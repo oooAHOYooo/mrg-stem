@@ -18,8 +18,9 @@
     .wrap{max-width:980px;margin:0 auto;padding:16px}
     .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
     nav a, a{color:var(--accent);text-decoration:none}
-    .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
     h2{margin:0 0 8px 0;font-size:20px}
     h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
     code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
@@ -35,9 +36,19 @@
   </style>
         <script>
     function printPage(){window.print()}
+    function updateProgressBar(){
+      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
+      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
+      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
+      document.getElementById('progress-bar').style.width=scrolled+'%'
+    }
+    window.addEventListener('scroll',updateProgressBar)
+    window.addEventListener('resize',updateProgressBar)
+    updateProgressBar()
   </script>
     </head>
     <body>
+        <div id="progress-bar" class="progress-bar"></div>
         <header>
             <div class="wrap">
                 <div class="title">Scratch Movement + Makey Makey</div>
@@ -76,7 +87,7 @@
                 </div>
             </section>
 
-            <section class="grid" style="margin-top:16px">
+            <section style="margin-top:16px">
                 <div class="card">
                     <img
                         src="https://user-images.githubusercontent.com/4721032/33775004-03f97224-dc0b-11e7-98c5-bc6eb3cc6598.png"
@@ -106,6 +117,15 @@
                         <h1>Today we will focus on Keyboard Inputs</h1>
                     </div>
                     <div class="card">
+                        <h1>Step 0: Open Scratch</h1>
+                        <ol>
+                            <li>Open Scratch</li>
+                            <li>Create a new project</li>
+                            <li>Create a new sprite</li>
+                            <li>Save the project</li>
+                        </ol>
+                    </div>
+                    <div class="card">
                         <h2>Step 1: Make Character Move to the Right</h2>
                         <img src="./data/scratch/concepts/Scratch_move_1.png"
                             alt="Keyboard Inputs">
@@ -124,24 +144,6 @@
                         <h2>Step 4: Make Character Jump Down</h2>
                         <img src="./data/scratch/concepts/Scratch_Jump_4.png"
                             alt="Jump Mechanics">
-                    </div>
-
-                    <div class="card">
-                        <h2>Keyboard Code (start here)</h2>
-                        <pre>when [right arrow v] key pressed
-  change x by (10)
-
-when [left arrow v] key pressed
-  change x by (-10)
-
-when [space v] key pressed
-  repeat (10)
-    change y by (5)
-  repeat (10)
-    change y by (-5)</pre>
-                        <h3>Bonus:Add Gravity</h3>
-                        <pre>change y by (-3) // try -2 to -5
-</pre>
                     </div>
 
                     <div class="card">
@@ -204,7 +206,7 @@ when [space v] key pressed
                         </ol>
                     </section>
 
-                    <section class="grid" style="margin-top:16px">
+                    <section style="margin-top:16px">
                         <div class="card">
                             <h2>Extra Challenges</h2>
                             <ul>
