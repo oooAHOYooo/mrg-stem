@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Scratch Platformer: Blocks + Coins | Mr. Gonzalez STEM</title>
+        <meta name="description"
+            content="Scratch platformer lesson: blocks, coins, collision detection, and side-scrolling mechanics." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+            rel="stylesheet">
+        <style>
+    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--muted:#9ca3af;--accent:#22d3ee;--good:#86efac;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+    header{padding:24px 16px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1224,transparent)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
+    nav a, a{color:var(--accent);text-decoration:none}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
+    h2{margin:0 0 8px 0;font-size:20px}
+    h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
+    pre{padding:12px;overflow:auto}
+    .checklist li{margin:6px 0}
+    .badge{display:inline-block;background:#0b1020;border:1px solid #1f2937;padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+    .cta{display:inline-block;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--accent);color:#04242a;font-weight:700}
+    .footer{margin-top:24px;color:var(--muted);font-size:14px}
+    .print{float:right}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1020;border:1px solid #1f2937;border-bottom-width:3px;padding:2px 6px;border-radius:8px}
+    svg{max-width:100%;height:auto;display:block}
+    img{max-width:100%;height:auto;display:block}
+  </style>
+        <script>
+    function printPage(){window.print()}
+    function updateProgressBar(){
+      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
+      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
+      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
+      document.getElementById('progress-bar').style.width=scrolled+'%'
+    }
+    window.addEventListener('scroll',updateProgressBar)
+    window.addEventListener('resize',updateProgressBar)
+    updateProgressBar()
+  </script>
+    </head>
+    <body>
+        <div id="progress-bar" class="progress-bar"></div>
+        <header>
+            <div class="wrap">
+                <div class="title">Scratch Platformer: Blocks + Coins</div>
+                <div><span class="badge">Grades 3–5</span> <button
+                        class="kbd print"
+                        onclick="printPage()">Print Page</button></div>
+            </div>
+        </header>
+
+        <main class="wrap">
+
+            <section class="grid">
+                <div class="card">
+                    <h2>Learning Target</h2>
+                    <ol class="checklist">
+                        <li>Make ground blocks and platforms</li>
+                        <li>Collect coins using collision</li>
+                        <li>Make blocks move from right to left to act like a
+                            side-scrolling game</li>
+                    </ol>
+                    <h3>Success Criteria</h3>
+                    <ul class="checklist">
+                        <li>Player lands on blocks</li>
+                        <li>Coins disappear when touched</li>
+                        <li>New blocks appear continuously from the right</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Materials</h2>
+                    <ul>
+                        <li>Scratch</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section style="margin-top:16px">
+                <div class="card">
+                    <h2>Step 1: Reduce the Size of the Bear</h2>
+                    <img src="./data/scratch/concepts/Scratch_Collision_1.png"
+                        alt="Reduce Bear Size - Set size to 25%">
+                    <p>Reduce the size of the bear sprite using the <code>set
+                            size to</code> block or by adjusting the size
+                        property in the sprite info panel.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 2: Paint a Square Block</h2>
+                    <img src="./data/scratch/concepts/Scratch_Collision2.png"
+                        alt="Paint New Sprite Button">
+                    <ol>
+                        <li>Click the "Paint New Sprite" button (looks like a
+                            paintbrush icon) in the sprite area to add a new
+                            sprite.</li>
+                        <li>The paint editor will open. Click the "Rectangle"
+                            tool (square/rectangle icon) in the drawing
+                            tools.</li>
+                    </ol>
+                    <img src="./data/scratch/concepts/Scratch_Collision3.png"
+                        alt="Drawing a Rectangle in Paint Editor">
+                    <ol start="3">
+                        <li>Click and drag on the canvas to draw a square or
+                            rectangle. This will be your ground block.</li>
+                        <li>You can color it green to look like grass, or any
+                            color you like.</li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h2>Step 3: Add Right-to-Left Scrolling Code</h2>
+                    <p>Go to the block sprite's code area and add this code to
+                        make blocks move from right to left:</p>
+                    <pre>
+when green flag clicked
+go to x: (200) y: (-140)
+forever
+    change x by (-5)
+    if &lt;x position &lt; -250&gt; then
+        go to x: (250) y: (-140)
+    end
+end</pre>
+                    <p>Duplicate this block to make a row. Now it feels like
+                        moving forward.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 4: Add Floating Platforms</h2>
+                    <p>Duplicate the block sprite and place some in the air for
+                        jumping.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 5: Player Jump + Landing</h2>
+                    <p>Go to the bear (player) sprite's code area and add this
+                        code to make your sprite land when touching blocks:</p>
+                    <pre>
+forever
+    change y by (-4)
+    if &lt;touching [Block v]?&gt; then
+        change y by (4)
+    end
+end</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 6: Add a Coin Sprite</h2>
+                    <p>Create a new coin sprite (use Paint New Sprite or choose
+                        from library). Go to the coin sprite's code area and add
+                        this code so it disappears when collected and reappears
+                        randomly:</p>
+                    <pre>
+when green flag clicked
+forever
+    if &lt;touching [Player v]?&gt; then
+        hide
+        play sound [pop v]
+        wait (0.2) seconds
+        go to x: (pick random -200 to 200) y: (pick random -100 to 100)
+        show
+    end
+end</pre>
+                </div>
+            </section>
+
+            <section style="margin-top:16px">
+                <div class="card">
+                    <h2>Extra Challenges</h2>
+                    <ul>
+                        <li>Add a score variable</li>
+                        <li>Add jump sound</li>
+                        <li>Add clouds or trees for background</li>
+                        <li>Change block speed to make game harder</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Think + Talk</h2>
+                    <ul>
+                        <li>What makes this feel like a real platformer?</li>
+                        <li>Why do the blocks move instead of the player?</li>
+                        <li>How would you add an enemy later?</li>
+                    </ul>
+                </div>
+            </section>
+
+            <p class="footer">© 2025 Mr. Gonzalez's STEM Resources | <a
+                    href="/">Back to Main Page</a></p>
+
+        </main>
+    </body>
+</html>
