@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>2 Player Controller | Mr. Gonzalez STEM</title>
+        <meta name="description"
+            content="Scratch lesson: build a two-player battle game (Bear vs Opponent) with separate controls, health, and hit detection." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+            rel="stylesheet">
+        <style>
+    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--muted:#9ca3af;--accent:#22d3ee;--good:#86efac;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+    header{padding:24px 16px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1224,transparent)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
+    nav a, a{color:var(--accent);text-decoration:none}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
+    h2{margin:0 0 8px 0;font-size:20px}
+    h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
+    pre{padding:12px;overflow:auto}
+    .checklist li{margin:6px 0}
+    .badge{display:inline-block;background:#0b1020;border:1px solid #1f2937;padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+    .cta{display:inline-block;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--accent);color:#04242a;font-weight:700}
+    .footer{margin-top:24px;color:var(--muted);font-size:14px}
+    .print{float:right}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1020;border:1px solid #1f2937;border-bottom-width:3px;padding:2px 6px;border-radius:8px}
+    svg{max-width:100%;height:auto;display:block}
+    img{max-width:100%;height:auto;display:block}
+  </style>
+        <script>
+    function printPage(){window.print()}
+    function updateProgressBar(){
+      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
+      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
+      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
+      document.getElementById('progress-bar').style.width=scrolled+'%'
+    }
+    window.addEventListener('scroll',updateProgressBar)
+    window.addEventListener('resize',updateProgressBar)
+    updateProgressBar()
+  </script>
+    </head>
+    <body>
+        <div id="progress-bar" class="progress-bar"></div>
+        <header>
+            <div class="wrap">
+                <div class="title">2 Player Controller — Bear vs. Opponent</div>
+                <div><span class="badge">Grades 3–5</span> <button
+                        class="kbd print"
+                        onclick="printPage()">Print Page</button></div>
+            </div>
+        </header>
+
+        <main class="wrap">
+
+            <section class="grid">
+                <div class="card">
+                    <h2>Learning Targets</h2>
+                    <ul class="checklist">
+                        <li>Create two sprites (Bear and Opponent) with separate controls</li>
+                        <li>Player 1 uses WASD; Player 2 uses Arrow Keys</li>
+                        <li>Add health variables and hit detection to make a battle game</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Materials</h2>
+                    <ul>
+                        <li>Scratch</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section style="margin-top:16px">
+                <div class="card">
+                    <h2>How a 2-Player Controller Works</h2>
+                    <ul class="checklist">
+                        <li><strong>Separate Keys:</strong> Each player listens for different keys.</li>
+                        <li><strong>Movement:</strong> Change <code>x</code> for left/right, <code>y</code> for jump.</li>
+                        <li><strong>Battle:</strong> Use variables for health and sense collisions for hits.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h1>Step 0: Setup</h1>
+                    <ol>
+                        <li>Open Scratch and create a new project</li>
+                        <li>Add two sprites: Bear and Opponent (any character)</li>
+                        <li>Add a simple stage background</li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h2>Step 1: Player 1 (Bear) Movement — WASD</h2>
+                    <pre>when green flag clicked
+forever
+  if &lt;key [a v] pressed?&gt; then
+    change x by (-6)
+  end
+  if &lt;key [d v] pressed?&gt; then
+    change x by (6)
+  end
+  if &lt;key [w v] pressed?&gt; then
+    change y by (8)
+    repeat (6)
+      change y by (-3)
+    end
+  end
+end</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 2: Player 2 (Opponent) Movement — Arrow Keys</h2>
+                    <pre>when green flag clicked
+forever
+  if &lt;key [left arrow v] pressed?&gt; then
+    change x by (-6)
+  end
+  if &lt;key [right arrow v] pressed?&gt; then
+    change x by (6)
+  end
+  if &lt;key [up arrow v] pressed?&gt; then
+    change y by (8)
+    repeat (6)
+      change y by (-3)
+    end
+  end
+end</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 3: Health Variables</h2>
+                    <ol>
+                        <li>Make two variables: <strong>Bear HP</strong> and <strong>Opponent HP</strong></li>
+                        <li>Set both to 100 at the start</li>
+                    </ol>
+                    <pre>when green flag clicked
+set [Bear HP v] to (100)
+set [Opponent HP v] to (100)</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 4: Simple Attack + Hit Detection</h2>
+                    <p>When Player 1 presses <span class="kbd">f</span>, check if the bear is touching the opponent. If yes, reduce Opponent HP.</p>
+                    <pre>// Bear sprite
+when [f v] key pressed
+if &lt;touching [Opponent v]?&gt; then
+  change [Opponent HP v] by (-10)
+end</pre>
+                    <p>When Player 2 presses <span class="kbd">l</span>, check if the opponent is touching the bear. If yes, reduce Bear HP.</p>
+                    <pre>// Opponent sprite
+when [l v] key pressed
+if &lt;touching [Bear v]?&gt; then
+  change [Bear HP v] by (-10)
+end</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 5: Win Condition</h2>
+                    <pre>forever
+  if &lt;(Bear HP) &lt;= (0)&gt; then
+    say [Opponent Wins!] for (2) seconds
+    stop [all v]
+  end
+  if &lt;(Opponent HP) &lt;= (0)&gt; then
+    say [Bear Wins!] for (2) seconds
+    stop [all v]
+  end
+end</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 6: Visual Health Bars (Top of Screen)</h2>
+                    <ol>
+                        <li>Create a new sprite named <strong>Bear HP Bar</strong> with a green rectangle costume.</li>
+                        <li>Place it at the top-left. Duplicate it for <strong>Opponent HP Bar</strong> (top-right).</li>
+                    </ol>
+                    <p><strong>Bear HP Bar sprite code:</strong></p>
+                    <pre>when green flag clicked
+go to x: (-200) y: (160)
+set size to (100) %
+show
+forever
+  set size to (Bear HP) %
+end</pre>
+                    <p><strong>Opponent HP Bar sprite code:</strong></p>
+                    <pre>when green flag clicked
+go to x: (200) y: (160)
+set size to (100) %
+show
+forever
+  set size to (Opponent HP) %
+end</pre>
+                    <p class="badge">Tip: Keep each bar’s original costume the same height and set size by percent so it shrinks as HP drops.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 7: Add Punch and Kick</h2>
+                    <p><strong>Bear (Player 1):</strong> Punch with <span class="kbd">F</span>, Kick with <span class="kbd">G</span></p>
+                    <pre>// Bear sprite
+when [f v] key pressed // Punch
+if &lt;touching [Opponent v]?&gt; then
+  change [Opponent HP v] by (-10)
+end
+wait (0.2) seconds
+
+when [g v] key pressed // Kick
+if &lt;touching [Opponent v]?&gt; then
+  change [Opponent HP v] by (-15)
+end
+wait (0.3) seconds</pre>
+                    <p><strong>Opponent (Player 2):</strong> Punch with <span class="kbd">K</span>, Kick with <span class="kbd">L</span></p>
+                    <pre>// Opponent sprite
+when [k v] key pressed // Punch
+if &lt;touching [Bear v]?&gt; then
+  change [Bear HP v] by (-10)
+end
+wait (0.2) seconds
+
+when [l v] key pressed // Kick
+if &lt;touching [Bear v]?&gt; then
+  change [Bear HP v] by (-15)
+end
+wait (0.3) seconds</pre>
+                    <p class="badge">Optional: Add a short animation or “say [Punch!] for (0.2) secs” when the attack happens.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Extra Challenges</h2>
+                    <ul>
+                        <li>Add knockback: briefly move the hit sprite backward</li>
+                        <li>Add animations when attacking or getting hit</li>
+                        <li>Add a block for “cooldown” so you can’t spam attacks</li>
+                        <li>Add platforms and gravity for a small arena</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Review Questions</h2>
+                    <ol>
+                        <li>How did we keep controls separate for each player?</li>
+                        <li>How do we check for a “hit” between sprites?</li>
+                        <li>Why do we use variables for health?</li>
+                    </ol>
+                </div>
+            </section>
+
+            <p class="footer">© 2025 Mr. Gonzalez's STEM Resources | <a href="/">Back to Main Page</a></p>
+        </main>
+    </body>
+    </html>
+
+

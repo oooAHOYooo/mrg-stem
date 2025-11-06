@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Lesson 4: Projectiles + Power-Ups | Mr. Gonzalez STEM</title>
+        <meta name="description"
+            content="Scratch lesson: add projectiles and power-ups. Learn cloning, cooldowns, item pickups, and balancing for games." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+            rel="stylesheet">
+        <style>
+    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--muted:#9ca3af;--accent:#22d3ee;--good:#86efac;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+    header{padding:24px 16px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1224,transparent)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
+    nav a, a{color:var(--accent);text-decoration:none}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
+    h2{margin:0 0 8px 0;font-size:20px}
+    h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
+    pre{padding:12px;overflow:auto}
+    .checklist li{margin:6px 0}
+    .badge{display:inline-block;background:#0b1020;border:1px solid #1f2937;padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+    .cta{display:inline-block;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--accent);color:#04242a;font-weight:700}
+    .footer{margin-top:24px;color:var(--muted);font-size:14px}
+    .print{float:right}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1020;border:1px solid #1f2937;border-bottom-width:3px;padding:2px 6px;border-radius:8px}
+    svg{max-width:100%;height:auto;display:block}
+    img{max-width:100%;height:auto;display:block}
+  </style>
+        <script>
+    function printPage(){window.print()}
+    function updateProgressBar(){
+      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
+      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
+      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
+      document.getElementById('progress-bar').style.width=scrolled+'%'
+    }
+    window.addEventListener('scroll',updateProgressBar)
+    window.addEventListener('resize',updateProgressBar)
+    updateProgressBar()
+  </script>
+    </head>
+    <body>
+        <div id="progress-bar" class="progress-bar"></div>
+        <header>
+            <div class="wrap">
+                <div class="title">Lesson 4: Projectiles + Power-Ups</div>
+                <div><span class="badge">Grades 3–5</span> <button
+                        class="kbd print"
+                        onclick="printPage()">Print Page</button></div>
+            </div>
+        </header>
+
+        <main class="wrap">
+            <section class="grid">
+                <div class="card">
+                    <h2>Learning Targets</h2>
+                    <ul class="checklist">
+                        <li>Create projectile attacks using cloning and movement</li>
+                        <li>Add cooldowns so players can’t spam attacks</li>
+                        <li>Spawn power-ups that change speed or heal HP</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h2>Materials</h2>
+                    <ul>
+                        <li>Scratch</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section style="margin-top:16px">
+                <div class="card">
+                    <h2>Step 1: Projectile Sprite</h2>
+                    <ol>
+                        <li>Create a new sprite named <strong>Projectile</strong> (small circle).</li>
+                        <li>Hide the original. Use clones for each shot.</li>
+                    </ol>
+                    <pre>// Projectile sprite
+when green flag clicked
+hide
+
+define fire (startX) (startY) (direction)
+go to x: (startX) y: (startY)
+point in direction (direction)
+create clone of [myself v]
+
+when I start as a clone
+show
+repeat until &lt;touching [edge v]?&gt;
+  move (12) steps
+  if &lt;touching [Opponent v]?&gt; then
+    change [Opponent HP v] by (-10)
+    delete this clone
+  end
+end
+delete this clone</pre>
+                </div>
+
+                <div class="card">
+                    <h2>Step 2: Fire Controls + Cooldown</h2>
+                    <p>In the Bear sprite, press <span class="kbd">H</span> to shoot right; in Opponent sprite, press <span class="kbd">;</span> to shoot left.</p>
+                    <pre>// Bear sprite
+when green flag clicked
+set [canShoot v] to [true]
+forever
+  if &lt;&lt;key [h v] pressed?&gt; and &lt;(canShoot) = [true]&gt;&gt; then
+    set [canShoot v] to [false]
+    broadcast [bear-fire v]
+    wait (0.5) seconds // cooldown
+    set [canShoot v] to [true]
+  end
+end
+
+when I receive [bear-fire v]
+call fire ((x position)) ((y position)) (90) // from Projectile</pre>
+                    <pre>// Opponent sprite
+when green flag clicked
+set [canShoot v] to [true]
+forever
+  if &lt;&lt;key [; v] pressed?&gt; and &lt;(canShoot) = [true]&gt;&gt; then
+    set [canShoot v] to [false]
+    broadcast [opponent-fire v]
+    wait (0.5) seconds // cooldown
+    set [canShoot v] to [true]
+  end
+end
+
+when I receive [opponent-fire v]
+call fire ((x position)) ((y position)) (-90) // from Projectile</pre>
+                    <p class="badge">Tip: In the <strong>Projectile</strong> sprite, right-click the <em>fire</em> custom block and check “Run without screen refresh” for smoother motion.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 3: Power-Ups (Speed + Heal)</h2>
+                    <ol>
+                        <li>Create a sprite named <strong>PowerUp</strong> with two costumes: <em>speed</em> and <em>heart</em>.</li>
+                        <li>Randomly show one at a random spot every 10 seconds.</li>
+                    </ol>
+                    <pre>// PowerUp sprite
+when green flag clicked
+forever
+  wait (10) seconds
+  go to x: (pick random (-200) to (200)) y: (pick random (-120) to (120))
+  switch costume to (pick random (1) to (2))
+  show
+  wait until &lt;&lt;touching [Bear v]?&gt; or &lt;touching [Opponent v]?&gt;&gt;
+  if &lt;touching [Bear v]?&gt; then
+    if &lt;(costume #) = (1)&gt; then // speed
+      change [bearSpeed v] by (3)
+      wait (5) seconds
+      change [bearSpeed v] by (-3)
+    else // heart
+      change [Bear HP v] by (15)
+    end
+  else // Opponent got it
+    if &lt;(costume #) = (1)&gt; then // speed
+      change [opponentSpeed v] by (3)
+      wait (5) seconds
+      change [opponentSpeed v] by (-3)
+    else // heart
+      change [Opponent HP v] by (15)
+    end
+  end
+  hide
+end</pre>
+                    <p>Use <code>bearSpeed</code> and <code>opponentSpeed</code> variables inside your movement code to adjust speed.</p>
+                </div>
+
+                <div class="card">
+                    <h2>Step 4: Balance + Polish</h2>
+                    <ul>
+                        <li>Adjust cooldowns (0.3–0.8s) and damage (5–15) for fairness</li>
+                        <li>Limit the number of active projectiles (e.g., 2 on-screen)</li>
+                        <li>Add brief animations or sounds when firing or picking a power-up</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Review</h2>
+                    <ol>
+                        <li>How does cloning help with projectiles?</li>
+                        <li>Why add a cooldown?</li>
+                        <li>What balance changes made your game more fun?</li>
+                    </ol>
+                </div>
+            </section>
+
+            <p class="footer">© 2025 Mr. Gonzalez's STEM Resources | <a href="/">Back to Main Page</a></p>
+        </main>
+    </body>
+    </html>
+
+
