@@ -20,6 +20,17 @@
     nav a, a{color:var(--accent);text-decoration:none}
     .grid{display:grid;gap:16px;grid-template-columns:1fr}
     .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(17,24,39,0.95);backdrop-filter:blur(20px);border-bottom:2px solid rgba(34,211,238,0.3);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+    .navbar-container{max-width:1400px;margin:0 auto;padding:0.75rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .navbar-brand{font-size:1.25rem;font-weight:700;color:var(--accent);text-decoration:none;transition:color 0.3s ease;flex-shrink:0}
+    .navbar-brand:hover{color:#86efac}
+    .navbar-menu{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+    .navbar-link{color:var(--accent);text-decoration:none;padding:0.5rem 1rem;border-radius:10px;background:rgba(15,23,42,0.8);border:1px solid rgba(34,211,238,0.3);transition:all 0.2s ease;font-size:0.9rem;font-weight:500;white-space:nowrap}
+    .navbar-link:hover{background:rgba(34,211,238,0.2);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(34,211,238,0.4)}
+    .navbar-toggle{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:0.5rem}
+    .navbar-toggle span{width:25px;height:3px;background:var(--accent);border-radius:2px;transition:all 0.3s ease}
+    body{padding-top:70px}
+    @media (max-width:1024px){.navbar-container{padding:0.75rem 1rem}.navbar-toggle{display:flex}.navbar-menu{display:none;width:100%;flex-direction:column;gap:0.5rem;margin-top:1rem}.navbar-menu.active{display:flex}.navbar-link{width:100%;text-align:center}.navbar-toggle.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}.navbar-toggle.active span:nth-child(2){opacity:0}.navbar-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-6px)}}
     .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
     h2{margin:0 0 8px 0;font-size:20px}
     h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
@@ -49,6 +60,23 @@
     </head>
     <body>
         <div id="progress-bar" class="progress-bar"></div>
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">🏠 Home</a>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="navbar-menu" id="navbar-menu">
+                    <a href="/movement.html" class="navbar-link">Lesson 1: Movement</a>
+                    <a href="/collision.html" class="navbar-link">Lesson 2: Collision</a>
+                    <a href="/2-player-controller.html" class="navbar-link">Lesson 3: 2-Player</a>
+                    <a href="/lesson-4-projectiles-powerups.html" class="navbar-link">Lesson 4: Projectiles</a>
+                    <a href="/major-student-challenge.html" class="navbar-link">Final Challenge</a>
+                </div>
+            </div>
+        </nav>
         <header>
             <div class="wrap">
                 <div class="title">2 Player Controller — Bear vs. Opponent</div>
@@ -254,6 +282,20 @@ wait (0.3) seconds</pre>
 
             <p class="footer">© 2025 Mr. Gonzalez's STEM Resources | <a href="/">Back to Main Page</a></p>
         </main>
+        <script>
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+        </script>
     </body>
     </html>
 
