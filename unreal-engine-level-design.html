@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Unreal Engine - Level Design | Mr. Gonzalez STEM</title>
+        <meta name="description"
+            content="Learn to design levels in Unreal Engine 5! Create a 4-season world you can walk through using third person perspective. Grades 1-5." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+            rel="stylesheet">
+        <style>
+    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--muted:#9ca3af;--accent:#22d3ee;--good:#86efac;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+    header{padding:24px 16px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1224,transparent)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
+    nav a, a{color:var(--accent);text-decoration:none}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(17,24,39,0.95);backdrop-filter:blur(20px);border-bottom:2px solid rgba(34,211,238,0.3);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+    .navbar-container{max-width:1400px;margin:0 auto;padding:0.75rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .navbar-brand{font-size:1.25rem;font-weight:700;color:var(--accent);text-decoration:none;transition:color 0.3s ease;flex-shrink:0}
+    .navbar-brand:hover{color:#86efac}
+    .navbar-menu{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+    .navbar-link{color:var(--accent);text-decoration:none;padding:0.5rem 1rem;border-radius:10px;background:rgba(15,23,42,0.8);border:1px solid rgba(34,211,238,0.3);transition:all 0.2s ease;font-size:0.9rem;font-weight:500;white-space:nowrap}
+    .navbar-link:hover{background:rgba(34,211,238,0.2);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(34,211,238,0.4)}
+    .navbar-toggle{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:0.5rem}
+    .navbar-toggle span{width:25px;height:3px;background:var(--accent);border-radius:2px;transition:all 0.3s ease}
+    body{padding-top:70px}
+    @media (max-width:1024px){.navbar-container{padding:0.75rem 1rem}.navbar-toggle{display:flex}.navbar-menu{display:none;width:100%;flex-direction:column;gap:0.5rem;margin-top:1rem}.navbar-menu.active{display:flex}.navbar-link{width:100%;text-align:center}.navbar-toggle.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}.navbar-toggle.active span:nth-child(2){opacity:0}.navbar-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-6px)}}
+    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
+    h2{margin:0 0 8px 0;font-size:20px}
+    h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+    code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
+    pre{padding:12px;overflow:auto}
+    .checklist li{margin:6px 0}
+    .badge{display:inline-block;background:#0b1020;border:1px solid #1f2937;padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
+    .cta{display:inline-block;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--accent);color:#04242a;font-weight:700}
+    .footer{margin-top:24px;color:var(--muted);font-size:14px}
+    .print{float:right}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1020;border:1px solid #1f2937;border-bottom-width:3px;padding:2px 6px;border-radius:8px}
+    svg{max-width:100%;height:auto;display:block}
+    img{max-width:100%;height:auto;display:block}
+    .start-here-widget{background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#04242a;padding:2rem;border-radius:16px;text-align:center;margin:2rem 0;box-shadow:0 10px 30px rgba(34,211,238,0.4)}
+    .start-here-widget h2{color:#04242a;font-size:clamp(1.5rem,4vw,2.5rem);margin-bottom:1rem}
+    .start-here-widget p{color:#04242a;font-size:1.1rem;font-weight:600}
+    .step-box{background:rgba(34,211,238,0.1);border:2px solid rgba(34,211,238,0.3);border-radius:12px;padding:1.5rem;margin:1rem 0}
+    .step-box h3{color:var(--accent);margin-top:0}
+    .step-number{display:inline-block;background:var(--accent);color:#04242a;width:32px;height:32px;border-radius:50%;text-align:center;line-height:32px;font-weight:700;margin-right:12px}
+    ol li, ul li{margin:8px 0;line-height:1.6}
+    .highlight-box{background:rgba(134,239,172,0.1);border:2px solid rgba(134,239,172,0.3);border-radius:12px;padding:1.5rem;margin:1rem 0}
+    .highlight-box h3{color:var(--good)}
+    .footer{background:rgba(17,24,39,0.95);backdrop-filter:blur(20px);border-top:3px solid rgba(34,211,238,0.3);padding:3rem 2rem 2rem;margin-top:4rem;color:#9ca3af}
+    .footer-container{max-width:1200px;margin:0 auto}
+    .footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2.5rem;margin-bottom:2rem}
+    .footer-section h3{color:#818cf8;font-size:1.25rem;font-weight:700;margin-bottom:1rem}
+    .footer-section p{line-height:1.7;margin-bottom:1rem;color:#9ca3af}
+    .footer-links{list-style:none;padding:0;margin:0}
+    .footer-links li{margin-bottom:0.75rem}
+    .footer-links a{color:#a5b4fc;text-decoration:none;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:0.5rem}
+    .footer-links a:hover{color:#c7d2fe;transform:translateX(5px)}
+    .footer-links a::before{content:"→";font-weight:bold}
+    .home-resources{background:rgba(31,41,55,0.8);border:2px solid rgba(34,211,238,0.3);border-radius:12px;padding:1.5rem;margin-top:1rem}
+    .home-resources h4{color:#818cf8;font-size:1.1rem;margin-bottom:0.75rem}
+    .home-resources ul{list-style:none;padding-left:0}
+    .home-resources li{margin-bottom:0.5rem;padding-left:1.5rem;position:relative}
+    .home-resources li::before{content:"✓";position:absolute;left:0;color:#10b981;font-weight:bold}
+    .home-resources a{color:#a5b4fc;text-decoration:none;font-weight:500}
+    .home-resources a:hover{color:#c7d2fe;text-decoration:underline}
+    .footer-bottom{text-align:center;padding-top:2rem;border-top:1px solid rgba(75,85,99,0.3);color:#9ca3af;font-size:0.9rem}
+    .footer-bottom p{margin:0.5rem 0}
+    @media (max-width:768px){.footer-grid{grid-template-columns:1fr;gap:2rem}.footer{padding:2rem 1rem 1.5rem}}
+  </style>
+        <script>
+    function printPage(){window.print()}
+    function updateProgressBar(){
+      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
+      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
+      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
+      document.getElementById('progress-bar').style.width=scrolled+'%'
+    }
+    window.addEventListener('scroll',updateProgressBar)
+    window.addEventListener('resize',updateProgressBar)
+    updateProgressBar()
+  </script>
+    </head>
+    <body>
+        <div id="progress-bar" class="progress-bar"></div>
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">🏠 Home</a>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="navbar-menu" id="navbar-menu">
+                    <a href="/movement.html" class="navbar-link">Lesson 1: Movement</a>
+                    <a href="/collision.html" class="navbar-link">Lesson 2: Collision</a>
+                    <a href="/2-player-controller.html" class="navbar-link">Lesson 3: 2-Player</a>
+                    <a href="/lesson-4-projectiles-powerups.html" class="navbar-link">Lesson 4: Projectiles</a>
+                    <a href="/major-student-challenge.html" class="navbar-link">Final Challenge</a>
+                    <a href="/unreal-engine-level-design.html" class="navbar-link">Unreal Engine</a>
+                </div>
+            </div>
+        </nav>
+        <header>
+            <div class="wrap">
+                <h1 class="title">Unreal Engine 5 - Level Design</h1>
+                <p style="color:var(--muted);margin-top:8px">Create your own 4-season world you can walk through!</p>
+            </div>
+        </header>
+        <main class="wrap">
+            <div class="start-here-widget">
+                <h2>🎮 Start Here for Unreal Engine!</h2>
+                <p>Follow these steps to download Unreal Engine and start building your world!</p>
+            </div>
+
+            <div class="card">
+                <h2>📥 Step 1: Download Unreal Engine at Home</h2>
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Go to the Unreal Engine Website</h3>
+                    <p>Visit <a href="https://www.unrealengine.com/" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;">www.unrealengine.com</a></p>
+                    <p>Click the big <strong>"Download Now"</strong> button at the top of the page.</p>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Create a Free Account</h3>
+                    <p>You'll need to make an account (it's free!). Ask a parent or guardian to help you:</p>
+                    <ul>
+                        <li>Click <strong>"Sign Up"</strong> or <strong>"Create Account"</strong></li>
+                        <li>Enter your email address (or your parent's email)</li>
+                        <li>Create a password (write it down somewhere safe!)</li>
+                        <li>Check your email and click the link to confirm your account</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Download Epic Games Launcher</h3>
+                    <p>After you sign in, you'll download the <strong>Epic Games Launcher</strong>:</p>
+                    <ul>
+                        <li>Click <strong>"Download"</strong> for the Epic Games Launcher</li>
+                        <li>Run the installer (ask a parent for help if needed)</li>
+                        <li>Sign in to the launcher with your account</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">4</span> Install Unreal Engine</h3>
+                    <p>In the Epic Games Launcher:</p>
+                    <ul>
+                        <li>Click on <strong>"Unreal Engine"</strong> in the left menu</li>
+                        <li>Click <strong>"Install Engine"</strong></li>
+                        <li>Choose the latest version (like 5.3 or 5.4)</li>
+                        <li>Click <strong>"Install"</strong> - this will take a while (maybe 30-60 minutes)</li>
+                        <li>Go get a snack while it downloads! 🍎</li>
+                    </ul>
+                    <p><strong>Important:</strong> Unreal Engine is BIG (about 10-15 GB), so make sure you have enough space on your computer!</p>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>💡 Tips for Parents</h3>
+                    <ul>
+                        <li>Unreal Engine is completely FREE for students and learning</li>
+                        <li>It works on Windows and Mac computers</li>
+                        <li>Make sure your computer has enough space (at least 20 GB free)</li>
+                        <li>The download might take 30-60 minutes depending on your internet</li>
+                        <li>If you have any problems, check the Unreal Engine website for help</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎨 Step 2: Getting Started with Free Assets</h2>
+                <p>Unreal Engine comes with lots of FREE stuff you can use to build your world!</p>
+
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Open Unreal Engine</h3>
+                    <p>After Unreal Engine finishes installing:</p>
+                    <ul>
+                        <li>Open the Epic Games Launcher</li>
+                        <li>Click <strong>"Launch"</strong> next to Unreal Engine</li>
+                        <li>When it opens, click <strong>"New Project"</strong></li>
+                        <li>Choose <strong>"Games"</strong> → <strong>"Third Person"</strong> template</li>
+                        <li>Give your project a name like "My4SeasonWorld"</li>
+                        <li>Click <strong>"Create"</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Get Free Assets from the Marketplace</h3>
+                    <p>Unreal Engine has a FREE marketplace with tons of stuff:</p>
+                    <ul>
+                        <li>In Unreal Engine, click <strong>"Edit"</strong> → <strong>"Plugins"</strong></li>
+                        <li>Or go to <a href="https://www.unrealengine.com/marketplace" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;">unrealengine.com/marketplace</a></li>
+                        <li>Look for things marked <strong>"FREE"</strong> or <strong>"Free for the Month"</strong></li>
+                        <li>Click on something you like, then click <strong>"Add to Project"</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Great Free Assets to Start With</h3>
+                    <p>Here are some FREE things perfect for making a 4-season world:</p>
+                    <ul>
+                        <li><strong>Starter Content</strong> - Already in your project! Trees, rocks, and more</li>
+                        <li><strong>Landscape Materials</strong> - Search for "grass", "snow", "autumn leaves"</li>
+                        <li><strong>Nature Packs</strong> - Look for "free nature" or "free trees"</li>
+                        <li><strong>Weather Effects</strong> - Search for "snow", "rain", "sun" effects</li>
+                    </ul>
+                    <p><strong>Remember:</strong> Always look for the <strong>"FREE"</strong> label before adding anything!</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🌍 Step 3: Create Your 4-Season World</h2>
+                <p>Now let's build a world with four different seasons you can walk through!</p>
+
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Set Up Your World</h3>
+                    <p>When your project opens, you'll see a character in a gray world:</p>
+                    <ul>
+                        <li>Press <kbd class="kbd">F</kbd> to focus on your character</li>
+                        <li>You can click and drag to look around</li>
+                        <li>Use the mouse wheel to zoom in and out</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Make Four Different Areas (One for Each Season)</h3>
+                    <p>We'll create four sections: Spring, Summer, Fall, and Winter!</p>
+                    
+                    <h4 style="color:var(--good);margin-top:1rem;">🌱 Spring Area:</h4>
+                    <ul>
+                        <li>In the Content Browser (bottom), search for "grass" or "flowers"</li>
+                        <li>Drag green grass and colorful flowers into your world</li>
+                        <li>Add some small trees with green leaves</li>
+                        <li>Place this in the front-left area of your world</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">☀️ Summer Area:</h4>
+                    <ul>
+                        <li>Add bright green grass and big trees</li>
+                        <li>Maybe add a sun or bright lighting</li>
+                        <li>Place this in the front-right area</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">🍂 Fall Area:</h4>
+                    <ul>
+                        <li>Search for "autumn" or "fall" materials</li>
+                        <li>Add trees with orange, red, and yellow leaves</li>
+                        <li>Add some fallen leaves on the ground</li>
+                        <li>Place this in the back-left area</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">❄️ Winter Area:</h4>
+                    <ul>
+                        <li>Search for "snow" materials</li>
+                        <li>Add white snow on the ground</li>
+                        <li>Add trees without leaves (bare branches)</li>
+                        <li>Maybe add some snowflakes or ice</li>
+                        <li>Place this in the back-right area</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Use Third Person Perspective</h3>
+                    <p>The <strong>Third Person</strong> template means you'll see your character from behind as you walk around!</p>
+                    <ul>
+                        <li>Your project already has third person set up - that's why we chose that template!</li>
+                        <li>To test it, click the <strong>"Play"</strong> button (green triangle) at the top</li>
+                        <li>Use <kbd class="kbd">W</kbd> <kbd class="kbd">A</kbd> <kbd class="kbd">S</kbd> <kbd class="kbd">D</kbd> keys to move</li>
+                        <li>Use your mouse to look around</li>
+                        <li>Press <kbd class="kbd">Space</kbd> to jump!</li>
+                        <li>Press <kbd class="kbd">Esc</kbd> to stop playing</li>
+                    </ul>
+                    <p><strong>Tip:</strong> Make sure you're in third person view (seeing your character from behind) when you play!</p>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">4</span> Connect Your Seasons</h3>
+                    <p>Make paths between your four season areas so you can walk from one to another:</p>
+                    <ul>
+                        <li>Add paths or roads between the areas</li>
+                        <li>You can use the landscape tool to make smooth ground</li>
+                        <li>Add signs or markers to show which season you're entering</li>
+                        <li>Test it by playing and walking from Spring → Summer → Fall → Winter!</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🎯 Your Goal</h3>
+                    <p>Create ONE world with FOUR different seasons that you can walk through using third person view!</p>
+                    <ul>
+                        <li>✅ Spring area with flowers and green grass</li>
+                        <li>✅ Summer area with bright trees and sunshine</li>
+                        <li>✅ Fall area with colorful autumn leaves</li>
+                        <li>✅ Winter area with snow and bare trees</li>
+                        <li>✅ Paths connecting all four areas</li>
+                        <li>✅ Third person camera so you see your character walking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Helpful Tips</h2>
+                <ul class="checklist">
+                    <li><strong>Save often!</strong> Press <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">S</kbd> (or <kbd class="kbd">Cmd</kbd> + <kbd class="kbd">S</kbd> on Mac) to save your work</li>
+                    <li><strong>Experiment!</strong> Try dragging different things into your world - you can always delete them</li>
+                    <li><strong>Use the search bar</strong> in the Content Browser to find things quickly</li>
+                    <li><strong>Ask for help</strong> if you get stuck - Mr. Gonzalez is here to help!</li>
+                    <li><strong>Have fun!</strong> There's no wrong way to make your world - be creative!</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>🎓 What You're Learning</h2>
+                <p>By making this 4-season world, you're learning:</p>
+                <ul class="checklist">
+                    <li>How to use professional game design tools</li>
+                    <li>How to organize and plan a project</li>
+                    <li>How to use free resources and assets</li>
+                    <li>How to create different environments</li>
+                    <li>How to test and play your creations</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h3>About This Lesson</h3>
+                        <p>Learn to design levels in Unreal Engine 5! Create your own 4-season world you can walk through using third person perspective.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3>More Lessons</h3>
+                        <ul class="footer-links">
+                            <li><a href="/movement.html">Lesson 1: Movement & Makey Makey</a></li>
+                            <li><a href="/collision.html">Lesson 2: Collision & Platformer</a></li>
+                            <li><a href="/2-player-controller.html">Lesson 3: 2-Player Controller</a></li>
+                            <li><a href="/lesson-4-projectiles-powerups.html">Lesson 4: Projectiles & Power-Ups</a></li>
+                            <li><a href="/major-student-challenge.html">Final Challenge: Create Your Game</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Resources</h3>
+                        <ul class="footer-links">
+                            <li><a href="https://www.unrealengine.com/" target="_blank" rel="noopener noreferrer">Unreal Engine Website</a></li>
+                            <li><a href="https://www.unrealengine.com/marketplace" target="_blank" rel="noopener noreferrer">Free Assets Marketplace</a></li>
+                            <li><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine" target="_blank" rel="noopener noreferrer">Unreal Engine Documentation</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Mr. Gonzalez's STEM Resources | Barnum Public Schools | Bridgeport, CT</p>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+        </script>
+    </body>
+</html>
+
