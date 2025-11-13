@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 2: Make Water and Grass - UE5 Level Design Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+        
+        .nav {
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .nav a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 20px 0;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        h4 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .tip-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step-box {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .step-box h4 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .goals-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .challenge-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="nav">
+                <a href="index.html">← Back to Table of Contents</a>
+            </div>
+            <h1><span class="emoji">🌊</span> Project 2: Lesson 2 - Make Water and Grass</h1>
+        </header>
+        
+        <div class="content">
+            <div class="goals-box">
+                <h3>Learning Goals</h3>
+                <p>By the end of this lesson, you will:</p>
+                <ul>
+                    <li>Know how to create water in your level</li>
+                    <li>Understand how to add and paint grass</li>
+                    <li>Learn to use materials and textures</li>
+                    <li>Create a more detailed natural environment</li>
+                </ul>
+            </div>
+            
+            <h2>Part 1: Creating Water</h2>
+            
+            <h3>Method 1: Using Water Body Actor (Easiest)</h3>
+            <div class="step-box">
+                <h4>Add Water to Your Level:</h4>
+                <ul>
+                    <li>In Place Actors panel, search for "Water"</li>
+                    <li>Look for "Water Body Ocean" or "Water Body Lake"</li>
+                    <li>Drag "Water Body Lake" into your viewport</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Position and Scale:</h4>
+                <ul>
+                    <li>Select the water actor</li>
+                    <li>Use the scale tool (<code>R</code> key, then drag) to make it larger</li>
+                    <li>Position it in a valley or low area of your landscape</li>
+                    <li>Adjust height to match your terrain</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Customize Water Appearance:</h4>
+                <ul>
+                    <li>Select the water actor</li>
+                    <li>In Details panel, find "Water" settings</li>
+                    <li>Adjust:
+                        <ul>
+                            <li><strong>Water Color:</strong> Make it blue or green-blue</li>
+                            <li><strong>Water Opacity:</strong> 0.8-0.9 (slightly transparent)</li>
+                            <li><strong>Wave Speed:</strong> Adjust for movement</li>
+                            <li><strong>Wave Amplitude:</strong> How big the waves are</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            
+            <h3>Method 2: Using Landscape Water (More Integrated)</h3>
+            <div class="step-box">
+                <h4>Enable Water in Landscape:</h4>
+                <ul>
+                    <li>Select your landscape</li>
+                    <li>In Landscape mode, find "Sculpt" tool</li>
+                    <li>Lower an area to create a lake bed (hold <code>Shift</code> and drag)</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Add Water Material:</h4>
+                <ul>
+                    <li>In Content Browser, search for "Water" materials</li>
+                    <li>If using Starter Content, look for water materials</li>
+                    <li>Create a new material if needed (Advanced)</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Paint Water Material:</h4>
+                <ul>
+                    <li>In Landscape mode, select "Paint" tool</li>
+                    <li>Choose your water material</li>
+                    <li>Paint it onto the lowered area</li>
+                </ul>
+            </div>
+            
+            <h2>Part 2: Adding Grass</h2>
+            
+            <h3>Using Foliage Tool (Recommended)</h3>
+            <div class="step-box">
+                <h4>Open Foliage Mode:</h4>
+                <ul>
+                    <li>Click "Foliage" button in Modes panel (or press <code>Shift+4</code>)</li>
+                    <li>This opens the Foliage tool</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Add Grass Asset:</h4>
+                <ul>
+                    <li>In Foliage mode, click the "+" button to add a new foliage type</li>
+                    <li>Click "Pick Asset" or drag a grass mesh from Content Browser</li>
+                    <li>Look for grass assets in:
+                        <ul>
+                            <li><code>StarterContent → Props</code></li>
+                            <li>Or download from Epic Marketplace (search "free grass")</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Configure Grass Settings:</h4>
+                <ul>
+                    <li><strong>Density:</strong> 200-500 (how many grass blades)</li>
+                    <li><strong>Radius:</strong> 1000-2000 (how far grass spreads)</li>
+                    <li><strong>Align to Normal:</strong> ✅ Checked (grass stands up straight)</li>
+                    <li><strong>Random Scale:</strong> 0.5-1.5 (variety in size)</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Paint Grass:</h4>
+                <ul>
+                    <li>Click and drag on your landscape to paint grass</li>
+                    <li>Paint in open areas, not on water or rocks</li>
+                    <li>Use <code>Shift+Click</code> to remove grass if needed</li>
+                    <li>Adjust brush size with <code>[</code> and <code>]</code> keys</li>
+                </ul>
+            </div>
+            
+            <h3>Using Landscape Grass (Alternative Method)</h3>
+            <div class="step-box">
+                <h4>Select Landscape:</h4>
+                <ul>
+                    <li>Click on your landscape in the viewport</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Add Grass Type:</h4>
+                <ul>
+                    <li>In Details panel, find "Landscape Grass Types"</li>
+                    <li>Click "+" to add a new grass type</li>
+                    <li>Assign a grass mesh</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Configure:</h4>
+                <ul>
+                    <li>Set density and distribution</li>
+                    <li>Grass will automatically appear on painted areas</li>
+                </ul>
+            </div>
+            
+            <h2>Part 3: Creating a Grass Material</h2>
+            <div class="step-box">
+                <ol>
+                    <li><strong>Open Material Editor:</strong>
+                        <ul>
+                            <li>In Content Browser, right-click → Materials & Textures → Material</li>
+                            <li>Name it "Grass_Material"</li>
+                        </ul>
+                    </li>
+                    <li><strong>Basic Grass Setup:</strong>
+                        <ul>
+                            <li>In Material Editor, add a "Grass" node (if available)</li>
+                            <li>Or use a green texture/color</li>
+                            <li>Connect to Base Color</li>
+                            <li>Set Roughness to 0.8-1.0 (grass is not shiny)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Apply to Landscape:</strong>
+                        <ul>
+                            <li>In Landscape Paint mode, select your grass material</li>
+                            <li>Paint it onto areas where you want grass to grow</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <h2>Part 4: Combining Water and Grass</h2>
+            <div class="step-box">
+                <ol>
+                    <li><strong>Create a Natural Scene:</strong>
+                        <ul>
+                            <li>Place water in a low area (valley or depression)</li>
+                            <li>Paint grass around the water's edge</li>
+                            <li>Add some rocks near the water</li>
+                            <li>Create a path from grass area to water</li>
+                        </ul>
+                    </li>
+                    <li><strong>Add Variety:</strong>
+                        <ul>
+                            <li>Use different grass densities</li>
+                            <li>Make some areas have more grass, some less</li>
+                            <li>Add patches of different textures</li>
+                        </ul>
+                    </li>
+                    <li><strong>Lighting:</strong>
+                        <ul>
+                            <li>Position your directional light to shine on the water</li>
+                            <li>Add a slight reflection on the water surface</li>
+                            <li>Make sure grass is well-lit</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <h2>Part 5: Water Effects and Details</h2>
+            <div class="step-box">
+                <ol>
+                    <li><strong>Add Water Ripples:</strong>
+                        <ul>
+                            <li>In water settings, enable "Enable Waves"</li>
+                            <li>Adjust wave frequency and amplitude</li>
+                            <li>Test in Play mode to see movement</li>
+                        </ul>
+                    </li>
+                    <li><strong>Water Sound (Optional):</strong>
+                        <ul>
+                            <li>Add an Ambient Sound actor near water</li>
+                            <li>Assign a water/stream sound effect</li>
+                            <li>Adjust volume and attenuation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Add Details Around Water:</strong>
+                        <ul>
+                            <li>Place small rocks along the shore</li>
+                            <li>Add some plants or reeds near water edge</li>
+                            <li>Create a natural transition from water to land</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="challenge-box">
+                <h3>Practice Challenge</h3>
+                <ul>
+                    <li>Create a lake or pond with water</li>
+                    <li>Add grass covering at least 50% of your landscape</li>
+                    <li>Make the water area look natural with rocks and details</li>
+                    <li>Ensure smooth transition between water and grass areas</li>
+                    <li>Test in Play mode and walk around your scene</li>
+                </ul>
+            </div>
+            
+            <h2>Troubleshooting</h2>
+            <div class="warning-box">
+                <p><strong>Water not showing?</strong> Make sure the water actor is positioned correctly and not below terrain</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>Grass too dense?</strong> Lower the density value in Foliage settings</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>Grass floating?</strong> Check "Align to Normal" and ensure landscape is properly set up</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>Water looks flat?</strong> Enable wave settings and adjust wave parameters</p>
+            </div>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e9ecef; text-align: center;">
+                <a href="lesson1-rocks-caves.html" style="display: inline-block; padding: 12px 30px; background: #667eea; color: white; border-radius: 8px; margin-right: 10px;">← Previous: Lesson 1</a>
+                <a href="lesson3-effects-landscape.html" style="display: inline-block; padding: 12px 30px; background: #764ba2; color: white; border-radius: 8px;">Next: Lesson 3 →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

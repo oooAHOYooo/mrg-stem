@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 1: Add Rocks and Make Caves - UE5 Level Design Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+        
+        .nav {
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .nav a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 20px 0;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 25px 0 15px 0;
+            font-size: 1.4em;
+        }
+        
+        h4 {
+            color: #555;
+            margin: 20px 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .tip-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step-box {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .step-box h4 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .goals-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .challenge-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="nav">
+                <a href="index.html">← Back to Table of Contents</a>
+            </div>
+            <h1><span class="emoji">⛰️</span> Project 1: Lesson 1 - Add Rocks and Make Caves</h1>
+        </header>
+        
+        <div class="content">
+            <div class="goals-box">
+                <h3>Learning Goals</h3>
+                <p>By the end of this lesson, you will:</p>
+                <ul>
+                    <li>Know how to add rocks to your level</li>
+                    <li>Understand how to create cave entrances and tunnels</li>
+                    <li>Learn to use the Landscape tool for terrain</li>
+                    <li>Be able to place and arrange objects in 3D space</li>
+                </ul>
+            </div>
+            
+            <h2>Part 1: Setting Up Your Terrain</h2>
+            
+            <h3>Creating the Landscape</h3>
+            <div class="step-box">
+                <h4>Open Landscape Mode:</h4>
+                <ul>
+                    <li>Click the "Landscape" button in the Modes panel (or press <code>Shift+2</code>)</li>
+                    <li>In the Landscape tool, set:
+                        <ul>
+                            <li><strong>Section Size:</strong> 63x63 quads</li>
+                            <li><strong>Sections Per Component:</strong> 1x1</li>
+                            <li><strong>Number of Components:</strong> 2x2 (this creates a small landscape to start)</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Create the Landscape:</h4>
+                <ul>
+                    <li>Click "Create" button in the Landscape tool</li>
+                    <li>Your landscape will appear in the viewport</li>
+                    <li>You can adjust the size later if needed</li>
+                </ul>
+            </div>
+            
+            <h3>Sculpting Basic Terrain</h3>
+            <div class="step-box">
+                <h4>Select Sculpt Tool:</h4>
+                <ul>
+                    <li>In Landscape mode, click the "Sculpt" tool (mountain icon)</li>
+                    <li>Adjust the brush size (use bracket keys <code>[</code> and <code>]</code> to resize)</li>
+                    <li>Set brush strength to 0.3-0.5 (not too strong!)</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Create Hills and Valleys:</h4>
+                <ul>
+                    <li>Click and drag on the landscape to raise terrain</li>
+                    <li>Hold <code>Shift</code> and drag to lower terrain</li>
+                    <li>Create some hills and valleys for your cave area</li>
+                </ul>
+            </div>
+            
+            <h2>Part 2: Adding Rocks</h2>
+            
+            <h3>Finding Rock Assets</h3>
+            <div class="step-box">
+                <h4>Open Content Browser:</h4>
+                <ul>
+                    <li>Look at the bottom of the screen for the Content Browser</li>
+                    <li>Navigate to: <code>StarterContent → Props</code></li>
+                    <li>Look for rock assets (they might be named "Rock" or "Stone")</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">If No Rocks Available:</h4>
+                <ul>
+                    <li>Go to the Epic Games Marketplace (in the launcher)</li>
+                    <li>Search for "free rocks" or "nature pack"</li>
+                    <li>Download a free rock pack</li>
+                    <li>Add it to your project</li>
+                </ul>
+            </div>
+            
+            <h3>Placing Rocks</h3>
+            <div class="step-box">
+                <h4>Drag and Drop:</h4>
+                <ul>
+                    <li>Drag a rock from Content Browser into the viewport</li>
+                    <li>Use the transform gizmo (arrows) to move it around</li>
+                    <li>Press <code>R</code> to rotate, <code>E</code> to scale</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Placing Multiple Rocks:</h4>
+                <ul>
+                    <li>Select a rock, press <code>Ctrl+W</code> to duplicate</li>
+                    <li>Move the duplicate to a new location</li>
+                    <li>Vary the sizes and rotations to make it look natural</li>
+                    <li><strong>Tip:</strong> Press <code>End</code> key to snap objects to the ground</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Creating Rock Clusters:</h4>
+                <ul>
+                    <li>Group 3-5 rocks together</li>
+                    <li>Make some larger, some smaller</li>
+                    <li>Rotate them randomly for a natural look</li>
+                    <li>Place clusters around your landscape</li>
+                </ul>
+            </div>
+            
+            <h2>Part 3: Making Caves</h2>
+            
+            <h3>Method 1: Using Landscape Sculpting</h3>
+            <div class="step-box">
+                <h4>Create Cave Entrance:</h4>
+                <ul>
+                    <li>Select the "Sculpt" tool in Landscape mode</li>
+                    <li>Use a medium-sized brush</li>
+                    <li>Lower the terrain to create a depression (hold <code>Shift</code> and drag)</li>
+                    <li>Make it deeper in the center, like a bowl</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Carve Out the Cave:</h4>
+                <ul>
+                    <li>Switch to "Erosion" tool (if available) or continue with Sculpt</li>
+                    <li>Create a tunnel opening by lowering terrain in a curved shape</li>
+                    <li>Make the opening wide enough to walk through</li>
+                    <li>Smooth the edges using the "Smooth" tool</li>
+                </ul>
+            </div>
+            
+            <h3>Method 2: Using Static Meshes (More Control)</h3>
+            <div class="step-box">
+                <h4>Create Cave Walls:</h4>
+                <ul>
+                    <li>In Content Browser, look for wall or cave assets</li>
+                    <li>If not available, use basic shapes:
+                        <ul>
+                            <li>Go to Place Actors → Geometry → Cube</li>
+                            <li>Scale it to create cave walls</li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Build Cave Structure:</h4>
+                <ul>
+                    <li>Place large cubes/scaled meshes to form cave walls</li>
+                    <li>Create an entrance opening</li>
+                    <li>Add a tunnel by placing more wall pieces</li>
+                    <li>Use the "Subtract" boolean operation if needed (Advanced)</li>
+                </ul>
+                
+                <h4 style="margin-top: 20px;">Add Cave Details:</h4>
+                <ul>
+                    <li>Place rocks inside the cave</li>
+                    <li>Add some stalactites (hanging rocks) if you have those assets</li>
+                    <li>Use darker lighting inside the cave</li>
+                </ul>
+            </div>
+            
+            <h2>Part 4: Lighting Your Cave</h2>
+            <div class="step-box">
+                <ol>
+                    <li><strong>Add Directional Light:</strong>
+                        <ul>
+                            <li>Place Actors → Light → Directional Light</li>
+                            <li>Position it above your level</li>
+                            <li>This simulates sunlight</li>
+                        </ul>
+                    </li>
+                    <li><strong>Add Point Light Inside Cave:</strong>
+                        <ul>
+                            <li>Place Actors → Light → Point Light</li>
+                            <li>Place it inside your cave</li>
+                            <li>Adjust intensity (try 1000-2000)</li>
+                            <li>Change color to warm (orange/yellow) for a torch-like effect</li>
+                        </ul>
+                    </li>
+                    <li><strong>Test Your Lighting:</strong>
+                        <ul>
+                            <li>Click "Play" button in the toolbar</li>
+                            <li>Walk around your level (<code>WASD</code> keys, mouse to look)</li>
+                            <li>See how the lighting looks</li>
+                            <li>Press <code>Esc</code> to exit play mode</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <h2>Part 5: Finishing Touches</h2>
+            <div class="step-box">
+                <ol>
+                    <li><strong>Add More Rocks Around Cave Entrance:</strong>
+                        <ul>
+                            <li>Make the entrance look natural</li>
+                            <li>Place rocks to frame the opening</li>
+                        </ul>
+                    </li>
+                    <li><strong>Add Ground Details:</strong>
+                        <ul>
+                            <li>Use the "Paint" tool in Landscape mode</li>
+                            <li>Paint different textures around the cave area</li>
+                        </ul>
+                    </li>
+                    <li><strong>Save Your Work:</strong>
+                        <ul>
+                            <li>Press <code>Ctrl+S</code></li>
+                            <li>Name your level "Lesson1_CaveLevel"</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="challenge-box">
+                <h3>Practice Challenge</h3>
+                <ul>
+                    <li>Create a cave system with 2-3 connected chambers</li>
+                    <li>Add at least 10 rocks in different sizes</li>
+                    <li>Make sure your cave has good lighting</li>
+                    <li>Create a path leading to the cave entrance</li>
+                </ul>
+            </div>
+            
+            <h2>Troubleshooting</h2>
+            <div class="warning-box">
+                <p><strong>Rocks floating?</strong> Press <code>End</code> key to snap to ground, or manually adjust Z position</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>Cave too dark?</strong> Add more lights or increase light intensity</p>
+            </div>
+            <div class="warning-box">
+                <p><strong>Can't see landscape?</strong> Make sure you're in the right view (perspective view, not orthographic)</p>
+            </div>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e9ecef; text-align: center;">
+                <a href="starting-a-project.html" style="display: inline-block; padding: 12px 30px; background: #667eea; color: white; border-radius: 8px; margin-right: 10px;">← Previous: Starting a Project</a>
+                <a href="lesson2-water-grass.html" style="display: inline-block; padding: 12px 30px; background: #764ba2; color: white; border-radius: 8px;">Next: Lesson 2 →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
