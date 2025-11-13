@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unreal Engine 5 - Level Design Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.4em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 50px 40px;
+        }
+        
+        .intro {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e7f3ff 100%);
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 3px solid #667eea;
+            text-align: center;
+        }
+        
+        .intro h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .intro p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .main-link {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 20px 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 1.5em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .main-link:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .quick-link-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .quick-link-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .quick-link-card .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .quick-link-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        
+        .quick-link-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .lessons-preview {
+            margin-top: 50px;
+        }
+        
+        .lessons-preview h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .lesson-preview-card {
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .lesson-preview-card.lesson1 {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #ffe0e0 0%, #fff5f5 100%);
+        }
+        
+        .lesson-preview-card.lesson2 {
+            border-color: #4ecdc4;
+            background: linear-gradient(135deg, #e0f7f5 0%, #f0fdfc 100%);
+        }
+        
+        .lesson-preview-card.lesson3 {
+            border-color: #95e1d3;
+            background: linear-gradient(135deg, #e8f8f5 0%, #f0fdfa 100%);
+        }
+        
+        .lesson-preview-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .lesson-preview-card .emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .lesson-preview-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .lesson-preview-card .title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.5em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 Unreal Engine 5</h1>
+            <p>Level Design Student Guide</p>
+        </header>
+        
+        <div class="content">
+            <div class="intro">
+                <h2>Welcome to Level Design! 🚀</h2>
+                <p>Learn how to create amazing 3D worlds with Unreal Engine 5!</p>
+                <p>This guide will teach you everything you need to know to build levels with rocks, caves, water, grass, and cool effects.</p>
+                <a href="unreal-engine/index.html" class="main-link">Start Learning →</a>
+            </div>
+            
+            <div class="quick-links">
+                <a href="unreal-engine/installing-ue5.html" class="quick-link-card">
+                    <span class="icon">💻</span>
+                    <h3>Installing UE5</h3>
+                    <p>Step-by-step guide to download and set up Unreal Engine 5 on your computer</p>
+                </a>
+                
+                <a href="unreal-engine/starting-a-project.html" class="quick-link-card">
+                    <span class="icon">🎯</span>
+                    <h3>Starting a Project</h3>
+                    <p>Learn how to create your first UE5 project and understand the interface</p>
+                </a>
+            </div>
+            
+            <div class="lessons-preview">
+                <h3>📚 Level Design Lessons</h3>
+                <div class="lessons-grid">
+                    <a href="unreal-engine/lesson1-rocks-caves.html" class="lesson-preview-card lesson1">
+                        <span class="emoji">⛰️</span>
+                        <div class="number">Lesson 1</div>
+                        <div class="title">Add Rocks & Make Caves</div>
+                        <p>Learn to place rocks and create awesome cave systems!</p>
+                    </a>
+                    
+                    <a href="unreal-engine/lesson2-water-grass.html" class="lesson-preview-card lesson2">
+                        <span class="emoji">🌊</span>
+                        <div class="number">Lesson 2</div>
+                        <div class="title">Make Water & Grass</div>
+                        <p>Add beautiful water features and grass to your level!</p>
+                    </a>
+                    
+                    <a href="unreal-engine/lesson3-effects-landscape.html" class="lesson-preview-card lesson3">
+                        <span class="emoji">✨</span>
+                        <div class="number">Lesson 3</div>
+                        <div class="title">Effects & Landscape</div>
+                        <p>Add cool effects, polish your landscape, and make it look amazing!</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><strong>Happy Building!</strong> 🎮✨</p>
+            <p>Remember: Practice makes perfect! Don't be afraid to experiment and try new things.</p>
+        </footer>
+    </div>
+</body>
+</html>
+
