@@ -1,245 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unreal Engine 5 - Level Design Guide</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Unreal Engine 5 - Level Design Guide</title>
+        <meta name="description" content="" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            /* Light Theme (Soft Matte) */
+            --primary-color: #6B8E9F;
+            --secondary-color: #8FA8B5;
+            --accent-color: #A8C4D0;
+            --bg-gradient-1: #F5F7FA;
+            --bg-gradient-2: #E8ECF1;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #CBD5E1;
+            --shadow-sm: rgba(0, 0, 0, 0.05);
+            --shadow-md: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+
+        [data-theme="dark"] {
+            --primary-color: #4A90A4;
+            --secondary-color: #6B9DB5;
+            --accent-color: #7FB3C8;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+
+        [data-theme="neon"] {
+            --primary-color: #00F5FF;
+            --secondary-color: #FF00FF;
+            --accent-color: #00FF00;
+            --bg-gradient-1: #0A0A0A;
+            --bg-gradient-2: #1A0A1A;
+            --card-bg: #1A1A2E;
+            --text-primary: #00F5FF;
+            --text-secondary: #FF00FF;
+            --border-color: #00FF00;
+            --shadow-sm: rgba(0, 245, 255, 0.2);
+            --shadow-md: rgba(0, 245, 255, 0.3);
+            --shadow-lg: rgba(0, 245, 255, 0.4);
         }
-        
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 50px 40px;
-            text-align: center;
-            position: relative;
+
+        [data-theme="christmas"] {
+            --primary-color: #DC2626;
+            --secondary-color: #16A34A;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF2F2;
+            --bg-gradient-2: #F0FDF4;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --shadow-sm: rgba(220, 38, 38, 0.1);
+            --shadow-md: rgba(220, 38, 38, 0.2);
+            --shadow-lg: rgba(220, 38, 38, 0.3);
         }
-        
-        .back-link {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            text-decoration: none;
-            opacity: 0.9;
-            font-size: 1em;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            transition: all 0.3s ease;
+
+        [data-theme="thanksgiving"] {
+            --primary-color: #D97706;
+            --secondary-color: #92400E;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF3C7;
+            --bg-gradient-2: #FDE68A;
+            --card-bg: #FFFFFF;
+            --text-primary: #78350F;
+            --text-secondary: #92400E;
+            --border-color: #FCD34D;
+            --shadow-sm: rgba(217, 119, 6, 0.1);
+            --shadow-md: rgba(217, 119, 6, 0.2);
+            --shadow-lg: rgba(217, 119, 6, 0.3);
         }
+        </style>
+        <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+        </script>
+    </head>
+    <body>
+        <div class="background"></div>
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">⚡ Home</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="theme-selector">
+                        <select class="theme-select" id="theme-selector" aria-label="Select theme" title="Choose a theme">
+                            <option value="light">☀️ Light</option>
+                            <option value="dark">🌙 Dark</option>
+                            <option value="neon">💜 Neon</option>
+                            <option value="christmas">🎄 Christmas</option>
+                            <option value="thanksgiving">🦃 Thanksgiving</option>
+                        </select>
+                    </div>
+                    <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </nav>
         
-        .back-link:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateX(-3px);
-        }
-        
-        header h1 {
-            font-size: 3.5em;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        header p {
-            font-size: 1.4em;
-            opacity: 0.95;
-        }
-        
-        .content {
-            padding: 50px 40px;
-        }
-        
-        .intro {
-            background: linear-gradient(135deg, #f0f4ff 0%, #e7f3ff 100%);
-            padding: 40px;
-            border-radius: 15px;
-            margin-bottom: 40px;
-            border: 3px solid #667eea;
-            text-align: center;
-        }
-        
-        .intro h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-        
-        .intro p {
-            font-size: 1.2em;
-            line-height: 1.8;
-            margin-bottom: 15px;
-        }
-        
-        .main-link {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 20px 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 15px;
-            font-size: 1.5em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .main-link:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-        }
-        
-        .quick-links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-        
-        .quick-link-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            border: 3px solid #e9ecef;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .quick-link-card:hover {
-            transform: translateY(-5px);
-            border-color: #667eea;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-        }
-        
-        .quick-link-card .icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        .quick-link-card h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-        }
-        
-        .quick-link-card p {
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        .lessons-preview {
-            margin-top: 50px;
-        }
-        
-        .lessons-preview h3 {
-            color: #667eea;
-            font-size: 2em;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .lessons-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-        }
-        
-        .lesson-preview-card {
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            padding: 25px;
-            border-radius: 15px;
-            border: 3px solid;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .lesson-preview-card.lesson1 {
-            border-color: #ff6b6b;
-            background: linear-gradient(135deg, #ffe0e0 0%, #fff5f5 100%);
-        }
-        
-        .lesson-preview-card.lesson2 {
-            border-color: #4ecdc4;
-            background: linear-gradient(135deg, #e0f7f5 0%, #f0fdfc 100%);
-        }
-        
-        .lesson-preview-card.lesson3 {
-            border-color: #95e1d3;
-            background: linear-gradient(135deg, #e8f8f5 0%, #f0fdfa 100%);
-        }
-        
-        .lesson-preview-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        
-        .lesson-preview-card .emoji {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .lesson-preview-card .number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .lesson-preview-card .title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        footer {
-            background: #f8f9fa;
-            padding: 30px;
-            text-align: center;
-            color: #666;
-            border-top: 2px solid #e9ecef;
-        }
-        
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2.5em;
-            }
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
+                        <a href="/#assignment-of-day" class="sidebar-link">🎮 Assignment of the Day</a>
+                        <a href="/#lessons" class="sidebar-link">📚 Lessons</a>
+                        <a href="/#templates" class="sidebar-link">🎨 Templates</a>
+                        <a href="/#tinkercad" class="sidebar-link">🎨 Tinkercad</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Lessons</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/movement.html" class="sidebar-link">🎮 Lesson 1: Movement</a>
+                        <a href="/collision.html" class="sidebar-link">💥 Lesson 2: Collision</a>
+                        <a href="/2-player-controller.html" class="sidebar-link">👥 Lesson 3: 2-Player</a>
+                        <a href="/lesson-4-projectiles-powerups.html" class="sidebar-link">🚀 Lesson 4: Projectiles</a>
+                        <a href="/major-student-challenge.html" class="sidebar-link">🏆 Final Challenge</a>
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">🎨 Unreal Engine</a>
+                    </nav>
+                </div>
+            </aside>
             
-            .content {
-                padding: 30px 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+<div class="container">
         <header>
             <a href="index.html" class="back-link">← Back to Mr. Gonzalez's STEM Class</a>
             <h1>🎮 Unreal Engine 5</h1>
@@ -294,13 +204,224 @@
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p><strong>Happy Building!</strong> 🎮✨</p>
-            <p>Remember: Practice makes perfect! Don't be afraid to experiment and try new things.</p>
-            <p style="margin-top: 15px;"><a href="index.html" style="color: #667eea; text-decoration: none;">← Back to Mr. Gonzalez's STEM Class</a></p>
-        </footer>
-    </div>
-</body>
-</html>
 
+    </div>
+                </div>
+            </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color);"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Quick Actions</h3>
+                    <nav class="sidebar-nav">
+                        <a href="https://scratch.mit.edu/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎮 Scratch Website</a>
+                        <a href="https://www.tinkercad.com/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎨 Tinkercad</a>
+                        <a href="https://code.org/" class="sidebar-link" target="_blank" rel="noopener noreferrer">💻 Code.org</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">📋 Class Rules</h3>
+                    <ol style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+                        <li>No Yelling</li>
+                        <li>Sit in your Seat</li>
+                        <li>Raise your hand for help</li>
+                        <li>Listen when Mr G instructs</li>
+                    </ol>
+                </div>
+            </aside>
+        </div>
+        
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+            <div class="navbar-container">
+                <div class="navbar-menu" id="navbar-menu">
+                    <div class="dropdown">
+                        <button class="navbar-link dropdown-toggle" id="scratch-lessons-dropdown" aria-haspopup="true" aria-expanded="false">
+                            📚 Scratch Lessons ▼
+                        </button>
+                        <div class="dropdown-menu" id="scratch-lessons-menu">
+                            <a href="/movement.html" class="dropdown-item">🎮 Lesson 1: Movement</a>
+                            <a href="/collision.html" class="dropdown-item">💥 Lesson 2: Collision</a>
+                            <a href="/2-player-controller.html" class="dropdown-item">👥 Lesson 3: 2-Player</a>
+                            <a href="/lesson-4-projectiles-powerups.html" class="dropdown-item">🚀 Lesson 4: Projectiles</a>
+                            <a href="/major-student-challenge.html" class="dropdown-item">🏆 Final Challenge</a>
+                        </div>
+                    </div>
+                    <a href="/unreal-engine-level-design.html" class="navbar-link">🎮 Unreal Engine 5</a>
+                </div>
+            </div>
+        </nav>
+
+        <footer class="footer" style="display: none;"></footer>
+        
+        <script>
+        (function () {
+            try {
+                var now = new Date();
+                var mm = String(now.getMonth() + 1).padStart(2, '0');
+                var dd = String(now.getDate()).padStart(2, '0');
+                var yyyy = String(now.getFullYear());
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var formatted = mm + '-' + dd + '-' + yyyy + ' - ' + weekday;
+                
+                // Update top date display
+                var topDateDisplay = document.getElementById('top-date-display');
+                if (topDateDisplay) {
+                    topDateDisplay.textContent = formatted;
+                }
+                
+                // Update sidebar date display
+                var sidebarDateDisplay = document.getElementById('sidebar-date-display');
+                if (sidebarDateDisplay) {
+                    sidebarDateDisplay.textContent = formatted;
+                }
+            } catch (e) {
+                console.error('Date display error:', e);
+            }
+        })();
+        </script>
+        <script>
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Dropdown toggle for Scratch Lessons
+        (function() {
+            var dropdownToggle = document.getElementById('scratch-lessons-dropdown');
+            var dropdownMenu = document.getElementById('scratch-lessons-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                    var isExpanded = dropdownMenu.classList.contains('show');
+                    dropdownToggle.setAttribute('aria-expanded', isExpanded);
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!dropdownMenu.contains(e.target) && !dropdownToggle.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                // Close dropdown when an item is clicked
+                dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Theme selector with dynamic style updates
+        (function() {
+            var themeSelector = document.getElementById('theme-selector');
+            var html = document.documentElement;
+            
+            // Theme color mappings
+            var themeColors = {
+                light: {
+                    primary: '#6B8E9F',
+                    secondary: '#8FA8B5',
+                    accent: '#A8C4D0',
+                    bg1: '#F5F7FA',
+                    bg2: '#E8ECF1',
+                    card: '#FFFFFF',
+                    text1: '#1E293B',
+                    text2: '#64748B',
+                    border: '#CBD5E1'
+                },
+                dark: {
+                    primary: '#4A90A4',
+                    secondary: '#6B9DB5',
+                    accent: '#7FB3C8',
+                    bg1: '#1E293B',
+                    bg2: '#0F172A',
+                    card: '#1E293B',
+                    text1: '#F1F5F9',
+                    text2: '#94A3B8',
+                    border: '#334155'
+                },
+                neon: {
+                    primary: '#00F5FF',
+                    secondary: '#FF00FF',
+                    accent: '#00FF00',
+                    bg1: '#0A0A0A',
+                    bg2: '#1A0A1A',
+                    card: '#1A1A2E',
+                    text1: '#00F5FF',
+                    text2: '#FF00FF',
+                    border: '#00FF00'
+                },
+                christmas: {
+                    primary: '#DC2626',
+                    secondary: '#16A34A',
+                    accent: '#F59E0B',
+                    bg1: '#FEF2F2',
+                    bg2: '#F0FDF4',
+                    card: '#FFFFFF',
+                    text1: '#1F2937',
+                    text2: '#6B7280',
+                    border: '#E5E7EB'
+                },
+                thanksgiving: {
+                    primary: '#D97706',
+                    secondary: '#92400E',
+                    accent: '#F59E0B',
+                    bg1: '#FEF3C7',
+                    bg2: '#FDE68A',
+                    card: '#FFFFFF',
+                    text1: '#78350F',
+                    text2: '#92400E',
+                    border: '#FCD34D'
+                }
+            };
+            
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                var colors = themeColors[theme];
+                if (colors) {
+                    html.style.setProperty('--primary-color', colors.primary);
+                    html.style.setProperty('--secondary-color', colors.secondary);
+                    html.style.setProperty('--accent-color', colors.accent);
+                    html.style.setProperty('--bg-gradient-1', colors.bg1);
+                    html.style.setProperty('--bg-gradient-2', colors.bg2);
+                    html.style.setProperty('--card-bg', colors.card);
+                    html.style.setProperty('--text-primary', colors.text1);
+                    html.style.setProperty('--text-secondary', colors.text2);
+                    html.style.setProperty('--border-color', colors.border);
+                }
+            }
+            
+            if (themeSelector) {
+                // Set initial value
+                var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+                themeSelector.value = currentTheme;
+                applyTheme(currentTheme);
+                
+                // Handle theme change
+                themeSelector.addEventListener('change', function() {
+                    applyTheme(this.value);
+                });
+            }
+        })();
+        </script>
+    </body>
+</html>

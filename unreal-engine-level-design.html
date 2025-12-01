@@ -1,120 +1,160 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Unreal Engine - Level Design | Mr. Gonzalez STEM</title>
-        <meta name="description"
-            content="Learn to design levels in Unreal Engine 5! Create a 4-season world you can walk through using third person perspective. Grades 1-5." />
+        <meta name="description" content="Learn to design levels in Unreal Engine 5! Create a 4-season world you can walk through using third person perspective. Grades 1-5." />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
-            rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
         <style>
-    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--muted:#9ca3af;--accent:#22d3ee;--good:#86efac;}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
-    header{padding:24px 16px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1224,transparent)}
-    .wrap{max-width:980px;margin:0 auto;padding:16px}
-    .title{font-weight:800;font-size:clamp(24px,4vw,40px);letter-spacing:.2px}
-    nav a, a{color:var(--accent);text-decoration:none}
-    .grid{display:grid;gap:16px;grid-template-columns:1fr}
-    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px}
-    .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(17,24,39,0.95);backdrop-filter:blur(20px);border-bottom:2px solid rgba(34,211,238,0.3);box-shadow:0 4px 20px rgba(0,0,0,0.5)}
-    .navbar-container{max-width:1400px;margin:0 auto;padding:0.75rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .navbar-brand{font-size:1.25rem;font-weight:700;color:var(--accent);text-decoration:none;transition:color 0.3s ease;flex-shrink:0}
-    .navbar-brand:hover{color:#86efac}
-    .navbar-menu{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
-    .navbar-link{color:var(--accent);text-decoration:none;padding:0.5rem 1rem;border-radius:10px;background:rgba(15,23,42,0.8);border:1px solid rgba(34,211,238,0.3);transition:all 0.2s ease;font-size:0.9rem;font-weight:500;white-space:nowrap}
-    .navbar-link:hover{background:rgba(34,211,238,0.2);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(34,211,238,0.4)}
-    .navbar-toggle{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:0.5rem}
-    .navbar-toggle span{width:25px;height:3px;background:var(--accent);border-radius:2px;transition:all 0.3s ease}
-    body{padding-top:70px}
-    @media (max-width:1024px){.navbar-container{padding:0.75rem 1rem}.navbar-toggle{display:flex}.navbar-menu{display:none;width:100%;flex-direction:column;gap:0.5rem;margin-top:1rem}.navbar-menu.active{display:flex}.navbar-link{width:100%;text-align:center}.navbar-toggle.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}.navbar-toggle.active span:nth-child(2){opacity:0}.navbar-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(7px,-6px)}}
-    .progress-bar{position:fixed;top:0;left:0;width:0%;height:4px;background:var(--accent);z-index:1000;transition:width 0.1s ease-out;box-shadow:0 2px 8px rgba(34,211,238,0.5)}
-    h2{margin:0 0 8px 0;font-size:20px}
-    h3{margin:16px 0 8px 0;font-size:16px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-    code, pre{background:#0b1020;color:#d1d5db;border:1px solid #1f2937;border-radius:10px}
-    pre{padding:12px;overflow:auto}
-    .checklist li{margin:6px 0}
-    .badge{display:inline-block;background:#0b1020;border:1px solid #1f2937;padding:2px 8px;border-radius:999px;color:var(--muted);font-size:12px}
-    .cta{display:inline-block;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--accent);color:#04242a;font-weight:700}
-    .footer{margin-top:24px;color:var(--muted);font-size:14px}
-    .print{float:right}
-    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1020;border:1px solid #1f2937;border-bottom-width:3px;padding:2px 6px;border-radius:8px}
-    svg{max-width:100%;height:auto;display:block}
-    img{max-width:100%;height:auto;display:block}
-    .start-here-widget{background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#04242a;padding:2rem;border-radius:16px;text-align:center;margin:2rem 0;box-shadow:0 10px 30px rgba(34,211,238,0.4)}
-    .start-here-widget h2{color:#04242a;font-size:clamp(1.5rem,4vw,2.5rem);margin-bottom:1rem}
-    .start-here-widget p{color:#04242a;font-size:1.1rem;font-weight:600}
-    .step-box{background:rgba(34,211,238,0.1);border:2px solid rgba(34,211,238,0.3);border-radius:12px;padding:1.5rem;margin:1rem 0}
-    .step-box h3{color:var(--accent);margin-top:0}
-    .step-number{display:inline-block;background:var(--accent);color:#04242a;width:32px;height:32px;border-radius:50%;text-align:center;line-height:32px;font-weight:700;margin-right:12px}
-    ol li, ul li{margin:8px 0;line-height:1.6}
-    .highlight-box{background:rgba(134,239,172,0.1);border:2px solid rgba(134,239,172,0.3);border-radius:12px;padding:1.5rem;margin:1rem 0}
-    .highlight-box h3{color:var(--good)}
-    .footer{background:rgba(17,24,39,0.95);backdrop-filter:blur(20px);border-top:3px solid rgba(34,211,238,0.3);padding:3rem 2rem 2rem;margin-top:4rem;color:#9ca3af}
-    .footer-container{max-width:1200px;margin:0 auto}
-    .footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2.5rem;margin-bottom:2rem}
-    .footer-section h3{color:#818cf8;font-size:1.25rem;font-weight:700;margin-bottom:1rem}
-    .footer-section p{line-height:1.7;margin-bottom:1rem;color:#9ca3af}
-    .footer-links{list-style:none;padding:0;margin:0}
-    .footer-links li{margin-bottom:0.75rem}
-    .footer-links a{color:#a5b4fc;text-decoration:none;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:0.5rem}
-    .footer-links a:hover{color:#c7d2fe;transform:translateX(5px)}
-    .footer-links a::before{content:"→";font-weight:bold}
-    .home-resources{background:rgba(31,41,55,0.8);border:2px solid rgba(34,211,238,0.3);border-radius:12px;padding:1.5rem;margin-top:1rem}
-    .home-resources h4{color:#818cf8;font-size:1.1rem;margin-bottom:0.75rem}
-    .home-resources ul{list-style:none;padding-left:0}
-    .home-resources li{margin-bottom:0.5rem;padding-left:1.5rem;position:relative}
-    .home-resources li::before{content:"✓";position:absolute;left:0;color:#10b981;font-weight:bold}
-    .home-resources a{color:#a5b4fc;text-decoration:none;font-weight:500}
-    .home-resources a:hover{color:#c7d2fe;text-decoration:underline}
-    .footer-bottom{text-align:center;padding-top:2rem;border-top:1px solid rgba(75,85,99,0.3);color:#9ca3af;font-size:0.9rem}
-    .footer-bottom p{margin:0.5rem 0}
-    @media (max-width:768px){.footer-grid{grid-template-columns:1fr;gap:2rem}.footer{padding:2rem 1rem 1.5rem}}
-  </style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            /* Light Theme (Soft Matte) */
+            --primary-color: #6B8E9F;
+            --secondary-color: #8FA8B5;
+            --accent-color: #A8C4D0;
+            --bg-gradient-1: #F5F7FA;
+            --bg-gradient-2: #E8ECF1;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #CBD5E1;
+            --shadow-sm: rgba(0, 0, 0, 0.05);
+            --shadow-md: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4A90A4;
+            --secondary-color: #6B9DB5;
+            --accent-color: #7FB3C8;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="neon"] {
+            --primary-color: #00F5FF;
+            --secondary-color: #FF00FF;
+            --accent-color: #00FF00;
+            --bg-gradient-1: #0A0A0A;
+            --bg-gradient-2: #1A0A1A;
+            --card-bg: #1A1A2E;
+            --text-primary: #00F5FF;
+            --text-secondary: #FF00FF;
+            --border-color: #00FF00;
+            --shadow-sm: rgba(0, 245, 255, 0.2);
+            --shadow-md: rgba(0, 245, 255, 0.3);
+            --shadow-lg: rgba(0, 245, 255, 0.4);
+        }
+
+        [data-theme="christmas"] {
+            --primary-color: #DC2626;
+            --secondary-color: #16A34A;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF2F2;
+            --bg-gradient-2: #F0FDF4;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --shadow-sm: rgba(220, 38, 38, 0.1);
+            --shadow-md: rgba(220, 38, 38, 0.2);
+            --shadow-lg: rgba(220, 38, 38, 0.3);
+        }
+
+        [data-theme="thanksgiving"] {
+            --primary-color: #D97706;
+            --secondary-color: #92400E;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF3C7;
+            --bg-gradient-2: #FDE68A;
+            --card-bg: #FFFFFF;
+            --text-primary: #78350F;
+            --text-secondary: #92400E;
+            --border-color: #FCD34D;
+            --shadow-sm: rgba(217, 119, 6, 0.1);
+            --shadow-md: rgba(217, 119, 6, 0.2);
+            --shadow-lg: rgba(217, 119, 6, 0.3);
+        }
+        </style>
         <script>
-    function printPage(){window.print()}
-    function updateProgressBar(){
-      const scrollTop=window.pageYOffset||document.documentElement.scrollTop
-      const scrollHeight=document.documentElement.scrollHeight-document.documentElement.clientHeight
-      const scrolled=scrollHeight>0?(scrollTop/scrollHeight)*100:0
-      document.getElementById('progress-bar').style.width=scrolled+'%'
-    }
-    window.addEventListener('scroll',updateProgressBar)
-    window.addEventListener('resize',updateProgressBar)
-    updateProgressBar()
-  </script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+        </script>
     </head>
     <body>
-        <div id="progress-bar" class="progress-bar"></div>
-        <nav class="navbar">
+        <div class="background"></div>
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
             <div class="navbar-container">
-                <a href="/" class="navbar-brand">🏠 Home</a>
-                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <div class="navbar-menu" id="navbar-menu">
-                    <a href="/movement.html" class="navbar-link">Lesson 1: Movement</a>
-                    <a href="/collision.html" class="navbar-link">Lesson 2: Collision</a>
-                    <a href="/2-player-controller.html" class="navbar-link">Lesson 3: 2-Player</a>
-                    <a href="/lesson-4-projectiles-powerups.html" class="navbar-link">Lesson 4: Projectiles</a>
-                    <a href="/major-student-challenge.html" class="navbar-link">Final Challenge</a>
-                    <a href="/unreal-engine-level-design.html" class="navbar-link">Unreal Engine</a>
+                <a href="/" class="navbar-brand">⚡ Home</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="theme-selector">
+                        <select class="theme-select" id="theme-selector" aria-label="Select theme" title="Choose a theme">
+                            <option value="light">☀️ Light</option>
+                            <option value="dark">🌙 Dark</option>
+                            <option value="neon">💜 Neon</option>
+                            <option value="christmas">🎄 Christmas</option>
+                            <option value="thanksgiving">🦃 Thanksgiving</option>
+                        </select>
+                    </div>
+                    <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                 </div>
             </div>
         </nav>
-        <header>
-            <div class="wrap">
+        
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
+                        <a href="/#assignment-of-day" class="sidebar-link">🎮 Assignment of the Day</a>
+                        <a href="/#lessons" class="sidebar-link">📚 Lessons</a>
+                        <a href="/#templates" class="sidebar-link">🎨 Templates</a>
+                        <a href="/#tinkercad" class="sidebar-link">🎨 Tinkercad</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Lessons</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/movement.html" class="sidebar-link">🎮 Lesson 1: Movement</a>
+                        <a href="/collision.html" class="sidebar-link">💥 Lesson 2: Collision</a>
+                        <a href="/2-player-controller.html" class="sidebar-link">👥 Lesson 3: 2-Player</a>
+                        <a href="/lesson-4-projectiles-powerups.html" class="sidebar-link">🚀 Lesson 4: Projectiles</a>
+                        <a href="/major-student-challenge.html" class="sidebar-link">🏆 Final Challenge</a>
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">🎨 Unreal Engine</a>
+                    </nav>
+                </div>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                <header><div class="wrap">
                 <h1 class="title">Unreal Engine 5 - Level Design</h1>
                 <p style="color:var(--muted);margin-top:8px">Create your own 4-season world you can walk through!</p>
-            </div>
-        </header>
-        <main class="wrap">
-            <div class="start-here-widget">
+            </div></header>
+
+<div class="start-here-widget">
                 <h2>🎮 Start Here for Unreal Engine!</h2>
                 <p>Follow these steps to download Unreal Engine and start building your world!</p>
             </div>
@@ -326,40 +366,82 @@
                     <li>How to test and play your creations</li>
                 </ul>
             </div>
-        </main>
-
-        <footer class="footer">
-            <div class="footer-container">
-                <div class="footer-grid">
-                    <div class="footer-section">
-                        <h3>About This Lesson</h3>
-                        <p>Learn to design levels in Unreal Engine 5! Create your own 4-season world you can walk through using third person perspective.</p>
-                    </div>
-                    <div class="footer-section">
-                        <h3>More Lessons</h3>
-                        <ul class="footer-links">
-                            <li><a href="/movement.html">Lesson 1: Movement & Makey Makey</a></li>
-                            <li><a href="/collision.html">Lesson 2: Collision & Platformer</a></li>
-                            <li><a href="/2-player-controller.html">Lesson 3: 2-Player Controller</a></li>
-                            <li><a href="/lesson-4-projectiles-powerups.html">Lesson 4: Projectiles & Power-Ups</a></li>
-                            <li><a href="/major-student-challenge.html">Final Challenge: Create Your Game</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-section">
-                        <h3>Resources</h3>
-                        <ul class="footer-links">
-                            <li><a href="https://www.unrealengine.com/" target="_blank" rel="noopener noreferrer">Unreal Engine Website</a></li>
-                            <li><a href="https://www.unrealengine.com/marketplace" target="_blank" rel="noopener noreferrer">Free Assets Marketplace</a></li>
-                            <li><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine" target="_blank" rel="noopener noreferrer">Unreal Engine Documentation</a></li>
-                        </ul>
-                    </div>
                 </div>
-                <div class="footer-bottom">
-                    <p>&copy; 2025 Mr. Gonzalez's STEM Resources | Barnum Public Schools | Bridgeport, CT</p>
+            </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color);"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Quick Actions</h3>
+                    <nav class="sidebar-nav">
+                        <a href="https://scratch.mit.edu/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎮 Scratch Website</a>
+                        <a href="https://www.tinkercad.com/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎨 Tinkercad</a>
+                        <a href="https://code.org/" class="sidebar-link" target="_blank" rel="noopener noreferrer">💻 Code.org</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">📋 Class Rules</h3>
+                    <ol style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+                        <li>No Yelling</li>
+                        <li>Sit in your Seat</li>
+                        <li>Raise your hand for help</li>
+                        <li>Listen when Mr G instructs</li>
+                    </ol>
+                </div>
+            </aside>
+        </div>
+        
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+            <div class="navbar-container">
+                <div class="navbar-menu" id="navbar-menu">
+                    <div class="dropdown">
+                        <button class="navbar-link dropdown-toggle" id="scratch-lessons-dropdown" aria-haspopup="true" aria-expanded="false">
+                            📚 Scratch Lessons ▼
+                        </button>
+                        <div class="dropdown-menu" id="scratch-lessons-menu">
+                            <a href="/movement.html" class="dropdown-item">🎮 Lesson 1: Movement</a>
+                            <a href="/collision.html" class="dropdown-item">💥 Lesson 2: Collision</a>
+                            <a href="/2-player-controller.html" class="dropdown-item">👥 Lesson 3: 2-Player</a>
+                            <a href="/lesson-4-projectiles-powerups.html" class="dropdown-item">🚀 Lesson 4: Projectiles</a>
+                            <a href="/major-student-challenge.html" class="dropdown-item">🏆 Final Challenge</a>
+                        </div>
+                    </div>
+                    <a href="/unreal-engine-level-design.html" class="navbar-link">🎮 Unreal Engine 5</a>
                 </div>
             </div>
-        </footer>
+        </nav>
 
+        <footer class="footer" style="display: none;"></footer>
+        
+        <script>
+        (function () {
+            try {
+                var now = new Date();
+                var mm = String(now.getMonth() + 1).padStart(2, '0');
+                var dd = String(now.getDate()).padStart(2, '0');
+                var yyyy = String(now.getFullYear());
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var formatted = mm + '-' + dd + '-' + yyyy + ' - ' + weekday;
+                
+                // Update top date display
+                var topDateDisplay = document.getElementById('top-date-display');
+                if (topDateDisplay) {
+                    topDateDisplay.textContent = formatted;
+                }
+                
+                // Update sidebar date display
+                var sidebarDateDisplay = document.getElementById('sidebar-date-display');
+                if (sidebarDateDisplay) {
+                    sidebarDateDisplay.textContent = formatted;
+                }
+            } catch (e) {
+                console.error('Date display error:', e);
+            }
+        })();
+        </script>
         <script>
         // Mobile navbar toggle
         (function() {
@@ -374,6 +456,132 @@
             }
         })();
         </script>
+        <script>
+        // Dropdown toggle for Scratch Lessons
+        (function() {
+            var dropdownToggle = document.getElementById('scratch-lessons-dropdown');
+            var dropdownMenu = document.getElementById('scratch-lessons-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                    var isExpanded = dropdownMenu.classList.contains('show');
+                    dropdownToggle.setAttribute('aria-expanded', isExpanded);
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!dropdownMenu.contains(e.target) && !dropdownToggle.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                // Close dropdown when an item is clicked
+                dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Theme selector with dynamic style updates
+        (function() {
+            var themeSelector = document.getElementById('theme-selector');
+            var html = document.documentElement;
+            
+            // Theme color mappings
+            var themeColors = {
+                light: {
+                    primary: '#6B8E9F',
+                    secondary: '#8FA8B5',
+                    accent: '#A8C4D0',
+                    bg1: '#F5F7FA',
+                    bg2: '#E8ECF1',
+                    card: '#FFFFFF',
+                    text1: '#1E293B',
+                    text2: '#64748B',
+                    border: '#CBD5E1'
+                },
+                dark: {
+                    primary: '#4A90A4',
+                    secondary: '#6B9DB5',
+                    accent: '#7FB3C8',
+                    bg1: '#1E293B',
+                    bg2: '#0F172A',
+                    card: '#1E293B',
+                    text1: '#F1F5F9',
+                    text2: '#94A3B8',
+                    border: '#334155'
+                },
+                neon: {
+                    primary: '#00F5FF',
+                    secondary: '#FF00FF',
+                    accent: '#00FF00',
+                    bg1: '#0A0A0A',
+                    bg2: '#1A0A1A',
+                    card: '#1A1A2E',
+                    text1: '#00F5FF',
+                    text2: '#FF00FF',
+                    border: '#00FF00'
+                },
+                christmas: {
+                    primary: '#DC2626',
+                    secondary: '#16A34A',
+                    accent: '#F59E0B',
+                    bg1: '#FEF2F2',
+                    bg2: '#F0FDF4',
+                    card: '#FFFFFF',
+                    text1: '#1F2937',
+                    text2: '#6B7280',
+                    border: '#E5E7EB'
+                },
+                thanksgiving: {
+                    primary: '#D97706',
+                    secondary: '#92400E',
+                    accent: '#F59E0B',
+                    bg1: '#FEF3C7',
+                    bg2: '#FDE68A',
+                    card: '#FFFFFF',
+                    text1: '#78350F',
+                    text2: '#92400E',
+                    border: '#FCD34D'
+                }
+            };
+            
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                var colors = themeColors[theme];
+                if (colors) {
+                    html.style.setProperty('--primary-color', colors.primary);
+                    html.style.setProperty('--secondary-color', colors.secondary);
+                    html.style.setProperty('--accent-color', colors.accent);
+                    html.style.setProperty('--bg-gradient-1', colors.bg1);
+                    html.style.setProperty('--bg-gradient-2', colors.bg2);
+                    html.style.setProperty('--card-bg', colors.card);
+                    html.style.setProperty('--text-primary', colors.text1);
+                    html.style.setProperty('--text-secondary', colors.text2);
+                    html.style.setProperty('--border-color', colors.border);
+                }
+            }
+            
+            if (themeSelector) {
+                // Set initial value
+                var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+                themeSelector.value = currentTheme;
+                applyTheme(currentTheme);
+                
+                // Handle theme change
+                themeSelector.addEventListener('change', function() {
+                    applyTheme(this.value);
+                });
+            }
+        })();
+        </script>
     </body>
 </html>
-
