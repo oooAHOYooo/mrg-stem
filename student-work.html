@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Student Work | Mr. Gonzalez STEM</title>
+        <meta name="description" content="Gallery of student projects - Scratch games and Tinkercad designs" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            --primary-color: #6B8E9F;
+            --secondary-color: #8FA8B5;
+            --accent-color: #A8C4D0;
+            --bg-gradient-1: #F5F7FA;
+            --bg-gradient-2: #E8ECF1;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #CBD5E1;
+            --shadow-sm: rgba(0, 0, 0, 0.05);
+            --shadow-md: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4A90A4;
+            --secondary-color: #6B9DB5;
+            --accent-color: #7FB3C8;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="neon"] {
+            --primary-color: #00F5FF;
+            --secondary-color: #FF00FF;
+            --accent-color: #00FF00;
+            --bg-gradient-1: #0A0A0A;
+            --bg-gradient-2: #1A0A1A;
+            --card-bg: #1A1A2E;
+            --text-primary: #00F5FF;
+            --text-secondary: #FF00FF;
+            --border-color: #00FF00;
+            --shadow-sm: rgba(0, 245, 255, 0.2);
+            --shadow-md: rgba(0, 245, 255, 0.3);
+            --shadow-lg: rgba(0, 245, 255, 0.4);
+        }
+
+        [data-theme="christmas"] {
+            --primary-color: #DC2626;
+            --secondary-color: #16A34A;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF2F2;
+            --bg-gradient-2: #F0FDF4;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --shadow-sm: rgba(220, 38, 38, 0.1);
+            --shadow-md: rgba(220, 38, 38, 0.2);
+            --shadow-lg: rgba(220, 38, 38, 0.3);
+        }
+
+        [data-theme="thanksgiving"] {
+            --primary-color: #D97706;
+            --secondary-color: #92400E;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF3C7;
+            --bg-gradient-2: #FDE68A;
+            --card-bg: #FFFFFF;
+            --text-primary: #78350F;
+            --text-secondary: #92400E;
+            --border-color: #FCD34D;
+            --shadow-sm: rgba(217, 119, 6, 0.1);
+            --shadow-md: rgba(217, 119, 6, 0.2);
+            --shadow-lg: rgba(217, 119, 6, 0.3);
+        }
+
+        /* Arcade Gallery Styles */
+        .arcade-gallery {
+            background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
+            padding: 2rem;
+            border-radius: 20px;
+            margin: 2rem 0;
+            border: 3px solid var(--border-color);
+            box-shadow: 0 10px 40px var(--shadow-lg);
+        }
+
+        .arcade-title {
+            text-align: center;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px var(--shadow-md), 0 4px 8px var(--shadow-lg);
+            position: relative;
+        }
+
+        .arcade-title::before,
+        .arcade-title::after {
+            content: '🎮';
+            font-size: 2rem;
+            margin: 0 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .arcade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .arcade-cabinet {
+            background: var(--card-bg);
+            border: 4px solid var(--primary-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px var(--shadow-md), inset 0 0 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arcade-cabinet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--primary-color));
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .arcade-cabinet:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 50px var(--shadow-lg), 0 0 30px var(--primary-color);
+            border-color: var(--accent-color);
+        }
+
+        .arcade-screen {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border: 3px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .arcade-screen iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .arcade-screen::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .arcade-info {
+            text-align: center;
+        }
+
+        .arcade-game-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .arcade-student {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Fancy Gallery Styles */
+        .fancy-gallery {
+            background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
+            padding: 3rem;
+            border-radius: 25px;
+            margin: 2rem 0;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 15px 50px var(--shadow-lg);
+        }
+
+        .gallery-title {
+            text-align: center;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .gallery-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px var(--shadow-md);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 2px solid var(--border-color);
+        }
+
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-15px) scale(1.03);
+            box-shadow: 0 20px 60px var(--shadow-lg), 0 0 40px var(--primary-color);
+            border-color: var(--accent-color);
+        }
+
+        .gallery-item:hover::before {
+            opacity: 0.1;
+        }
+
+        .gallery-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gallery-content {
+            padding: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gallery-item-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            text-transform: capitalize;
+        }
+
+        .gallery-item-student {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .gallery-item-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .gallery-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-link:hover {
+            background: var(--accent-color);
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px var(--shadow-md);
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin: 3rem 0 2rem;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 10px var(--shadow-md);
+        }
+
+        .section-header p {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .arcade-grid,
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .arcade-gallery,
+            .fancy-gallery {
+                padding: 1.5rem;
+            }
+        }
+        </style>
+        <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+        </script>
+    </head>
+    <body>
+        <div class="background"></div>
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">⚡ Home</a>
+                <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="theme-selector">
+                        <select class="theme-select" id="theme-selector" aria-label="Select theme" title="Choose a theme">
+                            <option value="light">☀️ Light</option>
+                            <option value="dark">🌙 Dark</option>
+                            <option value="neon">💡 Neon</option>
+                            <option value="christmas">🎄 Christmas</option>
+                            <option value="thanksgiving">🦃 Thanksgiving</option>
+                        </select>
+                    </div>
+                    <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
+                        <a href="/#assignment-of-day" class="sidebar-link">🎮 Assignment of the Day</a>
+                        <a href="/#lessons" class="sidebar-link">📚 Lessons</a>
+                        <a href="/#templates" class="sidebar-link">🎨 Templates</a>
+                        <a href="/#tinkercad" class="sidebar-link">🎨 Tinkercad</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Lessons</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/movement.html" class="sidebar-link">🎮 Lesson 1: Movement</a>
+                        <a href="/collision.html" class="sidebar-link">💥 Lesson 2: Collision</a>
+                        <a href="/2-player-controller.html" class="sidebar-link">👥 Lesson 3: 2-Player</a>
+                        <a href="/lesson-4-projectiles-powerups.html" class="sidebar-link">🚀 Lesson 4: Projectiles</a>
+                        <a href="/major-student-challenge.html" class="sidebar-link">🏆 Final Challenge</a>
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">🎨 Unreal Engine</a>
+                    </nav>
+                </div>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                    <div class="section-header">
+                        <h2>🌟 Student Work Gallery</h2>
+                        <p>Explore amazing projects created by our talented students!</p>
+                    </div>
+
+                    <!-- Scratch Arcade Gallery -->
+                    <div class="arcade-gallery">
+                        <h2 class="arcade-title">Scratch Games Arcade</h2>
+                        <div class="arcade-grid">
+                            <!-- Example Scratch Projects - Replace with actual student projects -->
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Platform Adventure</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Space Shooter</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Racing Game</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Puzzle Master</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Maze Runner</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+
+                            <div class="arcade-cabinet">
+                                <div class="arcade-screen">
+                                    <iframe src="https://scratch.mit.edu/projects/814000000/embed" allowtransparency="true" width="100%" height="100%" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                                </div>
+                                <div class="arcade-info">
+                                    <div class="arcade-game-title">Dance Party</div>
+                                    <div class="arcade-student">By: Student Name</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tinkercad Fancy Gallery -->
+                    <div class="fancy-gallery">
+                        <h2 class="gallery-title">🎨 Tinkercad Designs</h2>
+                        <div class="gallery-grid">
+                            <!-- Example Tinkercad Projects - Replace with actual student projects -->
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/6B8E9F/FFFFFF?text=3D+Design" alt="3D Design" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">Custom Keychain</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">A personalized keychain design featuring unique patterns and custom text engraving.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/8FA8B5/FFFFFF?text=Circuit+Design" alt="Circuit Design" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">LED Circuit</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">An interactive circuit design with multiple LEDs and sensors for automation.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/A8C4D0/FFFFFF?text=Architecture" alt="Architecture" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">Dream House</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">A detailed architectural model of a modern house with multiple rooms and features.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/6B8E9F/FFFFFF?text=Robot+Design" alt="Robot Design" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">Robot Friend</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">A friendly robot design with movable parts and expressive features.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/8FA8B5/FFFFFF?text=Jewelry" alt="Jewelry Design" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">Custom Ring</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">An elegant ring design with intricate patterns and gemstone settings.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+
+                            <div class="gallery-item">
+                                <img src="https://via.placeholder.com/600x400/A8C4D0/FFFFFF?text=Vehicle" alt="Vehicle Design" class="gallery-image">
+                                <div class="gallery-content">
+                                    <h3 class="gallery-item-title">Race Car</h3>
+                                    <p class="gallery-item-student">By: Student Name</p>
+                                    <p class="gallery-item-description">A sleek race car design with aerodynamic features and custom details.</p>
+                                    <a href="https://www.tinkercad.com/" target="_blank" class="gallery-link">View Design →</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 1.5rem; padding: 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color);"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Quick Actions</h3>
+                    <nav class="sidebar-nav">
+                        <a href="https://scratch.mit.edu/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎮 Scratch Website</a>
+                        <a href="https://www.tinkercad.com/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎨 Tinkercad</a>
+                        <a href="https://code.org/" class="sidebar-link" target="_blank" rel="noopener noreferrer">💻 Code.org</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">📋 Class Rules</h3>
+                    <ol style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+                        <li>No Yelling</li>
+                        <li>Sit in your Seat</li>
+                        <li>Raise your hand for help</li>
+                        <li>Listen when Mr G instructs</li>
+                    </ol>
+                </div>
+            </aside>
+        </div>
+        
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+            <div class="navbar-container">
+                <div class="navbar-menu" id="navbar-menu">
+                    <div class="dropdown">
+                        <button class="navbar-link dropdown-toggle" id="scratch-lessons-dropdown" aria-haspopup="true" aria-expanded="false">
+                            📚 Scratch Lessons ▼
+                        </button>
+                        <div class="dropdown-menu" id="scratch-lessons-menu">
+                            <a href="/movement.html" class="dropdown-item">🎮 Lesson 1: Movement</a>
+                            <a href="/collision.html" class="dropdown-item">💥 Lesson 2: Collision</a>
+                            <a href="/2-player-controller.html" class="dropdown-item">👥 Lesson 3: 2-Player</a>
+                            <a href="/lesson-4-projectiles-powerups.html" class="dropdown-item">🚀 Lesson 4: Projectiles</a>
+                            <a href="/major-student-challenge.html" class="dropdown-item">🏆 Final Challenge</a>
+                        </div>
+                    </div>
+                    <a href="/unreal-engine-level-design.html" class="navbar-link">🎮 Unreal Engine 5</a>
+                </div>
+            </div>
+        </nav>
+
+        <footer class="footer" style="display: none;"></footer>
+        
+        <script>
+        (function () {
+            try {
+                var now = new Date();
+                var mm = String(now.getMonth() + 1).padStart(2, '0');
+                var dd = String(now.getDate()).padStart(2, '0');
+                var yyyy = String(now.getFullYear());
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var formatted = mm + '-' + dd + '-' + yyyy + ' - ' + weekday;
+                
+                var sidebarDateDisplay = document.getElementById('sidebar-date-display');
+                if (sidebarDateDisplay) {
+                    sidebarDateDisplay.textContent = formatted;
+                }
+            } catch (e) {
+                console.error('Date display error:', e);
+            }
+        })();
+        </script>
+        <script>
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Dropdown toggle for Scratch Lessons
+        (function() {
+            var dropdownToggle = document.getElementById('scratch-lessons-dropdown');
+            var dropdownMenu = document.getElementById('scratch-lessons-menu');
+            
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                    var isExpanded = dropdownMenu.classList.contains('show');
+                    dropdownToggle.setAttribute('aria-expanded', isExpanded);
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!dropdownMenu.contains(e.target) && !dropdownToggle.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                dropdownMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('show');
+                        dropdownToggle.setAttribute('aria-expanded', 'false');
+                    });
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Theme selector with dynamic style updates
+        (function() {
+            var themeSelector = document.getElementById('theme-selector');
+            var html = document.documentElement;
+            
+            var themeColors = {
+                light: {
+                    primary: '#6B8E9F',
+                    secondary: '#8FA8B5',
+                    accent: '#A8C4D0',
+                    bg1: '#F5F7FA',
+                    bg2: '#E8ECF1',
+                    card: '#FFFFFF',
+                    text1: '#1E293B',
+                    text2: '#64748B',
+                    border: '#CBD5E1'
+                },
+                dark: {
+                    primary: '#4A90A4',
+                    secondary: '#6B9DB5',
+                    accent: '#7FB3C8',
+                    bg1: '#1E293B',
+                    bg2: '#0F172A',
+                    card: '#1E293B',
+                    text1: '#F1F5F9',
+                    text2: '#94A3B8',
+                    border: '#334155'
+                },
+                neon: {
+                    primary: '#00F5FF',
+                    secondary: '#FF00FF',
+                    accent: '#00FF00',
+                    bg1: '#0A0A0A',
+                    bg2: '#1A0A1A',
+                    card: '#1A1A2E',
+                    text1: '#00F5FF',
+                    text2: '#FF00FF',
+                    border: '#00FF00'
+                },
+                christmas: {
+                    primary: '#DC2626',
+                    secondary: '#16A34A',
+                    accent: '#F59E0B',
+                    bg1: '#FEF2F2',
+                    bg2: '#F0FDF4',
+                    card: '#FFFFFF',
+                    text1: '#1F2937',
+                    text2: '#6B7280',
+                    border: '#E5E7EB'
+                },
+                thanksgiving: {
+                    primary: '#D97706',
+                    secondary: '#92400E',
+                    accent: '#F59E0B',
+                    bg1: '#FEF3C7',
+                    bg2: '#FDE68A',
+                    card: '#FFFFFF',
+                    text1: '#78350F',
+                    text2: '#92400E',
+                    border: '#FCD34D'
+                }
+            };
+            
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                var colors = themeColors[theme];
+                if (colors) {
+                    html.style.setProperty('--primary-color', colors.primary);
+                    html.style.setProperty('--secondary-color', colors.secondary);
+                    html.style.setProperty('--accent-color', colors.accent);
+                    html.style.setProperty('--bg-gradient-1', colors.bg1);
+                    html.style.setProperty('--bg-gradient-2', colors.bg2);
+                    html.style.setProperty('--card-bg', colors.card);
+                    html.style.setProperty('--text-primary', colors.text1);
+                    html.style.setProperty('--text-secondary', colors.text2);
+                    html.style.setProperty('--border-color', colors.border);
+                }
+            }
+            
+            if (themeSelector) {
+                var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+                themeSelector.value = currentTheme;
+                applyTheme(currentTheme);
+                
+                themeSelector.addEventListener('change', function() {
+                    applyTheme(this.value);
+                });
+            }
+        })();
+        </script>
+    </body>
+</html>
+
