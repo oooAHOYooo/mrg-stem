@@ -406,10 +406,14 @@
             </div>
         </nav>
         
+        <!-- Sidebar Collapse Buttons -->
+        <button class="sidebar-collapse-btn left" id="collapse-left-btn" title="Toggle left sidebar">◀</button>
+        <button class="sidebar-collapse-btn right" id="collapse-right-btn" title="Toggle right sidebar">▶</button>
+        
         <!-- Dashboard Layout -->
-        <div class="dashboard-container">
+        <div class="dashboard-container" id="dashboard-container">
             <!-- Left Sidebar -->
-            <aside class="sidebar sidebar-left">
+            <aside class="sidebar sidebar-left" id="sidebar-left">
                 <div class="sidebar-content">
                     <h3 class="sidebar-title">📚 Quick Links</h3>
                     <nav class="sidebar-nav">
@@ -490,7 +494,7 @@
                             inset 0 2px 3px rgba(255,255,255,0.1),
                             inset 0 -2px 3px rgba(0,0,0,0.3);
                         position: relative;
-                        max-width: 580px;
+                        max-width: 750px;
                         width: 100%;
                     }
                     
@@ -563,7 +567,7 @@
                         background: #000;
                         border-radius: 15px 15px 25px 25px;
                         overflow: hidden;
-                        aspect-ratio: 4/3;
+                        aspect-ratio: 16/10;
                         box-shadow: 
                             0 0 20px rgba(100, 200, 100, 0.15),
                             inset 0 0 60px rgba(0,0,0,0.5);
@@ -973,7 +977,7 @@
             </main>
             
             <!-- Right Sidebar -->
-            <aside class="sidebar sidebar-right">
+            <aside class="sidebar sidebar-right" id="sidebar-right">
                 <div class="sidebar-content">
                     <h3 class="sidebar-title">📅 Today</h3>
                     <div id="sidebar-date-display" style="font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 0.5rem; padding: 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color);"></div>
@@ -1130,6 +1134,78 @@
                         dropdownMenu.classList.remove('show');
                         dropdownToggle.setAttribute('aria-expanded', 'false');
                     });
+                });
+            }
+        })();
+        </script>
+        <script>
+        // Sidebar collapse functionality
+        (function() {
+            var leftBtn = document.getElementById('collapse-left-btn');
+            var rightBtn = document.getElementById('collapse-right-btn');
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var dashboard = document.getElementById('dashboard-container');
+            
+            // Load saved state from localStorage
+            var leftCollapsed = localStorage.getItem('leftSidebarCollapsed') === 'true';
+            var rightCollapsed = localStorage.getItem('rightSidebarCollapsed') === 'true';
+            
+            function updateDashboardClass() {
+                dashboard.classList.remove('left-collapsed', 'right-collapsed', 'both-collapsed');
+                if (leftCollapsed && rightCollapsed) {
+                    dashboard.classList.add('both-collapsed');
+                } else if (leftCollapsed) {
+                    dashboard.classList.add('left-collapsed');
+                } else if (rightCollapsed) {
+                    dashboard.classList.add('right-collapsed');
+                }
+            }
+            
+            function applyLeftState() {
+                if (leftCollapsed) {
+                    leftSidebar.classList.add('collapsed');
+                    leftBtn.innerHTML = '▶';
+                    leftBtn.classList.add('collapsed');
+                } else {
+                    leftSidebar.classList.remove('collapsed');
+                    leftBtn.innerHTML = '◀';
+                    leftBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            function applyRightState() {
+                if (rightCollapsed) {
+                    rightSidebar.classList.add('collapsed');
+                    rightBtn.innerHTML = '◀';
+                    rightBtn.classList.add('collapsed');
+                } else {
+                    rightSidebar.classList.remove('collapsed');
+                    rightBtn.innerHTML = '▶';
+                    rightBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            // Apply initial states
+            applyLeftState();
+            applyRightState();
+            
+            // Toggle handlers
+            if (leftBtn) {
+                leftBtn.addEventListener('click', function() {
+                    leftCollapsed = !leftCollapsed;
+                    localStorage.setItem('leftSidebarCollapsed', leftCollapsed);
+                    applyLeftState();
+                });
+            }
+            
+            if (rightBtn) {
+                rightBtn.addEventListener('click', function() {
+                    rightCollapsed = !rightCollapsed;
+                    localStorage.setItem('rightSidebarCollapsed', rightCollapsed);
+                    applyRightState();
                 });
             }
         })();

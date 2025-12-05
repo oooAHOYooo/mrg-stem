@@ -471,6 +471,127 @@ body {
     margin: 0.5rem 0;
 }
 
+/* Sidebar Collapse Toggle Buttons */
+.sidebar-collapse-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #1e40af;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-collapse-btn:hover {
+    background: rgba(239, 246, 255, 1);
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 2px 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.sidebar-collapse-btn.left {
+    left: 200px;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+}
+
+.sidebar-collapse-btn.left.collapsed {
+    left: 0;
+}
+
+.sidebar-collapse-btn.right {
+    right: 200px;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+}
+
+.sidebar-collapse-btn.right.collapsed {
+    right: 0;
+}
+
+/* Collapsed sidebar states */
+.sidebar.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: none !important;
+}
+
+.sidebar.collapsed .sidebar-content {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Dashboard grid adjustments for collapsed sidebars */
+.dashboard-container.left-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr) 200px;
+}
+
+.dashboard-container.right-collapsed {
+    grid-template-columns: 200px minmax(0, 1fr) 0;
+}
+
+.dashboard-container.both-collapsed {
+    grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+/* Hide collapse buttons on mobile */
+@media (max-width: 768px) {
+    .sidebar-collapse-btn {
+        display: none;
+    }
+}
+
+/* Adjust button positions at different breakpoints */
+@media (max-width: 1200px) {
+    .sidebar-collapse-btn.left:not(.collapsed) {
+        left: 180px;
+    }
+    .sidebar-collapse-btn.right:not(.collapsed) {
+        right: 180px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .sidebar-collapse-btn.left:not(.collapsed) {
+        left: 150px;
+    }
+    .sidebar-collapse-btn.right:not(.collapsed) {
+        right: 150px;
+    }
+}
+
+/* Transition for smooth collapse */
+.sidebar {
+    transition: width 0.3s ease, padding 0.3s ease, min-width 0.3s ease;
+}
+
+.dashboard-container {
+    transition: grid-template-columns 0.3s ease;
+}
+
+/* Dark mode sidebar collapse buttons */
+body.dark-mode .sidebar-collapse-btn {
+    background: rgba(15, 15, 26, 0.95);
+    border-color: rgba(96, 165, 250, 0.4);
+    color: #60a5fa;
+}
+
+body.dark-mode .sidebar-collapse-btn:hover {
+    background: rgba(30, 58, 138, 0.5);
+    border-color: rgba(96, 165, 250, 0.7);
+    box-shadow: 2px 0 15px rgba(96, 165, 250, 0.3);
+}
+
 .dashboard-main {
     overflow-y: auto;
     overflow-x: hidden;
