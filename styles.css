@@ -335,6 +335,22 @@ body {
     .navbar-bottom {
         height: 45px;
     }
+    
+    /* Mobile - always single column */
+    .resources-grid,
+    .arcade-grid,
+    .gallery-grid,
+    .tinkercad-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 100%;
+    }
+}
+
+/* Smaller desktops / large tablets - single column for better readability */
+@media (max-width: 1200px) and (min-width: 769px) {
+    .resources-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
 }
 
 .background {
@@ -586,6 +602,55 @@ body {
 
 .dashboard-container.both-collapsed {
     grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+/* Single column layout when sidebars collapsed on smaller screens */
+@media (max-width: 1400px) {
+    .dashboard-container.left-collapsed .resources-grid,
+    .dashboard-container.right-collapsed .resources-grid,
+    .dashboard-container.both-collapsed .resources-grid,
+    .dashboard-container.left-collapsed .arcade-grid,
+    .dashboard-container.right-collapsed .arcade-grid,
+    .dashboard-container.both-collapsed .arcade-grid,
+    .dashboard-container.left-collapsed .gallery-grid,
+    .dashboard-container.right-collapsed .gallery-grid,
+    .dashboard-container.both-collapsed .gallery-grid,
+    .dashboard-container.left-collapsed .tinkercad-grid,
+    .dashboard-container.right-collapsed .tinkercad-grid,
+    .dashboard-container.both-collapsed .tinkercad-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Even on larger screens, single column when BOTH sidebars collapsed */
+.dashboard-container.both-collapsed .resources-grid,
+.dashboard-container.both-collapsed .arcade-grid,
+.dashboard-container.both-collapsed .gallery-grid,
+.dashboard-container.both-collapsed .tinkercad-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Tablet and below - always single column when any sidebar collapsed */
+@media (max-width: 1024px) {
+    .dashboard-container.left-collapsed .resources-grid,
+    .dashboard-container.right-collapsed .resources-grid,
+    .dashboard-container.left-collapsed .arcade-grid,
+    .dashboard-container.right-collapsed .arcade-grid,
+    .dashboard-container.left-collapsed .gallery-grid,
+    .dashboard-container.right-collapsed .gallery-grid,
+    .dashboard-container.left-collapsed .tinkercad-grid,
+    .dashboard-container.right-collapsed .tinkercad-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 550px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* Hide collapse buttons on mobile */
