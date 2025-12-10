@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Your Business Empire! - Learn HTML, CSS & Git | Mr. Gonzalez's STEM Class</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --wizard-primary: #10b981;
+            --wizard-secondary: #059669;
+            --wizard-accent: #34d399;
+            --wizard-dark: #064e3b;
+            --code-bg: #1e1e2e;
+            --code-text: #cdd6f4;
+            --code-keyword: #cba6f7;
+            --code-tag: #f38ba8;
+            --code-attr: #fab387;
+            --code-string: #a6e3a1;
+            --code-comment: #6c7086;
+            --success-glow: rgba(16, 185, 129, 0.6);
+            --error-glow: rgba(239, 68, 68, 0.6);
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Wizard Container */
+        .wizard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Make sure main content fills available space */
+        .dashboard-main {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--wizard-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .business-name-display {
+            background: linear-gradient(135deg, var(--wizard-primary), var(--wizard-secondary));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px var(--success-glow);
+        }
+
+        .progress-bar-container {
+            background: #e5e7eb;
+            border-radius: 999px;
+            height: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--wizard-primary), var(--wizard-accent));
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.75rem;
+            min-width: 60px;
+            box-shadow: 0 0 20px var(--success-glow);
+        }
+
+        .progress-text {
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Step Navigation */
+        .step-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #d1d5db;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            border-color: var(--wizard-primary);
+            background: var(--wizard-primary);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--success-glow);
+        }
+
+        .step-dot.completed {
+            border-color: var(--wizard-primary);
+            background: var(--wizard-accent);
+            color: white;
+        }
+
+        .step-dot:hover:not(.active) {
+            border-color: var(--wizard-secondary);
+            transform: scale(1.05);
+        }
+
+        /* Main Content Area */
+        .main-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            min-height: 600px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Lesson Panel */
+        .lesson-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .lesson-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .lesson-icon {
+            font-size: 3rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .lesson-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--wizard-dark);
+            line-height: 1.2;
+        }
+
+        .lesson-subtitle {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .lesson-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #374151;
+        }
+
+        .lesson-content p {
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content h3 {
+            color: var(--wizard-dark);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-box {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+            border: 2px solid rgba(251, 191, 36, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .tip-box .icon {
+            font-size: 1.5rem;
+        }
+
+        .code-example {
+            background: var(--code-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            border: 2px solid rgba(147, 51, 234, 0.3);
+        }
+
+        .code-example code {
+            color: var(--code-text);
+            display: block;
+            white-space: pre;
+        }
+
+        .code-example .tag { color: var(--code-tag); }
+        .code-example .attr { color: var(--code-attr); }
+        .code-example .string { color: var(--code-string); }
+        .code-example .comment { color: var(--code-comment); }
+
+        /* Code Editor Panel */
+        .editor-panel {
+            background: var(--code-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(147, 51, 234, 0.4);
+            box-shadow: 0 8px 32px rgba(147, 51, 234, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            background: linear-gradient(135deg, #2d2d3f, #1e1e2e);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .editor-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-tab {
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #a1a1aa;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .editor-tab.active {
+            background: rgba(147, 51, 234, 0.3);
+            border-color: rgba(147, 51, 234, 0.5);
+            color: #e9d5ff;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .btn-run {
+            background: linear-gradient(135deg, var(--wizard-primary), var(--wizard-secondary));
+            color: white;
+        }
+
+        .btn-run:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px var(--success-glow);
+        }
+
+        .btn-hint {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-hint:hover {
+            background: rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-reset:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .editor-body {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .line-numbers {
+            background: rgba(0,0,0,0.2);
+            padding: 1rem 0.5rem;
+            text-align: right;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: #6c7086;
+            user-select: none;
+            line-height: 1.6;
+        }
+
+        .code-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            color: var(--code-text);
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+            min-height: 250px;
+        }
+
+        .code-input::placeholder {
+            color: #6c7086;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-header {
+            background: linear-gradient(135deg, #2d2d3f, #1e1e2e);
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-title {
+            color: #a1a1aa;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .preview-frame {
+            background: white;
+            min-height: 150px;
+            max-height: 200px;
+            overflow: auto;
+        }
+
+        .preview-frame iframe {
+            width: 100%;
+            height: 150px;
+            border: none;
+        }
+
+        /* Feedback Area */
+        .feedback-area {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .feedback-message {
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feedback-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid rgba(16, 185, 129, 0.5);
+            color: #34d399;
+        }
+
+        .feedback-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+        }
+
+        .feedback-hint {
+            background: rgba(251, 191, 36, 0.2);
+            border: 2px solid rgba(251, 191, 36, 0.5);
+            color: #fbbf24;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn-prev {
+            background: rgba(107, 114, 128, 0.2);
+            color: #6b7280;
+            border: 2px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .nav-btn-prev:hover {
+            background: rgba(107, 114, 128, 0.3);
+        }
+
+        .nav-btn-next {
+            background: linear-gradient(135deg, var(--wizard-primary), var(--wizard-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--success-glow);
+        }
+
+        .nav-btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--success-glow);
+        }
+
+        .nav-btn-next:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Business Logo Preview */
+        .business-preview-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 3px solid #f59e0b;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .business-preview-card h4 {
+            color: #92400e;
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .business-logo-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #d97706;
+        }
+
+        /* Achievement Popup */
+        .achievement-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 4px solid #f59e0b;
+            border-radius: 24px;
+            padding: 2rem 3rem;
+            text-align: center;
+            z-index: 10000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .achievement-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .achievement-icon {
+            font-size: 4rem;
+            animation: celebrateBounce 0.5s ease infinite;
+        }
+
+        @keyframes celebrateBounce {
+            0%, 100% { transform: scale(1) rotate(-5deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .achievement-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #92400e;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .achievement-desc {
+            color: #b45309;
+            font-size: 1.1rem;
+        }
+
+        .achievement-close {
+            margin-top: 1.5rem;
+            padding: 0.75rem 2rem;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Confetti canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .welcome-icon {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--wizard-dark);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-desc {
+            font-size: 1.2rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .business-name-input {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .business-name-input input {
+            padding: 1rem 1.5rem;
+            font-size: 1.25rem;
+            border: 3px solid var(--wizard-primary);
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .business-name-input input:focus {
+            outline: none;
+            box-shadow: 0 0 20px var(--success-glow);
+        }
+
+        .start-btn {
+            padding: 1.25rem 3rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--wizard-primary), var(--wizard-secondary));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px var(--success-glow);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px var(--success-glow);
+        }
+
+        /* Lesson Cards Grid */
+        .lesson-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .lesson-card-mini {
+            background: rgba(255,255,255,0.8);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-card-mini:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .lesson-card-mini .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-card-mini h4 {
+            color: var(--wizard-dark);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .lesson-card-mini p {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        /* Git Section Special Styling */
+        .git-terminal {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            margin: 1rem 0;
+        }
+
+        .git-prompt {
+            color: #58a6ff;
+        }
+
+        .git-command {
+            color: #c9d1d9;
+        }
+
+        .git-output {
+            color: #8b949e;
+            margin-left: 1rem;
+        }
+
+        /* Certificate */
+        .certificate {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 4px solid #f59e0b;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .certificate::before {
+            content: '🏆';
+            position: absolute;
+            font-size: 8rem;
+            opacity: 0.1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .certificate h2 {
+            color: #92400e;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .certificate .business-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #b45309;
+            margin: 1rem 0;
+        }
+
+        .certificate p {
+            color: #92400e;
+            font-size: 1.1rem;
+        }
+
+        /* Hide/show sections */
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        /* ==========================================
+           MOBILE OPTIMIZATIONS
+           ========================================== */
+        
+        /* Tablet */
+        @media (max-width: 1024px) {
+            .main-split {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .lesson-panel {
+                max-height: none;
+            }
+            
+            .editor-panel {
+                min-height: 500px;
+            }
+            
+            .code-input {
+                min-height: 200px;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .wizard-container {
+                padding: 0.5rem;
+            }
+
+            .lesson-panel {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+            
+            .editor-panel {
+                border-radius: 12px;
+                min-height: 450px;
+            }
+
+            .welcome-title {
+                font-size: 1.5rem;
+                line-height: 1.3;
+            }
+
+            .welcome-icon {
+                font-size: 3.5rem;
+            }
+            
+            .welcome-desc {
+                font-size: 1rem;
+            }
+
+            .nav-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.95rem;
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .nav-buttons {
+                flex-direction: row;
+            }
+            
+            /* Progress Section Mobile */
+            .progress-section {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+            
+            .progress-title {
+                font-size: 1.1rem;
+            }
+            
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+            
+            .business-name-display {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.75rem;
+            }
+            
+            .step-nav {
+                gap: 0.35rem;
+            }
+            
+            .step-dot {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+            
+            /* Lesson Content Mobile */
+            .lesson-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+            
+            .lesson-icon {
+                font-size: 2.5rem;
+            }
+            
+            .lesson-title {
+                font-size: 1.35rem;
+            }
+            
+            .lesson-subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-content {
+                font-size: 1rem;
+            }
+            
+            .lesson-content h3 {
+                font-size: 1.1rem;
+            }
+            
+            /* Code Examples Mobile */
+            .code-example {
+                padding: 0.75rem;
+                font-size: 0.8rem;
+                border-radius: 8px;
+            }
+            
+            .tip-box {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .tip-box .icon {
+                font-size: 1.25rem;
+            }
+            
+            /* Editor Mobile */
+            .editor-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            
+            .editor-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .editor-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .editor-btn {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.8rem;
+            }
+            
+            .code-input {
+                font-size: 0.85rem;
+                padding: 0.75rem;
+                min-height: 150px;
+            }
+            
+            .line-numbers {
+                font-size: 0.8rem;
+                padding: 0.75rem 0.35rem;
+            }
+            
+            .preview-frame iframe {
+                height: 120px;
+            }
+            
+            .feedback-message {
+                font-size: 0.9rem;
+                padding: 0.75rem;
+            }
+            
+            /* Business Type Buttons Mobile */
+            .business-type-btn {
+                padding: 0.6rem 0.9rem;
+                font-size: 0.9rem;
+            }
+            
+            .business-name-input input {
+                width: 100%;
+                max-width: 280px;
+                padding: 0.75rem 1rem;
+                font-size: 1rem;
+            }
+            
+            .start-btn {
+                padding: 1rem 2rem;
+                font-size: 1.2rem;
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            /* Cards Mobile */
+            .lesson-cards {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .lesson-card-mini {
+                padding: 0.75rem;
+            }
+            
+            .lesson-card-mini .icon {
+                font-size: 1.75rem;
+            }
+            
+            .lesson-card-mini h4 {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-card-mini p {
+                font-size: 0.75rem;
+            }
+            
+            .product-showcase {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .product-card {
+                padding: 0.75rem;
+            }
+            
+            .product-card .emoji {
+                font-size: 2rem;
+            }
+            
+            .product-card .name {
+                font-size: 0.8rem;
+            }
+            
+            /* Empire Stats Mobile */
+            .empire-stats {
+                gap: 0.5rem;
+            }
+            
+            .empire-stat {
+                padding: 0.75rem 1rem;
+            }
+            
+            .empire-stat .value {
+                font-size: 1.25rem;
+            }
+            
+            .empire-stat .label {
+                font-size: 0.7rem;
+            }
+            
+            /* Git Terminal Mobile */
+            .git-terminal {
+                padding: 0.75rem;
+                font-size: 0.8rem;
+            }
+            
+            /* Certificate Mobile */
+            .certificate {
+                padding: 1.5rem 1rem;
+                border-radius: 16px;
+            }
+            
+            .certificate h2 {
+                font-size: 1.5rem;
+            }
+            
+            .certificate .business-name {
+                font-size: 1.75rem;
+            }
+            
+            /* Achievement Popup Mobile */
+            .achievement-popup {
+                width: 90%;
+                max-width: 320px;
+                padding: 1.5rem;
+            }
+            
+            .achievement-icon {
+                font-size: 3rem;
+            }
+            
+            .achievement-title {
+                font-size: 1.25rem;
+            }
+            
+            .achievement-desc {
+                font-size: 0.95rem;
+            }
+        }
+        
+        /* Small Mobile */
+        @media (max-width: 480px) {
+            .welcome-title {
+                font-size: 1.3rem;
+            }
+            
+            .welcome-icon {
+                font-size: 3rem;
+            }
+            
+            .lesson-title {
+                font-size: 1.2rem;
+            }
+            
+            .lesson-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .business-type-btn {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.85rem;
+            }
+            
+            .step-dot {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+            }
+            
+            .editor-panel {
+                min-height: 400px;
+            }
+            
+            .code-input {
+                min-height: 120px;
+                font-size: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .business-type-btn,
+            .nav-btn,
+            .editor-btn,
+            .step-dot,
+            .start-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .sidebar-link {
+                padding: 0.75rem;
+                min-height: 44px;
+            }
+        }
+
+        /* Scrollable dashboard fix */
+        .dashboard-main {
+            overflow-y: auto;
+        }
+
+        /* Business Type Selection */
+        .business-type-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: white;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .business-type-btn:hover {
+            border-color: var(--wizard-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .business-type-btn.selected {
+            border-color: var(--wizard-primary);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            box-shadow: 0 4px 15px var(--success-glow);
+        }
+
+        /* Product cards in lessons */
+        .product-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .product-card .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card .name {
+            font-weight: 700;
+            color: var(--wizard-dark);
+            font-size: 0.9rem;
+        }
+
+        .product-card .price {
+            color: var(--wizard-primary);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        /* Empire stats */
+        .empire-stats {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .empire-stat {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+        }
+
+        .empire-stat .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #b45309;
+        }
+
+        .empire-stat .label {
+            font-size: 0.8rem;
+            color: #92400e;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-brand">🚀 Mr. Gonzalez's STEM Class</a>
+            <div class="navbar-menu">
+                <a href="index.html" class="navbar-link">🏠 Home</a>
+                <a href="student-work.html" class="navbar-link">🎨 Student Work</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Container -->
+    <div class="dashboard-container" id="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📚 Learning Path</h3>
+                <nav class="sidebar-nav">
+                    <a href="#" class="sidebar-link" onclick="goToStep(0)">🏠 Welcome</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(1)">📝 HTML Basics</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(2)">🏷️ Your First Tag</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(3)">📋 Building Structure</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(4)">🎨 Add Some Style</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(5)">🌈 Colors & Fonts</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(6)">📦 Git Basics</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(7)">🚀 Deploy!</a>
+                    <a href="#" class="sidebar-link" onclick="goToStep(8)">🏆 Certificate</a>
+                </nav>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">💡 Quick Tips</h3>
+                <div class="tip-of-day">
+                    <span class="tip-icon">💡</span>
+                    <span class="tip-text">Tags in HTML are like building blocks! They wrap around content to tell the browser what to show.</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="wizard-container">
+                <!-- Progress Section -->
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <div class="progress-title">
+                            <span>👑 Build Your Business Empire</span>
+                        </div>
+                        <div class="business-name-display" id="business-name-top">🏪 Your Business</div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="progress-fill" style="width: 5%;">
+                            <span class="progress-text" id="progress-text">Step 1/9</span>
+                        </div>
+                    </div>
+                    <div class="step-nav" id="step-nav">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Step 0: Welcome -->
+                <div class="step-content active" id="step-0">
+                    <div class="lesson-panel">
+                        <div class="welcome-screen">
+                            <div class="welcome-icon">👑</div>
+                            <h1 class="welcome-title">Build Your Business Empire!</h1>
+                            <p class="welcome-desc">
+                                Today YOU become a <strong>business owner</strong>! You'll create a real website for YOUR company using the same tools professionals use: <strong>HTML</strong>, <strong>CSS</strong>, and <strong>Git</strong>!
+                            </p>
+
+                            <div class="lesson-cards">
+                                <div class="lesson-card-mini">
+                                    <div class="icon">💡</div>
+                                    <h4>Dream It</h4>
+                                    <p>Your business idea</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🔨</div>
+                                    <h4>Build It</h4>
+                                    <p>Code your website</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🚀</div>
+                                    <h4>Launch It</h4>
+                                    <p>Go live online!</p>
+                                </div>
+                            </div>
+
+                            <h3 style="color: var(--wizard-dark); margin-bottom: 1rem;">🏢 Step 1: What type of business will you run?</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem;">
+                                <button class="business-type-btn" onclick="selectBusinessType('🍕 Pizza Shop', 'pizza')">🍕 Pizza Shop</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🧁 Bakery', 'bakery')">🧁 Bakery</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🎮 Game Store', 'games')">🎮 Game Store</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🐕 Pet Shop', 'pets')">🐕 Pet Shop</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🎨 Art Studio', 'art')">🎨 Art Studio</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🛹 Sports Shop', 'sports')">🛹 Sports Shop</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('📚 Book Store', 'books')">📚 Book Store</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('🌮 Taco Stand', 'tacos')">🌮 Taco Stand</button>
+                                <button class="business-type-btn" onclick="selectBusinessType('✨ My Own Idea!', 'custom')">✨ My Own Idea!</button>
+                            </div>
+
+                            <h3 style="color: var(--wizard-dark); margin-bottom: 1rem;">🏷️ Step 2: Name your empire!</h3>
+                            <div class="business-name-input">
+                                <input type="text" id="business-name-input" placeholder="e.g., Super Mario's Pizza Palace" maxlength="35">
+                            </div>
+                            
+                            <div id="business-preview-box" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 3px solid #f59e0b; border-radius: 16px; padding: 1.5rem; margin: 1.5rem auto; max-width: 400px; display: none;">
+                                <p style="color: #92400e; font-size: 0.9rem; margin-bottom: 0.5rem;">Your Business Card Preview:</p>
+                                <div style="background: white; border-radius: 12px; padding: 1rem; text-align: center;">
+                                    <div id="preview-type-icon" style="font-size: 3rem;">🏪</div>
+                                    <h3 id="preview-business-name" style="color: #1e40af; margin: 0.5rem 0;">Your Business Name</h3>
+                                    <p id="preview-tagline" style="color: #6b7280; font-size: 0.85rem; margin: 0;">CEO: Future Entrepreneur</p>
+                                </div>
+                            </div>
+
+                            <button class="start-btn" onclick="startWizard()" id="start-btn" style="opacity: 0.5; cursor: not-allowed;" disabled>👑 Start Building My Empire!</button>
+                            <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 0.75rem;">Choose a business type and name to begin!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 1: HTML Basics -->
+                <div class="step-content" id="step-1">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">🏪</span>
+                                <div>
+                                    <h2 class="lesson-title">Your Store Sign!</h2>
+                                    <p class="lesson-subtitle">Every great empire needs a big, bold name!</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    Every successful business has a <strong>big sign</strong> that tells customers who they are! 
+                                    In HTML, we use <code>&lt;h1&gt;</code> tags to make BIG, important text - perfect for your business name!
+                                </p>
+
+                                <h3>🏗️ HTML Tags = Building Blocks</h3>
+                                <p>
+                                    HTML uses special words called <strong>tags</strong> wrapped in angle brackets <code>&lt; &gt;</code>. 
+                                    Think of them like sandwich bread - you need a top slice and a bottom slice!
+                                </p>
+
+                                <div class="code-example">
+                                    <code><span class="tag">&lt;h1&gt;</span><span id="example-business-1">Mario's Pizza Palace</span><span class="tag">&lt;/h1&gt;</span></code>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">🥪</span>
+                                    <div>
+                                        <strong>Sandwich Rule:</strong> Opening tag <code>&lt;h1&gt;</code> on top, your content in the middle, closing tag <code>&lt;/h1&gt;</code> with the <code>/</code> on the bottom!
+                                    </div>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Create your business sign! Type your business name <strong>"<span class="user-business-name">Your Business</span>"</strong> wrapped in <code>&lt;h1&gt;</code> tags!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">index.html</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(1)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(1)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(1)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-1">1</div>
+                                <textarea class="code-input" id="code-1" placeholder="Type your HTML here..."></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">👁️ Live Preview</span>
+                                </div>
+                                <div class="preview-frame">
+                                    <iframe id="preview-1"></iframe>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-1" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-1" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: First Tag -->
+                <div class="step-content" id="step-2">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">📣</span>
+                                <div>
+                                    <h2 class="lesson-title">Tell Customers What You Sell!</h2>
+                                    <p class="lesson-subtitle">Your business slogan & description</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    Great businesses tell customers <strong>why</strong> they're awesome! Now we'll add a <strong>slogan</strong> using the <code>&lt;p&gt;</code> (paragraph) tag.
+                                </p>
+
+                                <h3>💬 Famous Business Slogans</h3>
+                                <div class="product-showcase">
+                                    <div class="product-card">
+                                        <div class="emoji">🍟</div>
+                                        <div class="name">"I'm Lovin' It"</div>
+                                    </div>
+                                    <div class="product-card">
+                                        <div class="emoji">✔️</div>
+                                        <div class="name">"Just Do It"</div>
+                                    </div>
+                                    <div class="product-card">
+                                        <div class="emoji">🎯</div>
+                                        <div class="name">"Expect More"</div>
+                                    </div>
+                                </div>
+
+                                <h3>📝 The Tags You Need</h3>
+                                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                                    <li><code>&lt;h1&gt;</code> - Your BIG business name</li>
+                                    <li><code>&lt;p&gt;</code> - Your slogan or description</li>
+                                </ul>
+
+                                <div class="code-example">
+                                    <code><span class="tag">&lt;h1&gt;</span><span id="example-business-2">Mario's Pizza Palace</span><span class="tag">&lt;/h1&gt;</span>
+<span class="tag">&lt;p&gt;</span>The best pizza in town since 2024!<span class="tag">&lt;/p&gt;</span></code>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Create your business name in <code>&lt;h1&gt;</code> AND add a catchy slogan in <code>&lt;p&gt;</code> tags! Make customers want to visit <strong><span class="user-business-name">Your Business</span></strong>!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">index.html</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(2)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(2)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(2)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-2">1
+2
+3</div>
+                                <textarea class="code-input" id="code-2" placeholder="Type your HTML here..."></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">👁️ Live Preview</span>
+                                </div>
+                                <div class="preview-frame">
+                                    <iframe id="preview-2"></iframe>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-2" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-2" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Building Structure -->
+                <div class="step-content" id="step-3">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">🏗️</span>
+                                <div>
+                                    <h2 class="lesson-title">Build Your Store!</h2>
+                                    <p class="lesson-subtitle">Every business needs a proper building!</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    You wouldn't open a store without walls and a roof, right? Websites need structure too! Let's build the <strong>foundation</strong> of your business website.
+                                </p>
+
+                                <h3>🏪 Your Store Blueprint</h3>
+                                <div class="code-example">
+                                    <code><span class="tag">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;html&gt;</span>
+  <span class="tag">&lt;head&gt;</span>
+    <span class="tag">&lt;title&gt;</span><span id="example-business-3">Mario's Pizza Palace</span><span class="tag">&lt;/title&gt;</span>
+  <span class="tag">&lt;/head&gt;</span>
+  <span class="tag">&lt;body&gt;</span>
+    <span class="tag">&lt;h1&gt;</span>Welcome to <span id="example-business-3b">Mario's</span>!<span class="tag">&lt;/h1&gt;</span>
+    <span class="tag">&lt;p&gt;</span>Best pizza in town!<span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span></code>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">🏬</span>
+                                    <div>
+                                        <strong>Think of your store:</strong><br>
+                                        • <code>&lt;html&gt;</code> = The entire building<br>
+                                        • <code>&lt;head&gt;</code> = The back office (business name on the browser tab)<br>
+                                        • <code>&lt;body&gt;</code> = The store floor (what customers see!)
+                                    </div>
+                                </div>
+
+                                <div class="empire-stats">
+                                    <div class="empire-stat">
+                                        <div class="value">📄</div>
+                                        <div class="label">Website Page</div>
+                                    </div>
+                                    <div class="empire-stat">
+                                        <div class="value">🏷️</div>
+                                        <div class="label">Browser Tab</div>
+                                    </div>
+                                    <div class="empire-stat">
+                                        <div class="value">👀</div>
+                                        <div class="label">Customer View</div>
+                                    </div>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Build the complete structure for <strong><span class="user-business-name">Your Business</span></strong>! Include your business name in the <code>&lt;title&gt;</code> AND <code>&lt;h1&gt;</code>!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">index.html</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(3)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(3)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(3)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-3">1
+2
+3
+4
+5
+6
+7
+8
+9
+10</div>
+                                <textarea class="code-input" id="code-3" placeholder="Build your HTML structure..."></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">👁️ Live Preview</span>
+                                </div>
+                                <div class="preview-frame">
+                                    <iframe id="preview-3"></iframe>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-3" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-3" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: CSS Basics -->
+                <div class="step-content" id="step-4">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">🎨</span>
+                                <div>
+                                    <h2 class="lesson-title">Brand Your Empire!</h2>
+                                    <p class="lesson-subtitle">Make your store stand out with colors!</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    Every successful business has <strong>brand colors</strong>! McDonald's has red & yellow, Starbucks has green. What colors will <strong><span class="user-business-name">Your Business</span></strong> have?
+                                </p>
+
+                                <h3>🏪 Famous Brand Colors</h3>
+                                <div class="product-showcase">
+                                    <div class="product-card" style="background: linear-gradient(135deg, #ff0000, #ffcc00);">
+                                        <div class="emoji">🍟</div>
+                                        <div class="name" style="color: white; text-shadow: 1px 1px 2px black;">Red & Yellow</div>
+                                    </div>
+                                    <div class="product-card" style="background: linear-gradient(135deg, #00704A, #1E3932);">
+                                        <div class="emoji">☕</div>
+                                        <div class="name" style="color: white;">Green</div>
+                                    </div>
+                                    <div class="product-card" style="background: linear-gradient(135deg, #0066FF, #003399);">
+                                        <div class="emoji">📘</div>
+                                        <div class="name" style="color: white;">Blue</div>
+                                    </div>
+                                </div>
+
+                                <h3>🎯 CSS = Your Design Tool</h3>
+                                <p><strong>CSS</strong> lets you control colors, sizes, and more!</p>
+                                <div class="code-example">
+                                    <code><span class="tag">h1</span> {
+  <span class="attr">color</span>: <span class="string">red</span>;
+}</code>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">💡</span>
+                                    <div>
+                                        <strong>CSS goes in <code>&lt;style&gt;</code> tags!</strong> Put it in the <code>&lt;head&gt;</code> section, like this:<br>
+                                        <code>&lt;style&gt; h1 { color: red; } &lt;/style&gt;</code>
+                                    </div>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Choose a brand color for <strong><span class="user-business-name">Your Business</span></strong>! Add <code>&lt;style&gt;</code> tags and make your <code>h1</code> heading colorful!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">index.html</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(4)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(4)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(4)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-4">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14</div>
+                                <textarea class="code-input" id="code-4" placeholder="Add CSS to your page..."></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">👁️ Live Preview</span>
+                                </div>
+                                <div class="preview-frame">
+                                    <iframe id="preview-4"></iframe>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-4" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-4" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 5: More CSS -->
+                <div class="step-content" id="step-5">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">✨</span>
+                                <div>
+                                    <h2 class="lesson-title">Design Your Storefront!</h2>
+                                    <p class="lesson-subtitle">Make customers say "WOW!"</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>Time to make <strong><span class="user-business-name">Your Business</span></strong> look professional! A great storefront attracts customers!</p>
+
+                                <h3>🏪 Complete Store Design</h3>
+                                <div class="code-example">
+                                    <code><span class="tag">body</span> {
+  <span class="attr">background-color</span>: <span class="string">lightyellow</span>;
+  <span class="attr">font-family</span>: <span class="string">Arial</span>;
+  <span class="attr">text-align</span>: <span class="string">center</span>;
+}
+
+<span class="tag">h1</span> {
+  <span class="attr">color</span>: <span class="string">darkred</span>;
+  <span class="attr">font-size</span>: <span class="string">48px</span>;
+}
+
+<span class="tag">p</span> {
+  <span class="attr">color</span>: <span class="string">gray</span>;
+  <span class="attr">font-size</span>: <span class="string">20px</span>;
+}</code>
+                                </div>
+
+                                <h3>🎨 Choose Your Brand Colors</h3>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0;">
+                                    <span style="background: tomato; color: white; padding: 0.25rem 0.5rem; border-radius: 4px;">tomato</span>
+                                    <span style="background: gold; padding: 0.25rem 0.5rem; border-radius: 4px;">gold</span>
+                                    <span style="background: purple; color: white; padding: 0.25rem 0.5rem; border-radius: 4px;">purple</span>
+                                    <span style="background: deepskyblue; padding: 0.25rem 0.5rem; border-radius: 4px;">deepskyblue</span>
+                                    <span style="background: limegreen; padding: 0.25rem 0.5rem; border-radius: 4px;">limegreen</span>
+                                    <span style="background: hotpink; padding: 0.25rem 0.5rem; border-radius: 4px;">hotpink</span>
+                                    <span style="background: coral; padding: 0.25rem 0.5rem; border-radius: 4px;">coral</span>
+                                    <span style="background: navy; color: white; padding: 0.25rem 0.5rem; border-radius: 4px;">navy</span>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">💼</span>
+                                    <div>
+                                        <strong>CEO Tip:</strong> Pick colors that match what you sell!<br>
+                                        🍕 Pizza → red, orange<br>
+                                        🧁 Bakery → pink, brown<br>
+                                        🎮 Games → purple, blue<br>
+                                        🐕 Pets → green, yellow
+                                    </div>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Design the complete storefront for <strong><span class="user-business-name">Your Business</span></strong>! Include:
+                                </p>
+                                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                                    <li>A <code>background-color</code> for your store</li>
+                                    <li>A <code>color</code> for your business name</li>
+                                    <li>Style for your slogan too!</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">index.html</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(5)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(5)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(5)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-5">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</div>
+                                <textarea class="code-input" id="code-5" placeholder="Style your page..."></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">👁️ Live Preview</span>
+                                </div>
+                                <div class="preview-frame">
+                                    <iframe id="preview-5"></iframe>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-5" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-5" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 6: Git Basics -->
+                <div class="step-content" id="step-6">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">💾</span>
+                                <div>
+                                    <h2 class="lesson-title">Protect Your Empire!</h2>
+                                    <p class="lesson-subtitle">Save your business files safely!</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    Smart business owners <strong>back up their work</strong>! <strong>Git</strong> is like a magical vault that saves every version of your website. If something breaks, you can go back!
+                                </p>
+
+                                <h3>🎮 Git = Video Game Save Points</h3>
+                                <p>
+                                    Just like saving in Minecraft or Fortnite - you can always go back to your last save if something goes wrong!
+                                </p>
+
+                                <h3>💼 Business Backup Commands</h3>
+                                <div class="git-terminal">
+                                    <div><span class="git-prompt">$</span> <span class="git-command">git init</span></div>
+                                    <div class="git-output">📁 Created backup vault for <span class="user-business-name">Your Business</span></div>
+                                    <br>
+                                    <div><span class="git-prompt">$</span> <span class="git-command">git add .</span></div>
+                                    <div class="git-output">📋 Selected all business files</div>
+                                    <br>
+                                    <div><span class="git-prompt">$</span> <span class="git-command">git commit -m "My business website!"</span></div>
+                                    <div class="git-output">✅ Save point created!</div>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">💼</span>
+                                    <div>
+                                        <strong>CEO Commands:</strong><br>
+                                        • <code>git init</code> - Create your vault<br>
+                                        • <code>git add .</code> - Pick files to protect<br>
+                                        • <code>git commit</code> - Lock them in the vault!
+                                    </div>
+                                </div>
+
+                                <h3>👑 Your Empire Challenge</h3>
+                                <p>
+                                    Protect <strong><span class="user-business-name">Your Business</span></strong>! Type all three git commands to create your first save point!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">Terminal</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(6)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(6)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(6)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-6">1
+2
+3</div>
+                                <textarea class="code-input" id="code-6" placeholder="Type git commands here..." style="background: #0d1117; color: #c9d1d9;"></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">📟 Terminal Output</span>
+                                </div>
+                                <div class="preview-frame" style="background: #0d1117; padding: 1rem; color: #8b949e; font-family: monospace;">
+                                    <div id="terminal-output-6">Waiting for commands...</div>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-6" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-6" onclick="nextStep()" disabled>Next ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Step 7: Git Push -->
+                <div class="step-content" id="step-7">
+                    <div class="main-split">
+                        <div class="lesson-panel">
+                            <div class="lesson-header">
+                                <span class="lesson-icon">🚀</span>
+                                <div>
+                                    <h2 class="lesson-title">Grand Opening Day!</h2>
+                                    <p class="lesson-subtitle">Launch your business to the WORLD!</p>
+                                </div>
+                            </div>
+                            <div class="lesson-content">
+                                <p>
+                                    🎉 This is it! The moment every business owner dreams of - <strong>GRAND OPENING</strong>! 
+                                    With <code>git push</code>, your website goes LIVE for the whole world to see!
+                                </p>
+
+                                <div class="empire-stats">
+                                    <div class="empire-stat">
+                                        <div class="value">🌍</div>
+                                        <div class="label">Global Reach</div>
+                                    </div>
+                                    <div class="empire-stat">
+                                        <div class="value">24/7</div>
+                                        <div class="label">Always Open</div>
+                                    </div>
+                                    <div class="empire-stat">
+                                        <div class="value">∞</div>
+                                        <div class="label">Visitors</div>
+                                    </div>
+                                </div>
+
+                                <h3>🌐 GitHub = Your Business HQ</h3>
+                                <p>
+                                    <strong>GitHub</strong> hosts your website FOR FREE! Millions of businesses use it!
+                                </p>
+
+                                <h3>🎊 Launch Command</h3>
+                                <div class="git-terminal">
+                                    <div><span class="git-prompt">$</span> <span class="git-command">git push -u origin main</span></div>
+                                    <div class="git-output">🚀 Uploading <span class="user-business-name">Your Business</span>...</div>
+                                    <div class="git-output">📡 Connecting to servers worldwide...</div>
+                                    <div class="git-output" style="color: #3fb950;">🎉 YOUR BUSINESS IS NOW LIVE!</div>
+                                </div>
+
+                                <div class="tip-box">
+                                    <span class="icon">👑</span>
+                                    <div>
+                                        <strong>After you push:</strong><br>
+                                        • Your website is on the internet!<br>
+                                        • Friends & family can visit!<br>
+                                        • You're officially a web developer AND business owner!
+                                    </div>
+                                </div>
+
+                                <h3>👑 Final Empire Challenge</h3>
+                                <p>
+                                    Launch <strong><span class="user-business-name">Your Business</span></strong> to the world! Type the push command!
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <div class="editor-tabs">
+                                    <div class="editor-tab active">Terminal</div>
+                                </div>
+                                <div class="editor-controls">
+                                    <button class="editor-btn btn-hint" onclick="showHint(7)">💡 Hint</button>
+                                    <button class="editor-btn btn-reset" onclick="resetCode(7)">🔄 Reset</button>
+                                    <button class="editor-btn btn-run" onclick="runCode(7)">▶ Run</button>
+                                </div>
+                            </div>
+                            <div class="editor-body">
+                                <div class="line-numbers" id="lines-7">1</div>
+                                <textarea class="code-input" id="code-7" placeholder="Type the push command..." style="background: #0d1117; color: #c9d1d9;"></textarea>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-header">
+                                    <span class="preview-title">📟 Terminal Output</span>
+                                </div>
+                                <div class="preview-frame" style="background: #0d1117; padding: 1rem; color: #8b949e; font-family: monospace;">
+                                    <div id="terminal-output-7">Ready to deploy...</div>
+                                </div>
+                            </div>
+                            <div class="feedback-area">
+                                <div class="feedback-message" id="feedback-7" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn nav-btn-prev" onclick="prevStep()">⬅️ Back</button>
+                        <button class="nav-btn nav-btn-next" id="next-7" onclick="nextStep()" disabled>Get Certificate! 🏆</button>
+                    </div>
+                </div>
+
+                <!-- Step 8: Certificate -->
+                <div class="step-content" id="step-8">
+                    <div class="lesson-panel" style="max-width: 900px; margin: 0 auto;">
+                        <div class="certificate">
+                            <div style="font-size: 4rem; margin-bottom: 0.5rem;">👑</div>
+                            <h2>Official Business License</h2>
+                            <p style="font-size: 1.1rem;">This certifies that the owner of</p>
+                            <div class="business-name" id="cert-business-name">Your Business</div>
+                            <p>has successfully built their <strong>Business Empire Website</strong></p>
+                            <p style="font-size: 0.95rem; color: #92400e; margin-top: 1rem;">Mastering the skills of:</p>
+                            <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;">
+                                <span style="background: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">📝 HTML</span>
+                                <span style="background: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">🎨 CSS</span>
+                                <span style="background: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">📦 Git</span>
+                            </div>
+                            <div style="margin-top: 1.5rem; font-size: 3rem;">🏆🎉🚀💼👑</div>
+                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #92400e;">
+                                Established: <span id="cert-date"></span>
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 2rem;">
+                            <h3 style="color: var(--wizard-dark); margin-bottom: 1rem;">🎉 Your Empire is LIVE!</h3>
+                            <p style="font-size: 1.1rem; color: #6b7280; max-width: 600px; margin: 0 auto 1.5rem;">
+                                Congratulations, CEO! You now have the skills to build websites for ANY business! 
+                                Keep building, keep learning, keep growing your empire!
+                            </p>
+                            
+                            <div class="empire-stats" style="margin: 2rem 0;">
+                                <div class="empire-stat">
+                                    <div class="value">1</div>
+                                    <div class="label">Website Built</div>
+                                </div>
+                                <div class="empire-stat">
+                                    <div class="value">3</div>
+                                    <div class="label">Skills Learned</div>
+                                </div>
+                                <div class="empire-stat">
+                                    <div class="value">∞</div>
+                                    <div class="label">Future Potential</div>
+                                </div>
+                            </div>
+
+                            <div class="lesson-cards">
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🏪</div>
+                                    <h4>Store Built ✅</h4>
+                                    <p>HTML structure complete!</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🎨</div>
+                                    <h4>Brand Designed ✅</h4>
+                                    <p>CSS styling mastered!</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🚀</div>
+                                    <h4>Launched ✅</h4>
+                                    <p>Git deployed!</p>
+                                </div>
+                            </div>
+                            
+                            <h3 style="color: var(--wizard-dark); margin: 2rem 0 1rem;">🌟 What's Next for Your Empire?</h3>
+                            <div class="lesson-cards">
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🖼️</div>
+                                    <h4>Add Images</h4>
+                                    <p>Show your products!</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">🔗</div>
+                                    <h4>Add Links</h4>
+                                    <p>Connect pages!</p>
+                                </div>
+                                <div class="lesson-card-mini">
+                                    <div class="icon">📱</div>
+                                    <h4>Go Mobile</h4>
+                                    <p>Phone-friendly!</p>
+                                </div>
+                            </div>
+                            
+                            <button class="start-btn" onclick="restartWizard()" style="margin-top: 2rem;">
+                                👑 Build Another Empire!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">🏆 Achievements</h3>
+                <div id="achievements-list">
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">HTML Beginner</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">Tag Master</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">Structure Pro</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">CSS Artist</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">Style Guru</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">Git Starter</span>
+                    </div>
+                    <div class="rule-item" style="opacity: 0.5;">
+                        <span class="rule-number">🔒</span>
+                        <span class="rule-text">Deploy Master</span>
+                    </div>
+                </div>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">📊 Your Stats</h3>
+                <div class="tip-of-day">
+                    <span class="tip-icon">⭐</span>
+                    <span class="tip-text" id="stats-text">Complete challenges to earn stars!</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Collapse buttons -->
+    <button class="sidebar-collapse-btn left" id="collapse-left-btn" aria-label="Toggle left sidebar">◀</button>
+    <button class="sidebar-collapse-btn right" id="collapse-right-btn" aria-label="Toggle right sidebar">▶</button>
+
+    <!-- Bottom Navbar -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <div class="navbar-menu">
+                <a href="index.html" class="navbar-link">🏠 Home</a>
+                <a href="student-work.html" class="navbar-link">🎨 Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Achievement Popup -->
+    <div class="achievement-popup" id="achievement-popup">
+        <div class="achievement-icon" id="achievement-icon">🏆</div>
+        <div class="achievement-title" id="achievement-title">Achievement Unlocked!</div>
+        <div class="achievement-desc" id="achievement-desc">You did something amazing!</div>
+        <button class="achievement-close" onclick="closeAchievement()">Awesome! 🎉</button>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <script>
+        // State
+        let currentStep = 0;
+        let businessName = "Your Business";
+        let businessType = "";
+        let businessIcon = "🏪";
+        let completedSteps = new Set();
+        let achievements = [];
+        const totalSteps = 9;
+
+        // Business type data
+        const businessTypes = {
+            pizza: { icon: "🍕", products: ["Pepperoni Pizza", "Cheese Pizza", "Garlic Bread"], colors: ["tomato", "gold", "darkred"] },
+            bakery: { icon: "🧁", products: ["Cupcakes", "Cookies", "Birthday Cakes"], colors: ["pink", "hotpink", "brown"] },
+            games: { icon: "🎮", products: ["Video Games", "Controllers", "Gaming Chairs"], colors: ["purple", "blue", "lime"] },
+            pets: { icon: "🐕", products: ["Dog Food", "Cat Toys", "Fish Tanks"], colors: ["limegreen", "gold", "orange"] },
+            art: { icon: "🎨", products: ["Paintings", "Sculptures", "Art Supplies"], colors: ["purple", "pink", "coral"] },
+            sports: { icon: "🛹", products: ["Skateboards", "Basketballs", "Sneakers"], colors: ["orange", "blue", "black"] },
+            books: { icon: "📚", products: ["Comics", "Novels", "Textbooks"], colors: ["navy", "brown", "gold"] },
+            tacos: { icon: "🌮", products: ["Beef Tacos", "Burritos", "Nachos"], colors: ["gold", "orange", "green"] },
+            custom: { icon: "✨", products: ["Your Product 1", "Your Product 2", "Your Product 3"], colors: ["deepskyblue", "purple", "gold"] }
+        };
+
+        function selectBusinessType(name, type) {
+            businessType = type;
+            businessIcon = businessTypes[type].icon;
+            
+            // Update button styles
+            document.querySelectorAll('.business-type-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // Show preview box
+            document.getElementById('business-preview-box').style.display = 'block';
+            document.getElementById('preview-type-icon').textContent = businessIcon;
+            
+            // Check if we can enable start button
+            checkStartReady();
+        }
+
+        function checkStartReady() {
+            const nameInput = document.getElementById('business-name-input');
+            const startBtn = document.getElementById('start-btn');
+            const hasName = nameInput.value.trim().length > 0;
+            const hasType = businessType !== "";
+            
+            if (hasName && hasType) {
+                startBtn.disabled = false;
+                startBtn.style.opacity = '1';
+                startBtn.style.cursor = 'pointer';
+            } else {
+                startBtn.disabled = true;
+                startBtn.style.opacity = '0.5';
+                startBtn.style.cursor = 'not-allowed';
+            }
+            
+            // Update preview
+            if (hasName) {
+                document.getElementById('preview-business-name').textContent = nameInput.value.trim();
+            }
+        }
+
+        // Update business name displays throughout the page
+        function updateBusinessNameDisplays() {
+            document.querySelectorAll('.user-business-name').forEach(el => {
+                el.textContent = businessName;
+            });
+            document.getElementById('business-name-top').textContent = businessIcon + ' ' + businessName;
+        }
+
+        // Validation patterns for each step
+        const validations = {
+            1: {
+                check: (code) => {
+                    return code.includes('<h1>') && code.includes('</h1>') && code.trim().length > 10;
+                },
+                hint: "Use <h1>Your Business Name</h1> - don't forget the closing tag!",
+                success: "🎉 Great job! You made your first heading!",
+                achievement: { icon: "📝", title: "HTML Beginner", desc: "You wrote your first HTML tag!" }
+            },
+            2: {
+                check: (code) => {
+                    return code.includes('<h1>') && code.includes('</h1>') && 
+                           code.includes('<p>') && code.includes('</p>');
+                },
+                hint: "Add both a <h1> heading AND a <p> paragraph!",
+                success: "🎉 Perfect! You're building content!",
+                achievement: { icon: "🏷️", title: "Tag Master", desc: "You know multiple HTML tags!" }
+            },
+            3: {
+                check: (code) => {
+                    return code.includes('<html>') && code.includes('</html>') &&
+                           code.includes('<head>') && code.includes('</head>') &&
+                           code.includes('<body>') && code.includes('</body>') &&
+                           code.includes('<title>');
+                },
+                hint: "Your page needs <html>, <head> with <title>, and <body> sections!",
+                success: "🎉 Amazing! You built a complete HTML structure!",
+                achievement: { icon: "📋", title: "Structure Pro", desc: "You built a proper HTML page!" }
+            },
+            4: {
+                check: (code) => {
+                    return code.includes('<style>') && code.includes('</style>') &&
+                           code.includes('color') && code.includes('h1');
+                },
+                hint: "Add <style> in the <head> and use: h1 { color: blue; }",
+                success: "🎉 Colorful! You're styling like a pro!",
+                achievement: { icon: "🎨", title: "CSS Artist", desc: "You added style to your page!" }
+            },
+            5: {
+                check: (code) => {
+                    return code.includes('<style>') && 
+                           code.includes('background') &&
+                           (code.includes('body') || code.includes('h1') || code.includes('p'));
+                },
+                hint: "Try: body { background-color: lightyellow; }",
+                success: "🎉 Beautiful! Your website looks amazing!",
+                achievement: { icon: "🌈", title: "Style Guru", desc: "You're a CSS styling expert!" }
+            },
+            6: {
+                check: (code) => {
+                    const lines = code.toLowerCase().trim().split('\n');
+                    return lines.some(l => l.includes('git init')) &&
+                           lines.some(l => l.includes('git add')) &&
+                           lines.some(l => l.includes('git commit'));
+                },
+                hint: "Type these commands on separate lines:\ngit init\ngit add .\ngit commit -m \"message\"",
+                success: "🎉 Saved! Your code is now in version control!",
+                achievement: { icon: "📦", title: "Git Starter", desc: "You made your first commit!" }
+            },
+            7: {
+                check: (code) => {
+                    return code.toLowerCase().includes('git push');
+                },
+                hint: "Type: git push -u origin main",
+                success: "🎉 DEPLOYED! Your website is now on the internet!",
+                achievement: { icon: "🚀", title: "Deploy Master", desc: "You published your website!" }
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generateStepNav();
+            updateProgress();
+            
+            // Set up code input listeners for live preview
+            for (let i = 1; i <= 7; i++) {
+                const input = document.getElementById(`code-${i}`);
+                if (input) {
+                    input.addEventListener('input', () => updatePreview(i));
+                }
+            }
+        });
+
+        function generateStepNav() {
+            const nav = document.getElementById('step-nav');
+            nav.innerHTML = '';
+            for (let i = 0; i < totalSteps; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'step-dot' + (i === 0 ? ' active' : '') + (completedSteps.has(i) ? ' completed' : '');
+                dot.textContent = i + 1;
+                dot.onclick = () => goToStep(i);
+                nav.appendChild(dot);
+            }
+        }
+
+        function updateProgress() {
+            const fill = document.getElementById('progress-fill');
+            const text = document.getElementById('progress-text');
+            const percentage = Math.max(5, ((currentStep + 1) / totalSteps) * 100);
+            fill.style.width = percentage + '%';
+            text.textContent = `Step ${currentStep + 1}/${totalSteps}`;
+        }
+
+        function goToStep(step) {
+            // Hide current
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            // Show new
+            currentStep = step;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            // Update nav
+            document.querySelectorAll('.step-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === step);
+                dot.classList.toggle('completed', completedSteps.has(i));
+            });
+            updateProgress();
+        }
+
+        function startWizard() {
+            const input = document.getElementById('business-name-input');
+            businessName = input.value.trim() || "My Awesome Business";
+            document.getElementById('business-name-top').textContent = businessIcon + ' ' + businessName;
+            document.getElementById('cert-business-name').textContent = businessName;
+            
+            // Update all business name placeholders
+            updateBusinessNameDisplays();
+            
+            // Update example code snippets with business name
+            document.querySelectorAll('[id^="example-business"]').forEach(el => {
+                el.textContent = businessName;
+            });
+            
+            nextStep();
+        }
+        
+        // Listen for name input changes
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('business-name-input');
+            if (nameInput) {
+                nameInput.addEventListener('input', checkStartReady);
+            }
+        });
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                completedSteps.add(currentStep);
+                goToStep(currentStep + 1);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                goToStep(currentStep - 1);
+            }
+        }
+
+        function runCode(step) {
+            const code = document.getElementById(`code-${step}`).value;
+            const validation = validations[step];
+            const feedback = document.getElementById(`feedback-${step}`);
+            const nextBtn = document.getElementById(`next-${step}`);
+
+            if (validation.check(code)) {
+                // Success!
+                feedback.className = 'feedback-message feedback-success';
+                feedback.innerHTML = `<span>✅</span> ${validation.success}`;
+                feedback.style.display = 'flex';
+                nextBtn.disabled = false;
+
+                // Update preview
+                updatePreview(step);
+
+                // Show achievement
+                if (validation.achievement && !achievements.includes(validation.achievement.title)) {
+                    achievements.push(validation.achievement.title);
+                    showAchievement(validation.achievement);
+                    updateAchievementsList(step);
+                }
+
+                // Terminal output for git steps
+                if (step === 6) {
+                    document.getElementById('terminal-output-6').innerHTML = `
+                        <div style="color: #3fb950;">✓ Initialized empty Git repository</div>
+                        <div style="color: #3fb950;">✓ Added all files to staging area</div>
+                        <div style="color: #3fb950;">✓ Created commit: "My first website!"</div>
+                        <div style="color: #58a6ff; margin-top: 0.5rem;">🎉 Your code is saved!</div>
+                    `;
+                }
+                if (step === 7) {
+                    document.getElementById('terminal-output-7').innerHTML = `
+                        <div style="color: #3fb950;">✓ Connected to GitHub</div>
+                        <div style="color: #3fb950;">✓ Uploading files...</div>
+                        <div style="color: #3fb950;">✓ Website deployed!</div>
+                        <div style="color: #58a6ff; margin-top: 0.5rem;">🚀 Your site is LIVE at:</div>
+                        <div style="color: #f0883e;">https://${businessName.toLowerCase().replace(/\s+/g, '-')}.github.io</div>
+                    `;
+                    // Set certificate date
+                    document.getElementById('cert-date').textContent = new Date().toLocaleDateString();
+                }
+            } else {
+                // Error
+                feedback.className = 'feedback-message feedback-error';
+                feedback.innerHTML = `<span>❌</span> Not quite right. Keep trying!`;
+                feedback.style.display = 'flex';
+            }
+        }
+
+        function showHint(step) {
+            const feedback = document.getElementById(`feedback-${step}`);
+            feedback.className = 'feedback-message feedback-hint';
+            feedback.innerHTML = `<span>💡</span> ${validations[step].hint}`;
+            feedback.style.display = 'flex';
+        }
+
+        function resetCode(step) {
+            document.getElementById(`code-${step}`).value = '';
+            document.getElementById(`feedback-${step}`).style.display = 'none';
+            updatePreview(step);
+        }
+
+        function updatePreview(step) {
+            const code = document.getElementById(`code-${step}`).value;
+            const iframe = document.getElementById(`preview-${step}`);
+            if (iframe) {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open();
+                doc.write(code);
+                doc.close();
+            }
+        }
+
+        function updateAchievementsList(step) {
+            const items = document.querySelectorAll('#achievements-list .rule-item');
+            if (items[step - 1]) {
+                const achievement = validations[step].achievement;
+                items[step - 1].style.opacity = '1';
+                items[step - 1].innerHTML = `
+                    <span class="rule-number">${achievement.icon}</span>
+                    <span class="rule-text">${achievement.title}</span>
+                `;
+            }
+            // Update stats
+            document.getElementById('stats-text').textContent = `⭐ ${achievements.length}/7 achievements unlocked!`;
+        }
+
+        function showAchievement(achievement) {
+            document.getElementById('achievement-icon').textContent = achievement.icon;
+            document.getElementById('achievement-title').textContent = achievement.title;
+            document.getElementById('achievement-desc').textContent = achievement.desc;
+            document.getElementById('achievement-popup').classList.add('show');
+            launchConfetti();
+        }
+
+        function closeAchievement() {
+            document.getElementById('achievement-popup').classList.remove('show');
+        }
+
+        function restartWizard() {
+            currentStep = 0;
+            completedSteps.clear();
+            achievements = [];
+            businessName = "Your Business";
+            
+            // Reset all inputs
+            for (let i = 1; i <= 7; i++) {
+                const code = document.getElementById(`code-${i}`);
+                const feedback = document.getElementById(`feedback-${i}`);
+                const nextBtn = document.getElementById(`next-${i}`);
+                if (code) code.value = '';
+                if (feedback) feedback.style.display = 'none';
+                if (nextBtn) nextBtn.disabled = true;
+            }
+            
+            // Reset achievements display
+            const items = document.querySelectorAll('#achievements-list .rule-item');
+            items.forEach((item, i) => {
+                item.style.opacity = '0.5';
+                const names = ['HTML Beginner', 'Tag Master', 'Structure Pro', 'CSS Artist', 'Style Guru', 'Git Starter', 'Deploy Master'];
+                item.innerHTML = `
+                    <span class="rule-number">🔒</span>
+                    <span class="rule-text">${names[i]}</span>
+                `;
+            });
+            
+            document.getElementById('stats-text').textContent = 'Complete challenges to earn stars!';
+            document.getElementById('business-name-top').textContent = 'Your Business';
+            document.getElementById('business-name-input').value = '';
+            
+            generateStepNav();
+            goToStep(0);
+        }
+
+        // Confetti
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20 - 10,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 8 + 4,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; // gravity
+                    p.rotation += 5;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                frame++;
+                if (frame < 120) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+
+        // Sidebar collapse functionality
+        (function() {
+            var leftBtn = document.getElementById('collapse-left-btn');
+            var rightBtn = document.getElementById('collapse-right-btn');
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var dashboard = document.getElementById('dashboard-container');
+            
+            // Always start with both sidebars visible by default
+            var leftCollapsed = false;
+            var rightCollapsed = false;
+            
+            function updateDashboardClass() {
+                dashboard.classList.remove('left-collapsed', 'right-collapsed', 'both-collapsed');
+                if (leftCollapsed && rightCollapsed) {
+                    dashboard.classList.add('both-collapsed');
+                } else if (leftCollapsed) {
+                    dashboard.classList.add('left-collapsed');
+                } else if (rightCollapsed) {
+                    dashboard.classList.add('right-collapsed');
+                }
+            }
+            
+            function applyLeftState() {
+                if (leftCollapsed) {
+                    leftSidebar.classList.add('collapsed');
+                    leftBtn.innerHTML = '▶';
+                    leftBtn.classList.add('collapsed');
+                } else {
+                    leftSidebar.classList.remove('collapsed');
+                    leftBtn.innerHTML = '◀';
+                    leftBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            function applyRightState() {
+                if (rightCollapsed) {
+                    rightSidebar.classList.add('collapsed');
+                    rightBtn.innerHTML = '◀';
+                    rightBtn.classList.add('collapsed');
+                } else {
+                    rightSidebar.classList.remove('collapsed');
+                    rightBtn.innerHTML = '▶';
+                    rightBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            // Apply initial states
+            applyLeftState();
+            applyRightState();
+            
+            // Toggle handlers
+            if (leftBtn) {
+                leftBtn.addEventListener('click', function() {
+                    leftCollapsed = !leftCollapsed;
+                    applyLeftState();
+                });
+            }
+            
+            if (rightBtn) {
+                rightBtn.addEventListener('click', function() {
+                    rightCollapsed = !rightCollapsed;
+                    applyRightState();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
+
