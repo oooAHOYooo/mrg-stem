@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Smash Fighters - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ui-panel {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 3px solid;
+            pointer-events: auto;
+            color: white;
+        }
+
+        .health-panel {
+            position: fixed;
+            top: 0.5rem;
+            width: 500px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-color: #ff1744;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .health-bars {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .player-health {
+            flex: 1;
+        }
+
+        .player-name {
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .player1-name {
+            color: #ff6b6b;
+            text-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
+        }
+
+        .player2-name {
+            color: #4ecdc4;
+            text-shadow: 0 0 8px rgba(78, 205, 196, 0.8);
+        }
+
+        .health-bar-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            height: 24px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .health-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player1-health-bar {
+            background: linear-gradient(90deg, #4caf50, #8bc34a, #cddc39, #ffeb3b, #ff9800, #ff5722, #f44336);
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+            transition: background 0.3s ease;
+        }
+
+        .player2-health-bar {
+            background: linear-gradient(90deg, #4caf50, #8bc34a, #cddc39, #ffeb3b, #ff9800, #ff5722, #f44336);
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+            transition: background 0.3s ease;
+        }
+
+        .health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 1);
+            z-index: 1;
+            color: white;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: 280px;
+            border-color: #9c27b0;
+            padding: 1rem;
+        }
+
+        .controls-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            color: #9c27b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .control-set {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.75rem;
+            border-radius: 12px;
+            border: 2px solid;
+        }
+
+        .player1-controls {
+            border-color: #ff6b6b;
+        }
+
+        .player2-controls {
+            border-color: #4ecdc4;
+        }
+
+        .control-set h3 {
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .player1-controls h3 {
+            color: #ff6b6b;
+        }
+
+        .player2-controls h3 {
+            color: #4ecdc4;
+        }
+
+        .control-item {
+            margin: 0.3rem 0;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-key {
+            display: inline-block;
+            background: linear-gradient(135deg, #9c27b0, #e91e63);
+            color: white;
+            padding: 0.3rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(156, 39, 176, 0.5);
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            border: 4px solid #9c27b0;
+            box-shadow: 0 0 50px rgba(156, 39, 176, 0.8);
+            z-index: 100;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #9c27b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-over button {
+            margin-top: 1.5rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #9c27b0, #e91e63);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.5);
+        }
+
+        .game-over button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(156, 39, 176, 0.8);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 2px solid #9c27b0;
+            font-weight: 700;
+            z-index: 20;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(156, 39, 176, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .timer-display {
+            position: fixed;
+            top: 0.5rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 0.75rem 1.5rem;
+            border: 3px solid #9c27b0;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.5);
+            z-index: 20;
+            min-width: 120px;
+        }
+
+        .timer-display.warning {
+            border-color: #ff9800;
+            color: #ff9800;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .timer-display.danger {
+            border-color: #f44336;
+            color: #f44336;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        .powerup-indicator {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 0.75rem;
+            border: 3px solid #4caf50;
+            color: white;
+            font-size: 0.85rem;
+            z-index: 20;
+            min-width: 200px;
+        }
+
+        .powerup-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.3rem 0;
+            padding: 0.3rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .powerup-icon {
+            font-size: 1.2rem;
+        }
+
+        .powerup-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .powerup-timer {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .powerup-spawn {
+            position: absolute;
+            animation: float 2s ease-in-out infinite, glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(0.3); }
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 900;
+            color: #ffeb3b;
+            text-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .combo-display.show {
+            opacity: 1;
+            animation: comboPop 0.5s ease;
+        }
+
+        @keyframes comboPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <a href="mge.html" class="back-button">← Back to Experiments</a>
+
+    <div id="game-container"></div>
+
+    <div class="ui-overlay">
+        <div class="health-panel ui-panel">
+            <div class="health-bars">
+                <div class="player-health">
+                    <div class="player-name player1-name">P1</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar player1-health-bar" id="health-bar-1" style="width: 0%;"></div>
+                        <div class="health-text" id="health-text-1">0%</div>
+                    </div>
+                </div>
+                <div class="player-health">
+                    <div class="player-name player2-name">P2</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar player2-health-bar" id="health-bar-2" style="width: 0%;"></div>
+                        <div class="health-text" id="health-text-2">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel ui-panel">
+            <h2>🎮 Controls</h2>
+            <div class="controls-grid">
+                <div class="control-set player1-controls">
+                    <h3>Player 1</h3>
+                    <div class="control-item">
+                        <span class="control-key">W</span>
+                        <span>Jump</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">A</span>
+                        <span>Left</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">D</span>
+                        <span>Right</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">S</span>
+                        <span>Attack</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">Q</span>
+                        <span>Special</span>
+                    </div>
+                </div>
+                <div class="control-set player2-controls">
+                    <h3>Player 2</h3>
+                    <div class="control-item">
+                        <span class="control-key">↑</span>
+                        <span>Jump</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">←</span>
+                        <span>Left</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">→</span>
+                        <span>Right</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">↓</span>
+                        <span>Attack</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">.</span>
+                        <span>Special</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timer-display" id="timer-display">5:00</div>
+
+        <div class="powerup-indicator" id="powerup-indicator" style="display: none;">
+            <div style="font-weight: 800; margin-bottom: 0.5rem; text-align: center; color: #4caf50;">⚡ Powerups</div>
+            <div id="powerup-list"></div>
+        </div>
+
+        <div class="combo-display" id="combo-display"></div>
+
+        <div class="game-over" id="game-over">
+            <h2 id="winner-text">Player 1 Wins!</h2>
+            <p style="font-size: 1.2rem; margin-top: 1rem;">Great fight! 🎉</p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let scene, camera, renderer;
+        let player1, player2;
+        let platform;
+        let keys = {};
+        let gameRunning = true;
+        let matchTimer = 300; // 5 minutes in seconds
+        let powerups = [];
+        let powerupSpawnTimer = 0;
+        let lastHitTime = { p1: 0, p2: 0 };
+        let comboCount = { p1: 0, p2: 0 };
+        let comboDisplayTimer = 0;
+
+        // Player stats
+        const players = {
+            p1: {
+                percentage: 0,  // Smash Bros style - starts at 0%
+                position: { x: -3, y: 2, z: 0 },
+                velocity: { x: 0, y: 0, z: 0 },
+                onGround: false,
+                facing: 1,
+                attackCooldown: 0,
+                specialCooldown: 0,
+                color: 0xff6b6b,
+                invulnerable: 0,
+                isDead: false,
+                powerups: {},
+                moveSpeedMultiplier: 1,
+                damageMultiplier: 1,
+                hasShield: false
+            },
+            p2: {
+                percentage: 0,
+                position: { x: 3, y: 2, z: 0 },
+                velocity: { x: 0, y: 0, z: 0 },
+                onGround: false,
+                facing: -1,
+                attackCooldown: 0,
+                specialCooldown: 0,
+                color: 0x4ecdc4,
+                invulnerable: 0,
+                isDead: false,
+                powerups: {},
+                moveSpeedMultiplier: 1,
+                damageMultiplier: 1,
+                hasShield: false
+            }
+        };
+
+        // Physics constants
+        const GRAVITY = -25;
+        const JUMP_FORCE = 12;
+        const MOVE_SPEED = 8;
+        const ATTACK_DAMAGE = 8;  // Percentage damage
+        const SPECIAL_DAMAGE = 15;
+        const ATTACK_RANGE = 2.2;
+        const ATTACK_COOLDOWN = 25;
+        const SPECIAL_COOLDOWN = 90;
+        const PLATFORM_LEFT = -10;
+        const PLATFORM_RIGHT = 10;
+        const PLATFORM_TOP = 1;
+        const DEATH_Y = -5;  // Fall off screen
+        const DEATH_X = 15;  // Too far left/right
+        const KNOCKBACK_BASE = 0.15;  // Base knockback multiplier
+        const KNOCKBACK_SCALING = 0.12;  // Percentage scaling
+        const INVULNERABLE_TIME = 20;
+        const POWERUP_SPAWN_INTERVAL = 600; // Frames (10 seconds at 60fps)
+        const POWERUP_DURATION = 600; // Frames (10 seconds)
+        const COMBO_TIMEOUT = 120; // Frames (2 seconds)
+        
+        // Powerup types
+        const POWERUP_TYPES = {
+            SPEED: { icon: '⚡', name: 'Speed Boost', color: 0xffeb3b },
+            DAMAGE: { icon: '💥', name: 'Damage Boost', color: 0xf44336 },
+            SHIELD: { icon: '🛡️', name: 'Shield', color: 0x2196f3 },
+            HEALTH: { icon: '❤️', name: 'Health Restore', color: 0x4caf50 }
+        };
+
+        // Initialize Three.js scene
+        function init() {
+            const container = document.getElementById('game-container');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.set(0, 8, 15);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            scene.add(directionalLight);
+
+            // Colored lights for atmosphere
+            const light1 = new THREE.PointLight(0xff6b6b, 1, 30);
+            light1.position.set(-5, 5, 0);
+            scene.add(light1);
+
+            const light2 = new THREE.PointLight(0x4ecdc4, 1, 30);
+            light2.position.set(5, 5, 0);
+            scene.add(light2);
+
+            // Platform
+            const platformGeometry = new THREE.BoxGeometry(20, 1, 10);
+            const platformMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a2a4a,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+            platform = new THREE.Mesh(platformGeometry, platformMaterial);
+            platform.position.y = -0.5;
+            platform.receiveShadow = true;
+            scene.add(platform);
+
+            // Platform edges with warning zones
+            const edgeGeometry = new THREE.BoxGeometry(20, 0.5, 0.5);
+            const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0x9c27b0, emissive: 0x9c27b0, emissiveIntensity: 0.5 });
+            const leftEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            leftEdge.position.set(-10, 0, 0);
+            scene.add(leftEdge);
+            const rightEdge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            rightEdge.position.set(10, 0, 0);
+            scene.add(rightEdge);
+
+            // Death zones (visual indicators - subtle warning)
+            const deathZoneGeometry = new THREE.PlaneGeometry(3, 25);
+            const deathZoneMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff0000, 
+                transparent: true, 
+                opacity: 0.08,
+                side: THREE.DoubleSide
+            });
+            const leftDeathZone = new THREE.Mesh(deathZoneGeometry, deathZoneMaterial);
+            leftDeathZone.position.set(-12, 5, 0);
+            leftDeathZone.rotation.y = Math.PI / 2;
+            scene.add(leftDeathZone);
+            const rightDeathZone = new THREE.Mesh(deathZoneGeometry, deathZoneMaterial);
+            rightDeathZone.position.set(12, 5, 0);
+            rightDeathZone.rotation.y = Math.PI / 2;
+            scene.add(rightDeathZone);
+            
+            // Bottom death zone
+            const bottomDeathZone = new THREE.Mesh(
+                new THREE.PlaneGeometry(30, 3),
+                deathZoneMaterial
+            );
+            bottomDeathZone.position.set(0, -3, 0);
+            bottomDeathZone.rotation.x = Math.PI / 2;
+            scene.add(bottomDeathZone);
+
+            // Create players
+            createPlayer(1);
+            createPlayer(2);
+
+            // Background elements
+            createBackground();
+
+            // Initialize powerup system
+            spawnPowerup();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+
+            // Start game loop
+            animate();
+        }
+
+        function createPlayer(num) {
+            const player = players[num === 1 ? 'p1' : 'p2'];
+            const group = new THREE.Group();
+
+            // Body
+            const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ 
+                color: player.color,
+                emissive: player.color,
+                emissiveIntensity: 0.3
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.6;
+            body.castShadow = true;
+            group.add(body);
+
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+            const headMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xffdbac,
+                emissive: 0xffdbac,
+                emissiveIntensity: 0.1
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.6;
+            head.castShadow = true;
+            group.add(head);
+
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 1.7, 0.35);
+            group.add(leftEye);
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.15, 1.7, 0.35);
+            group.add(rightEye);
+
+            // Arms
+            const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+            const armMaterial = new THREE.MeshStandardMaterial({ color: player.color });
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.6, 0.8, 0);
+            leftArm.castShadow = true;
+            group.add(leftArm);
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.6, 0.8, 0);
+            rightArm.castShadow = true;
+            group.add(rightArm);
+
+            // Legs
+            const legGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.25, -0.2, 0);
+            leftLeg.castShadow = true;
+            group.add(leftLeg);
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.25, -0.2, 0);
+            rightLeg.castShadow = true;
+            group.add(rightLeg);
+
+            group.position.set(player.position.x, player.position.y, player.position.z);
+            scene.add(group);
+
+            if (num === 1) {
+                player1 = group;
+            } else {
+                player2 = group;
+            }
+        }
+
+        function createBackground() {
+            // Floating platforms
+            for (let i = 0; i < 3; i++) {
+                const smallPlatform = new THREE.Mesh(
+                    new THREE.BoxGeometry(3, 0.3, 2),
+                    new THREE.MeshStandardMaterial({ 
+                        color: 0x4a4a6a,
+                        emissive: 0x4a4a6a,
+                        emissiveIntensity: 0.2
+                    })
+                );
+                smallPlatform.position.set(
+                    (Math.random() - 0.5) * 15,
+                    3 + i * 2,
+                    (Math.random() - 0.5) * 5
+                );
+                smallPlatform.receiveShadow = true;
+                scene.add(smallPlatform);
+            }
+
+            // Particles
+            const particleCount = 100;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 50;
+                positions[i + 1] = Math.random() * 30;
+                positions[i + 2] = (Math.random() - 0.5) * 50;
+            }
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0x9c27b0,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.6
+            });
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            scene.add(particleSystem);
+        }
+
+        function onKeyDown(event) {
+            const key = event.key.toLowerCase();
+            // Handle arrow keys
+            if (key === 'arrowup') {
+                keys['arrowup'] = true;
+            } else if (key === 'arrowdown') {
+                keys['arrowdown'] = true;
+            } else if (key === 'arrowleft') {
+                keys['arrowleft'] = true;
+            } else if (key === 'arrowright') {
+                keys['arrowright'] = true;
+            } else {
+                keys[key] = true;
+            }
+            event.preventDefault();
+        }
+
+        function onKeyUp(event) {
+            const key = event.key.toLowerCase();
+            // Handle arrow keys
+            if (key === 'arrowup') {
+                keys['arrowup'] = false;
+            } else if (key === 'arrowdown') {
+                keys['arrowdown'] = false;
+            } else if (key === 'arrowleft') {
+                keys['arrowleft'] = false;
+            } else if (key === 'arrowright') {
+                keys['arrowright'] = false;
+            } else {
+                keys[key] = false;
+            }
+            event.preventDefault();
+        }
+
+        function updatePlayer(playerKey, controls, playerMesh) {
+            const player = players[playerKey];
+            if (!gameRunning) return;
+
+            // Movement (with powerup multiplier)
+            let moving = false;
+            const currentMoveSpeed = MOVE_SPEED * player.moveSpeedMultiplier;
+            if (controls.left && !controls.right) {
+                player.velocity.x = -currentMoveSpeed;
+                player.facing = -1;
+                moving = true;
+            } else if (controls.right && !controls.left) {
+                player.velocity.x = currentMoveSpeed;
+                player.facing = 1;
+                moving = true;
+            } else {
+                player.velocity.x *= 0.8; // Friction
+            }
+            
+            // Update powerup timers
+            updatePlayerPowerups(playerKey);
+
+            // Jumping
+            if (controls.jump && player.onGround) {
+                player.velocity.y = JUMP_FORCE;
+                player.onGround = false;
+            }
+
+            // Gravity
+            player.velocity.y += GRAVITY * 0.016;
+
+            // Update position
+            player.position.x += player.velocity.x * 0.016;
+            player.position.y += player.velocity.y * 0.016;
+
+            // Ground collision
+            if (player.position.y <= PLATFORM_TOP && player.position.x >= PLATFORM_LEFT && player.position.x <= PLATFORM_RIGHT) {
+                player.position.y = PLATFORM_TOP;
+                if (player.velocity.y < 0) {
+                    player.velocity.y = 0;
+                    player.onGround = true;
+                }
+            }
+
+            // Check for death (falling off)
+            if (player.position.y < DEATH_Y || 
+                player.position.x < -DEATH_X || 
+                player.position.x > DEATH_X) {
+                if (!player.isDead) {
+                    player.isDead = true;
+                    // Create death explosion effect
+                    createDeathEffect(player.position, player.color);
+                    screenShake(0.3);
+                    checkGameOver();
+                }
+            }
+
+            // Update invulnerability
+            if (player.invulnerable > 0) {
+                player.invulnerable--;
+                // Flash effect
+                const flash = Math.floor(player.invulnerable / 3) % 2;
+                playerMesh.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = flash ? 0.5 : 1;
+                    }
+                });
+            } else {
+                playerMesh.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = 1;
+                    }
+                });
+            }
+
+            // Update mesh
+            playerMesh.position.set(player.position.x, player.position.y, player.position.z);
+            playerMesh.rotation.y = player.facing === 1 ? 0 : Math.PI;
+            
+            // Add slight tilt when moving for more dynamic feel
+            if (moving) {
+                playerMesh.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
+            } else {
+                playerMesh.rotation.z = 0;
+            }
+
+            // Attack
+            if (controls.attack && player.attackCooldown <= 0) {
+                performAttack(playerKey);
+                player.attackCooldown = ATTACK_COOLDOWN;
+            }
+
+            // Special attack
+            if (controls.special && player.specialCooldown <= 0) {
+                performSpecialAttack(playerKey);
+                player.specialCooldown = SPECIAL_COOLDOWN;
+            }
+
+            // Update cooldowns
+            if (player.attackCooldown > 0) player.attackCooldown--;
+            if (player.specialCooldown > 0) player.specialCooldown--;
+        }
+
+        function performAttack(attackerKey) {
+            const attacker = players[attackerKey];
+            const defenderKey = attackerKey === 'p1' ? 'p2' : 'p1';
+            const defender = players[defenderKey];
+
+            if (defender.invulnerable > 0 || defender.isDead) return;
+
+            const distance = Math.abs(attacker.position.x - defender.position.x);
+            const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
+            if (distance < ATTACK_RANGE && verticalDistance < 2) {
+                // Check for shield
+                if (defender.hasShield) {
+                    defender.hasShield = false;
+                    createShieldBreakEffect(defender.position);
+                    return;
+                }
+                
+                // Add percentage damage (with damage multiplier)
+                const damage = ATTACK_DAMAGE * attacker.damageMultiplier;
+                defender.percentage += damage;
+                
+                // Calculate knockback based on percentage (like Smash Bros)
+                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING);
+                const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
+                defender.velocity.x += knockbackDir * knockbackStrength * 8;
+                defender.velocity.y += knockbackStrength * 4;
+                
+                // Invulnerability frames
+                defender.invulnerable = INVULNERABLE_TIME;
+                
+                // Combo system
+                const currentTime = Date.now();
+                if (currentTime - lastHitTime[attackerKey] < 2000) {
+                    comboCount[attackerKey]++;
+                    showCombo(attackerKey, comboCount[attackerKey]);
+                } else {
+                    comboCount[attackerKey] = 1;
+                }
+                lastHitTime[attackerKey] = currentTime;
+                
+                // Visual effects
+                createHitEffect(defender.position, defender.color);
+                screenShake(0.1);
+                
+                updateHealthBars();
+            }
+        }
+
+        function performSpecialAttack(attackerKey) {
+            const attacker = players[attackerKey];
+            const defenderKey = attackerKey === 'p1' ? 'p2' : 'p1';
+            const defender = players[defenderKey];
+
+            if (defender.invulnerable > 0 || defender.isDead) return;
+
+            const distance = Math.abs(attacker.position.x - defender.position.x);
+            const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
+            if (distance < ATTACK_RANGE * 1.5 && verticalDistance < 2.5) {
+                // Check for shield
+                if (defender.hasShield) {
+                    defender.hasShield = false;
+                    createShieldBreakEffect(defender.position);
+                    return;
+                }
+                
+                // Add percentage damage (with damage multiplier)
+                const damage = SPECIAL_DAMAGE * attacker.damageMultiplier;
+                defender.percentage += damage;
+                
+                // Strong knockback that scales with percentage
+                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * 1.5;
+                const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
+                defender.velocity.x += knockbackDir * knockbackStrength * 12;
+                defender.velocity.y += knockbackStrength * 6;
+                
+                // Invulnerability frames
+                defender.invulnerable = INVULNERABLE_TIME;
+                
+                // Combo system
+                const currentTime = Date.now();
+                if (currentTime - lastHitTime[attackerKey] < 2000) {
+                    comboCount[attackerKey]++;
+                    showCombo(attackerKey, comboCount[attackerKey]);
+                } else {
+                    comboCount[attackerKey] = 1;
+                }
+                lastHitTime[attackerKey] = currentTime;
+                
+                // Visual effects
+                createSpecialEffect(attacker.position);
+                createHitEffect(defender.position, defender.color);
+                screenShake(0.2);
+
+                updateHealthBars();
+            }
+        }
+
+        function createHitEffect(position, color) {
+            // Create impact particles
+            for (let i = 0; i < 8; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.1, 8, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: color,
+                        emissive: color,
+                        emissiveIntensity: 1
+                    })
+                );
+                particle.position.set(
+                    position.x + (Math.random() - 0.5) * 0.5,
+                    position.y + (Math.random() - 0.5) * 0.5,
+                    position.z + (Math.random() - 0.5) * 0.5
+                );
+                scene.add(particle);
+
+                const velocity = {
+                    x: (Math.random() - 0.5) * 0.3,
+                    y: (Math.random() - 0.5) * 0.3,
+                    z: (Math.random() - 0.5) * 0.3
+                };
+
+                let frame = 0;
+                const animate = () => {
+                    frame++;
+                    particle.position.x += velocity.x;
+                    particle.position.y += velocity.y;
+                    particle.position.z += velocity.z;
+                    particle.material.opacity -= 0.05;
+                    particle.scale.multiplyScalar(0.95);
+                    if (particle.material.opacity > 0 && frame < 20) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        scene.remove(particle);
+                    }
+                };
+                animate();
+            }
+        }
+
+        function createSpecialEffect(position) {
+            const geometry = new THREE.SphereGeometry(1, 16, 16);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x9c27b0,
+                emissive: 0x9c27b0,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.8
+            });
+            const effect = new THREE.Mesh(geometry, material);
+            effect.position.set(position.x, position.y + 1, position.z);
+            scene.add(effect);
+
+            let scale = 0.5;
+            const animate = () => {
+                scale += 0.15;
+                effect.scale.set(scale, scale, scale);
+                material.opacity -= 0.03;
+                if (material.opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    scene.remove(effect);
+                }
+            };
+            animate();
+        }
+
+        function createDeathEffect(position, color) {
+            // Big explosion of particles
+            for (let i = 0; i < 20; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.15, 8, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: color,
+                        emissive: color,
+                        emissiveIntensity: 1
+                    })
+                );
+                particle.position.set(position.x, position.y, position.z);
+                scene.add(particle);
+
+                const angle = (Math.PI * 2 * i) / 20;
+                const speed = 0.5 + Math.random() * 0.5;
+                const velocity = {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed + 0.3,
+                    z: (Math.random() - 0.5) * 0.3
+                };
+
+                let frame = 0;
+                const animate = () => {
+                    frame++;
+                    particle.position.x += velocity.x;
+                    particle.position.y += velocity.y;
+                    particle.position.z += velocity.z;
+                    velocity.y -= 0.02; // Gravity
+                    particle.material.opacity -= 0.03;
+                    particle.scale.multiplyScalar(0.98);
+                    if (particle.material.opacity > 0 && frame < 40) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        scene.remove(particle);
+                    }
+                };
+                animate();
+            }
+        }
+
+        function spawnPowerup() {
+            const types = Object.keys(POWERUP_TYPES);
+            const type = types[Math.floor(Math.random() * types.length)];
+            const powerupData = POWERUP_TYPES[type];
+            
+            // Spawn on platform
+            const x = (Math.random() - 0.5) * 15;
+            const y = 2;
+            const z = (Math.random() - 0.5) * 5;
+            
+            // Create powerup mesh
+            const geometry = new THREE.OctahedronGeometry(0.4, 0);
+            const material = new THREE.MeshStandardMaterial({
+                color: powerupData.color,
+                emissive: powerupData.color,
+                emissiveIntensity: 0.8,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const powerup = new THREE.Mesh(geometry, material);
+            powerup.position.set(x, y, z);
+            powerup.userData = { type, powerupData };
+            powerup.rotation.set(0, 0, 0);
+            scene.add(powerup);
+            
+            // Add glow effect
+            const glowGeometry = new THREE.OctahedronGeometry(0.5, 0);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: powerupData.color,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.copy(powerup.position);
+            glow.scale.set(1.2, 1.2, 1.2);
+            scene.add(glow);
+            powerup.userData.glow = glow;
+            
+            powerups.push(powerup);
+        }
+
+        function checkPowerupCollisions() {
+            powerups.forEach((powerup, index) => {
+                // Rotate powerup
+                powerup.rotation.y += 0.02;
+                powerup.rotation.x += 0.01;
+                if (powerup.userData.glow) {
+                    powerup.userData.glow.rotation.y -= 0.015;
+                    powerup.userData.glow.position.y = powerup.position.y + Math.sin(Date.now() * 0.005) * 0.2;
+                }
+                
+                // Check collision with players
+                [players.p1, players.p2].forEach((player, playerIndex) => {
+                    const playerKey = playerIndex === 0 ? 'p1' : 'p2';
+                    const distance = Math.sqrt(
+                        Math.pow(player.position.x - powerup.position.x, 2) +
+                        Math.pow(player.position.y - powerup.position.y, 2) +
+                        Math.pow(player.position.z - powerup.position.z, 2)
+                    );
+                    
+                    if (distance < 1) {
+                        // Player collected powerup
+                        applyPowerup(playerKey, powerup.userData.type);
+                        scene.remove(powerup);
+                        if (powerup.userData.glow) scene.remove(powerup.userData.glow);
+                        powerups.splice(index, 1);
+                        createPowerupCollectEffect(powerup.position, powerup.userData.powerupData.color);
+                    }
+                });
+            });
+        }
+
+        function applyPowerup(playerKey, type) {
+            const player = players[playerKey];
+            const powerupData = POWERUP_TYPES[type];
+            
+            switch(type) {
+                case 'SPEED':
+                    player.moveSpeedMultiplier = 1.5;
+                    player.powerups.SPEED = POWERUP_DURATION;
+                    break;
+                case 'DAMAGE':
+                    player.damageMultiplier = 1.5;
+                    player.powerups.DAMAGE = POWERUP_DURATION;
+                    break;
+                case 'SHIELD':
+                    player.hasShield = true;
+                    player.powerups.SHIELD = POWERUP_DURATION;
+                    // Visual shield effect
+                    addShieldVisual(playerKey);
+                    break;
+                case 'HEALTH':
+                    player.percentage = Math.max(0, player.percentage - 30);
+                    updateHealthBars();
+                    break;
+            }
+            
+            updatePowerupDisplay();
+        }
+
+        function updatePlayerPowerups(playerKey) {
+            const player = players[playerKey];
+            let updated = false;
+            
+            Object.keys(player.powerups).forEach(type => {
+                if (player.powerups[type] > 0) {
+                    player.powerups[type]--;
+                    if (player.powerups[type] <= 0) {
+                        delete player.powerups[type];
+                        updated = true;
+                        
+                        switch(type) {
+                            case 'SPEED':
+                                player.moveSpeedMultiplier = 1;
+                                break;
+                            case 'DAMAGE':
+                                player.damageMultiplier = 1;
+                                break;
+                            case 'SHIELD':
+                                player.hasShield = false;
+                                removeShieldVisual(playerKey);
+                                break;
+                        }
+                    }
+                }
+            });
+            
+            if (updated) updatePowerupDisplay();
+        }
+
+        function addShieldVisual(playerKey) {
+            const playerMesh = playerKey === 'p1' ? player1 : player2;
+            const player = players[playerKey];
+            
+            // Remove existing shield if any
+            removeShieldVisual(playerKey);
+            
+            const shieldGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+            const shieldMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2196f3,
+                emissive: 0x2196f3,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+            shield.name = 'shield';
+            playerMesh.add(shield);
+        }
+
+        function removeShieldVisual(playerKey) {
+            const playerMesh = playerKey === 'p1' ? player1 : player2;
+            const shield = playerMesh.getObjectByName('shield');
+            if (shield) {
+                playerMesh.remove(shield);
+            }
+        }
+
+        function updatePowerupDisplay() {
+            const indicator = document.getElementById('powerup-indicator');
+            const list = document.getElementById('powerup-list');
+            list.innerHTML = '';
+            
+            let hasPowerups = false;
+            [players.p1, players.p2].forEach((player, index) => {
+                const playerKey = index === 0 ? 'p1' : 'p2';
+                const playerName = index === 0 ? 'P1' : 'P2';
+                const playerColor = index === 0 ? '#ff6b6b' : '#4ecdc4';
+                
+                Object.keys(player.powerups).forEach(type => {
+                    hasPowerups = true;
+                    const powerupData = POWERUP_TYPES[type];
+                    const timeLeft = Math.ceil(player.powerups[type] / 60);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'powerup-item';
+                    item.style.borderLeft = `3px solid ${playerColor}`;
+                    item.innerHTML = `
+                        <span class="powerup-icon">${powerupData.icon}</span>
+                        <span class="powerup-name" style="color: ${playerColor}">${playerName}: ${powerupData.name}</span>
+                        <span class="powerup-timer">${timeLeft}s</span>
+                    `;
+                    list.appendChild(item);
+                });
+            });
+            
+            indicator.style.display = hasPowerups ? 'block' : 'none';
+        }
+
+        function createPowerupCollectEffect(position, color) {
+            for (let i = 0; i < 15; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.1, 8, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: color,
+                        emissive: color,
+                        emissiveIntensity: 1
+                    })
+                );
+                particle.position.set(position.x, position.y, position.z);
+                scene.add(particle);
+
+                const angle = (Math.PI * 2 * i) / 15;
+                const speed = 0.3;
+                const velocity = {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed,
+                    z: (Math.random() - 0.5) * 0.2
+                };
+
+                let frame = 0;
+                const animate = () => {
+                    frame++;
+                    particle.position.x += velocity.x;
+                    particle.position.y += velocity.y;
+                    particle.position.z += velocity.z;
+                    particle.material.opacity -= 0.05;
+                    if (particle.material.opacity > 0 && frame < 20) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        scene.remove(particle);
+                    }
+                };
+                animate();
+            }
+        }
+
+        function createShieldBreakEffect(position) {
+            for (let i = 0; i < 12; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.12, 8, 8),
+                    new THREE.MeshStandardMaterial({
+                        color: 0x2196f3,
+                        emissive: 0x2196f3,
+                        emissiveIntensity: 1
+                    })
+                );
+                particle.position.set(position.x, position.y, position.z);
+                scene.add(particle);
+
+                const angle = (Math.PI * 2 * i) / 12;
+                const speed = 0.4;
+                const velocity = {
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed,
+                    z: (Math.random() - 0.5) * 0.2
+                };
+
+                let frame = 0;
+                const animate = () => {
+                    frame++;
+                    particle.position.x += velocity.x;
+                    particle.position.y += velocity.y;
+                    particle.position.z += velocity.z;
+                    particle.material.opacity -= 0.04;
+                    if (particle.material.opacity > 0 && frame < 25) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        scene.remove(particle);
+                    }
+                };
+                animate();
+            }
+        }
+
+        function showCombo(playerKey, count) {
+            const comboDisplay = document.getElementById('combo-display');
+            comboDisplay.textContent = `${count}x COMBO!`;
+            comboDisplay.style.color = playerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
+            comboDisplay.classList.add('show');
+            
+            comboDisplayTimer = 60;
+            
+            setTimeout(() => {
+                comboDisplay.classList.remove('show');
+            }, 500);
+        }
+
+        let lastTimerUpdate = 0;
+        function updateTimer() {
+            if (!gameRunning) return;
+            
+            const now = Date.now();
+            if (now - lastTimerUpdate >= 1000) {
+                matchTimer--;
+                lastTimerUpdate = now;
+                
+                const minutes = Math.floor(matchTimer / 60);
+                const seconds = matchTimer % 60;
+                const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                const timerDisplay = document.getElementById('timer-display');
+                timerDisplay.textContent = timeString;
+                
+                // Change color based on time
+                timerDisplay.classList.remove('warning', 'danger');
+                if (matchTimer <= 30) {
+                    timerDisplay.classList.add('danger');
+                } else if (matchTimer <= 60) {
+                    timerDisplay.classList.add('warning');
+                }
+                
+                // Time's up - check winner by percentage
+                if (matchTimer <= 0) {
+                    gameRunning = false;
+                    const p1Percent = players.p1.percentage;
+                    const p2Percent = players.p2.percentage;
+                    
+                    if (p1Percent < p2Percent) {
+                        endGame('Player 1');
+                    } else if (p2Percent < p1Percent) {
+                        endGame('Player 2');
+                    } else {
+                        endGame('Tie - No One');
+                    }
+                }
+            }
+        }
+
+        let shakeOffset = { x: 0, y: 0 };
+        function screenShake(intensity) {
+            shakeOffset.x += (Math.random() - 0.5) * intensity * 2;
+            shakeOffset.y += (Math.random() - 0.5) * intensity * 2;
+        }
+
+        function updateHealthBars() {
+            const p1 = players.p1;
+            const p2 = players.p2;
+
+            // Smash Bros style - percentage goes up, bar fills from left
+            // Bar width represents percentage (max at 200% for visual)
+            const maxDisplayPercent = 200;
+            const p1BarPercent = Math.min(100, (p1.percentage / maxDisplayPercent) * 100);
+            const p2BarPercent = Math.min(100, (p2.percentage / maxDisplayPercent) * 100);
+
+            document.getElementById('health-bar-1').style.width = p1BarPercent + '%';
+            document.getElementById('health-text-1').textContent = Math.round(p1.percentage) + '%';
+
+            document.getElementById('health-bar-2').style.width = p2BarPercent + '%';
+            document.getElementById('health-text-2').textContent = Math.round(p2.percentage) + '%';
+
+            // Change color based on percentage (green -> yellow -> orange -> red)
+            const p1Bar = document.getElementById('health-bar-1');
+            const p2Bar = document.getElementById('health-bar-2');
+            
+            updateBarColor(p1Bar, p1.percentage);
+            updateBarColor(p2Bar, p2.percentage);
+        }
+
+        function updateBarColor(bar, percentage) {
+            if (percentage < 50) {
+                bar.style.background = 'linear-gradient(90deg, #4caf50, #8bc34a)';
+            } else if (percentage < 100) {
+                bar.style.background = 'linear-gradient(90deg, #8bc34a, #cddc39, #ffeb3b)';
+            } else if (percentage < 150) {
+                bar.style.background = 'linear-gradient(90deg, #ffeb3b, #ff9800, #ff5722)';
+            } else {
+                bar.style.background = 'linear-gradient(90deg, #ff5722, #f44336, #d32f2f)';
+            }
+        }
+
+        function checkGameOver() {
+            if (players.p1.isDead && !players.p2.isDead) {
+                endGame('Player 2');
+            } else if (players.p2.isDead && !players.p1.isDead) {
+                endGame('Player 1');
+            }
+        }
+
+        function endGame(winner) {
+            gameRunning = false;
+            document.getElementById('winner-text').textContent = winner + ' Wins!';
+            document.getElementById('game-over').classList.add('show');
+        }
+
+        function restartGame() {
+            players.p1.percentage = 0;
+            players.p2.percentage = 0;
+            players.p1.position = { x: -3, y: 2, z: 0 };
+            players.p2.position = { x: 3, y: 2, z: 0 };
+            players.p1.velocity = { x: 0, y: 0, z: 0 };
+            players.p2.velocity = { x: 0, y: 0, z: 0 };
+            players.p1.onGround = false;
+            players.p2.onGround = false;
+            players.p1.attackCooldown = 0;
+            players.p2.attackCooldown = 0;
+            players.p1.specialCooldown = 0;
+            players.p2.specialCooldown = 0;
+            players.p1.invulnerable = 0;
+            players.p2.invulnerable = 0;
+            players.p1.isDead = false;
+            players.p2.isDead = false;
+            players.p1.powerups = {};
+            players.p2.powerups = {};
+            players.p1.moveSpeedMultiplier = 1;
+            players.p2.moveSpeedMultiplier = 1;
+            players.p1.damageMultiplier = 1;
+            players.p2.damageMultiplier = 1;
+            players.p1.hasShield = false;
+            players.p2.hasShield = false;
+
+            player1.position.set(-3, 2, 0);
+            player2.position.set(3, 2, 0);
+            player1.rotation.set(0, 0, 0);
+            player2.rotation.set(0, Math.PI, 0);
+            
+            // Remove shields
+            removeShieldVisual('p1');
+            removeShieldVisual('p2');
+            
+            // Clear powerups
+            powerups.forEach(powerup => {
+                scene.remove(powerup);
+                if (powerup.userData.glow) scene.remove(powerup.userData.glow);
+            });
+            powerups = [];
+            powerupSpawnTimer = 0;
+            
+            // Reset timer
+            matchTimer = 300;
+            
+            // Reset combo
+            comboCount = { p1: 0, p2: 0 };
+            lastHitTime = { p1: 0, p2: 0 };
+            
+            // Reset camera
+            camera.position.set(0, 8, 15);
+            shakeOffset = { x: 0, y: 0 };
+
+            updateHealthBars();
+            updatePowerupDisplay();
+            updateTimer();
+            document.getElementById('game-over').classList.remove('show');
+            gameRunning = true;
+            
+            // Spawn initial powerup
+            setTimeout(() => spawnPowerup(), 2000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (gameRunning) {
+                // Player 1 controls (WASD + Q)
+                const p1Controls = {
+                    jump: keys['w'],
+                    left: keys['a'],
+                    right: keys['d'],
+                    attack: keys['s'],
+                    special: keys['q']
+                };
+
+                // Player 2 controls (Arrow keys + .)
+                const p2Controls = {
+                    jump: keys['arrowup'] === true,
+                    left: keys['arrowleft'] === true,
+                    right: keys['arrowright'] === true,
+                    attack: keys['arrowdown'] === true,
+                    special: keys['.'] === true || keys['period'] === true
+                };
+
+                updatePlayer('p1', p1Controls, player1);
+                updatePlayer('p2', p2Controls, player2);
+                
+                // Check for deaths continuously
+                checkGameOver();
+                
+                // Update timer
+                updateTimer();
+                
+                // Powerup system
+                checkPowerupCollisions();
+                powerupSpawnTimer++;
+                if (powerupSpawnTimer >= POWERUP_SPAWN_INTERVAL && powerups.length < 2) {
+                    spawnPowerup();
+                    powerupSpawnTimer = 0;
+                }
+                
+                // Update combo display timer
+                if (comboDisplayTimer > 0) {
+                    comboDisplayTimer--;
+                    if (comboDisplayTimer === 0) {
+                        comboCount.p1 = 0;
+                        comboCount.p2 = 0;
+                    }
+                }
+                
+                // Decay screen shake
+                if (shakeOffset.x !== 0 || shakeOffset.y !== 0) {
+                    shakeOffset.x *= 0.9;
+                    shakeOffset.y *= 0.9;
+                    camera.position.x = 0 + shakeOffset.x;
+                    camera.position.y = 8 + shakeOffset.y;
+                    if (Math.abs(shakeOffset.x) < 0.01 && Math.abs(shakeOffset.y) < 0.01) {
+                        shakeOffset.x = 0;
+                        shakeOffset.y = 0;
+                        camera.position.set(0, 8, 15);
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
