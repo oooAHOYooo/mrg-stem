@@ -389,6 +389,31 @@
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
+
+        .match-score {
+            position: fixed;
+            top: 0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 0.5rem 1rem;
+            border: 3px solid #9c27b0;
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(156, 39, 176, 0.5);
+            z-index: 20;
+            margin-top: 80px;
+        }
+
+        .match-info {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -468,7 +493,8 @@
             </div>
         </div>
 
-        <div class="timer-display" id="timer-display">5:00</div>
+        <div class="timer-display" id="timer-display">1:00</div>
+        <div class="match-score" id="match-score">Match 1 | P1: 0 - P2: 0</div>
 
         <div class="powerup-indicator" id="powerup-indicator" style="display: none;">
             <div style="font-weight: 800; margin-bottom: 0.5rem; text-align: center; color: #4caf50;">⚡ Powerups</div>
@@ -491,7 +517,10 @@
         let platform;
         let keys = {};
         let gameRunning = true;
-        let matchTimer = 300; // 5 minutes in seconds
+        let matchTimer = 60; // 1 minute in seconds
+        let matchScore = { p1: 0, p2: 0 };
+        let currentMatch = 1;
+        let matchEnded = false;
         let powerups = [];
         let powerupSpawnTimer = 0;
         let lastHitTime = { p1: 0, p2: 0 };
@@ -514,7 +543,9 @@
                 powerups: {},
                 moveSpeedMultiplier: 1,
                 damageMultiplier: 1,
-                hasShield: false
+                hasShield: false,
+                attackAnimation: 0,
+                specialAnimation: 0
             },
             p2: {
                 percentage: 0,
@@ -530,7 +561,9 @@
                 powerups: {},
                 moveSpeedMultiplier: 1,
                 damageMultiplier: 1,
-                hasShield: false
+                hasShield: false,
+                attackAnimation: 0,
+                specialAnimation: 0
             }
         };
 
@@ -677,6 +710,9 @@
 
             // Start game loop
             animate();
+            
+            // Initialize match score display
+            updateMatchScore();
         }
 
         function createPlayer(num) {
@@ -717,17 +753,23 @@
             rightEye.position.set(0.15, 1.7, 0.35);
             group.add(rightEye);
 
-            // Arms
+            // Arms (store references for animation)
             const armGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
             const armMaterial = new THREE.MeshStandardMaterial({ color: player.color });
             const leftArm = new THREE.Mesh(armGeometry, armMaterial);
             leftArm.position.set(-0.6, 0.8, 0);
             leftArm.castShadow = true;
+            leftArm.name = 'leftArm';
             group.add(leftArm);
             const rightArm = new THREE.Mesh(armGeometry, armMaterial);
             rightArm.position.set(0.6, 0.8, 0);
             rightArm.castShadow = true;
+            rightArm.name = 'rightArm';
             group.add(rightArm);
+            
+            // Store initial arm positions for animation
+            player.leftArmBasePos = { x: -0.6, y: 0.8, z: 0 };
+            player.rightArmBasePos = { x: 0.6, y: 0.8, z: 0 };
 
             // Legs
             const legGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.3);
@@ -911,14 +953,19 @@
                 playerMesh.rotation.z = 0;
             }
 
+            // Update attack animations
+            updateAttackAnimation(playerKey, playerMesh);
+
             // Attack
             if (controls.attack && player.attackCooldown <= 0) {
+                player.attackAnimation = 15; // Animation frames
                 performAttack(playerKey);
                 player.attackCooldown = ATTACK_COOLDOWN;
             }
 
             // Special attack
             if (controls.special && player.specialCooldown <= 0) {
+                player.specialAnimation = 20; // Animation frames
                 performSpecialAttack(playerKey);
                 player.specialCooldown = SPECIAL_COOLDOWN;
             }
@@ -926,6 +973,71 @@
             // Update cooldowns
             if (player.attackCooldown > 0) player.attackCooldown--;
             if (player.specialCooldown > 0) player.specialCooldown--;
+        }
+
+        function updateAttackAnimation(playerKey, playerMesh) {
+            const player = players[playerKey];
+            const leftArm = playerMesh.getObjectByName('leftArm');
+            const rightArm = playerMesh.getObjectByName('rightArm');
+            
+            if (!leftArm || !rightArm) return;
+            
+            // Attack animation - punch forward
+            if (player.attackAnimation > 0) {
+                const progress = 1 - (player.attackAnimation / 15);
+                const punchDistance = Math.sin(progress * Math.PI) * 0.8;
+                const punchHeight = Math.sin(progress * Math.PI) * 0.2;
+                
+                // Animate the arm in the direction player is facing
+                if (player.facing === 1) {
+                    rightArm.position.x = player.rightArmBasePos.x + punchDistance;
+                    rightArm.position.y = player.rightArmBasePos.y + punchHeight;
+                    rightArm.rotation.z = -Math.sin(progress * Math.PI) * 0.5;
+                } else {
+                    leftArm.position.x = player.leftArmBasePos.x - punchDistance;
+                    leftArm.position.y = player.leftArmBasePos.y + punchHeight;
+                    leftArm.rotation.z = Math.sin(progress * Math.PI) * 0.5;
+                }
+                
+                player.attackAnimation--;
+            } else {
+                // Return to base position
+                leftArm.position.set(
+                    player.leftArmBasePos.x,
+                    player.leftArmBasePos.y,
+                    player.leftArmBasePos.z
+                );
+                rightArm.position.set(
+                    player.rightArmBasePos.x,
+                    player.rightArmBasePos.y,
+                    player.rightArmBasePos.z
+                );
+                leftArm.rotation.z = 0;
+                rightArm.rotation.z = 0;
+            }
+            
+            // Special attack animation - both arms
+            if (player.specialAnimation > 0) {
+                const progress = 1 - (player.specialAnimation / 20);
+                const punchDistance = Math.sin(progress * Math.PI) * 1.0;
+                const punchHeight = Math.sin(progress * Math.PI) * 0.3;
+                
+                if (player.facing === 1) {
+                    rightArm.position.x = player.rightArmBasePos.x + punchDistance;
+                    rightArm.position.y = player.rightArmBasePos.y + punchHeight;
+                    rightArm.rotation.z = -Math.sin(progress * Math.PI) * 0.8;
+                    leftArm.position.x = player.leftArmBasePos.x + punchDistance * 0.5;
+                    leftArm.position.y = player.leftArmBasePos.y + punchHeight * 0.5;
+                } else {
+                    leftArm.position.x = player.leftArmBasePos.x - punchDistance;
+                    leftArm.position.y = player.leftArmBasePos.y + punchHeight;
+                    leftArm.rotation.z = Math.sin(progress * Math.PI) * 0.8;
+                    rightArm.position.x = player.rightArmBasePos.x - punchDistance * 0.5;
+                    rightArm.position.y = player.rightArmBasePos.y + punchHeight * 0.5;
+                }
+                
+                player.specialAnimation--;
+            }
         }
 
         function performAttack(attackerKey) {
@@ -1026,27 +1138,29 @@
         }
 
         function createHitEffect(position, color) {
-            // Create impact particles
-            for (let i = 0; i < 8; i++) {
+            // Create impact particles with more variety
+            for (let i = 0; i < 12; i++) {
                 const particle = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.1, 8, 8),
+                    new THREE.SphereGeometry(0.12, 8, 8),
                     new THREE.MeshStandardMaterial({
                         color: color,
                         emissive: color,
-                        emissiveIntensity: 1
+                        emissiveIntensity: 1.2
                     })
                 );
                 particle.position.set(
-                    position.x + (Math.random() - 0.5) * 0.5,
-                    position.y + (Math.random() - 0.5) * 0.5,
-                    position.z + (Math.random() - 0.5) * 0.5
+                    position.x + (Math.random() - 0.5) * 0.6,
+                    position.y + (Math.random() - 0.5) * 0.6,
+                    position.z + (Math.random() - 0.5) * 0.6
                 );
                 scene.add(particle);
 
+                const angle = (Math.PI * 2 * i) / 12;
+                const speed = 0.2 + Math.random() * 0.2;
                 const velocity = {
-                    x: (Math.random() - 0.5) * 0.3,
-                    y: (Math.random() - 0.5) * 0.3,
-                    z: (Math.random() - 0.5) * 0.3
+                    x: Math.cos(angle) * speed,
+                    y: Math.sin(angle) * speed + 0.1,
+                    z: (Math.random() - 0.5) * 0.2
                 };
 
                 let frame = 0;
@@ -1055,9 +1169,10 @@
                     particle.position.x += velocity.x;
                     particle.position.y += velocity.y;
                     particle.position.z += velocity.z;
-                    particle.material.opacity -= 0.05;
-                    particle.scale.multiplyScalar(0.95);
-                    if (particle.material.opacity > 0 && frame < 20) {
+                    velocity.y -= 0.01; // Gravity
+                    particle.material.opacity -= 0.04;
+                    particle.scale.multiplyScalar(0.96);
+                    if (particle.material.opacity > 0 && frame < 25) {
                         requestAnimationFrame(animate);
                     } else {
                         scene.remove(particle);
@@ -1065,6 +1180,31 @@
                 };
                 animate();
             }
+            
+            // Add impact flash
+            const flash = new THREE.Mesh(
+                new THREE.SphereGeometry(1.5, 16, 16),
+                new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.6
+                })
+            );
+            flash.position.set(position.x, position.y, position.z);
+            scene.add(flash);
+            
+            let flashFrame = 0;
+            const flashAnimate = () => {
+                flashFrame++;
+                flash.scale.set(1 + flashFrame * 0.1, 1 + flashFrame * 0.1, 1 + flashFrame * 0.1);
+                flash.material.opacity -= 0.1;
+                if (flash.material.opacity > 0 && flashFrame < 6) {
+                    requestAnimationFrame(flashAnimate);
+                } else {
+                    scene.remove(flash);
+                }
+            };
+            flashAnimate();
         }
 
         function createSpecialEffect(position) {
@@ -1439,17 +1579,22 @@
                 }
                 
                 // Time's up - check winner by percentage
-                if (matchTimer <= 0) {
-                    gameRunning = false;
+                if (matchTimer <= 0 && !matchEnded) {
+                    matchEnded = true;
                     const p1Percent = players.p1.percentage;
                     const p2Percent = players.p2.percentage;
                     
+                    let winner = null;
                     if (p1Percent < p2Percent) {
-                        endGame('Player 1');
+                        winner = 'p1';
+                        matchScore.p1++;
+                        endMatch('Player 1', false);
                     } else if (p2Percent < p1Percent) {
-                        endGame('Player 2');
+                        winner = 'p2';
+                        matchScore.p2++;
+                        endMatch('Player 2', false);
                     } else {
-                        endGame('Tie - No One');
+                        endMatch('Tie', false);
                     }
                 }
             }
@@ -1498,20 +1643,59 @@
         }
 
         function checkGameOver() {
+            if (matchEnded) return;
+            
             if (players.p1.isDead && !players.p2.isDead) {
-                endGame('Player 2');
+                matchScore.p2++;
+                endMatch('Player 2', true);
             } else if (players.p2.isDead && !players.p1.isDead) {
-                endGame('Player 1');
+                matchScore.p1++;
+                endMatch('Player 1', true);
             }
         }
 
-        function endGame(winner) {
+        function endMatch(winner, isKO) {
+            matchEnded = true;
             gameRunning = false;
-            document.getElementById('winner-text').textContent = winner + ' Wins!';
+            
+            const winText = isKO ? `${winner} Wins by KO!` : `${winner} Wins!`;
+            document.getElementById('winner-text').textContent = winText;
+            
+            // Update match score display
+            updateMatchScore();
+            
+            // Check if best of 3 is complete
+            if (matchScore.p1 >= 2 || matchScore.p2 >= 2) {
+                const overallWinner = matchScore.p1 >= 2 ? 'Player 1' : 'Player 2';
+                document.getElementById('winner-text').textContent = `${overallWinner} Wins Best of 3! 🏆`;
+                document.getElementById('game-over').querySelector('button').textContent = 'New Tournament';
+            } else {
+                document.getElementById('game-over').querySelector('button').textContent = 'Next Match';
+            }
+            
             document.getElementById('game-over').classList.add('show');
         }
 
+        function updateMatchScore() {
+            const scoreDisplay = document.getElementById('match-score');
+            const matchText = currentMatch <= 3 ? `Match ${currentMatch}` : 'Final';
+            scoreDisplay.innerHTML = `
+                ${matchText} | P1: ${matchScore.p1} - P2: ${matchScore.p2}
+                <div class="match-info">Best of 3</div>
+            `;
+        }
+
         function restartGame() {
+            // Check if tournament is over
+            if (matchScore.p1 >= 2 || matchScore.p2 >= 2) {
+                // Reset tournament
+                matchScore = { p1: 0, p2: 0 };
+                currentMatch = 1;
+            } else {
+                // Next match
+                currentMatch++;
+            }
+            
             players.p1.percentage = 0;
             players.p2.percentage = 0;
             players.p1.position = { x: -3, y: 2, z: 0 };
@@ -1536,11 +1720,26 @@
             players.p2.damageMultiplier = 1;
             players.p1.hasShield = false;
             players.p2.hasShield = false;
+            players.p1.attackAnimation = 0;
+            players.p2.attackAnimation = 0;
+            players.p1.specialAnimation = 0;
+            players.p2.specialAnimation = 0;
 
             player1.position.set(-3, 2, 0);
             player2.position.set(3, 2, 0);
             player1.rotation.set(0, 0, 0);
             player2.rotation.set(0, Math.PI, 0);
+            
+            // Reset arm positions
+            const p1LeftArm = player1.getObjectByName('leftArm');
+            const p1RightArm = player1.getObjectByName('rightArm');
+            const p2LeftArm = player2.getObjectByName('leftArm');
+            const p2RightArm = player2.getObjectByName('rightArm');
+            
+            if (p1LeftArm) p1LeftArm.position.set(players.p1.leftArmBasePos.x, players.p1.leftArmBasePos.y, players.p1.leftArmBasePos.z);
+            if (p1RightArm) p1RightArm.position.set(players.p1.rightArmBasePos.x, players.p1.rightArmBasePos.y, players.p1.rightArmBasePos.z);
+            if (p2LeftArm) p2LeftArm.position.set(players.p2.leftArmBasePos.x, players.p2.leftArmBasePos.y, players.p2.leftArmBasePos.z);
+            if (p2RightArm) p2RightArm.position.set(players.p2.rightArmBasePos.x, players.p2.rightArmBasePos.y, players.p2.rightArmBasePos.z);
             
             // Remove shields
             removeShieldVisual('p1');
@@ -1555,7 +1754,8 @@
             powerupSpawnTimer = 0;
             
             // Reset timer
-            matchTimer = 300;
+            matchTimer = 60;
+            matchEnded = false;
             
             // Reset combo
             comboCount = { p1: 0, p2: 0 };
@@ -1567,6 +1767,7 @@
 
             updateHealthBars();
             updatePowerupDisplay();
+            updateMatchScore();
             updateTimer();
             document.getElementById('game-over').classList.remove('show');
             gameRunning = true;
