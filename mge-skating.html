@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skating Game - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ui-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid;
+            pointer-events: auto;
+        }
+
+        .score-panel {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 240px;
+            border-color: #ff6b6b;
+            padding: 1rem;
+        }
+
+        .timer-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .timer-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+        }
+
+        .timer-value {
+            font-size: 1.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .player-score {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0.75rem;
+            margin: 0.4rem 0;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .player1-score {
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            color: white;
+            border: 2px solid #ff4757;
+        }
+
+        .player2-score {
+            background: linear-gradient(135deg, #4ecdc4, #6ee7b7);
+            color: white;
+            border: 2px solid #26d0ce;
+        }
+
+        .player-stats {
+            font-size: 0.7rem;
+            opacity: 0.85;
+            margin-top: 0.2rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: 200px;
+            border-color: #4ecdc4;
+            padding: 0.75rem;
+        }
+
+        .controls-panel h2 {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .control-set {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+
+        .player1-controls {
+            border-color: #ff6b6b;
+        }
+
+        .player2-controls {
+            border-color: #4ecdc4;
+        }
+
+        .control-set h3 {
+            margin-bottom: 0.3rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .player1-controls h3 {
+            color: #ff6b6b;
+        }
+
+        .player2-controls h3 {
+            color: #4ecdc4;
+        }
+
+        .control-keys {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.25rem;
+            font-size: 0.65rem;
+        }
+
+        .control-key {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.25rem 0.4rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 3px solid #ff6b6b;
+            border-radius: 15px;
+            padding: 0.75rem 1.5rem;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            color: white;
+        }
+
+        .title {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #ffe66d, #a78bfa);
+            background-size: 400% 400%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        .wave-info {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 3px solid #ffe66d;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 15;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .wave-info.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .wave-info h2 {
+            font-size: 2rem;
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+        }
+
+        .wave-info p {
+            font-size: 1.2rem;
+            color: #475569;
+            margin: 0.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .score-panel {
+                width: calc(100% - 2rem);
+                max-width: 240px;
+                font-size: 0.85rem;
+            }
+
+            .controls-panel {
+                width: 180px;
+                font-size: 0.8rem;
+            }
+
+            .timer-value {
+                font-size: 1.2rem;
+            }
+
+            .player-score {
+                font-size: 0.9rem;
+                padding: 0.5rem 0.6rem;
+            }
+
+            .title {
+                font-size: 1.5rem;
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+
+            .back-button {
+                top: 0.5rem;
+                right: 0.5rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <div class="ui-overlay">
+        <a href="mge.html" class="back-button">← Back to MGE</a>
+        
+        <div class="title">⛸️ SKATING GAME ⛸️</div>
+        
+        <div class="score-panel ui-panel">
+            <div class="timer-display">
+                <div class="timer-label">⏱️ Time</div>
+                <div class="timer-value" id="timer">00:00</div>
+            </div>
+            <div class="player-score player1-score">
+                <div>
+                    <div>Player 1 ⛸️</div>
+                    <div class="player-stats">
+                        <span id="gems1">💎 0</span>
+                        <span id="combos1">🔥 0x</span>
+                    </div>
+                </div>
+                <div style="font-size: 1.3rem;" id="score1">0</div>
+            </div>
+            <div class="player-score player2-score">
+                <div>
+                    <div>Player 2 ⛸️</div>
+                    <div class="player-stats">
+                        <span id="gems2">💎 0</span>
+                        <span id="combos2">🔥 0x</span>
+                    </div>
+                </div>
+                <div style="font-size: 1.3rem;" id="score2">0</div>
+            </div>
+        </div>
+
+        <div class="controls-panel ui-panel">
+            <h2 style="margin-bottom: 0.5rem; color: #1a1a2e; text-align: center; font-size: 0.85rem;">Controls</h2>
+            <div class="controls-grid">
+                <div class="control-set player1-controls">
+                    <h3>P1</h3>
+                    <div class="control-keys">
+                        <div><span class="control-key">W</span></div>
+                        <div><span class="control-key">A</span></div>
+                        <div><span class="control-key">S</span></div>
+                        <div><span class="control-key">D</span></div>
+                    </div>
+                </div>
+                <div class="control-set player2-controls">
+                    <h3>P2</h3>
+                    <div class="control-keys">
+                        <div><span class="control-key">↑</span></div>
+                        <div><span class="control-key">←</span></div>
+                        <div><span class="control-key">↓</span></div>
+                        <div><span class="control-key">→</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wave-info" id="wave-info">
+            <h2 id="wave-title">Ready to Skate!</h2>
+            <p id="wave-message">Collect the colorful gems!</p>
+        </div>
+    </div>
+
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.getElementById('game-container').appendChild(renderer.domElement);
+
+        // Camera position
+        camera.position.set(0, 12, 20);
+        camera.lookAt(0, 0, 0);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 15, 5);
+        scene.add(directionalLight);
+
+        const pointLight1 = new THREE.PointLight(0xff6b6b, 1.5, 50);
+        pointLight1.position.set(-8, 8, 8);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x4ecdc4, 1.5, 50);
+        pointLight2.position.set(8, 8, 8);
+        scene.add(pointLight2);
+
+        const pointLight3 = new THREE.PointLight(0xffe66d, 1, 50);
+        pointLight3.position.set(0, 10, -8);
+        scene.add(pointLight3);
+
+        // Ice rink (colorful ice)
+        const rinkGeometry = new THREE.PlaneGeometry(50, 50, 20, 20);
+        const rinkMaterial = new THREE.MeshPhongMaterial({
+            color: 0x87ceeb,
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide,
+            shininess: 100
+        });
+        const rink = new THREE.Mesh(rinkGeometry, rinkMaterial);
+        rink.rotation.x = -Math.PI / 2;
+        rink.position.y = 0;
+        scene.add(rink);
+
+        // Add colorful ice patterns
+        const icePatterns = [];
+        for (let i = 0; i < 5; i++) {
+            const pattern = new THREE.Mesh(
+                new THREE.CircleGeometry(3, 32),
+                new THREE.MeshPhongMaterial({
+                    color: new THREE.Color().setHSL(Math.random(), 0.7, 0.8),
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                })
+            );
+            pattern.rotation.x = -Math.PI / 2;
+            pattern.position.set(
+                (Math.random() - 0.5) * 40,
+                0.01,
+                (Math.random() - 0.5) * 40
+            );
+            scene.add(pattern);
+            icePatterns.push(pattern);
+        }
+
+        // Player 1 (Red skater)
+        const skater1Group = new THREE.Group();
+        const skater1Body = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.2, 0.2, 0.8, 8),
+            new THREE.MeshPhongMaterial({
+                color: 0xff6b6b,
+                emissive: 0xff4757,
+                emissiveIntensity: 0.5
+            })
+        );
+        skater1Body.position.y = 0.4;
+        skater1Group.add(skater1Body);
+
+        const skater1Head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 16, 16),
+            new THREE.MeshPhongMaterial({
+                color: 0xffdbac,
+                emissive: 0xffcc99,
+                emissiveIntensity: 0.3
+            })
+        );
+        skater1Head.position.y = 1.1;
+        skater1Group.add(skater1Head);
+
+        // Skates
+        const skate1 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.1, 0.6),
+            new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            })
+        );
+        skate1.position.set(-0.15, 0.05, 0);
+        skater1Group.add(skate1);
+
+        const skate2 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.1, 0.6),
+            new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            })
+        );
+        skate2.position.set(0.15, 0.05, 0);
+        skater1Group.add(skate2);
+
+        skater1Group.position.set(-5, 0.5, 0);
+        scene.add(skater1Group);
+
+        // Player 2 (Cyan skater)
+        const skater2Group = new THREE.Group();
+        const skater2Body = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.2, 0.2, 0.8, 8),
+            new THREE.MeshPhongMaterial({
+                color: 0x4ecdc4,
+                emissive: 0x26d0ce,
+                emissiveIntensity: 0.5
+            })
+        );
+        skater2Body.position.y = 0.4;
+        skater2Group.add(skater2Body);
+
+        const skater2Head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 16, 16),
+            new THREE.MeshPhongMaterial({
+                color: 0xffdbac,
+                emissive: 0xffcc99,
+                emissiveIntensity: 0.3
+            })
+        );
+        skater2Head.position.y = 1.1;
+        skater2Group.add(skater2Head);
+
+        const skate3 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.1, 0.6),
+            new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            })
+        );
+        skate3.position.set(-0.15, 0.05, 0);
+        skater2Group.add(skate3);
+
+        const skate4 = new THREE.Mesh(
+            new THREE.BoxGeometry(0.3, 0.1, 0.6),
+            new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            })
+        );
+        skate4.position.set(0.15, 0.05, 0);
+        skater2Group.add(skate4);
+
+        skater2Group.position.set(5, 0.5, 0);
+        scene.add(skater2Group);
+
+        // Colorful particles (snow/ice crystals)
+        const particles = [];
+        const particleCount = 150;
+        const particleGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            positions[i3] = (Math.random() - 0.5) * 60;
+            positions[i3 + 1] = Math.random() * 15 + 2;
+            positions[i3 + 2] = (Math.random() - 0.5) * 60;
+
+            const color = new THREE.Color();
+            const hue = Math.random();
+            color.setHSL(hue, 0.8, 0.7);
+            colors[i3] = color.r;
+            colors[i3 + 1] = color.g;
+            colors[i3 + 2] = color.b;
+        }
+
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.3,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.9
+        });
+
+        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particleSystem);
+
+        // Game state
+        const keys = {};
+        let score1 = 0;
+        let score2 = 0;
+        let gems1 = 0;
+        let gems2 = 0;
+        let combos1 = 0;
+        let combos2 = 0;
+        let comboTime1 = 0;
+        let comboTime2 = 0;
+        let lastGemTime1 = 0;
+        let lastGemTime2 = 0;
+        let spinCount1 = 0;
+        let spinCount2 = 0;
+        let lastRotation1 = 0;
+        let lastRotation2 = 0;
+        let gameStartTime = Date.now();
+        const speed = 0.2;
+        const bounds = 20;
+        const COMBO_WINDOW = 2000; // 2 seconds to maintain combo
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            keys[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            keys[e.key] = false;
+        });
+
+        // Score display update
+        function updateScore() {
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+            document.getElementById('gems1').textContent = `💎 ${gems1}`;
+            document.getElementById('gems2').textContent = `💎 ${gems2}`;
+            document.getElementById('combos1').textContent = `🔥 ${combos1}x`;
+            document.getElementById('combos2').textContent = `🔥 ${combos2}x`;
+        }
+
+        // Timer update
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Award points with bonus system
+        function awardPoints(player, basePoints, reason) {
+            const now = Date.now();
+            let points = basePoints;
+            let message = `+${basePoints} ${reason}`;
+
+            if (player === 1) {
+                // Check for combo
+                if (now - lastGemTime1 < COMBO_WINDOW) {
+                    combos1++;
+                    const comboBonus = Math.min(combos1 * 5, 50); // Max 50 bonus
+                    points += comboBonus;
+                    message = `+${points} ${reason} (${combos1}x combo!)`;
+                } else {
+                    combos1 = 1;
+                }
+                lastGemTime1 = now;
+
+                // Speed bonus (if moving)
+                const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'] ||
+                                keys['W'] || keys['S'] || keys['A'] || keys['D'];
+                if (isMoving) {
+                    const speedBonus = 2;
+                    points += speedBonus;
+                }
+
+                // Spin/trick bonus
+                const currentRotation = skater1Group.rotation.y;
+                if (Math.abs(currentRotation - lastRotation1) > 0.5) {
+                    spinCount1++;
+                    if (spinCount1 % 4 === 0) {
+                        const trickBonus = 15;
+                        points += trickBonus;
+                        message = `+${points} ${reason} + Trick!`;
+                    }
+                }
+                lastRotation1 = currentRotation;
+
+                score1 += points;
+                gems1++;
+            } else {
+                // Check for combo
+                if (now - lastGemTime2 < COMBO_WINDOW) {
+                    combos2++;
+                    const comboBonus = Math.min(combos2 * 5, 50);
+                    points += comboBonus;
+                    message = `+${points} ${reason} (${combos2}x combo!)`;
+                } else {
+                    combos2 = 1;
+                }
+                lastGemTime2 = now;
+
+                // Speed bonus
+                const isMoving = keys['ArrowUp'] || keys['ArrowDown'] || 
+                                keys['ArrowLeft'] || keys['ArrowRight'];
+                if (isMoving) {
+                    const speedBonus = 2;
+                    points += speedBonus;
+                }
+
+                // Spin/trick bonus
+                const currentRotation = skater2Group.rotation.y;
+                if (Math.abs(currentRotation - lastRotation2) > 0.5) {
+                    spinCount2++;
+                    if (spinCount2 % 4 === 0) {
+                        const trickBonus = 15;
+                        points += trickBonus;
+                        message = `+${points} ${reason} + Trick!`;
+                    }
+                }
+                lastRotation2 = currentRotation;
+
+                score2 += points;
+                gems2++;
+            }
+
+            updateScore();
+            return message;
+        }
+
+        // Reset combos if too much time passes
+        function updateCombos() {
+            const now = Date.now();
+            if (now - lastGemTime1 > COMBO_WINDOW && combos1 > 1) {
+                combos1 = 0;
+            }
+            if (now - lastGemTime2 > COMBO_WINDOW && combos2 > 1) {
+                combos2 = 0;
+            }
+        }
+
+        // Info display
+        function showInfo(title, message) {
+            const info = document.getElementById('wave-info');
+            document.getElementById('wave-title').textContent = title;
+            document.getElementById('wave-message').textContent = message;
+            info.classList.add('show');
+            setTimeout(() => {
+                info.classList.remove('show');
+            }, 2000);
+        }
+
+        // Collectibles (colorful gems)
+        const collectibles = [];
+        function createCollectible() {
+            const geometry = new THREE.OctahedronGeometry(0.5);
+            const material = new THREE.MeshPhongMaterial({
+                color: new THREE.Color().setHSL(Math.random(), 1, 0.5),
+                emissive: new THREE.Color().setHSL(Math.random(), 1, 0.3),
+                emissiveIntensity: 0.9,
+                shininess: 100
+            });
+            const collectible = new THREE.Mesh(geometry, material);
+            collectible.position.set(
+                (Math.random() - 0.5) * 40,
+                0.8,
+                (Math.random() - 0.5) * 40
+            );
+            collectible.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+            collectible.userData.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.03,
+                y: (Math.random() - 0.5) * 0.03,
+                z: (Math.random() - 0.5) * 0.03
+            };
+            collectible.userData.floatSpeed = Math.random() * 0.02 + 0.01;
+            collectible.userData.floatOffset = Math.random() * Math.PI * 2;
+            scene.add(collectible);
+            collectibles.push(collectible);
+        }
+
+        // Create initial collectibles
+        for (let i = 0; i < 12; i++) {
+            createCollectible();
+        }
+
+        // Animation loop
+        let frame = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            frame++;
+
+            // Player 1 movement (WASD)
+            if (keys['w'] || keys['W']) {
+                skater1Group.position.z -= speed;
+                skater1Group.rotation.x = -0.2;
+            } else if (keys['s'] || keys['S']) {
+                skater1Group.position.z += speed;
+                skater1Group.rotation.x = 0.2;
+            } else {
+                skater1Group.rotation.x = 0;
+            }
+            if (keys['a'] || keys['A']) {
+                skater1Group.position.x -= speed;
+                skater1Group.rotation.z = 0.2;
+            } else if (keys['d'] || keys['D']) {
+                skater1Group.position.x += speed;
+                skater1Group.rotation.z = -0.2;
+            } else {
+                skater1Group.rotation.z = 0;
+            }
+
+            // Player 2 movement (Arrow keys)
+            if (keys['ArrowUp']) {
+                skater2Group.position.z -= speed;
+                skater2Group.rotation.x = -0.2;
+            } else if (keys['ArrowDown']) {
+                skater2Group.position.z += speed;
+                skater2Group.rotation.x = 0.2;
+            } else {
+                skater2Group.rotation.x = 0;
+            }
+            if (keys['ArrowLeft']) {
+                skater2Group.position.x -= speed;
+                skater2Group.rotation.z = 0.2;
+            } else if (keys['ArrowRight']) {
+                skater2Group.position.x += speed;
+                skater2Group.rotation.z = -0.2;
+            } else {
+                skater2Group.rotation.z = 0;
+            }
+
+            // Keep players in bounds
+            skater1Group.position.x = Math.max(-bounds, Math.min(bounds, skater1Group.position.x));
+            skater1Group.position.z = Math.max(-bounds, Math.min(bounds, skater1Group.position.z));
+            skater2Group.position.x = Math.max(-bounds, Math.min(bounds, skater2Group.position.x));
+            skater2Group.position.z = Math.max(-bounds, Math.min(bounds, skater2Group.position.z));
+
+            // Rotate skaters for visual effect
+            skater1Group.rotation.y += 0.02;
+            skater2Group.rotation.y -= 0.02;
+
+            // Update collectibles
+            collectibles.forEach((collectible, index) => {
+                collectible.rotation.x += collectible.userData.rotationSpeed.x;
+                collectible.rotation.y += collectible.userData.rotationSpeed.y;
+                collectible.rotation.z += collectible.userData.rotationSpeed.z;
+
+                // Float animation
+                collectible.position.y = 0.8 + Math.sin(frame * collectible.userData.floatSpeed + collectible.userData.floatOffset) * 0.3;
+
+                // Check collision with player 1
+                const dist1 = skater1Group.position.distanceTo(collectible.position);
+                if (dist1 < 1.5) {
+                    const message = awardPoints(1, 10, 'Gem');
+                    scene.remove(collectible);
+                    collectibles.splice(index, 1);
+                    createCollectible();
+                    showInfo('Player 1 Scored!', message);
+                }
+
+                // Check collision with player 2
+                const dist2 = skater2Group.position.distanceTo(collectible.position);
+                if (dist2 < 1.5) {
+                    const message = awardPoints(2, 10, 'Gem');
+                    scene.remove(collectible);
+                    collectibles.splice(index, 1);
+                    createCollectible();
+                    showInfo('Player 2 Scored!', message);
+                }
+            });
+
+            // Update particles
+            particleSystem.rotation.y += 0.001;
+            const positions = particleGeometry.attributes.position.array;
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                positions[i3 + 1] -= 0.05;
+                if (positions[i3 + 1] < 0) {
+                    positions[i3 + 1] = 15;
+                    positions[i3] = (Math.random() - 0.5) * 60;
+                    positions[i3 + 2] = (Math.random() - 0.5) * 60;
+                }
+            }
+            particleGeometry.attributes.position.needsUpdate = true;
+
+            // Rotate lights for dynamic effect
+            pointLight1.position.x = Math.cos(frame * 0.01) * 8;
+            pointLight1.position.z = Math.sin(frame * 0.01) * 8;
+            pointLight2.position.x = Math.cos(frame * 0.01 + Math.PI) * 8;
+            pointLight2.position.z = Math.sin(frame * 0.01 + Math.PI) * 8;
+            pointLight3.position.y = 10 + Math.sin(frame * 0.02) * 2;
+
+            // Animate ice patterns
+            icePatterns.forEach((pattern, i) => {
+                pattern.rotation.z += 0.005;
+                pattern.material.opacity = 0.3 + Math.sin(frame * 0.02 + i) * 0.1;
+            });
+
+            // Camera animation
+            camera.position.x = Math.sin(frame * 0.003) * 3;
+            camera.position.y = 12 + Math.sin(frame * 0.005) * 2;
+            camera.lookAt(0, 0, 0);
+
+            // Update timer and combos
+            updateTimer();
+            updateCombos();
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+        updateScore();
+        updateTimer();
+        setInterval(updateTimer, 1000); // Update timer every second
+        showInfo('Welcome!', 'Collect gems, build combos, do tricks!');
+    </script>
+</body>
+</html>

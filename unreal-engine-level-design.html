@@ -429,10 +429,15 @@
                         <span class="icon">👑</span>
                         <span class="label">HTML</span>
                     </a>
-                    <a href="/" class="mobile-menu-item">
-                        <span class="icon">🏠</span>
-                        <span class="label">Home</span>
-                    </a>
+                    <div class="mobile-menu-item mobile-dropdown" id="mobile-misc-dropdown">
+                        <span class="icon">⚡</span>
+                        <span class="label">Misc</span>
+                        <div class="mobile-dropdown-menu" id="mobile-misc-menu">
+                            <a href="/mge.html" class="mobile-dropdown-item featured-mge">
+                                <span class="icon">🧪</span> MGE Experiments
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -650,6 +655,36 @@
                 // Handle theme change
                 themeSelector.addEventListener('change', function() {
                     applyTheme(this.value);
+                });
+            }
+        })();
+
+        // Mobile Misc dropdown toggle
+        (function() {
+            var mobileDropdown = document.getElementById('mobile-misc-dropdown');
+            var mobileMenu = document.getElementById('mobile-misc-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    }
+                });
+                
+                var dropdownItems = mobileMenu.querySelectorAll('.mobile-dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    });
                 });
             }
         })();

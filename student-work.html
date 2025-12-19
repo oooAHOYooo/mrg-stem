@@ -417,6 +417,7 @@
                 <div class="sidebar-content">
                     <h3 class="sidebar-title">📚 Quick Links</h3>
                     <nav class="sidebar-nav">
+                        <a href="/animals.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.2), rgba(155, 89, 182, 0.2)); border-color: rgba(52, 152, 219, 0.4);">🐕🐱🦋 Dogs, Cats & Butterflies</a>
                         <a href="/#santa-house-tutorial" class="sidebar-link">🎄 Santa's House Tutorial</a>
                         <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
                         <a href="/#assignment-of-day" class="sidebar-link">🎮 Assignment of the Day</a>
@@ -1191,6 +1192,7 @@
                     <h3 class="sidebar-title">🎯 Quick Actions</h3>
                     <nav class="sidebar-nav">
                         <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                        <a href="/animals.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(230, 126, 34, 0.2), rgba(155, 89, 182, 0.2)); border-color: rgba(52, 152, 219, 0.4);">🐕🐱🦋 Animals</a>
                         <a href="https://scratch.mit.edu/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🎮 Scratch Website</a>
                         <a href="https://www.tinkercad.com/" class="sidebar-link" target="_blank" rel="noopener noreferrer">🔧 Tinkercad</a>
                         <a href="https://code.org/" class="sidebar-link" target="_blank" rel="noopener noreferrer">💻 Code.org</a>
@@ -1255,10 +1257,15 @@
                         <span class="icon">👑</span>
                         <span class="label">HTML</span>
                     </a>
-                    <a href="/" class="mobile-menu-item">
-                        <span class="icon">🏠</span>
-                        <span class="label">Home</span>
-                    </a>
+                    <div class="mobile-menu-item mobile-dropdown" id="mobile-misc-dropdown">
+                        <span class="icon">⚡</span>
+                        <span class="label">Misc</span>
+                        <div class="mobile-dropdown-menu" id="mobile-misc-menu">
+                            <a href="/mge.html" class="mobile-dropdown-item featured-mge">
+                                <span class="icon">🧪</span> MGE Experiments
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -1535,6 +1542,36 @@
                 
                 themeSelector.addEventListener('change', function() {
                     applyTheme(this.value);
+                });
+            }
+        })();
+
+        // Mobile Misc dropdown toggle
+        (function() {
+            var mobileDropdown = document.getElementById('mobile-misc-dropdown');
+            var mobileMenu = document.getElementById('mobile-misc-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    }
+                });
+                
+                var dropdownItems = mobileMenu.querySelectorAll('.mobile-dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    });
                 });
             }
         })();
