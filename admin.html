@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Teacher Admin Dashboard | MRG STEM</title>
+        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="portfolio.css">
+        <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+        <style>
+            .admin-dashboard {
+                min-height: 100vh;
+                padding: 1rem;
+            }
+
+            .admin-header {
+                background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(126, 34, 206, 0.15));
+                border: 3px solid rgba(147, 51, 234, 0.4);
+                border-radius: 20px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .admin-header h1 {
+                font-size: clamp(2rem, 6vw, 3.5rem);
+                color: #6b21a8;
+                margin-bottom: 0.5rem;
+                font-weight: 900;
+            }
+
+            .admin-header p {
+                font-size: clamp(1rem, 2.5vw, 1.3rem);
+                color: #7c3aed;
+                margin: 0;
+            }
+
+            .admin-tabs {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 2rem;
+                flex-wrap: wrap;
+                border-bottom: 3px solid rgba(147, 51, 234, 0.3);
+            }
+
+            .admin-tab {
+                padding: 1rem 2rem;
+                background: rgba(147, 51, 234, 0.1);
+                border: 2px solid rgba(147, 51, 234, 0.3);
+                border-radius: 15px 15px 0 0;
+                cursor: pointer;
+                font-size: clamp(1rem, 2.5vw, 1.3rem);
+                font-weight: 700;
+                color: #7c3aed;
+                transition: all 0.3s ease;
+                border-bottom: none;
+            }
+
+            .admin-tab:hover {
+                background: rgba(147, 51, 234, 0.2);
+                transform: translateY(-3px);
+            }
+
+            .admin-tab.active {
+                background: rgba(147, 51, 234, 0.3);
+                border-color: rgba(147, 51, 234, 0.6);
+                color: #6b21a8;
+            }
+
+            .admin-panel {
+                display: none;
+                background: rgba(255, 255, 255, 0.95);
+                border: 3px solid rgba(147, 51, 234, 0.3);
+                border-radius: 20px;
+                padding: 2.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 8px 24px rgba(147, 51, 234, 0.1);
+            }
+
+            .admin-panel.active {
+                display: block;
+            }
+
+            .admin-panel h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #6b21a8;
+                margin-bottom: 1.5rem;
+                font-weight: 800;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .stat-card {
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));
+                border: 2px solid rgba(59, 130, 246, 0.3);
+                border-radius: 15px;
+                padding: 1.5rem;
+                text-align: center;
+            }
+
+            .stat-card h3 {
+                font-size: clamp(2rem, 5vw, 3rem);
+                color: #1e40af;
+                margin-bottom: 0.5rem;
+                font-weight: 900;
+            }
+
+            .stat-card p {
+                font-size: clamp(1rem, 2.5vw, 1.2rem);
+                color: #64748b;
+                font-weight: 600;
+                margin: 0;
+            }
+
+            .student-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .student-card {
+                background: rgba(239, 246, 255, 0.9);
+                border: 2px solid rgba(59, 130, 246, 0.3);
+                border-radius: 15px;
+                padding: 1.5rem;
+                transition: all 0.3s ease;
+            }
+
+            .student-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+                border-color: rgba(59, 130, 246, 0.6);
+            }
+
+            .student-card h3 {
+                font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+                color: #1e40af;
+                margin-bottom: 1rem;
+                font-weight: 800;
+            }
+
+            .student-stats {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .student-stat {
+                background: rgba(59, 130, 246, 0.1);
+                padding: 0.5rem 1rem;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                color: #1e40af;
+                font-weight: 600;
+            }
+
+            .view-portfolio-btn {
+                width: 100%;
+                padding: 0.75rem;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+                border: 2px solid rgba(59, 130, 246, 0.4);
+                border-radius: 10px;
+                color: #1e40af;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-size: 1rem;
+            }
+
+            .view-portfolio-btn:hover {
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+                transform: translateY(-2px);
+            }
+
+            .lesson-form {
+                display: grid;
+                gap: 1.5rem;
+            }
+
+            .form-group label {
+                display: block;
+                color: #6b21a8;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                font-size: 1.1rem;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                width: 100%;
+                padding: 0.75rem;
+                border: 2px solid rgba(147, 51, 234, 0.3);
+                border-radius: 10px;
+                font-size: 1rem;
+                font-family: inherit;
+                box-sizing: border-box;
+            }
+
+            .form-group textarea {
+                min-height: 150px;
+                resize: vertical;
+            }
+
+            .btn-admin {
+                padding: 1rem 2rem;
+                background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2));
+                border: 2px solid rgba(147, 51, 234, 0.4);
+                border-radius: 10px;
+                color: #6b21a8;
+                font-weight: 700;
+                cursor: pointer;
+                font-size: 1.1rem;
+                transition: all 0.2s ease;
+            }
+
+            .btn-admin:hover {
+                background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(126, 34, 206, 0.3));
+                transform: translateY(-2px);
+            }
+
+            .lessons-list {
+                display: grid;
+                gap: 1.5rem;
+            }
+
+            .lesson-item {
+                background: rgba(239, 246, 255, 0.9);
+                border: 2px solid rgba(59, 130, 246, 0.3);
+                border-radius: 15px;
+                padding: 1.5rem;
+            }
+
+            .lesson-item h3 {
+                font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+                color: #1e40af;
+                margin-bottom: 0.75rem;
+                font-weight: 800;
+            }
+
+            .lesson-item p {
+                color: #64748b;
+                margin-bottom: 1rem;
+                line-height: 1.6;
+            }
+
+            .lesson-meta {
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+                font-size: 0.9rem;
+                color: #94a3b8;
+            }
+
+            .login-screen {
+                text-align: center;
+                padding: 4rem 2rem;
+                background: rgba(255, 255, 255, 0.95);
+                border: 3px solid rgba(147, 51, 234, 0.3);
+                border-radius: 20px;
+                max-width: 500px;
+                margin: 4rem auto;
+            }
+
+            .login-screen h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #6b21a8;
+                margin-bottom: 1rem;
+                font-weight: 800;
+            }
+
+            .login-screen p {
+                color: #64748b;
+                margin-bottom: 2rem;
+                font-size: 1.1rem;
+            }
+
+            .netlify-identity-button {
+                padding: 1rem 2rem;
+                background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2));
+                border: 2px solid rgba(147, 51, 234, 0.4);
+                border-radius: 10px;
+                color: #6b21a8;
+                font-weight: 700;
+                cursor: pointer;
+                font-size: 1.1rem;
+            }
+
+            @media (max-width: 768px) {
+                .admin-tabs {
+                    flex-direction: column;
+                }
+
+                .admin-tab {
+                    border-radius: 15px;
+                    border: 2px solid rgba(147, 51, 234, 0.3);
+                    border-bottom: 2px solid rgba(147, 51, 234, 0.3);
+                }
+            }
+
+            body.dark-mode .admin-panel {
+                background: rgba(15, 15, 26, 0.95);
+                border-color: rgba(147, 51, 234, 0.5);
+            }
+
+            body.dark-mode .admin-panel h2 {
+                color: #a78bfa;
+            }
+
+            body.dark-mode .student-card {
+                background: rgba(30, 58, 138, 0.3);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .student-card h3 {
+                color: #60a5fa;
+            }
+
+            body.dark-mode .lesson-item {
+                background: rgba(30, 58, 138, 0.3);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .lesson-item h3 {
+                color: #60a5fa;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="background"></div>
+        
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">⚡ Home</a>
+                <a href="/admin.html" class="navbar-brand">👨‍🏫 Admin</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="netlify-identity-menu"></div>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="admin-dashboard">
+                    <!-- Login Screen -->
+                    <div id="login-screen" class="login-screen">
+                        <h2>👨‍🏫 Teacher Login</h2>
+                        <p>Please log in to access the admin dashboard</p>
+                        <div id="netlify-identity-widget"></div>
+                    </div>
+
+                    <!-- Admin Dashboard (hidden until login) -->
+                    <div id="admin-content" style="display: none;">
+                        <!-- Header -->
+                        <div class="admin-header">
+                            <h1>👨‍🏫 Teacher Admin Dashboard</h1>
+                            <p>Manage lessons and view student portfolios</p>
+                        </div>
+
+                        <!-- Tabs -->
+                        <div class="admin-tabs">
+                            <button class="admin-tab active" onclick="showTab('overview')">📊 Overview</button>
+                            <button class="admin-tab" onclick="showTab('portfolios')">📁 Student Portfolios</button>
+                            <button class="admin-tab" onclick="showTab('lessons')">📚 Manage Lessons</button>
+                            <button class="admin-tab" onclick="showTab('settings')">⚙️ Settings</button>
+                            <button class="admin-tab" onclick="showTab('help')">📖 Help & Docs</button>
+                        </div>
+
+                        <!-- Overview Tab -->
+                        <div id="overview-tab" class="admin-panel active">
+                            <h2>📊 Dashboard Overview</h2>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <h3 id="total-students">0</h3>
+                                    <p>Total Students</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="total-projects">0</h3>
+                                    <p>Total Projects</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="active-students">0</h3>
+                                    <p>Active Students</p>
+                                </div>
+                                <div class="stat-card">
+                                    <h3 id="avg-projects">0</h3>
+                                    <p>Avg Projects/Student</p>
+                                </div>
+                            </div>
+                            <div class="instruction-card">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem;">Quick Actions</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <button class="btn-admin" onclick="showTab('lessons')">➕ Add New Lesson</button>
+                                    <button class="btn-admin" onclick="showTab('portfolios')">👀 View All Portfolios</button>
+                                    <button class="btn-admin" onclick="exportAllData()">💾 Export All Data</button>
+                                    <button class="btn-admin" onclick="refreshDashboard()">🔄 Refresh Data</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Portfolios Tab -->
+                        <div id="portfolios-tab" class="admin-panel">
+                            <h2>📁 Student Portfolios</h2>
+                            <div style="margin-bottom: 1.5rem;">
+                                <input type="text" id="search-students" placeholder="🔍 Search students..." 
+                                       style="width: 100%; padding: 0.75rem; border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 10px; font-size: 1rem;"
+                                       onkeyup="filterStudents()">
+                            </div>
+                            <div id="students-list" class="student-list">
+                                <p>Loading student portfolios...</p>
+                            </div>
+                        </div>
+
+                        <!-- Lessons Tab -->
+                        <div id="lessons-tab" class="admin-panel">
+                            <h2>📚 Manage Lessons</h2>
+                            
+                            <!-- Add Lesson Form -->
+                            <div class="instruction-card" style="margin-bottom: 2rem;">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem;">➕ Add New Lesson</h3>
+                                <form id="lesson-form" class="lesson-form" onsubmit="addLesson(event)">
+                                    <div class="form-group">
+                                        <label>Lesson Title *</label>
+                                        <input type="text" id="lesson-title" required placeholder="e.g., Introduction to Scratch">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Lesson Type</label>
+                                        <select id="lesson-type">
+                                            <option value="scratch">🎮 Scratch</option>
+                                            <option value="tinkercad">🌍 Tinkercad</option>
+                                            <option value="video">🎬 Video</option>
+                                            <option value="other">✨ Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Description</label>
+                                        <textarea id="lesson-description" placeholder="Describe what students will learn..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Resources/Links (one per line)</label>
+                                        <textarea id="lesson-resources" placeholder="https://scratch.mit.edu/...&#10;https://www.tinkercad.com/..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Target Grades</label>
+                                        <select id="lesson-grades" multiple style="height: 100px;">
+                                            <option value="1">Grade 1</option>
+                                            <option value="2">Grade 2</option>
+                                            <option value="3">Grade 3</option>
+                                            <option value="4">Grade 4</option>
+                                            <option value="5">Grade 5</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn-admin">➕ Add Lesson</button>
+                                </form>
+                            </div>
+
+                            <!-- Existing Lessons -->
+                            <h3 style="color: #1e40af; margin-bottom: 1rem;">📋 Existing Lessons</h3>
+                            <div id="lessons-list" class="lessons-list">
+                                <p>Loading lessons...</p>
+                            </div>
+                        </div>
+
+                        <!-- Settings Tab -->
+                        <div id="settings-tab" class="admin-panel">
+                            <h2>⚙️ Settings</h2>
+                            <div class="instruction-card">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem;">System Information</h3>
+                                <p><strong>Storage Type:</strong> <span id="storage-type">localStorage</span></p>
+                                <p><strong>Backend Status:</strong> <span id="backend-status">Not configured</span></p>
+                                <p><strong>Total Storage Used:</strong> <span id="storage-used">Calculating...</span></p>
+                            </div>
+                            <div class="instruction-card" style="margin-top: 1.5rem;">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem;">Actions</h3>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <button class="btn-admin" onclick="exportAllData()">💾 Export All Student Data</button>
+                                    <button class="btn-admin" onclick="clearAllData()" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); color: #dc2626;">🗑️ Clear All Data (Danger!)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Help & Documentation Tab -->
+                        <div id="help-tab" class="admin-panel">
+                            <h2>📖 Help & Documentation</h2>
+                            
+                            <!-- What Netlify Can Do -->
+                            <div class="instruction-card" style="margin-bottom: 2rem;">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">🌐 What Can Netlify Do?</h3>
+                                
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; border-left: 4px solid rgba(59, 130, 246, 0.5);">
+                                    <h4 style="color: #1e40af; margin-bottom: 0.75rem; font-size: 1.3rem;">✅ What You're Using Now:</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem;">
+                                        <li><strong>Free Website Hosting</strong> - Your site is live on the internet for free</li>
+                                        <li><strong>Automatic Updates</strong> - When you push code to GitHub, Netlify updates your site automatically</li>
+                                        <li><strong>HTTPS/SSL</strong> - Your site is secure (the lock icon in browser)</li>
+                                        <li><strong>Fast CDN</strong> - Your site loads fast from anywhere in the world</li>
+                                        <li><strong>Custom Domain</strong> - You can use your own website name (like mrgstem.com)</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; border-left: 4px solid rgba(16, 185, 129, 0.5);">
+                                    <h4 style="color: #065f46; margin-bottom: 0.75rem; font-size: 1.3rem;">🚀 What You Can Add:</h4>
+                                    <ul style="line-height: 2; color: #047857; padding-left: 1.5rem;">
+                                        <li><strong>Netlify Functions</strong> - Run code on the server (like saving portfolios to a database)</li>
+                                        <li><strong>Netlify Identity</strong> - User login system (for teacher/admin access)</li>
+                                        <li><strong>Form Handling</strong> - Collect form submissions (like contact forms)</li>
+                                        <li><strong>Serverless Functions</strong> - Run backend code without managing servers</li>
+                                        <li><strong>Environment Variables</strong> - Store secrets (like database passwords) securely</li>
+                                        <li><strong>Branch Previews</strong> - Test changes before going live</li>
+                                        <li><strong>Analytics</strong> - See how many people visit your site</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(245, 158, 11, 0.1); padding: 1.5rem; border-radius: 15px; border-left: 4px solid rgba(245, 158, 11, 0.5);">
+                                    <h4 style="color: #92400e; margin-bottom: 0.75rem; font-size: 1.3rem;">💡 In Plain English:</h4>
+                                    <p style="color: #78350f; line-height: 1.8; font-size: 1.1rem;">
+                                        <strong>Netlify is like a free web hosting service</strong> that automatically updates your website when you make changes. 
+                                        Right now, you're using it to host your static website (HTML, CSS, JavaScript files). 
+                                        But you can also add "serverless functions" - which are like mini-programs that run on Netlify's servers 
+                                        to do things like save data to a database, handle user logins, or process forms. 
+                                        It's all free for small projects, and you don't need to manage any servers yourself!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- What I've Built -->
+                            <div class="instruction-card" style="margin-bottom: 2rem;">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">🛠️ What Has Been Built</h3>
+                                
+                                <div style="background: rgba(147, 51, 234, 0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; border-left: 4px solid rgba(147, 51, 234, 0.5);">
+                                    <h4 style="color: #6b21a8; margin-bottom: 0.75rem; font-size: 1.3rem;">📁 Student Portfolio System</h4>
+                                    <ul style="line-height: 2; color: #7c3aed; padding-left: 1.5rem;">
+                                        <li><strong>Portfolio Page</strong> (`/portfolio.html`) - Students can add, edit, and view their projects</li>
+                                        <li><strong>Auto-Save</strong> - Portfolios save automatically to browser storage</li>
+                                        <li><strong>Export/Import</strong> - Students can backup and restore their portfolios</li>
+                                        <li><strong>Project Types</strong> - Support for Tinkercad, Scratch, Video, and Other projects</li>
+                                        <li><strong>Kid-Friendly</strong> - Designed for 1st-5th graders with big buttons and simple language</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; border-left: 4px solid rgba(59, 130, 246, 0.5);">
+                                    <h4 style="color: #1e40af; margin-bottom: 0.75rem; font-size: 1.3rem;">👨‍🏫 Admin Dashboard</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem;">
+                                        <li><strong>View All Portfolios</strong> - See every student's work in one place</li>
+                                        <li><strong>Statistics</strong> - See total students, projects, and activity</li>
+                                        <li><strong>Lesson Management</strong> - Create and manage lessons for students</li>
+                                        <li><strong>Search Students</strong> - Quickly find specific students</li>
+                                        <li><strong>Export Data</strong> - Download all student portfolios as backup</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; border-left: 4px solid rgba(16, 185, 129, 0.5);">
+                                    <h4 style="color: #065f46; margin-bottom: 0.75rem; font-size: 1.3rem;">🔧 Backend Functions (Ready to Use)</h4>
+                                    <ul style="line-height: 2; color: #047857; padding-left: 1.5rem;">
+                                        <li><strong>Portfolio API</strong> - Functions to save/load portfolios from database</li>
+                                        <li><strong>Portfolio Pages</strong> - Auto-generate student portfolio pages</li>
+                                        <li><strong>Admin API</strong> - Functions for teacher access to all portfolios</li>
+                                        <li><strong>Lesson API</strong> - Functions to manage lessons</li>
+                                        <li><strong>All on Netlify</strong> - No separate server needed!</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background: rgba(245, 158, 11, 0.1); padding: 1.5rem; border-radius: 15px; border-left: 4px solid rgba(245, 158, 11, 0.5);">
+                                    <h4 style="color: #92400e; margin-bottom: 0.75rem; font-size: 1.3rem;">📝 In Plain English:</h4>
+                                    <p style="color: #78350f; line-height: 1.8; font-size: 1.1rem;">
+                                        <strong>I've built a complete portfolio system</strong> where students can create and manage their work, 
+                                        and you (the teacher) can see everything in this admin dashboard. Right now it works with browser storage, 
+                                        but I've also created all the code needed to connect it to a cloud database when you're ready. 
+                                        Everything is designed to work with Netlify - no separate servers or complicated setup needed!
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- How It All Works -->
+                            <div class="instruction-card" style="margin-bottom: 2rem;">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">⚙️ How It All Works</h3>
+                                
+                                <div style="background: rgba(239, 246, 255, 0.9); padding: 1.5rem; border-radius: 15px; border: 2px solid rgba(59, 130, 246, 0.3);">
+                                    <h4 style="color: #1e40af; margin-bottom: 1rem;">Current Setup (What Works Now):</h4>
+                                    <ol style="line-height: 2; color: #475569; padding-left: 1.5rem;">
+                                        <li><strong>Students</strong> go to `/portfolio.html` and add their projects</li>
+                                        <li><strong>Data saves</strong> to their browser (localStorage) automatically</li>
+                                        <li><strong>You (teacher)</strong> come to this admin page to see all students</li>
+                                        <li><strong>Everything works</strong> without any backend setup!</li>
+                                    </ol>
+                                </div>
+
+                                <div style="background: rgba(239, 246, 255, 0.9); padding: 1.5rem; border-radius: 15px; border: 2px solid rgba(59, 130, 246, 0.3); margin-top: 1.5rem;">
+                                    <h4 style="color: #1e40af; margin-bottom: 1rem;">Future Setup (When You're Ready):</h4>
+                                    <ol style="line-height: 2; color: #475569; padding-left: 1.5rem;">
+                                        <li><strong>Set up Fauna database</strong> (free, takes 10 minutes)</li>
+                                        <li><strong>Add environment variable</strong> in Netlify (copy/paste secret key)</li>
+                                        <li><strong>Enable Netlify Identity</strong> (for teacher login - optional)</li>
+                                        <li><strong>Deploy</strong> - Netlify automatically uses the functions</li>
+                                        <li><strong>Done!</strong> - Portfolios now save to cloud, accessible from anywhere</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <!-- Files Created -->
+                            <div class="instruction-card">
+                                <h3 style="color: #1e40af; margin-bottom: 1rem; font-size: 1.8rem;">📂 Files Created</h3>
+                                
+                                <div style="background: rgba(239, 246, 255, 0.9); padding: 1.5rem; border-radius: 15px; border: 2px solid rgba(59, 130, 246, 0.3);">
+                                    <h4 style="color: #1e40af; margin-bottom: 0.75rem;">Main Pages:</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem; font-family: monospace; font-size: 0.95rem;">
+                                        <li><code>portfolio.html</code> - Student portfolio page</li>
+                                        <li><code>admin.html</code> - This admin dashboard</li>
+                                        <li><code>index.html</code> - Updated homepage</li>
+                                    </ul>
+
+                                    <h4 style="color: #1e40af; margin-top: 1.5rem; margin-bottom: 0.75rem;">JavaScript Files:</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem; font-family: monospace; font-size: 0.95rem;">
+                                        <li><code>portfolio.js</code> - Portfolio management system</li>
+                                        <li><code>portfolio-api.js</code> - API client (works with localStorage or cloud)</li>
+                                        <li><code>portfolio.css</code> - Styling for portfolios</li>
+                                    </ul>
+
+                                    <h4 style="color: #1e40af; margin-top: 1.5rem; margin-bottom: 0.75rem;">Netlify Functions (Backend):</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem; font-family: monospace; font-size: 0.95rem;">
+                                        <li><code>netlify/functions/portfolios.js</code> - Save/load portfolios</li>
+                                        <li><code>netlify/functions/portfolio-page.js</code> - Generate student pages</li>
+                                        <li><code>netlify/functions/admin-portfolios.js</code> - Admin access</li>
+                                        <li><code>netlify/functions/admin-lessons.js</code> - Lesson management</li>
+                                    </ul>
+
+                                    <h4 style="color: #1e40af; margin-top: 1.5rem; margin-bottom: 0.75rem;">Documentation:</h4>
+                                    <ul style="line-height: 2; color: #475569; padding-left: 1.5rem; font-family: monospace; font-size: 0.95rem;">
+                                        <li><code>ADMIN-SETUP.md</code> - How to set up admin dashboard</li>
+                                        <li><code>NETLIFY-FUNCTIONS-SETUP.md</code> - How to set up backend</li>
+                                        <li><code>IS-IT-READY.md</code> - Is it ready for students?</li>
+                                        <li><code>STUDENT-PORTFOLIOS-GUIDE.md</code> - Guide for students</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+            <div class="navbar-container">
+                <div class="navbar-menu">
+                    <a href="/" class="navbar-link">🏠 Home</a>
+                    <a href="/admin.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4);">👨‍🏫 Admin</a>
+                </div>
+            </div>
+        </nav>
+
+        <script>
+        // Initialize Netlify Identity
+        if (window.netlifyIdentity) {
+            window.netlifyIdentity.on("init", user => {
+                if (user) {
+                    showAdminContent();
+                } else {
+                    showLoginScreen();
+                }
+            });
+            window.netlifyIdentity.on("login", user => {
+                showAdminContent();
+                window.netlifyIdentity.close();
+            });
+            window.netlifyIdentity.on("logout", () => {
+                showLoginScreen();
+            });
+        }
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('admin-content').style.display = 'none';
+        }
+
+        function showAdminContent() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-content').style.display = 'block';
+            loadDashboard();
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.admin-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Load tab data
+            if (tabName === 'portfolios') {
+                loadStudentPortfolios();
+            } else if (tabName === 'lessons') {
+                loadLessons();
+            } else if (tabName === 'overview') {
+                loadDashboard();
+            }
+        }
+
+        async function loadDashboard() {
+            // Load all student data from localStorage
+            const allData = getAllStudentData();
+            const students = Object.keys(allData);
+            const allProjects = students.flatMap(name => allData[name] || []);
+            
+            document.getElementById('total-students').textContent = students.length;
+            document.getElementById('total-projects').textContent = allProjects.length;
+            document.getElementById('active-students').textContent = students.filter(name => 
+                allData[name] && allData[name].length > 0
+            ).length;
+            document.getElementById('avg-projects').textContent = students.length > 0 
+                ? (allProjects.length / students.length).toFixed(1) 
+                : '0';
+        }
+
+        function getAllStudentData() {
+            const stored = localStorage.getItem('student_portfolios');
+            return stored ? JSON.parse(stored) : {};
+        }
+
+        async function loadStudentPortfolios() {
+            const allData = getAllStudentData();
+            const students = Object.keys(allData);
+            const container = document.getElementById('students-list');
+
+            if (students.length === 0) {
+                container.innerHTML = '<p>No students have created portfolios yet.</p>';
+                return;
+            }
+
+            container.innerHTML = students.map(studentName => {
+                const portfolios = allData[studentName] || [];
+                const projectTypes = new Set(portfolios.map(p => p.projectType));
+                
+                return `
+                    <div class="student-card" data-student-name="${studentName}">
+                        <h3>${studentName}</h3>
+                        <div class="student-stats">
+                            <span class="student-stat">📁 ${portfolios.length} Projects</span>
+                            <span class="student-stat">🎯 ${projectTypes.size} Types</span>
+                        </div>
+                        <button class="view-portfolio-btn" onclick="viewStudentPortfolio('${studentName}')">
+                            👀 View Portfolio
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterStudents() {
+            const searchTerm = document.getElementById('search-students').value.toLowerCase();
+            const cards = document.querySelectorAll('.student-card');
+            
+            cards.forEach(card => {
+                const studentName = card.dataset.studentName.toLowerCase();
+                card.style.display = studentName.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        function viewStudentPortfolio(studentName) {
+            // Store student name and redirect to portfolio page
+            localStorage.setItem('view_student_portfolio', studentName);
+            window.location.href = '/portfolio.html?view=' + encodeURIComponent(studentName);
+        }
+
+        function loadLessons() {
+            const lessons = getLessons();
+            const container = document.getElementById('lessons-list');
+
+            if (lessons.length === 0) {
+                container.innerHTML = '<p>No lessons added yet. Use the form above to add your first lesson!</p>';
+                return;
+            }
+
+            container.innerHTML = lessons.map((lesson, index) => `
+                <div class="lesson-item">
+                    <h3>${lesson.title}</h3>
+                    <p>${lesson.description || 'No description'}</p>
+                    <div class="lesson-meta">
+                        <span>📅 ${new Date(lesson.createdAt).toLocaleDateString()}</span>
+                        <span>🎯 ${lesson.type}</span>
+                        <span>👥 Grades: ${lesson.grades.join(', ')}</span>
+                    </div>
+                    <button class="btn-admin" onclick="deleteLesson(${index})" style="margin-top: 1rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); color: #dc2626;">
+                        🗑️ Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function getLessons() {
+            const stored = localStorage.getItem('teacher_lessons');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveLessons(lessons) {
+            localStorage.setItem('teacher_lessons', JSON.stringify(lessons));
+        }
+
+        function addLesson(e) {
+            e.preventDefault();
+            const lessons = getLessons();
+            const newLesson = {
+                title: document.getElementById('lesson-title').value,
+                type: document.getElementById('lesson-type').value,
+                description: document.getElementById('lesson-description').value,
+                resources: document.getElementById('lesson-resources').value.split('\n').filter(r => r.trim()),
+                grades: Array.from(document.getElementById('lesson-grades').selectedOptions).map(o => o.value),
+                createdAt: new Date().toISOString()
+            };
+
+            lessons.push(newLesson);
+            saveLessons(lessons);
+            document.getElementById('lesson-form').reset();
+            loadLessons();
+            alert('✅ Lesson added successfully!');
+        }
+
+        function deleteLesson(index) {
+            if (confirm('Are you sure you want to delete this lesson?')) {
+                const lessons = getLessons();
+                lessons.splice(index, 1);
+                saveLessons(lessons);
+                loadLessons();
+            }
+        }
+
+        function exportAllData() {
+            const allData = {
+                students: getAllStudentData(),
+                lessons: getLessons(),
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `all-student-data-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function refreshDashboard() {
+            loadDashboard();
+            loadStudentPortfolios();
+            alert('✅ Dashboard refreshed!');
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ WARNING: This will delete ALL student portfolios and lessons! Are you absolutely sure?')) {
+                if (confirm('This cannot be undone! Type "DELETE" to confirm.')) {
+                    localStorage.removeItem('student_portfolios');
+                    localStorage.removeItem('teacher_lessons');
+                    alert('🗑️ All data cleared.');
+                    loadDashboard();
+                    loadStudentPortfolios();
+                    loadLessons();
+                }
+            }
+        }
+
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+            
+            setTheme(currentTheme);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+        </script>
+    </body>
+</html>
+
