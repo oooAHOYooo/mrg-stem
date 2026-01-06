@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit a Project | Mr. G STEM</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portfolio.css">
+    <style>
+      .submit-hero {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.12));
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        border: 2px solid rgba(245, 158, 11, 0.35);
+      }
+      .submit-hero h1 {
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        color: #92400e;
+        margin-bottom: 0.75rem;
+        font-weight: 900;
+      }
+      .submit-hero p {
+        color: #78350f;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        max-width: 850px;
+        margin: 0 auto;
+      }
+      .tiny-help {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-top: 0.5rem;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 768px) {
+        .grid-2 { grid-template-columns: 1fr; }
+      }
+      .pill {
+        display: inline-block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        color: #1e40af;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+      body.dark-mode .submit-hero {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(251, 191, 36, 0.18));
+        border-color: rgba(245, 158, 11, 0.45);
+      }
+      body.dark-mode .submit-hero h1 { color: #fbbf24; }
+      body.dark-mode .submit-hero p { color: #fde68a; }
+      body.dark-mode .tiny-help { color: #94a3b8; }
+      body.dark-mode .pill { color: #93c5fd; }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+
+    <nav class="navbar navbar-top">
+      <div class="navbar-container">
+        <a href="/" class="navbar-brand">⚡ Home</a>
+        <a href="/portfolio" class="navbar-brand">🏫 Portfolios</a>
+        <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+        <div style="display:flex; align-items:center; gap: 1rem;">
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="dashboard-main">
+      <div class="main-content-scroll">
+        <div class="submit-hero">
+          <h1>📮 Submit a Project</h1>
+          <p>
+            Submit your project to Mr. G for approval. If it’s approved, it will be added to the
+            class portfolio pages at <span class="pill">/portfolio</span>.
+          </p>
+          <p class="tiny-help">
+            Tip: Make sure your Scratch project is shared (so the link works).
+          </p>
+        </div>
+
+        <section class="portfolio-section">
+          <h2>📝 Project Submission Form</h2>
+          <p>
+            Fill this out carefully. Your teacher will copy the approved project into the portfolio list.
+          </p>
+
+          <!--
+            IMPORTANT:
+            Replace the action URL below with your Formspree endpoint, e.g.
+            https://formspree.io/f/abcdwxyz
+          -->
+          <form id="submit-form" action="https://formspree.io/f/REPLACE_ME" method="POST">
+            <!-- anti-spam honeypot (Formspree supports this convention) -->
+            <input type="text" name="_gotcha" style="display:none">
+
+            <!-- optional: where to redirect after submit -->
+            <input type="hidden" name="_redirect" value="/submit-portfolio.html?sent=1">
+            <input type="hidden" name="_subject" value="MRG STEM: New portfolio submission">
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="classSlug">Class (example: 5a) *</label>
+                <input id="classSlug" name="classSlug" type="text" required placeholder="5a">
+                <div class="tiny-help">Use the same class code that appears in the portfolio directory.</div>
+              </div>
+
+              <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input id="firstName" name="firstName" type="text" required placeholder="Christian">
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="projectType">Project Type *</label>
+                <select id="projectType" name="projectType" required>
+                  <option value="">Choose one…</option>
+                  <option value="scratch">🎮 Scratch</option>
+                  <option value="tinkercad">🌍 Tinkercad</option>
+                  <option value="video">🎬 Video</option>
+                  <option value="other">✨ Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="tags">Tags (comma-separated)</label>
+                <input id="tags" name="tags" type="text" placeholder="game, platformer, coding">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="title">Project Title *</label>
+              <input id="title" name="title" type="text" required placeholder="My Awesome Game">
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description (what you made + what you learned)</label>
+              <textarea id="description" name="description" rows="5" placeholder="I made a platformer. I learned how to use variables and collisions..."></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="link1">Link #1 *</label>
+                <input id="link1" name="link1" type="url" required placeholder="https://scratch.mit.edu/projects/...">
+              </div>
+              <div class="form-group">
+                <label for="link1Label">Link #1 Label</label>
+                <input id="link1Label" name="link1Label" type="text" placeholder="Play on Scratch">
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label for="link2">Link #2 (optional)</label>
+                <input id="link2" name="link2" type="url" placeholder="https://www.tinkercad.com/things/...">
+              </div>
+              <div class="form-group">
+                <label for="link2Label">Link #2 Label</label>
+                <input id="link2Label" name="link2Label" type="text" placeholder="View my design">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">📮 Submit to Mr. G</button>
+              <a class="btn-secondary" href="/portfolio" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">🏫 View Portfolios</a>
+            </div>
+          </form>
+
+          <div id="sent-message" class="portfolio-feature" style="display:none; margin-top: 1.5rem;">
+            <h3>✅ Sent!</h3>
+            <p>Your submission was sent to your teacher.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <nav class="navbar navbar-bottom">
+      <div class="navbar-container">
+        <a href="/" class="navbar-link">🏠 Home</a>
+        <a href="/portfolio" class="navbar-link">🏫 Portfolios</a>
+      </div>
+    </nav>
+
+    <script>
+      // Theme toggle (matches site behavior)
+      (function() {
+        var themeToggle = document.getElementById('theme-toggle');
+        var currentTheme = localStorage.getItem('theme') || 'light';
+        function setTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+          var icon = themeToggle.querySelector('.theme-icon');
+          if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        setTheme(currentTheme);
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(currentTheme);
+          });
+        }
+      })();
+
+      // Pre-fill from query params: ?class=5a&student=christian&sent=1
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var cls = params.get('class');
+        var student = params.get('student');
+        var sent = params.get('sent');
+        if (cls) document.getElementById('classSlug').value = cls;
+        if (student) document.getElementById('firstName').value = student.replace(/-/g, ' ');
+        if (sent === '1') {
+          var msg = document.getElementById('sent-message');
+          if (msg) msg.style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      })();
+
+      // Safety: don't submit if Formspree URL not configured
+      (function() {
+        var form = document.getElementById('submit-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+          if (String(form.action || '').includes('REPLACE_ME')) {
+            e.preventDefault();
+            alert('Teacher setup needed: replace the Formspree action URL in submit-portfolio.html');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
+
