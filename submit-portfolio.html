@@ -7,58 +7,258 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="portfolio.css">
     <style>
+      /* Kid-friendly giant form styles */
+      body {
+        font-size: 24px;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+      
+      html, body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+      
+      .dashboard-main {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: calc(100vh - 120px);
+        -webkit-overflow-scrolling: touch;
+        position: relative;
+      }
+      
+      .main-content-scroll {
+        padding: 2rem 1rem 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: auto;
+      }
+      
       .submit-hero {
         text-align: center;
-        padding: 2.5rem 2rem;
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.12));
-        border-radius: 20px;
-        margin-bottom: 2rem;
-        border: 2px solid rgba(245, 158, 11, 0.35);
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+        border-radius: 25px;
+        margin-bottom: 3rem;
+        border: 4px solid rgba(245, 158, 11, 0.4);
       }
       .submit-hero h1 {
-        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-size: clamp(3rem, 8vw, 5rem);
         color: #92400e;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
         font-weight: 900;
+        line-height: 1.2;
       }
       .submit-hero p {
         color: #78350f;
-        font-size: 1.1rem;
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        line-height: 1.8;
+        max-width: 900px;
+        margin: 0 auto 1rem;
+      }
+      
+      .portfolio-section {
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+      }
+      
+      .portfolio-section h2 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        margin-bottom: 2rem;
+        color: #1e40af;
+        font-weight: 900;
+      }
+      
+      .portfolio-section > p {
+        font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+        margin-bottom: 2.5rem;
+        line-height: 1.8;
+      }
+      
+      .form-group {
+        margin-bottom: 3rem;
+      }
+      
+      .form-group label {
+        display: block;
+        font-size: 48px;
+        font-weight: 800;
+        color: #1e40af;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+      }
+      
+      .form-group input[type="text"],
+      .form-group input[type="url"],
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        font-size: 72px;
+        padding: 1.5rem 2rem;
+        border: 4px solid #3b82f6;
+        border-radius: 20px;
+        background: white;
+        color: #1e293b;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        min-height: 100px;
+      }
+      
+      .form-group input[type="text"]:focus,
+      .form-group input[type="url"]:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        border-width: 6px;
+      }
+      
+      .form-group textarea {
+        min-height: 300px;
+        resize: vertical;
+        font-family: inherit;
         line-height: 1.6;
-        max-width: 850px;
-        margin: 0 auto;
       }
+      
+      .form-group select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231e40af' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 2rem center;
+        background-size: 48px;
+        padding-right: 5rem;
+      }
+      
       .tiny-help {
-        font-size: 0.9rem;
+        font-size: 32px;
         color: #64748b;
-        margin-top: 0.5rem;
+        margin-top: 1rem;
+        line-height: 1.6;
+        font-weight: 500;
       }
+      
+      .tiny-help strong {
+        color: #1e40af;
+        font-weight: 700;
+      }
+      
       .grid-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 2rem;
       }
+      
       @media (max-width: 768px) {
-        .grid-2 { grid-template-columns: 1fr; }
+        .grid-2 { 
+          grid-template-columns: 1fr;
+          gap: 3rem;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group select,
+        .form-group textarea {
+          font-size: 48px;
+          padding: 1.2rem 1.5rem;
+          min-height: 80px;
+        }
+        
+        .form-group label {
+          font-size: 36px;
+        }
+        
+        .tiny-help {
+          font-size: 24px;
+        }
       }
+      
+      .form-actions {
+        margin-top: 4rem;
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .btn-primary,
+      .btn-secondary {
+        font-size: 56px;
+        padding: 2rem 4rem;
+        border-radius: 25px;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 5px solid;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 120px;
+      }
+      
+      .btn-primary {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        border-color: #92400e;
+      }
+      
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #d97706, #b45309);
+      }
+      
+      .btn-secondary {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border-color: #1e40af;
+      }
+      
+      .btn-secondary:hover {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+      }
+      
       .pill {
         display: inline-block;
-        padding: 0.35rem 0.6rem;
+        padding: 0.5rem 1rem;
         border-radius: 999px;
         background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.25);
+        border: 2px solid rgba(59, 130, 246, 0.25);
         color: #1e40af;
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 1.2rem;
       }
+      
+      #sent-message {
+        padding: 3rem;
+        text-align: center;
+        border-radius: 25px;
+      }
+      
+      #sent-message h3 {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+      
+      #sent-message p {
+        font-size: 2rem;
+      }
+      
       body.dark-mode .submit-hero {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(251, 191, 36, 0.18));
-        border-color: rgba(245, 158, 11, 0.45);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+        border-color: rgba(245, 158, 11, 0.5);
       }
       body.dark-mode .submit-hero h1 { color: #fbbf24; }
       body.dark-mode .submit-hero p { color: #fde68a; }
       body.dark-mode .tiny-help { color: #94a3b8; }
       body.dark-mode .pill { color: #93c5fd; }
+      body.dark-mode .form-group input,
+      body.dark-mode .form-group select,
+      body.dark-mode .form-group textarea {
+        background: #1e293b;
+        color: #f1f5f9;
+        border-color: #60a5fa;
+      }
     </style>
   </head>
   <body>
@@ -80,28 +280,30 @@
     <main class="dashboard-main">
       <div class="main-content-scroll">
         <div class="submit-hero">
-          <h1>📮 Submit a Project</h1>
+          <h1>📮 Submit Your Work!</h1>
           <p>
-            Submit your project to Mr. G for approval. If it’s approved, it will be added to the
-            class portfolio pages at <span class="pill">/portfolio</span>.
+            Share anything cool you made! 🎨<br>
+            Finished a project? Have an idea? Reviewed a game?<br>
+            Send it to Mr. G! ✨
           </p>
-          <p class="tiny-help">
-            Tip: Make sure your Scratch project is shared (so the link works).
+          <p class="tiny-help" style="font-size: clamp(1.2rem, 2vw, 1.6rem); margin-top: 1.5rem;">
+            💡 <strong>You can submit:</strong><br>
+            ✅ Games you finished<br>
+            💡 Cool ideas you have<br>
+            ⭐ Reviews of games or apps<br>
+            🚧 Projects you're still working on<br>
+            ✨ Anything creative!
           </p>
         </div>
 
         <section class="portfolio-section">
-          <h2>📝 Project Submission Form</h2>
+          <h2>📝 Fill Out This Form</h2>
           <p>
-            Fill this out carefully. Your teacher will copy the approved project into the portfolio list.
+            Fill this out and send it to Mr. G! 📮<br>
+            He'll look at it and add it to your portfolio if it's approved! ✨
           </p>
 
-          <!--
-            IMPORTANT:
-            Replace the action URL below with your Formspree endpoint, e.g.
-            https://formspree.io/f/abcdwxyz
-          -->
-          <form id="submit-form" action="https://formspree.io/f/REPLACE_ME" method="POST">
+          <form id="submit-form" action="https://formspree.io/f/xqearapy" method="POST">
             <!-- anti-spam honeypot (Formspree supports this convention) -->
             <input type="text" name="_gotcha" style="display:none">
 
@@ -109,67 +311,150 @@
             <input type="hidden" name="_redirect" value="/submit-portfolio.html?sent=1">
             <input type="hidden" name="_subject" value="MRG STEM: New portfolio submission">
 
+            <!-- Student Info -->
             <div class="grid-2">
               <div class="form-group">
-                <label for="classSlug">Class (example: 5a) *</label>
+                <label for="classSlug">📚 What Class Are You In? *</label>
                 <input id="classSlug" name="classSlug" type="text" required placeholder="5a">
-                <div class="tiny-help">Use the same class code that appears in the portfolio directory.</div>
+                <div class="tiny-help">Type your class code (like 5a, 5b, 4a, etc.)</div>
               </div>
 
               <div class="form-group">
-                <label for="firstName">First Name *</label>
-                <input id="firstName" name="firstName" type="text" required placeholder="Christian">
+                <label for="firstName">👤 What's Your First Name? *</label>
+                <input id="firstName" name="firstName" type="text" required placeholder="Type your name here">
               </div>
             </div>
 
-            <div class="grid-2">
-              <div class="form-group">
-                <label for="projectType">Project Type *</label>
-                <select id="projectType" name="projectType" required>
-                  <option value="">Choose one…</option>
-                  <option value="scratch">🎮 Scratch</option>
-                  <option value="tinkercad">🌍 Tinkercad</option>
-                  <option value="video">🎬 Video</option>
-                  <option value="other">✨ Other</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="tags">Tags (comma-separated)</label>
-                <input id="tags" name="tags" type="text" placeholder="game, platformer, coding">
-              </div>
-            </div>
-
+            <!-- Submission Type -->
             <div class="form-group">
-              <label for="title">Project Title *</label>
+              <label for="submissionType">🎯 What Are You Sending? *</label>
+              <select id="submissionType" name="submissionType" required>
+                <option value="">👉 Pick one below...</option>
+                <option value="completed-project">✅ I Finished Something! (Completed Project)</option>
+                <option value="idea">💡 I Have a Cool Idea! (Something I want to make)</option>
+                <option value="review">⭐ I Reviewed Something! (Game, app, website)</option>
+                <option value="work-in-progress">🚧 I'm Still Working On It! (Work in Progress)</option>
+                <option value="other">✨ Something Else Cool! (Other creative work)</option>
+              </select>
+              <div class="tiny-help">Pick the one that best describes what you're sharing!</div>
+            </div>
+
+            <!-- Project Type (for completed projects) -->
+            <div class="form-group" id="projectTypeGroup" style="display:none;">
+              <label for="projectType">What type of project? *</label>
+              <select id="projectType" name="projectType">
+                <option value="">Choose one…</option>
+                <option value="scratch">🎮 Scratch Game/Project</option>
+                <option value="tinkercad">🌍 Tinkercad 3D Design</option>
+                <option value="video">🎬 Video (YouTube, etc.)</option>
+                <option value="art">🎨 Art/Drawing</option>
+                <option value="writing">✍️ Writing/Story</option>
+                <option value="code">💻 Code/Programming</option>
+                <option value="other">✨ Other</option>
+              </select>
+            </div>
+
+            <!-- Title -->
+            <div class="form-group">
+              <label for="title">✏️ Give It a Name! *</label>
               <input id="title" name="title" type="text" required placeholder="My Awesome Game">
+              <div class="tiny-help">Give your project, idea, or review a cool name!</div>
             </div>
 
+            <!-- Description -->
             <div class="form-group">
-              <label for="description">Description (what you made + what you learned)</label>
-              <textarea id="description" name="description" rows="5" placeholder="I made a platformer. I learned how to use variables and collisions..."></textarea>
-            </div>
-
-            <div class="grid-2">
-              <div class="form-group">
-                <label for="link1">Link #1 *</label>
-                <input id="link1" name="link1" type="url" required placeholder="https://scratch.mit.edu/projects/...">
-              </div>
-              <div class="form-group">
-                <label for="link1Label">Link #1 Label</label>
-                <input id="link1Label" name="link1Label" type="text" placeholder="Play on Scratch">
+              <label for="description">📝 Tell Me All About It! *</label>
+              <textarea id="description" name="description" rows="8" required placeholder="Write about what you made, what you learned, what you're proud of, or what you think is cool!"></textarea>
+              <div class="tiny-help">
+                <strong>💡 For projects:</strong> What did you make? What did you learn?<br>
+                <strong>💡 For ideas:</strong> What do you want to make? Why is it cool?<br>
+                <strong>💡 For reviews:</strong> What did you review? What did you like? What didn't you like?
               </div>
             </div>
 
-            <div class="grid-2">
-              <div class="form-group">
-                <label for="link2">Link #2 (optional)</label>
-                <input id="link2" name="link2" type="url" placeholder="https://www.tinkercad.com/things/...">
+            <!-- Scratch Account Section -->
+            <div class="form-group" style="background: rgba(255, 159, 10, 0.1); padding: 2rem; border-radius: 20px; border: 4px solid rgba(255, 159, 10, 0.3); margin-bottom: 3rem;">
+              <label style="font-size: 48px; font-weight: 800; margin-bottom: 1rem; display: block; color: #1e40af;">🎮 Scratch Account Info (If you made a Scratch project)</label>
+              <div class="tiny-help" style="margin-bottom: 2rem;">
+                <strong>📋 Don't have a Scratch account yet?</strong><br>
+                <a href="/scratch-setup.html" style="color: #3b82f6; text-decoration: underline; font-weight: 700; font-size: 36px;">👉 Click here to see how to set one up! 📖</a>
               </div>
-              <div class="form-group">
-                <label for="link2Label">Link #2 Label</label>
-                <input id="link2Label" name="link2Label" type="text" placeholder="View my design">
+              
+              <div class="grid-2" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="scratchUsername">👤 Your Scratch Username</label>
+                  <input id="scratchUsername" name="scratchUsername" type="text" placeholder="YourScratchUsername">
+                  <div class="tiny-help">Your Scratch username (not your real name)</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="scratchProjectLink">🔗 Your Scratch Project Link</label>
+                  <input id="scratchProjectLink" name="scratchProjectLink" type="url" placeholder="https://scratch.mit.edu/projects/1234567890/">
+                  <div class="tiny-help">Copy and paste the link to your project</div>
+                </div>
               </div>
+            </div>
+
+            <!-- Tinkercad Account Section -->
+            <div class="form-group" style="background: rgba(16, 185, 129, 0.1); padding: 2rem; border-radius: 20px; border: 4px solid rgba(16, 185, 129, 0.3); margin-bottom: 3rem;">
+              <label style="font-size: 48px; font-weight: 800; margin-bottom: 1rem; display: block; color: #1e40af;">🌍 Tinkercad Account Info (If you made a Tinkercad design)</label>
+              <div class="tiny-help" style="margin-bottom: 2rem;">
+                <strong>📋 Don't have a Tinkercad account yet?</strong><br>
+                Ask Mr. G for help setting one up, or use your school Google account!
+              </div>
+              
+              <div class="grid-2" style="margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="tinkercadUsername">👤 Your Tinkercad Username</label>
+                  <input id="tinkercadUsername" name="tinkercadUsername" type="text" placeholder="YourTinkercadUsername">
+                  <div class="tiny-help">Your Tinkercad username or email</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="tinkercadProjectLink">🔗 Your Tinkercad Design Link</label>
+                  <input id="tinkercadProjectLink" name="tinkercadProjectLink" type="url" placeholder="https://www.tinkercad.com/things/abc123...">
+                  <div class="tiny-help">Copy and paste the link to your design</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Other Links Section -->
+            <div class="form-group">
+              <label style="font-size: 48px; font-weight: 800; margin-bottom: 1rem; display: block; color: #1e40af;">🔗 Other Links (Optional)</label>
+              <div class="tiny-help" style="margin-bottom: 2rem;">If you have other links (like YouTube videos, websites, etc.), add them here!</div>
+              
+              <div class="grid-2" style="margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="link1">Link #1</label>
+                  <input id="link1" name="link1" type="url" placeholder="https://...">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="link1Label">What is this link? (optional)</label>
+                  <input id="link1Label" name="link1Label" type="text" placeholder="Watch my video / View my website">
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="link2">Link #2 (optional)</label>
+                  <input id="link2" name="link2" type="url" placeholder="https://...">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="link2Label">What is this link? (optional)</label>
+                  <input id="link2Label" name="link2Label" type="text" placeholder="See my other work">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+              <label for="tags">🏷️ Tags (Optional - Add Keywords)</label>
+              <input id="tags" name="tags" type="text" placeholder="game, platformer, coding">
+              <div class="tiny-help">Add words that describe your work (like "game" or "art" or "coding") separated by commas</div>
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="form-group">
+              <label for="additionalNotes">💬 Anything Else You Want to Say? (Optional)</label>
+              <textarea id="additionalNotes" name="additionalNotes" rows="5" placeholder="Write anything else here - questions, extra info, or things you want Mr. G to know!"></textarea>
             </div>
 
             <div class="form-actions">
@@ -228,16 +513,24 @@
         }
       })();
 
-      // Safety: don't submit if Formspree URL not configured
+      // Show/hide project type based on submission type
       (function() {
-        var form = document.getElementById('submit-form');
-        if (!form) return;
-        form.addEventListener('submit', function(e) {
-          if (String(form.action || '').includes('REPLACE_ME')) {
-            e.preventDefault();
-            alert('Teacher setup needed: replace the Formspree action URL in submit-portfolio.html');
-          }
-        });
+        var submissionType = document.getElementById('submissionType');
+        var projectTypeGroup = document.getElementById('projectTypeGroup');
+        var projectType = document.getElementById('projectType');
+        
+        if (submissionType && projectTypeGroup) {
+          submissionType.addEventListener('change', function() {
+            if (this.value === 'completed-project' || this.value === 'work-in-progress') {
+              projectTypeGroup.style.display = 'block';
+              projectType.setAttribute('required', 'required');
+            } else {
+              projectTypeGroup.style.display = 'none';
+              projectType.removeAttribute('required');
+              projectType.value = '';
+            }
+          });
+        }
       })();
     </script>
   </body>

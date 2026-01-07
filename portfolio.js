@@ -12,17 +12,20 @@ class PortfolioManager {
     async init() {
         await this.loadPortfolios();
         this.setupEventListeners();
-        await this.renderPortfolioList();
+        // Only render if container exists (some pages don't have portfolio display)
+        const container = document.getElementById('portfolio-items-container');
+        if (container) {
+            await this.renderPortfolioList();
+        }
     }
 
     getCurrentStudent() {
-        // Get student name from localStorage or prompt
+        // Get student name from localStorage (no prompt - user can set it via the change name button)
         let studentName = localStorage.getItem('student_name');
         if (!studentName) {
-            studentName = prompt('Enter your name to create your portfolio:');
-            if (studentName) {
-                localStorage.setItem('student_name', studentName);
-            }
+            // Default to "Student" if no name is set - user can change it via the UI
+            studentName = 'Student';
+            localStorage.setItem('student_name', studentName);
         }
         return studentName;
     }
@@ -216,7 +219,10 @@ class PortfolioManager {
 
     async renderPortfolioList() {
         const container = document.getElementById('portfolio-items-container');
-        if (!container) return;
+        if (!container) {
+            // No container on this page, that's okay
+            return;
+        }
 
         const portfolios = await this.getPortfolios();
         
@@ -417,11 +423,30 @@ class PortfolioManager {
 }
 
 // Initialize portfolio manager when DOM is ready
+// Only initialize on portfolio.html page specifically (not index.html)
 let portfolioManager;
 document.addEventListener('DOMContentLoaded', () => {
-    portfolioManager = new PortfolioManager();
+    // Only initialize on the actual portfolio.html page (not index.html)
+    const pathname = window.location.pathname.toLowerCase();
+    const isPortfolioPage = pathname === '/portfolio.html' || 
+                           pathname.endsWith('/portfolio.html') ||
+                           (pathname.includes('portfolio.html') && !pathname.includes('index'));
+    
+    // Don't initialize on index.html even if it has portfolio elements
+    const isIndexPage = pathname === '/' || 
+                       pathname === '/index.html' ||
+                       pathname.endsWith('/index.html');
+    
+    if (isPortfolioPage && !isIndexPage) {
+        try {
+            portfolioManager = new PortfolioManager();
+            window.portfolioManager = portfolioManager;
+        } catch (error) {
+            console.error('Error initializing portfolio manager:', error);
+        }
+    } else {
+        // For other pages, don't initialize - buttons will handle their own logic
+        window.portfolioManager = null;
+    }
 });
-
-// Make it globally available
-window.portfolioManager = portfolioManager;
 

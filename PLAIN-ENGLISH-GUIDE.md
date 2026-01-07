@@ -206,3 +206,4 @@ A: Right now it's accessible to anyone. Add Netlify Identity for teacher login (
 **Q: Can students access from home?**
 A: Not yet (browser storage only). After backend setup, yes - they'll get shareable links!
 
+

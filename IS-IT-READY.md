@@ -131,3 +131,4 @@ A: No! It works right now. Backend setup is optional (for cloud storage and shar
 
 **Ready to go!** Students can start creating portfolios today! 🎉
 
+
