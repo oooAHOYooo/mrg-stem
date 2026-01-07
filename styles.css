@@ -4,6 +4,21 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Theme variable defaults (used across subpages) */
+    --primary-color: #3b82f6;
+    --secondary-color: #2563eb;
+    --accent-color: #60a5fa;
+    --bg-gradient-1: #e8f4f8;
+    --bg-gradient-2: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --border-color: rgba(59, 130, 246, 0.2);
+    --shadow-sm: rgba(0, 0, 0, 0.06);
+    --shadow-md: rgba(0, 0, 0, 0.12);
+}
+
 html {
     height: 100%;
     overflow-x: hidden;
@@ -17,7 +32,7 @@ body {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    color: #1a1a2e;
+    color: var(--text-primary, #1a1a2e);
     padding-top: 0;
     padding-bottom: 0;
 }
@@ -1618,11 +1633,12 @@ body.dark-theme .footer-bottom {
 
 /* Sitewide card style to match lesson pages */
 .card {
-    background: #111827;
-    border: 1px solid #1f2937;
+    background: var(--card-bg, rgba(255, 255, 255, 0.85));
+    border: 2px solid var(--border-color, rgba(59, 130, 246, 0.2));
     border-radius: 16px;
     padding: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 30px var(--shadow-md, rgba(0, 0, 0, 0.12));
+    color: var(--text-primary, #1e293b);
 }
 
 /* Responsive images */
@@ -1637,6 +1653,12 @@ img {
    ============================================ */
 
 body.dark-mode {
+    /* Keep legacy dark-mode working even on pages that don't define theme vars */
+    --card-bg: rgba(15, 15, 26, 0.9);
+    --text-primary: #e0e7ff;
+    --text-secondary: #c7d2fe;
+    --border-color: rgba(96, 165, 250, 0.4);
+    --shadow-md: rgba(0, 0, 0, 0.4);
     color: #e0e7ff;
     background: #0a0a0f;
 }

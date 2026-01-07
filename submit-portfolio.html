@@ -259,6 +259,25 @@
         color: #f1f5f9;
         border-color: #60a5fa;
       }
+
+      /* Make file inputs readable in the giant-form UI */
+      .form-group input[type="file"] {
+        width: 100%;
+        font-size: 36px;
+        padding: 1.2rem 1.5rem;
+        border: 4px solid #3b82f6;
+        border-radius: 20px;
+        background: white;
+        color: #1e293b;
+        font-weight: 600;
+        box-sizing: border-box;
+        min-height: 100px;
+      }
+      body.dark-mode .form-group input[type="file"] {
+        background: #1e293b;
+        color: #f1f5f9;
+        border-color: #60a5fa;
+      }
     </style>
   </head>
   <body>
@@ -303,7 +322,7 @@
             He'll look at it and add it to your portfolio if it's approved! ✨
           </p>
 
-          <form id="submit-form" action="https://formspree.io/f/xqearapy" method="POST">
+          <form id="submit-form" action="https://formspree.io/f/xqearapy" method="POST" enctype="multipart/form-data">
             <!-- anti-spam honeypot (Formspree supports this convention) -->
             <input type="text" name="_gotcha" style="display:none">
 
@@ -314,21 +333,21 @@
             <!-- Student Info -->
             <div class="grid-2">
               <div class="form-group">
-                <label for="classSlug">📚 What Class Are You In? *</label>
-                <input id="classSlug" name="classSlug" type="text" required placeholder="5a">
-                <div class="tiny-help">Type your class code (like 5a, 5b, 4a, etc.)</div>
+                <label for="classroomOrTeacher">🏫 Classroom Number or Teacher (Optional)</label>
+                <input id="classroomOrTeacher" name="classroomOrTeacher" type="text" placeholder="Room 12 / Ms. Smith">
+                <div class="tiny-help">If you know it, type your classroom number or your teacher’s name.</div>
               </div>
 
               <div class="form-group">
-                <label for="firstName">👤 What's Your First Name? *</label>
-                <input id="firstName" name="firstName" type="text" required placeholder="Type your name here">
+                <label for="studentName">👤 Student Name *</label>
+                <input id="studentName" name="studentName" type="text" required placeholder="Type your name here">
               </div>
             </div>
 
             <!-- Submission Type -->
             <div class="form-group">
-              <label for="submissionType">🎯 What Are You Sending? *</label>
-              <select id="submissionType" name="submissionType" required>
+              <label for="submissionType">🎯 What Are You Sending? (Optional)</label>
+              <select id="submissionType" name="submissionType">
                 <option value="">👉 Pick one below...</option>
                 <option value="completed-project">✅ I Finished Something! (Completed Project)</option>
                 <option value="idea">💡 I Have a Cool Idea! (Something I want to make)</option>
@@ -341,7 +360,7 @@
 
             <!-- Project Type (for completed projects) -->
             <div class="form-group" id="projectTypeGroup" style="display:none;">
-              <label for="projectType">What type of project? *</label>
+              <label for="projectType">What type of project? (Optional)</label>
               <select id="projectType" name="projectType">
                 <option value="">Choose one…</option>
                 <option value="scratch">🎮 Scratch Game/Project</option>
@@ -363,12 +382,22 @@
 
             <!-- Description -->
             <div class="form-group">
-              <label for="description">📝 Tell Me All About It! *</label>
-              <textarea id="description" name="description" rows="8" required placeholder="Write about what you made, what you learned, what you're proud of, or what you think is cool!"></textarea>
+              <label for="description">📝 Tell Me All About It! (Optional)</label>
+              <textarea id="description" name="description" rows="8" placeholder="Write about what you made, what you learned, what you're proud of, or what you think is cool!"></textarea>
               <div class="tiny-help">
                 <strong>💡 For projects:</strong> What did you make? What did you learn?<br>
                 <strong>💡 For ideas:</strong> What do you want to make? Why is it cool?<br>
                 <strong>💡 For reviews:</strong> What did you review? What did you like? What didn't you like?
+              </div>
+            </div>
+
+            <!-- Photos / Screenshots -->
+            <div class="form-group" style="background: rgba(59, 130, 246, 0.08); padding: 2rem; border-radius: 20px; border: 4px solid rgba(59, 130, 246, 0.25); margin-bottom: 3rem;">
+              <label for="screenshots" style="font-size: 48px; font-weight: 800; margin-bottom: 1rem; display: block; color: #1e40af;">📸 Upload Photos or Screenshots (Optional)</label>
+              <input id="screenshots" name="attachment" type="file" accept="image/*" multiple>
+              <div class="tiny-help">
+                Add screenshots/photos of your project.<br>
+                If upload doesn’t work on your device, you can also paste a link in <strong>Other Links</strong> below.
               </div>
             </div>
 
@@ -503,9 +532,15 @@
         var params = new URLSearchParams(window.location.search);
         var cls = params.get('class');
         var student = params.get('student');
+        var classroom = params.get('classroom');
+        var teacher = params.get('teacher');
         var sent = params.get('sent');
-        if (cls) document.getElementById('classSlug').value = cls;
-        if (student) document.getElementById('firstName').value = student.replace(/-/g, ' ');
+        var classInfoEl = document.getElementById('classroomOrTeacher');
+        var studentNameEl = document.getElementById('studentName');
+        if (classroom && classInfoEl) classInfoEl.value = classroom;
+        if (teacher && classInfoEl && !classInfoEl.value) classInfoEl.value = teacher;
+        if (cls && classInfoEl && !classInfoEl.value) classInfoEl.value = cls;
+        if (student && studentNameEl) studentNameEl.value = student.replace(/-/g, ' ');
         if (sent === '1') {
           var msg = document.getElementById('sent-message');
           if (msg) msg.style.display = 'block';
@@ -523,10 +558,8 @@
           submissionType.addEventListener('change', function() {
             if (this.value === 'completed-project' || this.value === 'work-in-progress') {
               projectTypeGroup.style.display = 'block';
-              projectType.setAttribute('required', 'required');
             } else {
               projectTypeGroup.style.display = 'none';
-              projectType.removeAttribute('required');
               projectType.value = '';
             }
           });

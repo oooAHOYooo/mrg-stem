@@ -47,11 +47,12 @@ The form now handles:
 5. **Other** - Any creative work that doesn't fit the above
 
 ### Form Fields
-- **Student Info**: Class and first name (required)
-- **Submission Type**: What they're submitting (required)
+- **Student Info**: Classroom number / teacher (optional) + student name (required)
+- **Submission Type**: What they're submitting (optional)
 - **Project Type**: Only shows for completed/work-in-progress (conditional)
-- **Title**: Flexible for any submission type
+- **Title**: Required
 - **Description**: Context-aware help text
+- **Photos / Screenshots**: Optional upload (image files)
 - **Links**: Optional (0-2 links with labels)
 - **Tags**: Optional keywords
 - **Additional Notes**: Optional extra info
@@ -90,12 +91,13 @@ All submission links use consistent styling:
 When submitted, you'll receive:
 ```json
 {
-  "classSlug": "5a",
-  "firstName": "Christian",
+  "classroomOrTeacher": "Room 12 / Ms. Smith",
+  "studentName": "Christian",
   "submissionType": "completed-project",
   "projectType": "scratch",
   "title": "My Awesome Game",
   "description": "I made a platformer...",
+  "attachment": "(file upload, if provided)",
   "link1": "https://scratch.mit.edu/projects/...",
   "link1Label": "Play my game",
   "link2": "",
@@ -168,6 +170,7 @@ When submitted, you'll receive:
 
 - **Form Action**: `https://formspree.io/f/xqearapy`
 - **Method**: POST
+- **Encoding**: `multipart/form-data` (supports optional file uploads)
 - **Redirect**: `/submit-portfolio.html?sent=1`
 - **Spam Protection**: Honeypot field (`_gotcha`)
 - **Email Subject**: "MRG STEM: New portfolio submission"
@@ -177,8 +180,9 @@ When submitted, you'll receive:
 - [ ] Test form submission with each submission type
 - [ ] Verify Formspree receives all data
 - [ ] Check email notifications work
-- [ ] Test form validation (required fields)
+- [ ] Test form validation (only name + title required)
 - [ ] Verify dynamic fields show/hide correctly
+- [ ] Test optional screenshot/photo upload
 - [ ] Test links from homepage, portfolio page, student work page
 - [ ] Verify mobile responsiveness
 - [ ] Check dark mode styling

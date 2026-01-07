@@ -86,6 +86,77 @@
             --shadow-md: rgba(217, 119, 6, 0.2);
             --shadow-lg: rgba(217, 119, 6, 0.3);
         }
+
+        /* Lesson readability helpers */
+        .concepts-card {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .concepts-card h2 {
+            margin: 0 0 0.5rem 0;
+        }
+        .concepts-kicker {
+            margin: 0 0 1rem 0;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .concept-block {
+            background: rgba(59, 130, 246, 0.08);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1rem;
+        }
+        .concept-block h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-primary);
+        }
+        .concept-block p {
+            margin: 0.5rem 0;
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .concept-block ul,
+        .concept-block ol {
+            margin: 0.5rem 0 0.75rem 1.25rem;
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .concept-block li {
+            margin: 0.25rem 0;
+        }
+        .concept-block pre {
+            margin: 0.75rem 0 0 0;
+            padding: 0.75rem;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.75);
+            overflow: auto;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        [data-theme="dark"] .concept-block,
+        [data-theme="neon"] .concept-block {
+            background: rgba(96, 165, 250, 0.12);
+        }
+        [data-theme="dark"] .concept-block pre,
+        [data-theme="neon"] .concept-block pre {
+            background: rgba(15, 23, 42, 0.6);
+            border-color: rgba(96, 165, 250, 0.35);
+        }
+        .concept-block details {
+            margin-top: 0.75rem;
+        }
+        .concept-block summary {
+            cursor: pointer;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
         </style>
         <script>
         // Apply theme immediately to prevent flash
@@ -326,108 +397,72 @@
 
                     <section>
 
-                        <div class="card">
-                            <h1>Concepts to Remember for later.</h1>
-                            <p>Advanced Reading Alert</p>
-                            <h2>3 Types of Character Controls</h2>
-                            <p>One of the key skills necessary when building
-                                projects is
-                                using the right type of controls for the
-                                character.
-                                There are times when you want the character to
-                                be
-                                controlled by the keyboard, other times you want
-                                the
-                                character's movement to be automatic, and other
-                                times
-                                you want a character to be based on how the
-                                mouse
-                                moves.</p>
+                        <div class="card concepts-card">
+                            <h2>🧠 Concepts to Remember (For Later)</h2>
+                            <p class="concepts-kicker">Optional extra reading. Skim the <strong>bold</strong> parts.</p>
 
-                            <h3>1. Keyboard Inputs</h3>
-                            <p>To build controls based on key inputs, we use
-                                loops,
-                                conditional statements, and sense whether or not
-                                the
-                                keyboard button we have intended for movement is
-                                being
-                                pressed.</p>
+                            <p><strong>Big idea:</strong> There are 3 common ways to control a character in Scratch.</p>
 
-                            <p><strong>Moving Forward:</strong> Use a
-                                'When Green Flag Clicked' block from Events,
-                                then an
-                                'If Then'
-                                conditional statement from Control. Inside the
-                                diamond,
-                                place a 'When Key Pressed' block from Sensing
-                                set to
-                                'Up Arrow'. In the action area, add
-                                'Move 10 steps' from
-                                Motion.</p>
+                            <div class="concepts-grid">
+                                <div class="concept-block">
+                                    <h3>1) ⌨️ Keyboard Inputs</h3>
+                                    <p><strong>Use when:</strong> the player should control the character.</p>
+                                    <ul>
+                                        <li><strong>Left / Right:</strong> change <code>x</code></li>
+                                        <li><strong>Up / Down:</strong> change <code>y</code></li>
+                                        <li><strong>Turn:</strong> turn degrees (smaller = smoother)</li>
+                                    </ul>
+                                    <p><strong>Quick recipe:</strong></p>
+                                    <ol>
+                                        <li><strong>Events:</strong> when green flag clicked</li>
+                                        <li><strong>Control:</strong> forever</li>
+                                        <li><strong>Control:</strong> if &lt;key pressed?&gt; then</li>
+                                        <li><strong>Motion:</strong> change x/y or turn</li>
+                                    </ol>
+                                    <details>
+                                        <summary>Show example</summary>
+                                        <pre>when green flag clicked
+forever
+  if &lt;key (right arrow) pressed?&gt; then
+    change x by (10)
+  end
+end</pre>
+                                    </details>
+                                </div>
 
-                            <p><strong>Moving Backward:</strong> Similar to
-                                forward, but
-                                use 'Down Arrow' and 'Move -10 steps' (negative
-                                steps
-                                move backward).</p>
+                                <div class="concept-block">
+                                    <h3>2) 🤖 Computer Controlled (Automatic)</h3>
+                                    <p><strong>Use when:</strong> you want movement without a player controlling it (like an enemy).</p>
+                                    <p><strong>Quick recipe:</strong></p>
+                                    <ol>
+                                        <li>when green flag clicked</li>
+                                        <li>forever</li>
+                                        <li>glide (1) secs to x: (pick random) y: (pick random)</li>
+                                    </ol>
+                                    <details>
+                                        <summary>Speed tip</summary>
+                                        <ul>
+                                            <li><strong>Faster:</strong> smaller glide time (0.1–0.9)</li>
+                                            <li><strong>Slower:</strong> bigger glide time (2–5)</li>
+                                        </ul>
+                                    </details>
+                                </div>
 
-                            <p><strong>Turn Left:</strong> Use 'Left Arrow' key
-                                pressed,
-                                with 'Turn 5 Degrees Counterclockwise' from
-                                Motion.
-                                Making it 5 degrees instead of 15 creates a more
-                                gradual
-                                turn.</p>
-
-                            <p><strong>Turn Right:</strong> Use 'Right Arrow'
-                                key
-                                pressed, with 'Turn 5 Degrees Clockwise' from
-                                Motion.</p>
-
-                            <h3>2. Computer Controlled</h3>
-                            <p>There are times when we want automatic movement
-                                without
-                                precise controls. This is useful when one
-                                character is
-                                controlled by keyboard inputs and another
-                                character
-                                should move automatically.</p>
-
-                            <p>Use 'When Green Flag Clicked' from Events, then
-                                'Glide (1) secs to X Y' from Motion. Replace the
-                                X
-                                coordinate with 'Pick Random (-240) to (240)'
-                                from
-                                Operators, and the Y coordinate with
-                                'Pick Random (-180) to (180)'. This makes the
-                                character
-                                move to random positions every second.</p>
-
-                            <p>To make movement faster, reduce the glide time
-                                (0.1-0.9
-                                seconds). To make it slower, increase the time
-                                (2-5
-                                seconds).</p>
-
-                            <h3>3. Mouse Inputs</h3>
-                            <p>Instead of using keyboard inputs, we can control
-                                our
-                                character based on the position of the
-                                mouse.</p>
-
-                            <p>Use 'When Green Flag Clicked' from Events, then
-                                'Glide (1) secs to X Y' from Motion. Replace the
-                                X
-                                coordinate with 'Mouse X' from Sensing, and the
-                                Y
-                                coordinate with 'Mouse Y' from Sensing.</p>
-
-                            <p>For mouse controls, we want the character to move
-                                as fast
-                                as possible to where the mouse is. Reduce the
-                                glide time
-                                to 0 or 0.1 seconds for instant, responsive
-                                movement.</p>
+                                <div class="concept-block">
+                                    <h3>3) 🖱️ Mouse Inputs</h3>
+                                    <p><strong>Use when:</strong> the character should follow your mouse.</p>
+                                    <p><strong>Quick recipe:</strong></p>
+                                    <ol>
+                                        <li>when green flag clicked</li>
+                                        <li>forever</li>
+                                        <li>go to x: (mouse x) y: (mouse y) <em>or</em> glide (0.1) secs to x/y</li>
+                                    </ol>
+                                    <details>
+                                        <summary>Tip for smooth control</summary>
+                                        <p>Use a tiny glide (0.1) to make it smooth but still fast.</p>
+                                    </details>
+                                </div>
+                            </div>
                         </div>
 
                     </section>
