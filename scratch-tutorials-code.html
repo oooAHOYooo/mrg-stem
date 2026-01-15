@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch Tutorials (Code) | Mr. Gonzalez's STEM Class</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .code-hero {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+        .code-hero h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+            font-weight: 900;
+        }
+        .code-hero p {
+            color: #475569;
+            font-size: 1.1rem;
+        }
+        .tutorial-section {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+        }
+        .tutorial-section h2 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: #1e40af;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            border-bottom: 3px solid rgba(59, 130, 246, 0.3);
+            padding-bottom: 0.5rem;
+        }
+        .tutorial-section h3 {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: #3b82f6;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border-left: 4px solid #3b82f6;
+        }
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .pdf-section {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        .pdf-section h4 {
+            color: #dc2626;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .pdf-link {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            color: #991b1b;
+            text-decoration: none;
+            font-weight: 700;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .pdf-link:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+            transform: translateY(-2px);
+        }
+        .step-card {
+            background: rgba(239, 246, 255, 0.5);
+            border-left: 4px solid rgba(59, 130, 246, 0.4);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+        .step-card h4 {
+            color: #1e40af;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+        }
+        .step-card ul, .step-card ol {
+            margin-left: 1.5rem;
+            color: #475569;
+        }
+        .step-card li {
+            margin: 0.5rem 0;
+        }
+        .toc {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+        .toc li {
+            margin: 0.5rem 0;
+        }
+        .toc a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem;
+            display: block;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .toc a:hover {
+            background: rgba(59, 130, 246, 0.2);
+            padding-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Fixed Top Nav -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">⚡ Home</a>
+            <a href="/portfolio.html" class="navbar-brand">📁 My Portfolio</a>
+            <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+            <a href="/lesson-plans.html" class="navbar-brand">📅 Lesson Plans</a>
+            <a href="/coverage.html" class="navbar-brand">📝 Coverage</a>
+            <a href="/portfolio" class="navbar-brand">🏫 Class Portfolios</a>
+            <a href="/submit-portfolio.html" class="navbar-brand">📮 Submit</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container" id="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar sidebar-left" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📚 Quick Links</h3>
+                <nav class="sidebar-nav">
+                    <a href="/" class="sidebar-link">🏠 Home</a>
+                    <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                    <a href="/scratch-tutorials.html" class="sidebar-link">📚 Scratch Tutorials</a>
+                    <a href="/scratch-tutorials-code.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)); border: 2px solid rgba(59, 130, 246, 0.3); font-weight: 700;">💻 Scratch Tutorials (Code)</a>
+                </nav>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">🎯 Lessons</h3>
+                <nav class="sidebar-nav">
+                    <a href="/unreal-engine-level-design.html" class="sidebar-link">🏔️ Unreal Engine</a>
+                    <a href="/learn-html.html" class="sidebar-link">👑 HTML & CSS</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="code-hero">
+                    <h1>💻 Scratch Tutorials (Code)</h1>
+                    <p>Complete code reference for all Scratch tutorials. Copy and paste these code blocks into your Scratch projects.</p>
+                </div>
+
+                <!-- Table of Contents -->
+                <div class="toc">
+                    <h3>📑 Table of Contents</h3>
+                    <ul>
+                        <li><a href="#lesson-1-movement">Lesson 1: Movement</a></li>
+                        <li><a href="#lesson-2-collision">Lesson 2: Collision Detection</a></li>
+                        <li><a href="#lesson-3-2player">Lesson 3: 2-Player Controller</a></li>
+                        <li><a href="#lesson-4-projectiles">Lesson 4: Projectiles & Power-ups</a></li>
+                        <li><a href="#geometry-dash">Geometry Dash Tutorial</a></li>
+                    </ul>
+                </div>
+
+                <!-- Lesson 1: Movement -->
+                <div class="tutorial-section" id="lesson-1-movement">
+                    <h2>🏃 Lesson 1: Movement</h2>
+                    
+                    <div class="pdf-section">
+                        <h4>📄 PDF Resources</h4>
+                        <p>Download the complete Movement tutorial PDF:</p>
+                        <a href="#" class="pdf-link">📥 Movement Tutorial PDF</a>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 1: Move Right</h4>
+                        <p>Make your character move to the right when the right arrow key is pressed.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [right arrow v] pressed?&gt; then
+    change x by (10)
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 2: Move Left</h4>
+                        <p>Make your character move to the left when the left arrow key is pressed.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [left arrow v] pressed?&gt; then
+    change x by (-10)
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 3: Jump Up</h4>
+                        <p>Make your character jump up when the space key is pressed.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [space v] pressed?&gt; then
+    repeat (10)
+      change y by (5)
+    end
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 4: Jump Down (Gravity)</h4>
+                        <p>Add gravity so the character falls back down after jumping.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [space v] pressed?&gt; then
+    repeat (10)
+      change y by (5)
+    end
+    repeat (10)
+      change y by (-5)
+    end
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Makey Makey: Left Pad</h4>
+                        <p>Connect Makey Makey left pad to move left.</p>
+                        <div class="code-block">
+                            <pre>when [left pad v] pressed
+  change x by (-10)
+</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Makey Makey: Right Pad</h4>
+                        <p>Connect Makey Makey right pad to move right.</p>
+                        <div class="code-block">
+                            <pre>when [right pad v] pressed
+  change x by (10)
+</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Makey Makey: Jump Pad</h4>
+                        <p>Connect Makey Makey space pad to jump.</p>
+                        <div class="code-block">
+                            <pre>when [space pad v] pressed
+  change y by (5)
+  repeat (6)
+    change y by (-3)
+  end
+</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson 2: Collision -->
+                <div class="tutorial-section" id="lesson-2-collision">
+                    <h2>💥 Lesson 2: Collision Detection</h2>
+                    
+                    <div class="pdf-section">
+                        <h4>📄 PDF Resources</h4>
+                        <p>Download the complete Collision Detection tutorial PDF:</p>
+                        <a href="#" class="pdf-link">📥 Collision Tutorial PDF</a>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 1: Create a Block Sprite</h4>
+                        <p>Paint a new sprite as a square block. This will be your ground/platform.</p>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 2: Block Scrolling (Right to Left)</h4>
+                        <p>Make blocks move from right to left to create a scrolling effect.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+go to x: (200) y: (-140)
+forever
+  change x by (-5)
+  if &lt;x position &lt; (-250)&gt; then
+    go to x: (250) y: (-140)
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 3: Coin Collection</h4>
+                        <p>Create a coin sprite that scrolls and disappears when touched.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+go to x: (155) y: (-115)
+forever
+  change x by (-6)
+  if &lt;x position &lt; (-150)&gt; then
+    go to x: (155) y: (-115)
+  end
+  if &lt;touching [Bear-walking v]?&gt; then
+    hide
+    wait (1) seconds
+    show
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 4: Collision Detection with Ground</h4>
+                        <p>Prevent the character from falling through the ground.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;touching [Block v]?&gt; then
+    change y by (5)
+  end
+end</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson 3: 2-Player -->
+                <div class="tutorial-section" id="lesson-3-2player">
+                    <h2>👥 Lesson 3: 2-Player Controller</h2>
+                    
+                    <div class="pdf-section">
+                        <h4>📄 PDF Resources</h4>
+                        <p>Download the complete 2-Player Controller tutorial PDF:</p>
+                        <a href="#" class="pdf-link">📥 2-Player Tutorial PDF</a>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 1: Player 1 (Bear) Movement — WASD</h4>
+                        <p>Player 1 controls using W, A, S, D keys.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [a v] pressed?&gt; then
+    change x by (-6)
+  end
+  if &lt;key [d v] pressed?&gt; then
+    change x by (6)
+  end
+  if &lt;key [w v] pressed?&gt; then
+    change y by (8)
+    repeat (6)
+      change y by (-3)
+    end
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 2: Player 2 (Opponent) Movement — Arrow Keys</h4>
+                        <p>Player 2 controls using arrow keys.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [left arrow v] pressed?&gt; then
+    change x by (-6)
+  end
+  if &lt;key [right arrow v] pressed?&gt; then
+    change x by (6)
+  end
+  if &lt;key [up arrow v] pressed?&gt; then
+    change y by (8)
+    repeat (6)
+      change y by (-3)
+    end
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 3: Health Variables</h4>
+                        <p>Create health variables for both players.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+set [Bear HP v] to (100)
+set [Opponent HP v] to (100)</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 4: Attack + Hit Detection</h4>
+                        <p>Player 1 attacks with F key, Player 2 attacks with L key.</p>
+                        <div class="code-block">
+                            <pre>// Bear sprite
+when [f v] key pressed
+if &lt;touching [Opponent v]?&gt; then
+  change [Opponent HP v] by (-10)
+end
+
+// Opponent sprite
+when [l v] key pressed
+if &lt;touching [Bear v]?&gt; then
+  change [Bear HP v] by (-10)
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 5: Win Condition</h4>
+                        <p>Check if either player's health reaches 0.</p>
+                        <div class="code-block">
+                            <pre>forever
+  if &lt;(Bear HP) &lt;= (0)&gt; then
+    say [Opponent Wins!] for (2) seconds
+    stop [all v]
+  end
+  if &lt;(Opponent HP) &lt;= (0)&gt; then
+    say [Bear Wins!] for (2) seconds
+    stop [all v]
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 6: Health Bars</h4>
+                        <p>Visual health bars that shrink as health decreases.</p>
+                        <div class="code-block">
+                            <pre>// Bear HP Bar sprite
+when green flag clicked
+go to x: (-200) y: (160)
+set size to (100) %
+show
+forever
+  set size to (Bear HP) %
+end
+
+// Opponent HP Bar sprite
+when green flag clicked
+go to x: (200) y: (160)
+set size to (100) %
+show
+forever
+  set size to (Opponent HP) %
+end</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lesson 4: Projectiles -->
+                <div class="tutorial-section" id="lesson-4-projectiles">
+                    <h2>🚀 Lesson 4: Projectiles & Power-ups</h2>
+                    
+                    <div class="pdf-section">
+                        <h4>📄 PDF Resources</h4>
+                        <p>Download the complete Projectiles & Power-ups tutorial PDF:</p>
+                        <a href="#" class="pdf-link">📥 Projectiles Tutorial PDF</a>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 1: Projectile Sprite Setup</h4>
+                        <p>Create a projectile sprite and hide the original. Use clones for each shot.</p>
+                        <div class="code-block">
+                            <pre>// Projectile sprite
+when green flag clicked
+hide
+
+define fire (startX) (startY) (direction)
+go to x: (startX) y: (startY)
+point in direction (direction)
+create clone of [myself v]
+
+when I start as a clone
+show
+repeat until &lt;touching [edge v]?&gt;
+  move (12) steps
+  if &lt;touching [Opponent v]?&gt; then
+    change [Opponent HP v] by (-10)
+    delete this clone
+  end
+end
+delete this clone</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 2: Fire Controls + Cooldown (Player 1)</h4>
+                        <p>Player 1 fires with H key. Includes cooldown to prevent spamming.</p>
+                        <div class="code-block">
+                            <pre>// Bear sprite
+when green flag clicked
+set [canShoot v] to [true]
+forever
+  if &lt;&lt;key [h v] pressed?&gt; and &lt;(canShoot) = [true]&gt;&gt; then
+    set [canShoot v] to [false]
+    broadcast [bear-fire v]
+    wait (0.5) seconds
+    set [canShoot v] to [true]
+  end
+end
+
+when I receive [bear-fire v]
+call fire ((x position)) ((y position)) (90)</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 3: Fire Controls + Cooldown (Player 2)</h4>
+                        <p>Player 2 fires with semicolon (;) key.</p>
+                        <div class="code-block">
+                            <pre>// Opponent sprite
+when green flag clicked
+set [canShoot v] to [true]
+forever
+  if &lt;&lt;key [; v] pressed?&gt; and &lt;(canShoot) = [true]&gt;&gt; then
+    set [canShoot v] to [false]
+    broadcast [opponent-fire v]
+    wait (0.5) seconds
+    set [canShoot v] to [true]
+  end
+end
+
+when I receive [opponent-fire v]
+call fire ((x position)) ((y position)) (-90)</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 4: Power-ups (Speed + Heal)</h4>
+                        <p>Create power-ups that spawn randomly and give speed boost or heal.</p>
+                        <div class="code-block">
+                            <pre>// PowerUp sprite
+when green flag clicked
+forever
+  wait (10) seconds
+  go to x: (pick random (-200) to (200)) y: (pick random (-120) to (120))
+  switch costume to (pick random (1) to (2))
+  show
+  wait until &lt;touching [Bear v]?&gt; or &lt;touching [Opponent v]?&gt;
+  if &lt;costume [name v] = [speed]&gt; then
+    if &lt;touching [Bear v]?&gt; then
+      broadcast [bear-speed v]
+    else
+      broadcast [opponent-speed v]
+    end
+  else
+    if &lt;touching [Bear v]?&gt; then
+      change [Bear HP v] by (20)
+    else
+      change [Opponent HP v] by (20)
+    end
+  end
+  hide
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 5: Speed Power-up Effect</h4>
+                        <p>Apply speed boost when power-up is collected.</p>
+                        <div class="code-block">
+                            <pre>// Bear sprite
+when I receive [bear-speed v]
+set [moveSpeed v] to (8)
+wait (5) seconds
+set [moveSpeed v] to (6)</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geometry Dash -->
+                <div class="tutorial-section" id="geometry-dash">
+                    <h2>⭐ Geometry Dash Tutorial</h2>
+                    
+                    <div class="pdf-section">
+                        <h4>📄 PDF Resources</h4>
+                        <p>Download the complete Geometry Dash tutorial PDF:</p>
+                        <a href="#" class="pdf-link">📥 Geometry Dash Tutorial PDF</a>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 1: Player Setup</h4>
+                        <p>Set up the player sprite at the start position.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+show
+point in direction (90)
+go to x: (-152) y: (-104)</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 2: Player Jump</h4>
+                        <p>Make the player jump when space key is pressed.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;key [space v] pressed?&gt; then
+    repeat (10)
+      turn cw (10) degrees
+      change y by (10)
+    end
+    repeat (10)
+      turn cw (10) degrees
+      change y by (-10)
+    end
+    point in direction (90)
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 3: Spike Clones</h4>
+                        <p>Create spikes that spawn continuously.</p>
+                        <div class="code-block">
+                            <pre>// Spike sprite
+when green flag clicked
+set [score v] to (0)
+hide
+forever
+  create clone of [myself v]
+  wait (1) seconds
+end
+
+when I start as a clone
+show
+go to x: (170) y: (-108)
+switch costume to (pick random (1) to (3))
+glide (1) secs to x: (-280) y: (y position)
+delete this clone</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 4: Score System</h4>
+                        <p>Increase score while player is alive.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  repeat until &lt;touching [spikes v]?&gt;
+    change [score v] by (1)
+  end
+end</pre>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h4>Step 5: Game Over</h4>
+                        <p>End game when player touches spikes.</p>
+                        <div class="code-block">
+                            <pre>when green flag clicked
+forever
+  if &lt;touching [spikes v]?&gt; then
+    switch backdrop to [game over v]
+    stop [all v]
+  end
+end
+
+when backdrop switches to [game over v]
+hide
+play sound [game over v] until done</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📅 Today</h3>
+                <div id="sidebar-date-time-weather-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; font-size: clamp(0.9rem, 1.8vw, 1.1rem);"></div>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">💡 Quick Tips</h3>
+                <div class="tip-of-day">
+                    <span class="tip-icon">💡</span>
+                    <p class="tip-text">Copy the code blocks exactly as shown. Make sure to match the block names and values.</p>
+                </div>
+                <div class="tip-of-day" style="margin-top: 1rem;">
+                    <span class="tip-icon">📋</span>
+                    <p class="tip-text">Test your code after each step to make sure it works before moving to the next step.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Collapse buttons -->
+    <button class="sidebar-collapse-btn left" id="collapse-left-btn" aria-label="Toggle left sidebar">◀</button>
+    <button class="sidebar-collapse-btn right" id="collapse-right-btn" aria-label="Toggle right sidebar">▶</button>
+
+    <!-- Bottom Navbar -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <a href="/scratch-tutorials.html" class="navbar-link">📚 Scratch Tutorials</a>
+                <a href="/scratch-tutorials-code.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); border-color: rgba(59, 130, 246, 0.4);">💻 Scratch Code</a>
+                <a href="/portfolio.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); border-color: rgba(59, 130, 246, 0.4);">📁 Portfolio</a>
+                <a href="/lesson-plans.html" class="navbar-link">📅 Lesson Plans</a>
+                <a href="/coverage.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4);">📝 Coverage</a>
+                <a href="/portfolio" class="navbar-link">🏫 Class Portfolios</a>
+                <a href="/submit-portfolio.html" class="navbar-link">📮 Submit</a>
+                <a href="/unreal-engine-level-design.html" class="navbar-link">🎮 Unreal Engine 5</a>
+                <a href="/learn-html.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border-color: rgba(16, 185, 129, 0.4);">👑 Build Empire</a>
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="mge-experiments-dropdown" aria-haspopup="true" aria-expanded="false">
+                        🧪 MGE Experiments ▼
+                    </button>
+                    <div class="dropdown-menu" id="mge-experiments-menu">
+                        <a href="/mge.html" class="dropdown-item">🧪 All Experiments</a>
+                        <a href="/mge-skating.html" class="dropdown-item">⛸️ Skating Game</a>
+                        <a href="/mge-smash.html" class="dropdown-item">⚔️ Super Smash Fighters</a>
+                        <a href="/mge-parkour.html" class="dropdown-item">🏃 Parkour Runner</a>
+                        <a href="/mge-dash3d.html" class="dropdown-item">💥 3D Dash</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <a href="/scratch-tutorials.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎮</span>
+                    <span class="label">Scratch</span>
+                </a>
+                <a href="/unreal-engine-level-design.html" class="mobile-menu-item featured-blue">
+                    <span class="icon">🏔️</span>
+                    <span class="label">Unreal</span>
+                </a>
+                <a href="/learn-html.html" class="mobile-menu-item featured-green">
+                    <span class="icon">👑</span>
+                    <span class="label">HTML</span>
+                </a>
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-misc-dropdown">
+                    <span class="icon">📦</span>
+                    <span class="label">Misc</span>
+                    <div class="mobile-dropdown-menu" id="mobile-misc-menu">
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">📅</span> Lesson Plans
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                        <a href="/scratch-tutorials-code.html" class="mobile-dropdown-item">
+                            <span class="icon">💻</span> Scratch Code
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Class Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit Project
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <script src="scripts.js"></script>
+    <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+
+            setTheme(currentTheme);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date, Time, and Weather display for Bridgeport CT
+        (function() {
+            var dateTimeWeatherDisplay = document.getElementById('sidebar-date-time-weather-display');
+            if (!dateTimeWeatherDisplay) return;
+
+            async function updateDateTimeWeather() {
+                try {
+                    var now = new Date();
+                    var weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
+                    var month = now.toLocaleDateString('en-US', { month: 'short' });
+                    var day = now.getDate();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+
+                    var timeFormatted = `${hours}:${minutes}:${seconds}`;
+                    var dateFormatted = `${weekday}, ${month} ${day}`;
+
+                    var weatherText = '🌤️ Bridgeport, CT';
+
+                    var apiKey = 'demo';
+                    var city = 'Bridgeport';
+                    var state = 'CT';
+                    var country = 'US';
+                    var url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${state},${country}&units=imperial&appid=${apiKey}`;
+
+                    try {
+                        var response = await fetch(url);
+                        if (response.ok) {
+                            var data = await response.json();
+                            var temp = Math.round(data.main.temp);
+                            weatherText = `🌤️ ${temp}°F`;
+                        }
+                    } catch (e) {
+                        console.error('Weather API error:', e);
+                    }
+
+                    dateTimeWeatherDisplay.innerHTML = `📅 ${dateFormatted}<br>🕐 ${timeFormatted} ${weatherText}`;
+
+                } catch (e) {
+                    console.error('Date/Time/Weather error:', e);
+                    dateTimeWeatherDisplay.textContent = 'Error loading info';
+                }
+            }
+
+            updateDateTimeWeather();
+            setInterval(updateDateTimeWeather, 1000);
+        })();
+
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+
+        // Dropdown toggles
+        (function() {
+            var mgeToggle = document.getElementById('mge-experiments-dropdown');
+            var mgeMenu = document.getElementById('mge-experiments-menu');
+
+            if (mgeToggle && mgeMenu) {
+                mgeToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mgeMenu.classList.toggle('show');
+                });
+            }
+
+            var mobileMiscToggle = document.getElementById('mobile-misc-dropdown');
+            var mobileMiscMenu = document.getElementById('mobile-misc-menu');
+
+            if (mobileMiscToggle && mobileMiscMenu) {
+                mobileMiscToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMiscMenu.classList.toggle('show');
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (mgeMenu && !mgeMenu.contains(e.target) && mgeToggle && !mgeToggle.contains(e.target)) {
+                    mgeMenu.classList.remove('show');
+                }
+                if (mobileMiscMenu && !mobileMiscMenu.contains(e.target) && mobileMiscToggle && !mobileMiscToggle.contains(e.target)) {
+                    mobileMiscMenu.classList.remove('show');
+                }
+            });
+        })();
+
+        // Sidebar collapse functionality
+        (function() {
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var collapseLeftBtn = document.getElementById('collapse-left-btn');
+            var collapseRightBtn = document.getElementById('collapse-right-btn');
+            var dashboardContainer = document.getElementById('dashboard-container');
+
+            function toggleSidebar(sidebar, button, isLeft) {
+                var isCollapsed = sidebar.classList.contains('collapsed');
+                sidebar.classList.toggle('collapsed', !isCollapsed);
+                button.classList.toggle('collapsed', !isCollapsed);
+                button.textContent = isCollapsed ? (isLeft ? '◀' : '▶') : (isLeft ? '▶' : '◀');
+                dashboardContainer.classList.toggle('left-collapsed', isLeft && !isCollapsed);
+                dashboardContainer.classList.toggle('right-collapsed', !isLeft && !isCollapsed);
+            }
+
+            if (collapseLeftBtn && leftSidebar) {
+                collapseLeftBtn.addEventListener('click', function() {
+                    toggleSidebar(leftSidebar, collapseLeftBtn, true);
+                });
+            }
+            if (collapseRightBtn && rightSidebar) {
+                collapseRightBtn.addEventListener('click', function() {
+                    toggleSidebar(rightSidebar, collapseRightBtn, false);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
