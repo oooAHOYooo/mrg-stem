@@ -37,20 +37,38 @@
         '🎯 100% portfolio completion goal'
     ];
 
-    const whatsNew = [
-        '✨ New: Tinkercad Portfolio Manager',
-        '🆕 Featured: Collectibles Tutorial',
-        '📚 New: Scratch Code Tutorials',
-        '🌍 New: 3D Viewer Integration',
-        '🎮 Updated: Game Development Path',
-        '📝 New: What\'s New Blog Section',
-        '💡 Tip: Check student portfolios weekly',
-        '🎨 New: Drag & Drop Portfolio Manager',
-        '📊 Stats: 36 Tinkercad projects this month',
-        '🏆 Challenge: Final projects due soon',
-        '💻 New: HTML Empire Builder',
-        '🎯 Goal: 100% portfolio completion'
+    // Latest tutorials - update these regularly
+    const latestTutorials = [
+        '⭐ Featured: Collectibles Tutorial - Learn collision detection & scoring',
+        '🎮 New: Geometry Dash Tutorial - Build endless runner games',
+        '🚀 Lesson 4: Projectiles & Power-ups - Add shooting mechanics',
+        '💥 Collision Detection - Master game physics',
+        '👥 2-Player Controller - Create fighting games',
+        '🏃 Movement Tutorial - Character controls & jumping',
+        '🌍 Tinkercad Basics - Your first 3D design',
+        '🏠 Create Santa\'s House - Holiday 3D project',
+        '🏢 Design a Building - Architecture in Tinkercad',
+        '👑 Build Your Empire - HTML web development',
+        '🎨 Unreal Engine Level Design - 3D game worlds',
+        '🧪 MGE Experiments - Try new game engines'
     ];
+
+    // What's New items - pulled from blog posts
+    function getWhatsNewItems() {
+        if (window.getWhatsNewPosts) {
+            const posts = window.getWhatsNewPosts();
+            return posts.slice(0, 3).map(post => {
+                return `${post.icon} ${post.title} - ${post.description}`;
+            });
+        }
+        return [
+            '🌍 New: Tinkercad Portfolio Manager - Drag & drop 3D projects',
+            '⭐ Featured: Collectibles Tutorial - Game development skills',
+            '📚 New: Scratch Code Tutorials - Step-by-step guides'
+        ];
+    }
+
+    const whatsNew = getWhatsNewItems();
 
     function getRandomItems(array, count) {
         const shuffled = [...array].sort(() => 0.5 - Math.random());
@@ -58,13 +76,21 @@
     }
 
     function createTickerContent() {
+        // Prioritize latest tutorials and what's new at the start
+        const latestTutorialsItems = getRandomItems(latestTutorials, 4);
+        const whatsNewItems = getWhatsNewItems();
+        const computerFactsItems = getRandomItems(computerFacts, 3);
+        const classStatsItems = getRandomItems(classStats, 2);
+        
+        // Put latest tutorials and what's new first, then mix in facts and stats
         const allItems = [
-            ...getRandomItems(computerFacts, 5),
-            ...getRandomItems(classStats, 4),
-            ...getRandomItems(whatsNew, 3)
+            ...latestTutorialsItems,
+            ...whatsNewItems,
+            ...computerFactsItems,
+            ...classStatsItems
         ];
         
-        // Shuffle all items
+        // Shuffle but keep some structure
         const shuffled = allItems.sort(() => 0.5 - Math.random());
         
         // Create ticker items
@@ -127,11 +153,25 @@
         initTickerNav();
     }
 
-    // Update ticker content every 5 minutes
-    setInterval(() => {
+    // Wait for whats-new.js to load, then update ticker
+    function updateTickerWithLatest() {
         const tickerContent = document.getElementById('ticker-content');
         if (tickerContent) {
-            tickerContent.innerHTML = createTickerContent() + createTickerContent();
+            // Recreate content with latest data
+            const newContent = createTickerContent();
+            tickerContent.innerHTML = newContent + newContent;
         }
-    }, 300000); // 5 minutes
+    }
+
+    // Update ticker content every 5 minutes
+    setInterval(updateTickerWithLatest, 300000); // 5 minutes
+    
+    // Also update after whats-new.js loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateTickerWithLatest, 1000); // Wait for whats-new.js
+        });
+    } else {
+        setTimeout(updateTickerWithLatest, 1000);
+    }
 })();
