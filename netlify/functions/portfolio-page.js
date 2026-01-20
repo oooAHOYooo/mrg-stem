@@ -92,6 +92,20 @@ function getScratchEmbedUrl(url) {
   }
 }
 
+function getTinkercadEmbedUrl(url) {
+  try {
+    const u = new URL(url);
+    if (!u.hostname.includes('tinkercad.com')) return null;
+    // Extract project ID from Tinkercad URL
+    // Formats: https://www.tinkercad.com/things/ABC123 or https://www.tinkercad.com/things/ABC123/edit
+    const m = u.pathname.match(/\/things\/([a-zA-Z0-9]+)/);
+    if (!m) return null;
+    return `https://www.tinkercad.com/embed/${m[1]}`;
+  } catch {
+    return null;
+  }
+}
+
 function normalizeProjects(projects) {
   const arr = Array.isArray(projects) ? projects : [];
   return arr
@@ -291,6 +305,7 @@ function generateStudentPage({ cls, student }) {
 
         const firstLink = Array.isArray(p.links) && p.links[0] && p.links[0].url ? String(p.links[0].url) : null;
         const scratchEmbed = firstLink ? getScratchEmbedUrl(firstLink) : null;
+        const tinkercadEmbed = firstLink ? getTinkercadEmbedUrl(firstLink) : null;
 
         const linksHtml = Array.isArray(p.links) && p.links.length > 0
           ? `
@@ -324,6 +339,14 @@ function generateStudentPage({ cls, student }) {
             ${scratchEmbed ? `
               <div style="margin: 0.75rem 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(59, 130, 246, 0.25); background: rgba(0,0,0,0.05);">
                 <iframe src="${escapeAttribute(scratchEmbed)}" allowtransparency="true" width="100%" height="380" frameborder="0" scrolling="no" allowfullscreen></iframe>
+              </div>
+            ` : ''}
+            ${tinkercadEmbed ? `
+              <div style="margin: 0.75rem 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(16, 185, 129, 0.25); background: rgba(0,0,0,0.05);">
+                <iframe src="${escapeAttribute(tinkercadEmbed)}" width="100%" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe>
+                <div style="padding: 0.5rem; text-align: center; background: rgba(16, 185, 129, 0.1); color: #047857; font-size: 0.85rem; font-weight: 600;">
+                  🖱️ Click and drag to rotate • Scroll to zoom
+                </div>
               </div>
             ` : ''}
             ${p.description ? `<p class="portfolio-item-description">${escapeHtml(p.description)}</p>` : ''}

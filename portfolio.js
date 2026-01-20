@@ -248,7 +248,13 @@ class PortfolioManager {
             emptyMsg.remove();
         }
 
-        container.innerHTML = portfolios.map(portfolio => `
+        container.innerHTML = portfolios.map(portfolio => {
+            // Check for embeddable content
+            const firstLink = portfolio.links && portfolio.links.length > 0 ? portfolio.links[0] : null;
+            const scratchEmbed = firstLink ? this.getScratchEmbedUrl(firstLink) : null;
+            const tinkercadEmbed = firstLink ? this.getTinkercadEmbedUrl(firstLink) : null;
+
+            return `
             <div class="portfolio-item" data-portfolio-id="${portfolio.id}">
                 <div class="portfolio-item-header">
                     <h3>${this.escapeHtml(portfolio.title)}</h3>
@@ -258,11 +264,24 @@ class PortfolioManager {
                     </div>
                 </div>
                 <div class="portfolio-item-type">${this.getTypeIcon(portfolio.projectType)} ${this.getTypeName(portfolio.projectType)}</div>
+                ${scratchEmbed ? `
+                    <div style="margin: 0.75rem 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(59, 130, 246, 0.25); background: rgba(0,0,0,0.05);">
+                        <iframe src="${this.escapeHtml(scratchEmbed)}" allowtransparency="true" width="100%" height="380" frameborder="0" scrolling="no" allowfullscreen></iframe>
+                    </div>
+                ` : ''}
+                ${tinkercadEmbed ? `
+                    <div style="margin: 0.75rem 0; border-radius: 12px; overflow: hidden; border: 2px solid rgba(16, 185, 129, 0.25); background: rgba(0,0,0,0.05);">
+                        <iframe src="${this.escapeHtml(tinkercadEmbed)}" width="100%" height="400" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe>
+                        <div style="padding: 0.5rem; text-align: center; background: rgba(16, 185, 129, 0.1); color: #047857; font-size: 0.85rem; font-weight: 600;">
+                            🖱️ Click and drag to rotate • Scroll to zoom
+                        </div>
+                    </div>
+                ` : ''}
                 ${portfolio.description ? `<p class="portfolio-item-description">${this.escapeHtml(portfolio.description)}</p>` : ''}
                 ${portfolio.links && portfolio.links.length > 0 ? `
                     <div class="portfolio-item-links">
                         ${portfolio.links.map(link => `
-                            <a href="${link}" target="_blank" rel="noopener noreferrer" class="portfolio-link">
+                            <a href="${this.escapeHtml(link)}" target="_blank" rel="noopener noreferrer" class="portfolio-link">
                                 🔗 ${this.getDomainFromUrl(link)}
                             </a>
                         `).join('')}
@@ -279,7 +298,8 @@ class PortfolioManager {
                         ` • Updated: ${new Date(portfolio.updatedAt).toLocaleDateString()}` : ''}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     async showPortfolio() {
@@ -358,6 +378,32 @@ class PortfolioManager {
             return urlObj.hostname.replace('www.', '');
         } catch {
             return url;
+        }
+    }
+
+    getTinkercadEmbedUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            if (!urlObj.hostname.includes('tinkercad.com')) return null;
+            // Extract project ID from Tinkercad URL
+            // Formats: https://www.tinkercad.com/things/ABC123 or https://www.tinkercad.com/things/ABC123/edit
+            const match = urlObj.pathname.match(/\/things\/([a-zA-Z0-9]+)/);
+            if (!match || !match[1]) return null;
+            return `https://www.tinkercad.com/embed/${match[1]}`;
+        } catch {
+            return null;
+        }
+    }
+
+    getScratchEmbedUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname !== 'scratch.mit.edu') return null;
+            const match = urlObj.pathname.match(/\/projects\/(\d+)(\/|$)/);
+            if (!match) return null;
+            return `https://scratch.mit.edu/projects/${match[1]}/embed`;
+        } catch {
+            return null;
         }
     }
 

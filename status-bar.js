@@ -94,17 +94,19 @@
         breadcrumbHTML += `<span class="breadcrumb-item active">${pageInfo.icon} ${pageInfo.title}</span>`;
         breadcrumbHTML += '</div>';
 
-        // Create status info HTML
+        // Create status info HTML - time under date
         const statusHTML = `
             <div class="page-status">
-                <span class="status-info">
-                    <span class="icon">📅</span>
-                    <span class="status-date">${formatDate()}</span>
-                </span>
-                <span class="status-info">
-                    <span class="icon">🕐</span>
-                    <span class="status-time">${formatTime()}</span>
-                </span>
+                <div class="status-info-group">
+                    <span class="status-info">
+                        <span class="icon">📅</span>
+                        <span class="status-date">${formatDate()}</span>
+                    </span>
+                    <span class="status-info status-time-below">
+                        <span class="icon">🕐</span>
+                        <span class="status-time">${formatTime()}</span>
+                    </span>
+                </div>
             </div>
         `;
 

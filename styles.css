@@ -52,10 +52,12 @@ body {
 
 .navbar-top {
     top: 0;
-    min-height: 60px;
-    height: auto;
+    min-height: 48px;
+    max-height: 48px;
+    height: 48px;
     border-bottom: 2px solid rgba(59, 130, 246, 0.2);
-    padding: 0.5rem 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .navbar-bottom {
@@ -158,21 +160,66 @@ body {
 .navbar-container {
     max-width: 100%;
     margin: 0 auto;
-    padding: 0.5rem 1rem;
+    padding: 0.25rem 0.75rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    height: 48px;
+    overflow: hidden;
+}
+
+/* Ticker Navigation Styles */
+.ticker-nav-container {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    background: rgba(16, 185, 129, 0.05);
+    border-right: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 0 0.75rem;
+}
+
+.ticker-nav-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ticker-nav-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+.ticker-item {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: #047857;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Status Bar & Breadcrumb Styles */
 .status-bar {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    flex: 1;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
     min-width: 0;
 }
 
@@ -211,24 +258,38 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     background: rgba(239, 246, 255, 0.6);
     border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 8px;
-    font-size: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
     color: #1e40af;
     font-weight: 500;
     white-space: nowrap;
+    height: fit-content;
+}
+
+.status-info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-items: flex-end;
 }
 
 .status-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    line-height: 1.2;
+}
+
+.status-info.status-time-below {
+    font-size: 0.7rem;
+    opacity: 0.85;
 }
 
 .status-info .icon {
-    font-size: 1rem;
+    font-size: 0.85rem;
 }
 
 .navbar-actions {
@@ -261,13 +322,18 @@ body {
 }
 
 .navbar-brand {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: #1e40af;
     text-decoration: none;
     transition: all 0.3s ease;
     flex-shrink: 0;
     text-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    height: fit-content;
 }
 
 .navbar-brand:hover {
@@ -332,15 +398,16 @@ body {
     background: rgba(239, 246, 255, 0.8);
     border: 2px solid rgba(59, 130, 246, 0.3);
     border-radius: 50%;
-    width: 45px;
-    height: 45px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    flex-shrink: 0;
 }
 
 .theme-toggle:hover {
@@ -2057,6 +2124,175 @@ body.dark-mode .footer-links a {
 body.dark-mode .footer-links a:hover {
     color: #bfdbfe;
     text-shadow: 0 0 15px rgba(191, 219, 254, 0.8);
+}
+
+/* What's New Blog Styles */
+.whats-new-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.whats-new-post {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    border-radius: 15px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.whats-new-post:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+.whats-new-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.whats-new-meta {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.whats-new-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.whats-new-title {
+    color: #065f46;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.whats-new-date {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.whats-new-category {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.category-feature {
+    background: rgba(16, 185, 129, 0.2);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.category-tutorial {
+    background: rgba(59, 130, 246, 0.2);
+    color: #1e40af;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.whats-new-description {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.whats-new-stats,
+.whats-new-highlights {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 10px;
+    border-left: 3px solid rgba(16, 185, 129, 0.4);
+}
+
+.whats-new-stats h4,
+.whats-new-highlights h4 {
+    color: #047857;
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+}
+
+.stats-list,
+.highlights-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.stats-list li,
+.highlights-list li {
+    color: #475569;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.highlights-list li::before {
+    content: '✨ ';
+    margin-right: 0.25rem;
+}
+
+/* Dark mode for What's New */
+body.dark-mode .whats-new-post {
+    background: rgba(15, 15, 26, 0.9);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+body.dark-mode .whats-new-title {
+    color: #10b981;
+}
+
+body.dark-mode .whats-new-description {
+    color: #c7d2fe;
+}
+
+body.dark-mode .whats-new-stats,
+body.dark-mode .whats-new-highlights {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: rgba(16, 185, 129, 0.5);
+}
+
+body.dark-mode .stats-list li,
+body.dark-mode .highlights-list li {
+    background: rgba(30, 58, 138, 0.3);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #c7d2fe;
+}
+
+/* Responsive What's New */
+@media (max-width: 768px) {
+    .whats-new-header {
+        flex-direction: column;
+    }
+
+    .whats-new-meta {
+        width: 100%;
+    }
+
+    .stats-list,
+    .highlights-list {
+        grid-template-columns: 1fr;
+    }
 }
 
 body.dark-mode .home-resources {

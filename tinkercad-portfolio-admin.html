@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinkercad Portfolio Manager | Mr. Gonzalez's STEM Class</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portfolio.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-header h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: #065f46;
+            margin-bottom: 0.5rem;
+            font-weight: 900;
+        }
+
+        .admin-header p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: #047857;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .admin-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            border: 3px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .admin-btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-color: #047857;
+        }
+
+        .admin-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .admin-btn-secondary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .admin-btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .add-project-section {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .add-project-section h2 {
+            color: #065f46;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .drop-zone {
+            border: 3px dashed rgba(16, 185, 129, 0.4);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(16, 185, 129, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: rgba(16, 185, 129, 0.7);
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.02);
+        }
+
+        .drop-zone-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone-text {
+            color: #047857;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .drop-zone-hint {
+            color: #059669;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: move;
+            position: relative;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .project-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .project-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .project-card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #065f46;
+            margin: 0;
+            flex: 1;
+        }
+
+        .project-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .project-card-btn {
+            background: transparent;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            color: #047857;
+        }
+
+        .project-card-btn:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .project-card-btn.delete {
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        .project-card-btn.delete:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: rgba(220, 38, 38, 0.5);
+        }
+
+        .tinkercad-viewer-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(16, 185, 129, 0.25);
+            background: rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+        }
+
+        .tinkercad-viewer-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .project-card-info {
+            color: #475569;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-card-student {
+            font-weight: 600;
+            color: #047857;
+        }
+
+        .project-card-link {
+            display: inline-block;
+            margin-top: 0.5rem;
+            color: #059669;
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .project-card-link:hover {
+            background: rgba(16, 185, 129, 0.2);
+            transform: translateX(3px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-hint {
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+
+        .save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: rgba(16, 185, 129, 0.95);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateY(100px);
+            transition: transform 0.3s ease;
+            font-weight: 600;
+        }
+
+        .save-status.show {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🌍 Tinkercad Portfolio Manager</h1>
+            <p>Drag and drop Tinkercad projects to organize student work</p>
+        </div>
+
+        <div class="admin-actions">
+            <button class="admin-btn admin-btn-primary" onclick="showAddProjectForm()">➕ Add New Project</button>
+            <button class="admin-btn admin-btn-secondary" onclick="saveToPortfolio()">💾 Save to Portfolio JSON</button>
+            <a href="data/student-portfolios.json" target="_blank" class="admin-btn admin-btn-secondary">📄 View JSON File</a>
+            <a href="portfolio.html" class="admin-btn admin-btn-secondary">👀 View Portfolio</a>
+        </div>
+
+        <div id="add-project-section" class="add-project-section" style="display: none;">
+            <h2>Add Tinkercad Project</h2>
+            <form id="add-project-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="project-title">Project Title *</label>
+                        <input type="text" id="project-title" required placeholder="My Awesome 3D Design">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-name">Student Name *</label>
+                        <input type="text" id="student-name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="student-class">Class</label>
+                        <input type="text" id="student-class" placeholder="5A">
+                    </div>
+                    <div class="form-group">
+                        <label for="tinkercad-url">Tinkercad URL *</label>
+                        <input type="url" id="tinkercad-url" required placeholder="https://www.tinkercad.com/things/...">
+                        <div class="tiny-help" style="margin-top: 0.5rem; color: #64748b; font-size: 0.85rem;">
+                            Paste the Tinkercad share link here. Make sure the design is set to "Public" in Tinkercad.
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Description</label>
+                    <textarea id="project-description" rows="3" placeholder="What did the student create? What skills did they learn?"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Add Project</button>
+                    <button type="button" class="btn-secondary" onclick="hideAddProjectForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-icon">📋</div>
+            <div class="drop-zone-text">Drag Tinkercad URLs here or click to add</div>
+            <div class="drop-zone-hint">Paste Tinkercad share links (one per line)</div>
+        </div>
+
+        <div id="projects-container" class="projects-grid">
+            <!-- Projects will be loaded here -->
+        </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🌍</div>
+            <div class="empty-state-text">No Tinkercad projects yet</div>
+            <div class="empty-state-hint">Add your first project using the button above</div>
+        </div>
+    </div>
+
+    <div id="save-status" class="save-status">Saved!</div>
+
+    <script>
+        // Tinkercad Portfolio Manager
+        let projects = [];
+        const STORAGE_KEY = 'tinkercad_portfolio_projects';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProjects();
+            setupEventListeners();
+            setupDragAndDrop();
+        });
+
+        function setupEventListeners() {
+            // Add project form
+            document.getElementById('add-project-form').addEventListener('submit', handleAddProject);
+            
+            // Drop zone click
+            document.getElementById('drop-zone').addEventListener('click', () => {
+                showAddProjectForm();
+            });
+
+            // Drop zone drag and drop
+            const dropZone = document.getElementById('drop-zone');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                handleDrop(e);
+            });
+
+            // Paste handler
+            document.addEventListener('paste', (e) => {
+                if (e.target === dropZone || e.target.closest('.drop-zone')) {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData('text');
+                    handlePaste(text);
+                }
+            });
+        }
+
+        function setupDragAndDrop() {
+            // Sortable functionality for project cards
+            const container = document.getElementById('projects-container');
+            
+            container.addEventListener('dragstart', (e) => {
+                if (e.target.closest('.project-card')) {
+                    const card = e.target.closest('.project-card');
+                    card.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', card.outerHTML);
+                    e.dataTransfer.setData('text/plain', card.dataset.projectId);
+                }
+            });
+
+            container.addEventListener('dragend', (e) => {
+                const cards = container.querySelectorAll('.project-card');
+                cards.forEach(card => card.classList.remove('dragging'));
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const dragging = container.querySelector('.dragging');
+                if (dragging && afterElement == null) {
+                    container.appendChild(dragging);
+                } else if (dragging && afterElement) {
+                    container.insertBefore(dragging, afterElement);
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                updateProjectOrder();
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.project-card:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateProjectOrder() {
+            const cards = document.querySelectorAll('.project-card');
+            const newOrder = Array.from(cards).map(card => card.dataset.projectId);
+            
+            // Reorder projects array
+            projects = newOrder.map(id => projects.find(p => p.id === id)).filter(Boolean);
+            saveProjects();
+        }
+
+        function handleDrop(e) {
+            const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
+            if (text && text.startsWith('http')) {
+                handlePaste(text);
+            }
+        }
+
+        function handlePaste(text) {
+            const urls = text.split('\n').map(line => line.trim()).filter(line => 
+                line.includes('tinkercad.com') && line.startsWith('http')
+            );
+
+            if (urls.length > 0) {
+                urls.forEach(url => {
+                    addProjectFromUrl(url);
+                });
+                showNotification(`Added ${urls.length} project(s)!`);
+            } else {
+                showNotification('No valid Tinkercad URLs found. Make sure to paste Tinkercad share links.', 'error');
+            }
+        }
+
+        function addProjectFromUrl(url) {
+            const project = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                title: 'Untitled Project',
+                studentName: 'Student',
+                studentClass: '',
+                tinkercadUrl: url,
+                embedUrl: getTinkercadEmbedUrl(url),
+                description: '',
+                createdAt: new Date().toISOString()
+            };
+            projects.push(project);
+            saveProjects();
+            renderProjects();
+            showAddProjectForm(project);
+        }
+
+        function handleAddProject(e) {
+            e.preventDefault();
+            
+            const project = {
+                id: document.getElementById('add-project-form').dataset.editId || 
+                    Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                title: document.getElementById('project-title').value,
+                studentName: document.getElementById('student-name').value,
+                studentClass: document.getElementById('student-class').value,
+                tinkercadUrl: document.getElementById('tinkercad-url').value,
+                embedUrl: getTinkercadEmbedUrl(document.getElementById('tinkercad-url').value),
+                description: document.getElementById('project-description').value,
+                createdAt: document.getElementById('add-project-form').dataset.editId ? 
+                    projects.find(p => p.id === document.getElementById('add-project-form').dataset.editId)?.createdAt || new Date().toISOString() :
+                    new Date().toISOString()
+            };
+
+            const editId = document.getElementById('add-project-form').dataset.editId;
+            if (editId) {
+                const index = projects.findIndex(p => p.id === editId);
+                if (index !== -1) {
+                    projects[index] = project;
+                }
+            } else {
+                projects.push(project);
+            }
+
+            saveProjects();
+            renderProjects();
+            hideAddProjectForm();
+            showNotification(editId ? 'Project updated!' : 'Project added!');
+        }
+
+        function showAddProjectForm(project = null) {
+            const form = document.getElementById('add-project-form');
+            const section = document.getElementById('add-project-section');
+            
+            if (project) {
+                document.getElementById('project-title').value = project.title;
+                document.getElementById('student-name').value = project.studentName;
+                document.getElementById('student-class').value = project.studentClass || '';
+                document.getElementById('tinkercad-url').value = project.tinkercadUrl;
+                document.getElementById('project-description').value = project.description || '';
+                form.dataset.editId = project.id;
+            } else {
+                form.reset();
+                delete form.dataset.editId;
+            }
+            
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideAddProjectForm() {
+            document.getElementById('add-project-section').style.display = 'none';
+            document.getElementById('add-project-form').reset();
+            delete document.getElementById('add-project-form').dataset.editId;
+        }
+
+        function editProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                showAddProjectForm(project);
+            }
+        }
+
+        function deleteProject(projectId) {
+            if (confirm('Are you sure you want to delete this project?')) {
+                projects = projects.filter(p => p.id !== projectId);
+                saveProjects();
+                renderProjects();
+                showNotification('Project deleted!');
+            }
+        }
+
+        function getTinkercadEmbedUrl(url) {
+            // Extract project ID from Tinkercad URL
+            // Formats: https://www.tinkercad.com/things/ABC123 or https://www.tinkercad.com/things/ABC123/edit
+            const match = url.match(/tinkercad\.com\/things\/([a-zA-Z0-9]+)/);
+            if (match && match[1]) {
+                return `https://www.tinkercad.com/embed/${match[1]}`;
+            }
+            return url; // Fallback to original URL
+        }
+
+        function renderProjects() {
+            const container = document.getElementById('projects-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (projects.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            container.innerHTML = projects.map(project => `
+                <div class="project-card" data-project-id="${project.id}" draggable="true">
+                    <div class="project-card-header">
+                        <h3 class="project-card-title">${escapeHtml(project.title)}</h3>
+                        <div class="project-card-actions">
+                            <button class="project-card-btn" onclick="editProject('${project.id}')" title="Edit">✏️</button>
+                            <button class="project-card-btn delete" onclick="deleteProject('${project.id}')" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="tinkercad-viewer-container">
+                        <iframe src="${escapeHtml(project.embedUrl)}" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe>
+                    </div>
+                    <div class="project-card-info">
+                        <div class="project-card-student">👤 ${escapeHtml(project.studentName)}${project.studentClass ? ` • ${escapeHtml(project.studentClass)}` : ''}</div>
+                        ${project.description ? `<div style="margin-top: 0.5rem; color: #64748b;">${escapeHtml(project.description)}</div>` : ''}
+                    </div>
+                    <a href="${escapeHtml(project.tinkercadUrl)}" target="_blank" rel="noopener noreferrer" class="project-card-link">
+                        🔗 View on Tinkercad →
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function saveProjects() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+        }
+
+        function loadProjects() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    projects = JSON.parse(saved);
+                    renderProjects();
+                } catch (e) {
+                    console.error('Error loading projects:', e);
+                    projects = [];
+                }
+            } else {
+                // Load sample projects if no saved data
+                loadSampleProjects();
+            }
+        }
+
+        function loadSampleProjects() {
+            const sampleProjects = [
+                { id: '1', title: '3D House Design', studentName: 'Alex', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/abc123', embedUrl: 'https://www.tinkercad.com/embed/abc123', description: 'A beautiful house with windows and doors', createdAt: new Date().toISOString() },
+                { id: '2', title: 'Rocket Ship', studentName: 'Jordan', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/def456', embedUrl: 'https://www.tinkercad.com/embed/def456', description: 'Space rocket ready for launch', createdAt: new Date().toISOString() },
+                { id: '3', title: 'Robot Friend', studentName: 'Sam', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/ghi789', embedUrl: 'https://www.tinkercad.com/embed/ghi789', description: 'Friendly robot with moving parts', createdAt: new Date().toISOString() },
+                { id: '4', title: 'Castle Tower', studentName: 'Taylor', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/jkl012', embedUrl: 'https://www.tinkercad.com/embed/jkl012', description: 'Medieval castle with turrets', createdAt: new Date().toISOString() },
+                { id: '5', title: 'Race Car', studentName: 'Morgan', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/mno345', embedUrl: 'https://www.tinkercad.com/embed/mno345', description: 'Fast racing car design', createdAt: new Date().toISOString() },
+                { id: '6', title: 'Tree House', studentName: 'Casey', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/pqr678', embedUrl: 'https://www.tinkercad.com/embed/pqr678', description: 'Cozy tree house in the woods', createdAt: new Date().toISOString() },
+                { id: '7', title: 'Dinosaur', studentName: 'Riley', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/stu901', embedUrl: 'https://www.tinkercad.com/embed/stu901', description: 'T-Rex with detailed features', createdAt: new Date().toISOString() },
+                { id: '8', title: 'Lighthouse', studentName: 'Avery', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/vwx234', embedUrl: 'https://www.tinkercad.com/embed/vwx234', description: 'Tall lighthouse by the sea', createdAt: new Date().toISOString() },
+                { id: '9', title: 'Airplane', studentName: 'Quinn', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/yza567', embedUrl: 'https://www.tinkercad.com/embed/yza567', description: 'Commercial airplane model', createdAt: new Date().toISOString() },
+                { id: '10', title: 'Bridge', studentName: 'Blake', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/bcd890', embedUrl: 'https://www.tinkercad.com/embed/bcd890', description: 'Suspension bridge design', createdAt: new Date().toISOString() },
+                { id: '11', title: 'Volcano', studentName: 'Cameron', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/efg123', embedUrl: 'https://www.tinkercad.com/embed/efg123', description: 'Erupting volcano with lava', createdAt: new Date().toISOString() },
+                { id: '12', title: 'Windmill', studentName: 'Dakota', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/hij456', embedUrl: 'https://www.tinkercad.com/embed/hij456', description: 'Dutch windmill with spinning blades', createdAt: new Date().toISOString() },
+                { id: '13', title: 'Pyramid', studentName: 'Emery', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/klm789', embedUrl: 'https://www.tinkercad.com/embed/klm789', description: 'Ancient Egyptian pyramid', createdAt: new Date().toISOString() },
+                { id: '14', title: 'Submarine', studentName: 'Finley', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/nop012', embedUrl: 'https://www.tinkercad.com/embed/nop012', description: 'Underwater exploration vessel', createdAt: new Date().toISOString() },
+                { id: '15', title: 'Ferris Wheel', studentName: 'Harper', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/qrs345', embedUrl: 'https://www.tinkercad.com/embed/qrs345', description: 'Amusement park ride', createdAt: new Date().toISOString() },
+                { id: '16', title: 'Skyscraper', studentName: 'Indigo', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/tuv678', embedUrl: 'https://www.tinkercad.com/embed/tuv678', description: 'Modern city skyscraper', createdAt: new Date().toISOString() },
+                { id: '17', title: 'Helicopter', studentName: 'Jasper', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/wxy901', embedUrl: 'https://www.tinkercad.com/embed/wxy901', description: 'Rescue helicopter', createdAt: new Date().toISOString() },
+                { id: '18', title: 'Train', studentName: 'Kai', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/zab234', embedUrl: 'https://www.tinkercad.com/embed/zab234', description: 'Steam locomotive', createdAt: new Date().toISOString() },
+                { id: '19', title: 'Tower Bridge', studentName: 'Logan', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/cde567', embedUrl: 'https://www.tinkercad.com/embed/cde567', description: 'Famous London bridge', createdAt: new Date().toISOString() },
+                { id: '20', title: 'Space Station', studentName: 'Maya', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/fgh890', embedUrl: 'https://www.tinkercad.com/embed/fgh890', description: 'International space station', createdAt: new Date().toISOString() },
+                { id: '21', title: 'Eiffel Tower', studentName: 'Noah', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/ijk123', embedUrl: 'https://www.tinkercad.com/embed/ijk123', description: 'Paris landmark replica', createdAt: new Date().toISOString() },
+                { id: '22', title: 'Boat', studentName: 'Olive', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/lmn456', embedUrl: 'https://www.tinkercad.com/embed/lmn456', description: 'Sailboat on the water', createdAt: new Date().toISOString() },
+                { id: '23', title: 'Clock Tower', studentName: 'Parker', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/opq789', embedUrl: 'https://www.tinkercad.com/embed/opq789', description: 'Big Ben style clock', createdAt: new Date().toISOString() },
+                { id: '24', title: 'Hot Air Balloon', studentName: 'River', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/rst012', embedUrl: 'https://www.tinkercad.com/embed/rst012', description: 'Colorful balloon basket', createdAt: new Date().toISOString() },
+                { id: '25', title: 'Wind Turbine', studentName: 'Sage', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/uvw345', embedUrl: 'https://www.tinkercad.com/embed/uvw345', description: 'Renewable energy generator', createdAt: new Date().toISOString() },
+                { id: '26', title: 'Satellite', studentName: 'Tatum', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/xyz678', embedUrl: 'https://www.tinkercad.com/embed/xyz678', description: 'Communication satellite', createdAt: new Date().toISOString() },
+                { id: '27', title: 'Crane', studentName: 'Violet', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/abc901', embedUrl: 'https://www.tinkercad.com/embed/abc901', description: 'Construction crane', createdAt: new Date().toISOString() },
+                { id: '28', title: 'Telescope', studentName: 'Willow', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/def234', embedUrl: 'https://www.tinkercad.com/embed/def234', description: 'Astronomical telescope', createdAt: new Date().toISOString() },
+                { id: '29', title: 'Water Tower', studentName: 'Xander', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/ghi567', embedUrl: 'https://www.tinkercad.com/embed/ghi567', description: 'City water storage', createdAt: new Date().toISOString() },
+                { id: '30', title: 'Rocket Launcher', studentName: 'Yara', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/jkl890', embedUrl: 'https://www.tinkercad.com/embed/jkl890', description: 'Space launch platform', createdAt: new Date().toISOString() },
+                { id: '31', title: 'Observatory', studentName: 'Zane', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/mno123', embedUrl: 'https://www.tinkercad.com/embed/mno123', description: 'Astronomy dome', createdAt: new Date().toISOString() },
+                { id: '32', title: 'Cable Car', studentName: 'Aria', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/pqr456', embedUrl: 'https://www.tinkercad.com/embed/pqr456', description: 'Mountain cable car', createdAt: new Date().toISOString() },
+                { id: '33', title: 'Oil Rig', studentName: 'Bodhi', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/stu789', embedUrl: 'https://www.tinkercad.com/embed/stu789', description: 'Offshore drilling platform', createdAt: new Date().toISOString() },
+                { id: '34', title: 'Radio Tower', studentName: 'Cora', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/vwx012', embedUrl: 'https://www.tinkercad.com/embed/vwx012', description: 'Communication tower', createdAt: new Date().toISOString() },
+                { id: '35', title: 'Solar Panel Array', studentName: 'Dante', studentClass: '4B', tinkercadUrl: 'https://www.tinkercad.com/things/yza345', embedUrl: 'https://www.tinkercad.com/embed/yza345', description: 'Renewable energy farm', createdAt: new Date().toISOString() },
+                { id: '36', title: 'Space Shuttle', studentName: 'Elena', studentClass: '5A', tinkercadUrl: 'https://www.tinkercad.com/things/bcd678', embedUrl: 'https://www.tinkercad.com/embed/bcd678', description: 'NASA space shuttle', createdAt: new Date().toISOString() }
+            ];
+            projects = sampleProjects;
+            saveProjects();
+            renderProjects();
+        }
+
+        async function saveToPortfolio() {
+            // This would save to the student-portfolios.json file
+            // For now, we'll export the data and show instructions
+            const exportData = {
+                projects: projects,
+                exportDate: new Date().toISOString(),
+                instructions: "Copy these projects into data/student-portfolios.json under the appropriate student's projects array"
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tinkercad-portfolio-export.json';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('Portfolio data exported! Check the downloaded file.', 'success');
+        }
+
+        function showNotification(message, type = 'success') {
+            const status = document.getElementById('save-status');
+            status.textContent = message;
+            status.className = `save-status show ${type}`;
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Make functions globally available
+        window.showAddProjectForm = showAddProjectForm;
+        window.hideAddProjectForm = hideAddProjectForm;
+        window.editProject = editProject;
+        window.deleteProject = deleteProject;
+        window.saveToPortfolio = saveToPortfolio;
+    </script>
+</body>
+</html>
