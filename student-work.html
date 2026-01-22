@@ -448,6 +448,19 @@
             <!-- Main Content Area -->
             <main class="dashboard-main">
                 <div class="main-content-scroll">
+                    <!-- Tinkercad 3D Projects Section - Instagram Grid Style -->
+                    <div class="tinkercad-section">
+                        <div class="tinkercad-header">
+                            <span class="tinkercad-badge">🔧 3D DESIGNS 🔧</span>
+                            <h2 class="tinkercad-title">Tinkercad Creations</h2>
+                            <p class="tinkercad-subtitle">Interactive 3D models by our student makers</p>
+                        </div>
+                        <div class="tinkercad-instagram-grid" id="tinkercad-projects-grid">
+                            <!-- Tinkercad projects will be loaded here -->
+                        </div>
+                        <p class="tinkercad-instructions">🖱️ Hover to see details • Click to view full 3D model</p>
+                    </div>
+                    
                     <!-- Featured Game Section - CRT TV Style -->
                     <div class="crt-tv-container">
                         <div class="crt-tv-body">
@@ -844,35 +857,8 @@
                     }
                     </style>
                     
-                    <!-- Tinkercad 3D Projects Section -->
-                    <div class="tinkercad-section">
-                        <div class="tinkercad-header">
-                            <span class="tinkercad-badge">🔧 3D DESIGNS 🔧</span>
-                            <h2 class="tinkercad-title">Tinkercad Creations</h2>
-                            <p class="tinkercad-subtitle">Interactive 3D models by our student makers</p>
-                        </div>
-                        <div class="tinkercad-grid">
-                            <!-- Tinkercad Project 1 - PLACEHOLDER -->
-                            <div class="tinkercad-card">
-                                <div class="tinkercad-viewer">
-                                    <!-- Replace with actual Tinkercad embed code -->
-                                    <div class="tinkercad-placeholder">
-                                        <span class="placeholder-icon">🎨</span>
-                                        <span class="placeholder-text">Coming Soon!</span>
-                                        <span class="placeholder-subtext">Student 3D designs will appear here</span>
-                                    </div>
-                                </div>
-                                <div class="tinkercad-info">
-                                    <h3 class="tinkercad-project-title">Project Name</h3>
-                                    <p class="tinkercad-student">By: Student Name</p>
-                                    <p class="tinkercad-grade">Grade • School</p>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="tinkercad-instructions">🖱️ CLICK AND DRAG TO ROTATE • SCROLL TO ZOOM</p>
-                    </div>
                     <style>
-                    /* Tinkercad Section Styles */
+                    /* Tinkercad Instagram Grid Styles */
                     .tinkercad-section {
                         background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
                         padding: 2rem;
@@ -915,40 +901,83 @@
                         font-weight: 500;
                     }
                     
-                    .tinkercad-grid {
+                    /* Instagram-style grid */
+                    .tinkercad-instagram-grid {
                         display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-                        gap: 2rem;
+                        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                        gap: 1rem;
                         margin-top: 1.5rem;
                     }
                     
-                    .tinkercad-card {
-                        background: var(--card-bg);
-                        border-radius: 20px;
+                    .tinkercad-instagram-card {
+                        position: relative;
+                        width: 100%;
+                        aspect-ratio: 1;
+                        border-radius: 8px;
                         overflow: hidden;
-                        box-shadow: 0 10px 40px var(--shadow-md);
-                        border: 2px solid var(--border-color);
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                         transition: all 0.3s ease;
                     }
                     
-                    .tinkercad-card:hover {
-                        transform: translateY(-8px);
-                        box-shadow: 0 20px 50px var(--shadow-lg);
-                        border-color: #F59E0B;
+                    .tinkercad-instagram-card:hover {
+                        transform: scale(1.02);
+                        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
                     }
                     
-                    .tinkercad-viewer {
+                    .tinkercad-instagram-viewer {
                         width: 100%;
-                        aspect-ratio: 16/10;
-                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                        height: 100%;
                         position: relative;
-                        overflow: hidden;
                     }
                     
-                    .tinkercad-viewer iframe {
+                    .tinkercad-instagram-viewer iframe {
                         width: 100%;
                         height: 100%;
                         border: none;
+                        pointer-events: none;
+                    }
+                    
+                    .tinkercad-instagram-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-end;
+                        padding: 1rem;
+                        color: white;
+                    }
+                    
+                    .tinkercad-instagram-card:hover .tinkercad-instagram-overlay {
+                        opacity: 1;
+                    }
+                    
+                    .tinkercad-instagram-title {
+                        font-size: 1rem;
+                        font-weight: 700;
+                        margin-bottom: 0.25rem;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    .tinkercad-instagram-student {
+                        font-size: 0.85rem;
+                        color: #F59E0B;
+                        font-weight: 600;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    .tinkercad-instagram-grade {
+                        font-size: 0.75rem;
+                        color: rgba(255, 255, 255, 0.8);
+                        margin-top: 0.25rem;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
                     }
                     
                     .tinkercad-placeholder {
@@ -966,8 +995,8 @@
                     }
                     
                     .placeholder-icon {
-                        font-size: 4rem;
-                        margin-bottom: 1rem;
+                        font-size: 3rem;
+                        margin-bottom: 0.5rem;
                         animation: float-icon 3s ease-in-out infinite;
                     }
                     
@@ -977,64 +1006,45 @@
                     }
                     
                     .placeholder-text {
-                        font-size: 1.5rem;
-                        font-weight: 800;
+                        font-size: 1rem;
+                        font-weight: 700;
                         text-transform: uppercase;
-                        letter-spacing: 3px;
+                        letter-spacing: 2px;
                         color: #F59E0B;
                         text-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
                     }
                     
                     .placeholder-subtext {
-                        font-size: 0.9rem;
+                        font-size: 0.75rem;
                         color: #94a3b8;
                         margin-top: 0.5rem;
-                    }
-                    
-                    .tinkercad-info {
-                        padding: 1.25rem;
                         text-align: center;
-                        background: linear-gradient(180deg, var(--card-bg), var(--bg-gradient-1));
-                    }
-                    
-                    .tinkercad-project-title {
-                        font-size: 1.25rem;
-                        font-weight: 800;
-                        color: var(--text-primary);
-                        margin: 0 0 0.5rem;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    }
-                    
-                    .tinkercad-student {
-                        font-size: 1rem;
-                        color: #F59E0B;
-                        font-weight: 700;
-                        margin: 0 0 0.25rem;
-                    }
-                    
-                    .tinkercad-grade {
-                        font-size: 0.85rem;
-                        color: var(--text-secondary);
-                        margin: 0;
+                        padding: 0 1rem;
                     }
                     
                     .tinkercad-instructions {
                         text-align: center;
                         margin-top: 1.5rem;
                         font-family: 'Courier New', monospace;
-                        font-size: 0.9rem;
+                        font-size: 0.85rem;
                         color: var(--text-secondary);
                         letter-spacing: 1px;
                     }
                     
-                    @media (max-width: 600px) {
-                        .tinkercad-grid {
-                            grid-template-columns: 1fr;
+                    @media (max-width: 768px) {
+                        .tinkercad-instagram-grid {
+                            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                            gap: 0.75rem;
                         }
                         
                         .tinkercad-section {
                             padding: 1.5rem;
+                        }
+                    }
+                    
+                    @media (max-width: 480px) {
+                        .tinkercad-instagram-grid {
+                            grid-template-columns: repeat(2, 1fr);
                         }
                     }
                     </style>
@@ -1279,6 +1289,103 @@
         })();
         </script>
         <script>
+        // Load and display Tinkercad projects
+        (function() {
+            const STORAGE_KEY = 'tinkercad_portfolio_projects';
+            const grid = document.getElementById('tinkercad-projects-grid');
+            
+            if (!grid) return;
+            
+            function loadTinkercadProjects() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    let projects = [];
+                    
+                    if (saved) {
+                        projects = JSON.parse(saved);
+                    }
+                    
+                    if (projects.length === 0) {
+                        grid.innerHTML = `
+                            <div class="tinkercad-instagram-card" style="grid-column: 1 / -1; aspect-ratio: 16/9;">
+                                <div class="tinkercad-placeholder">
+                                    <span class="placeholder-icon">🎨</span>
+                                    <span class="placeholder-text">No Tinkercad Projects Yet</span>
+                                    <span class="placeholder-subtext">Student 3D designs will appear here when added</span>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    grid.innerHTML = projects.map(function(project) {
+                        const embedUrl = project.embedUrl || getTinkercadEmbedUrl(project.tinkercadUrl);
+                        const tinkercadLink = project.tinkercadUrl ? `href="${escapeHtml(project.tinkercadUrl)}"` : '';
+                        return `
+                            <div class="tinkercad-instagram-card" ${tinkercadLink ? `onclick="window.open('${escapeHtml(project.tinkercadUrl)}', '_blank')"` : ''}>
+                                <div class="tinkercad-instagram-viewer">
+                                    ${embedUrl ? `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe>` : `
+                                        <div class="tinkercad-placeholder">
+                                            <span class="placeholder-icon">🎨</span>
+                                            <span class="placeholder-text">3D Design</span>
+                                        </div>
+                                    `}
+                                </div>
+                                <div class="tinkercad-instagram-overlay">
+                                    <div class="tinkercad-instagram-title">${escapeHtml(project.title || 'Untitled Project')}</div>
+                                    <div class="tinkercad-instagram-student">By: ${escapeHtml(project.studentName || 'Student')}</div>
+                                    ${project.studentClass ? `<div class="tinkercad-instagram-grade">${escapeHtml(project.studentClass)}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    console.error('Error loading Tinkercad projects:', e);
+                    grid.innerHTML = `
+                        <div class="tinkercad-instagram-card" style="grid-column: 1 / -1; aspect-ratio: 16/9;">
+                            <div class="tinkercad-placeholder">
+                                <span class="placeholder-icon">⚠️</span>
+                                <span class="placeholder-text">Error Loading Projects</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            function getTinkercadEmbedUrl(url) {
+                if (!url) return '';
+                try {
+                    const match = url.match(/tinkercad\.com\/things\/([a-zA-Z0-9]+)/);
+                    if (match) {
+                        return `https://www.tinkercad.com/embed/${match[1]}`;
+                    }
+                } catch (e) {
+                    console.error('Error parsing Tinkercad URL:', e);
+                }
+                return '';
+            }
+            
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Load projects when page loads
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadTinkercadProjects);
+            } else {
+                loadTinkercadProjects();
+            }
+            
+            // Listen for storage changes to update when projects are added
+            window.addEventListener('storage', function(e) {
+                if (e.key === STORAGE_KEY) {
+                    loadTinkercadProjects();
+                }
+            });
+        })();
         </script>
         <script>
         // Sidebar collapse functionality
