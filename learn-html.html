@@ -1605,6 +1605,58 @@
 <body>
     <h1>Welcome to My Website!</h1>
     <p>Start building your empire here!</p>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile Dropdown Toggle
+            var mobileDropdown = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMenu = document.getElementById('mobile-quick-links-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
 </body>
 </html>"></textarea>
                         </div>
@@ -2413,49 +2465,83 @@
     <nav class="navbar navbar-bottom">
         <div class="navbar-container">
             <!-- Desktop Menu -->
-            <div class="navbar-menu">
-                <a href="index.html" class="navbar-link">🏠 Home</a>
-                <a href="student-work.html" class="navbar-link">🎨 Gallery</a>
-                <a href="/movement.html" class="navbar-link">🎮 Scratch</a>
-                <a href="/unreal-engine-level-design.html" class="navbar-link">🏔️ Unreal</a>
-                <a href="/learn-python.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4);">🐍 Python</a>
-            </div>
-            
-            <!-- Mobile Menu Grid -->
-            <div class="mobile-menu-grid">
-                <a href="/movement.html" class="mobile-menu-item featured-orange">
-                    <span class="icon">🎮</span>
-                    <span class="label">Scratch</span>
-                </a>
-                <a href="/unreal-engine-level-design.html" class="mobile-menu-item featured-blue">
-                    <span class="icon">🏔️</span>
-                    <span class="label">Unreal</span>
-                </a>
-                <a href="/student-work.html" class="mobile-menu-item featured-purple">
-                    <span class="icon">🎨</span>
-                    <span class="label">Gallery</span>
-                </a>
-                <div class="mobile-menu-item mobile-dropdown" id="mobile-misc-dropdown">
-                    <span class="icon">⚡</span>
-                    <span class="label">Misc</span>
-                    <div class="mobile-dropdown-menu" id="mobile-misc-menu">
-                            <a href="/mge.html" class="mobile-dropdown-item featured-mge">
-                                <span class="icon">🧪</span> MGE Experiments
-                            </a>
-                            <a href="/mge-skating.html" class="mobile-dropdown-item">
-                                <span class="icon">⛸️</span> Skating Game
-                            </a>
-                            <a href="/mge-smash.html" class="mobile-dropdown-item">
-                                <span class="icon">⚔️</span> Super Smash Fighters
-                            </a>
-                            <a href="/mge-parkour.html" class="mobile-dropdown-item">
-                                <span class="icon">🏃</span> Parkour Runner
-                            </a>
-                            <a href="/mge-dash3d.html" class="mobile-dropdown-item">
-                                <span class="icon">💥</span> 3D Dash
-                            </a>
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
                     </div>
                 </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
             </div>
         </div>
     </nav>
@@ -2533,6 +2619,58 @@
 <body>
     <h1>Welcome to My Website!</h1>
     <p>Start building your empire here! Edit the code on the left to see changes live.</p>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile Dropdown Toggle
+            var mobileDropdown = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMenu = document.getElementById('mobile-quick-links-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
 </body>
 </html>`,
                 updated: new Date().toISOString()
@@ -2778,6 +2916,58 @@
         });
 
     </script>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile Dropdown Toggle
+            var mobileDropdown = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMenu = document.getElementById('mobile-quick-links-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
 </body>
 </html>
 
