@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dogs, Cats & Butterflies | Mr. Gonzalez STEM</title>
+    <meta name="description" content="Learn about amazing animals - dogs, cats, and butterflies!">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --dog-color: #E67E22;
+            --cat-color: #9B59B6;
+            --butterfly-color: #3498DB;
+            --bg-warm: #FFF8E7;
+            --bg-cool: #E8F4FD;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-cool) 50%, #F3E5F5 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background elements */
+        .bg-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .floating-paw {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.15;
+            animation: floatAround 20s infinite ease-in-out;
+        }
+
+        .floating-paw:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .floating-paw:nth-child(2) { top: 30%; right: 10%; animation-delay: -5s; }
+        .floating-paw:nth-child(3) { top: 60%; left: 15%; animation-delay: -10s; }
+        .floating-paw:nth-child(4) { top: 80%; right: 20%; animation-delay: -15s; }
+        .floating-paw:nth-child(5) { top: 45%; left: 80%; animation-delay: -7s; }
+        .floating-paw:nth-child(6) { top: 20%; left: 60%; animation-delay: -12s; }
+
+        @keyframes floatAround {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -30px) rotate(10deg); }
+            50% { transform: translate(-10px, 20px) rotate(-5deg); }
+            75% { transform: translate(30px, 10px) rotate(15deg); }
+        }
+
+        /* Header */
+        .hero-header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-family: 'Fredoka', cursive;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--dog-color) 0%, var(--cat-color) 50%, var(--butterfly-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .hero-icons {
+            font-size: 3rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .hero-icons span {
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .hero-icons span:nth-child(2) { animation-delay: 0.2s; }
+        .hero-icons span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Navigation */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: var(--text-dark);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            margin: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Animal Section */
+        .animal-section {
+            margin-bottom: 4rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-icon {
+            font-size: 3.5rem;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .section-title {
+            font-family: 'Fredoka', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .section-title.dogs { color: var(--dog-color); }
+        .section-title.cats { color: var(--cat-color); }
+        .section-title.butterflies { color: var(--butterfly-color); }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .animal-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .animal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+        }
+
+        .animal-card.dog::before { background: linear-gradient(90deg, #E67E22, #F39C12); }
+        .animal-card.cat::before { background: linear-gradient(90deg, #9B59B6, #8E44AD); }
+        .animal-card.butterfly::before { background: linear-gradient(90deg, #3498DB, #2980B9); }
+
+        .animal-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image.dog-bg { background: linear-gradient(135deg, #FDEBD0 0%, #F9E4C8 100%); }
+        .card-image.cat-bg { background: linear-gradient(135deg, #F5EEF8 0%, #E8DAEF 100%); }
+        .card-image.butterfly-bg { background: linear-gradient(135deg, #EBF5FB 0%, #D4E6F1 100%); }
+
+        .card-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(transparent, white);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Fredoka', cursive;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-dark);
+        }
+
+        .card-description {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        /* Fun Facts Section */
+        .fun-facts {
+            background: white;
+            border-radius: 30px;
+            padding: 3rem;
+            margin: 3rem 0;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fun-facts::before {
+            content: '✨';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 3rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.2) rotate(10deg); opacity: 0.7; }
+        }
+
+        .fun-facts-title {
+            font-family: 'Fredoka', cursive;
+            font-size: 2rem;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .fact-item {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FEF5E7 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border-left: 4px solid;
+            transition: transform 0.3s ease;
+        }
+
+        .fact-item:nth-child(3n+1) { border-color: var(--dog-color); }
+        .fact-item:nth-child(3n+2) { border-color: var(--cat-color); }
+        .fact-item:nth-child(3n) { border-color: var(--butterfly-color); }
+
+        .fact-item:hover {
+            transform: translateX(10px);
+        }
+
+        .fact-item h4 {
+            font-family: 'Fredoka', cursive;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .fact-item p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            padding: 3rem;
+            margin: 3rem 0;
+            color: white;
+        }
+
+        .comparison-title {
+            font-family: 'Fredoka', cursive;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .comparison-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .comparison-card h3 {
+            font-family: 'Fredoka', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .comparison-card ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .comparison-card li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+
+        /* Quiz Section */
+        .quiz-section {
+            background: white;
+            border-radius: 30px;
+            padding: 3rem;
+            margin: 3rem 0;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .quiz-title {
+            font-family: 'Fredoka', cursive;
+            font-size: 2rem;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .quiz-question {
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            margin-bottom: 2rem;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .quiz-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: 3px solid #E0E0E0;
+            border-radius: 50px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .quiz-btn:hover {
+            border-color: var(--butterfly-color);
+            background: #EBF5FB;
+            transform: scale(1.05);
+        }
+
+        .quiz-btn.correct {
+            border-color: #27AE60;
+            background: #D5F5E3;
+            animation: celebrate 0.5s ease;
+        }
+
+        .quiz-btn.wrong {
+            border-color: #E74C3C;
+            background: #FADBD8;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .quiz-result {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 16px;
+            display: none;
+        }
+
+        .quiz-result.show { display: block; }
+        .quiz-result.correct { background: #D5F5E3; color: #27AE60; }
+        .quiz-result.wrong { background: #FADBD8; color: #E74C3C; }
+
+        /* Footer */
+        .page-footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .page-footer a {
+            color: var(--butterfly-color);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .page-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .hero-header { padding: 2rem 1rem; }
+            .fun-facts, .quiz-section, .comparison-section { padding: 1.5rem; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating background elements -->
+    <div class="bg-elements">
+        <span class="floating-paw">🐾</span>
+        <span class="floating-paw">🦋</span>
+        <span class="floating-paw">🐱</span>
+        <span class="floating-paw">🐕</span>
+        <span class="floating-paw">🌸</span>
+        <span class="floating-paw">🐾</span>
+    </div>
+
+    <a href="/student-work.html" class="back-link">← Back to Student Work</a>
+
+    <header class="hero-header">
+        <h1 class="hero-title">Dogs, Cats & Butterflies</h1>
+        <p class="hero-subtitle">Discover the wonderful world of our favorite creatures!</p>
+        <div class="hero-icons">
+            <span>🐕</span>
+            <span>🐱</span>
+            <span>🦋</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Dogs Section -->
+        <section class="animal-section">
+            <div class="section-header">
+                <span class="section-icon">🐕</span>
+                <h2 class="section-title dogs">All About Dogs</h2>
+            </div>
+            <div class="card-grid">
+                <div class="animal-card dog">
+                    <div class="card-image dog-bg">🐕‍🦺</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Loyal Companions</h3>
+                        <p class="card-description">Dogs have been human's best friends for over 15,000 years! They're known for their unwavering loyalty and love for their families.</p>
+                    </div>
+                </div>
+                <div class="animal-card dog">
+                    <div class="card-image dog-bg">🦮</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Super Sniffers</h3>
+                        <p class="card-description">A dog's nose has about 300 million scent receptors compared to our 6 million. They can smell things we can't even imagine!</p>
+                    </div>
+                </div>
+                <div class="animal-card dog">
+                    <div class="card-image dog-bg">🐶</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Smart Learners</h3>
+                        <p class="card-description">Dogs can learn over 100 words and commands! They understand our emotions and can even sense when we're feeling sad.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cats Section -->
+        <section class="animal-section">
+            <div class="section-header">
+                <span class="section-icon">🐱</span>
+                <h2 class="section-title cats">All About Cats</h2>
+            </div>
+            <div class="card-grid">
+                <div class="animal-card cat">
+                    <div class="card-image cat-bg">😺</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Independent Hunters</h3>
+                        <p class="card-description">Cats are natural-born hunters. Even house cats have amazing reflexes and can jump up to 6 times their length!</p>
+                    </div>
+                </div>
+                <div class="animal-card cat">
+                    <div class="card-image cat-bg">😸</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Purr-fect Nappers</h3>
+                        <p class="card-description">Cats sleep 12-16 hours a day! They're crepuscular, meaning they're most active at dawn and dusk.</p>
+                    </div>
+                </div>
+                <div class="animal-card cat">
+                    <div class="card-image cat-bg">🐈</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Whisker Wonders</h3>
+                        <p class="card-description">A cat's whiskers are as wide as their body and help them navigate in the dark. They're like built-in measuring tools!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Butterflies Section -->
+        <section class="animal-section">
+            <div class="section-header">
+                <span class="section-icon">🦋</span>
+                <h2 class="section-title butterflies">All About Butterflies</h2>
+            </div>
+            <div class="card-grid">
+                <div class="animal-card butterfly">
+                    <div class="card-image butterfly-bg">🦋</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Amazing Transformation</h3>
+                        <p class="card-description">Butterflies go through metamorphosis - starting as caterpillars, then becoming a chrysalis, and finally emerging as beautiful butterflies!</p>
+                    </div>
+                </div>
+                <div class="animal-card butterfly">
+                    <div class="card-image butterfly-bg">🌸</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Colorful Wings</h3>
+                        <p class="card-description">Butterfly wings are actually transparent! The colors come from tiny scales that reflect light in amazing patterns.</p>
+                    </div>
+                </div>
+                <div class="animal-card butterfly">
+                    <div class="card-image butterfly-bg">🌺</div>
+                    <div class="card-content">
+                        <h3 class="card-title">Super Travelers</h3>
+                        <p class="card-description">Monarch butterflies migrate up to 3,000 miles! They travel from Canada to Mexico and back again each year.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fun Facts -->
+        <section class="fun-facts">
+            <h2 class="fun-facts-title">🎉 Amazing Fun Facts!</h2>
+            <div class="facts-grid">
+                <div class="fact-item">
+                    <h4>🐕 Dog Fact</h4>
+                    <p>Dogs can see in the dark much better than humans because of a special layer in their eyes called the tapetum lucidum!</p>
+                </div>
+                <div class="fact-item">
+                    <h4>🐱 Cat Fact</h4>
+                    <p>Cats have over 20 different vocalizations, including the meow which they only use to communicate with humans!</p>
+                </div>
+                <div class="fact-item">
+                    <h4>🦋 Butterfly Fact</h4>
+                    <p>Butterflies taste with their feet! When they land on a flower, they can immediately tell if it's good to eat.</p>
+                </div>
+                <div class="fact-item">
+                    <h4>🐕 Dog Fact</h4>
+                    <p>A dog's nose print is unique, just like a human fingerprint. No two dogs have the same nose print!</p>
+                </div>
+                <div class="fact-item">
+                    <h4>🐱 Cat Fact</h4>
+                    <p>Cats spend about 30-50% of their day grooming themselves. They're one of the cleanest animals!</p>
+                </div>
+                <div class="fact-item">
+                    <h4>🦋 Butterfly Fact</h4>
+                    <p>Some butterflies can fly at speeds up to 30 miles per hour! Most flutter around at 5-12 mph.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="comparison-section">
+            <h2 class="comparison-title">🔍 Quick Comparison</h2>
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-icon">🐕</div>
+                    <h3>Dogs</h3>
+                    <ul>
+                        <li>🏠 Domestic pet</li>
+                        <li>💤 Sleep 12-14 hours</li>
+                        <li>🍖 Eat meat & kibble</li>
+                        <li>❤️ Very social</li>
+                        <li>📏 Many sizes</li>
+                    </ul>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-icon">🐱</div>
+                    <h3>Cats</h3>
+                    <ul>
+                        <li>🏠 Domestic pet</li>
+                        <li>💤 Sleep 12-16 hours</li>
+                        <li>🐟 Eat meat & fish</li>
+                        <li>😎 Independent</li>
+                        <li>📏 Small to medium</li>
+                    </ul>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-icon">🦋</div>
+                    <h3>Butterflies</h3>
+                    <ul>
+                        <li>🌿 Wild insect</li>
+                        <li>🌙 Rest at night</li>
+                        <li>🌸 Drink nectar</li>
+                        <li>✈️ Migratory</li>
+                        <li>📏 2-12 cm wingspan</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section class="quiz-section">
+            <h2 class="quiz-title">🧠 Test Your Knowledge!</h2>
+            <p class="quiz-question" id="quiz-question">How many hours a day do cats typically sleep?</p>
+            <div class="quiz-options" id="quiz-options">
+                <button class="quiz-btn" data-answer="wrong">4-6 hours</button>
+                <button class="quiz-btn" data-answer="wrong">8-10 hours</button>
+                <button class="quiz-btn" data-answer="correct">12-16 hours</button>
+                <button class="quiz-btn" data-answer="wrong">20+ hours</button>
+            </div>
+            <div class="quiz-result" id="quiz-result"></div>
+            <button class="quiz-btn" id="next-question" style="display: none; margin-top: 1rem; background: var(--butterfly-color); color: white; border-color: var(--butterfly-color);">Next Question →</button>
+        </section>
+    </div>
+
+    <footer class="page-footer">
+        <p>Made with 💜 for Mr. Gonzalez's STEM Class</p>
+        <p><a href="/student-work.html">← Back to Student Work</a> | <a href="/">Home</a></p>
+    </footer>
+
+    <script>
+        // Quiz functionality
+        const questions = [
+            {
+                question: "How many hours a day do cats typically sleep?",
+                options: ["4-6 hours", "8-10 hours", "12-16 hours", "20+ hours"],
+                correct: 2
+            },
+            {
+                question: "How far can Monarch butterflies migrate?",
+                options: ["100 miles", "500 miles", "1,000 miles", "3,000 miles"],
+                correct: 3
+            },
+            {
+                question: "How many scent receptors do dogs have?",
+                options: ["6 million", "50 million", "300 million", "1 billion"],
+                correct: 2
+            },
+            {
+                question: "What do butterflies taste with?",
+                options: ["Their tongue", "Their antennae", "Their feet", "Their wings"],
+                correct: 2
+            },
+            {
+                question: "How many words can dogs learn?",
+                options: ["About 10", "About 50", "Over 100", "Over 500"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('quiz-question').textContent = q.question;
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn';
+                btn.textContent = opt;
+                btn.dataset.answer = index === q.correct ? 'correct' : 'wrong';
+                btn.addEventListener('click', handleAnswer);
+                optionsDiv.appendChild(btn);
+            });
+            
+            document.getElementById('quiz-result').className = 'quiz-result';
+            document.getElementById('quiz-result').style.display = 'none';
+            document.getElementById('next-question').style.display = 'none';
+        }
+
+        function handleAnswer(e) {
+            const buttons = document.querySelectorAll('.quiz-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            const result = document.getElementById('quiz-result');
+            
+            if (e.target.dataset.answer === 'correct') {
+                e.target.classList.add('correct');
+                result.textContent = '🎉 Correct! Great job!';
+                result.className = 'quiz-result show correct';
+            } else {
+                e.target.classList.add('wrong');
+                buttons.forEach(btn => {
+                    if (btn.dataset.answer === 'correct') {
+                        btn.classList.add('correct');
+                    }
+                });
+                result.textContent = '❌ Not quite! Try the next one!';
+                result.className = 'quiz-result show wrong';
+            }
+            
+            if (currentQuestion < questions.length - 1) {
+                document.getElementById('next-question').style.display = 'inline-block';
+            } else {
+                result.textContent += ' 🏆 Quiz Complete!';
+            }
+        }
+
+        document.getElementById('next-question').addEventListener('click', () => {
+            currentQuestion++;
+            loadQuestion();
+        });
+
+        loadQuestion();
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+

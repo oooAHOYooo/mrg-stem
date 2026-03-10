@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinkercad Tutorials | Mr. Gonzalez's STEM Class</title>
+    <meta name="description" content="Complete collection of Tinkercad 3D design tutorial videos for students.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tutorials-hero {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+            border-radius: 20px;
+            margin-bottom: 3rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+        .tutorials-hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: #065f46;
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+        .tutorials-hero p {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: #047857;
+        }
+        .tutorials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .tutorial-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tutorial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        .tutorial-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .tutorial-card h3 {
+            color: #065f46;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .tutorial-card .lesson-number {
+            color: #10b981;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tutorial-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .tutorial-card.featured {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        .tutorial-card.beginner {
+            border-left: 4px solid #10b981;
+        }
+        .tutorial-card.intermediate {
+            border-left: 4px solid #f59e0b;
+        }
+        .tutorial-card.advanced {
+            border-left: 4px solid #ef4444;
+        }
+        .video-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Fixed Top Nav -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">⚡ Home</a>
+            <a href="/portfolio.html" class="navbar-brand">📁 My Portfolio</a>
+            <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+            <a href="/lesson-plans.html" class="navbar-brand">🏠 Take Home Projects</a>
+            <a href="/coverage.html" class="navbar-brand">📝 Coverage</a>
+            <a href="/portfolio" class="navbar-brand">🏫 Class Portfolios</a>
+            <a href="/submit-portfolio.html" class="navbar-brand">📮 Submit</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container" id="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar sidebar-left" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📚 Quick Links</h3>
+                <nav class="sidebar-nav">
+                    <a href="/" class="sidebar-link">🏠 Home</a>
+                    <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                </nav>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">🎯 All Tutorials</h3>
+                <nav class="sidebar-nav">
+                    <a href="/scratch-tutorials.html" class="sidebar-link">📚 Scratch Tutorials</a>
+                    <a href="/tinkercad-tutorials.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15)); border: 2px solid rgba(16, 185, 129, 0.3); font-weight: 700;">🌍 Tinkercad Tutorials</a>
+                    <a href="/unreal-engine-level-design.html" class="sidebar-link">🏔️ Unreal Engine</a>
+                    <a href="/learn-html.html" class="sidebar-link">👑 HTML & CSS</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="tutorials-hero">
+                    <h1>🌍 Tinkercad Tutorials</h1>
+                    <p>Learn 3D design with Tinkercad! Watch video tutorials and create amazing 3D models, buildings, and worlds.</p>
+                </div>
+
+                <div class="tutorials-grid">
+                    <!-- Getting Started -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card beginner featured">
+                        <div class="video-thumbnail">▶️</div>
+                        <div class="lesson-number">Getting Started</div>
+                        <h3>Tinkercad Basics</h3>
+                        <p>Learn the basics of Tinkercad: navigation, shapes, and your first 3D design.</p>
+                    </a>
+
+                    <!-- Santa's House -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card beginner">
+                        <div class="video-thumbnail">🏠</div>
+                        <div class="lesson-number">Holiday Project</div>
+                        <h3>Create Santa's House</h3>
+                        <p>Build a festive Santa's house with chimneys, windows, doors, and decorations.</p>
+                    </a>
+
+                    <!-- Building Design -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card intermediate">
+                        <div class="video-thumbnail">🏢</div>
+                        <div class="lesson-number">Architecture</div>
+                        <h3>Design a Building</h3>
+                        <p>Create your own building with multiple floors, windows, and architectural details.</p>
+                    </a>
+
+                    <!-- Character Design -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card intermediate">
+                        <div class="video-thumbnail">👤</div>
+                        <div class="lesson-number">Character Design</div>
+                        <h3>Create a Character</h3>
+                        <p>Design your own 3D character using basic shapes and creative techniques.</p>
+                    </a>
+
+                    <!-- World Building -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card intermediate">
+                        <div class="video-thumbnail">🌎</div>
+                        <div class="lesson-number">World Building</div>
+                        <h3>Build a 3D World</h3>
+                        <p>Create an entire 3D world with landscapes, buildings, and interactive elements.</p>
+                    </a>
+
+                    <!-- Advanced Techniques -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card advanced">
+                        <div class="video-thumbnail">⚙️</div>
+                        <div class="lesson-number">Advanced</div>
+                        <h3>Advanced Techniques</h3>
+                        <p>Learn advanced Tinkercad skills: grouping, alignment, and complex shapes.</p>
+                    </a>
+
+                    <!-- Circuits -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card intermediate">
+                        <div class="video-thumbnail">⚡</div>
+                        <div class="lesson-number">Electronics</div>
+                        <h3>Circuit Design</h3>
+                        <p>Design and simulate electronic circuits using Tinkercad's circuit simulator.</p>
+                    </a>
+
+                    <!-- 3D Printing Prep -->
+                    <a href="https://www.youtube.com/watch?v=demo" target="_blank" rel="noopener noreferrer" class="tutorial-card advanced">
+                        <div class="video-thumbnail">🖨️</div>
+                        <div class="lesson-number">3D Printing</div>
+                        <h3>Prepare for 3D Printing</h3>
+                        <p>Learn how to prepare your Tinkercad designs for 3D printing.</p>
+                    </a>
+                </div>
+
+                <div style="margin-top: 3rem; padding: 2rem; background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 2px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                    <h2 style="color: #065f46; margin-bottom: 1rem;">🎯 Ready to Start?</h2>
+                    <p style="color: #047857; margin-bottom: 1.5rem; font-size: 1.1rem;">Join our Tinkercad class and start creating amazing 3D designs!</p>
+                    <a href="https://www.tinkercad.com/joinclass" target="_blank" rel="noopener noreferrer" class="project-button" style="display: inline-block; padding: 1rem 2rem; font-size: 1.1rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border-color: rgba(16, 185, 129, 0.4); color: #065f46; font-weight: 700;">
+                        🌍 Join Tinkercad Class →
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📅 Today</h3>
+                <div id="sidebar-date-time-weather-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; font-size: clamp(0.9rem, 1.8vw, 1.1rem);"></div>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">💡 Tip of the Day</h3>
+                <div class="tip-of-day" id="tip-of-day">
+                    <span class="tip-icon">💡</span>
+                    <p class="tip-text" id="tip-text">Loading tip...</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Collapse buttons -->
+    <button class="sidebar-collapse-btn left" id="collapse-left-btn" aria-label="Toggle left sidebar">◀</button>
+    <button class="sidebar-collapse-btn right" id="collapse-right-btn" aria-label="Toggle right sidebar">▶</button>
+
+    <!-- Bottom Navbar -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script src="scripts.js"></script>
+    <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+
+            setTheme(currentTheme);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date, Time, and Weather display for Bridgeport CT
+        (function() {
+            var dateTimeWeatherDisplay = document.getElementById('sidebar-date-time-weather-display');
+            if (!dateTimeWeatherDisplay) return;
+
+            async function updateDateTimeWeather() {
+                try {
+                    var now = new Date();
+                    var weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
+                    var month = now.toLocaleDateString('en-US', { month: 'short' });
+                    var day = now.getDate();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+
+                    var timeFormatted = `${hours}:${minutes}:${seconds}`;
+                    var dateFormatted = `${weekday}, ${month} ${day}`;
+
+                    var weatherText = '🌤️ Bridgeport, CT';
+
+                    var apiKey = 'demo';
+                    var city = 'Bridgeport';
+                    var state = 'CT';
+                    var country = 'US';
+                    var url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${state},${country}&units=imperial&appid=${apiKey}`;
+
+                    try {
+                        var response = await fetch(url);
+                        if (response.ok) {
+                            var data = await response.json();
+                            var temp = Math.round(data.main.temp);
+                            weatherText = `🌤️ ${temp}°F`;
+                        }
+                    } catch (e) {
+                        console.error('Weather API error:', e);
+                    }
+
+                    dateTimeWeatherDisplay.innerHTML = `📅 ${dateFormatted}<br>🕐 ${timeFormatted} ${weatherText}`;
+
+                } catch (e) {
+                    console.error('Date/Time/Weather error:', e);
+                    dateTimeWeatherDisplay.textContent = 'Error loading info';
+                }
+            }
+
+            updateDateTimeWeather();
+            setInterval(updateDateTimeWeather, 1000);
+        })();
+
+        // Tip of the Day from JSON
+        (function() {
+            var tipText = document.getElementById('tip-text');
+            if (!tipText) return;
+
+            async function loadTip() {
+                try {
+                    var response = await fetch('/data/computer-facts.json');
+                    if (response.ok) {
+                        var data = await response.json();
+                        var facts = data.facts;
+                        
+                        // Get today's date to potentially match historical dates
+                        var today = new Date();
+                        var dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+                        
+                        // Use day of year to pick a fact (ensures same fact each day)
+                        var factIndex = dayOfYear % facts.length;
+                        var selectedFact = facts[factIndex];
+                        
+                        tipText.textContent = selectedFact.text;
+                    } else {
+                        tipText.textContent = 'Start building your portfolio today! Every project you create is a step toward showcasing your creativity.';
+                    }
+                } catch (e) {
+                    console.error('Error loading tip:', e);
+                    tipText.textContent = 'Start building your portfolio today! Every project you create is a step toward showcasing your creativity.';
+                }
+            }
+
+            loadTip();
+        })();
+
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+
+        // Dropdown toggles
+        (function() {
+            var mgeToggle = document.getElementById('mge-experiments-dropdown');
+            var mgeMenu = document.getElementById('mge-experiments-menu');
+
+            if (mgeToggle && mgeMenu) {
+                mgeToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mgeMenu.classList.toggle('show');
+                });
+            }
+
+            var mobileMiscToggle = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMiscMenu = document.getElementById('mobile-quick-links-menu');
+
+            if (mobileMiscToggle && mobileMiscMenu) {
+                mobileMiscToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMiscMenu.classList.toggle('show');
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (mgeMenu && !mgeMenu.contains(e.target) && mgeToggle && !mgeToggle.contains(e.target)) {
+                    mgeMenu.classList.remove('show');
+                }
+                if (mobileMiscMenu && !mobileMiscMenu.contains(e.target) && mobileMiscToggle && !mobileMiscToggle.contains(e.target)) {
+                    mobileMiscMenu.classList.remove('show');
+                }
+            });
+        })();
+
+        // Sidebar collapse functionality
+        (function() {
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var collapseLeftBtn = document.getElementById('collapse-left-btn');
+            var collapseRightBtn = document.getElementById('collapse-right-btn');
+            var dashboardContainer = document.getElementById('dashboard-container');
+
+            function toggleSidebar(sidebar, button, isLeft) {
+                var isCollapsed = sidebar.classList.contains('collapsed');
+                sidebar.classList.toggle('collapsed', !isCollapsed);
+                button.classList.toggle('collapsed', !isCollapsed);
+                button.textContent = isCollapsed ? (isLeft ? '◀' : '▶') : (isLeft ? '▶' : '◀');
+                dashboardContainer.classList.toggle('left-collapsed', isLeft && !isCollapsed);
+                dashboardContainer.classList.toggle('right-collapsed', !isLeft && !isCollapsed);
+            }
+
+            if (collapseLeftBtn && leftSidebar) {
+                collapseLeftBtn.addEventListener('click', function() {
+                    toggleSidebar(leftSidebar, collapseLeftBtn, true);
+                });
+            }
+            if (collapseRightBtn && rightSidebar) {
+                collapseRightBtn.addEventListener('click', function() {
+                    toggleSidebar(rightSidebar, collapseRightBtn, false);
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>

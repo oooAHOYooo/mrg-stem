@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coverage | Mr. Gonzalez's STEM Class</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .coverage-hero {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(220, 38, 38, 0.12));
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(239, 68, 68, 0.35);
+        }
+        .coverage-hero h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: #991b1b;
+            margin-bottom: 0.5rem;
+            font-weight: 900;
+        }
+        .coverage-hero p {
+            color: #b91c1c;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .coverage-section {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08);
+        }
+        .coverage-section h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: #991b1b;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .coverage-section h3 {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            color: #b91c1c;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .coverage-section p, .coverage-section li {
+            color: #475569;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+        .coverage-section ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .coverage-section ol {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .coverage-section strong {
+            color: #991b1b;
+        }
+        .important-note {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid rgba(239, 68, 68, 0.6);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        .schedule-item {
+            background: rgba(239, 68, 68, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid rgba(239, 68, 68, 0.4);
+        }
+        .schedule-item .time {
+            font-weight: 700;
+            color: #991b1b;
+            font-size: 1.1rem;
+        }
+        .schedule-item .activity {
+            color: #475569;
+            margin-top: 0.25rem;
+        }
+        .contact-card {
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .contact-card strong {
+            display: block;
+            color: #991b1b;
+            margin-bottom: 0.25rem;
+        }
+        .contact-card span {
+            color: #475569;
+        }
+        textarea, input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-primary);
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .coverage-form-section {
+            background: rgba(239, 68, 68, 0.05);
+            border: 2px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        .coverage-form-section h3 {
+            margin-top: 0;
+        }
+        .grade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+        .grade-card {
+            background: rgba(239, 68, 68, 0.08);
+            border: 2px solid rgba(239, 68, 68, 0.2);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+        }
+        .grade-card h3 {
+            margin-top: 0;
+            color: #991b1b;
+        }
+        .grade-card ul {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        .grade-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .grade-links a {
+            display: inline-block;
+            padding: 0.4rem 0.7rem;
+            border-radius: 8px;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            text-decoration: none;
+            color: #991b1b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Fixed Top Nav -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">⚡ Home</a>
+            <a href="/portfolio.html" class="navbar-brand">📁 My Portfolio</a>
+            <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+            <a href="/lesson-plans.html" class="navbar-brand">🏠 Take Home Projects</a>
+            <a href="/coverage.html" class="navbar-brand">📝 Coverage</a>
+            <a href="/portfolio" class="navbar-brand">🏫 Class Portfolios</a>
+            <a href="/submit-portfolio.html" class="navbar-brand">📮 Submit</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container" id="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar sidebar-left" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📚 Quick Links</h3>
+                <nav class="sidebar-nav">
+                    <a href="/" class="sidebar-link">🏠 Home</a>
+                    <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                    <a href="/lesson-plans.html" class="sidebar-link">🏠 Take Home Projects</a>
+                    <a href="/coverage.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15)); border: 2px solid rgba(239, 68, 68, 0.3); font-weight: 700;">📝 Coverage</a>
+                </nav>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">🎯 Lessons</h3>
+                <nav class="sidebar-nav">
+                    <a href="/scratch-tutorials.html" class="sidebar-link">📚 Scratch Tutorials</a>
+                    <a href="/unreal-engine-level-design.html" class="sidebar-link">🏔️ Unreal Engine</a>
+                    <a href="/learn-html.html" class="sidebar-link">👑 HTML & CSS</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="coverage-hero">
+                    <h1>📝 Coverage Documentation</h1>
+                    <p>Instructions and information for substitute teachers covering Mr. Gonzalez's STEM class</p>
+                </div>
+
+                <!-- Grade-Level Plan -->
+                <div class="coverage-section">
+                    <h2>🎓 Grade-Level Coverage Guide</h2>
+                    <p>Choose the grade level below. These plans are aligned to the class expectations and keep students focused on independent work.</p>
+                    <div class="important-note">
+                        <strong>✅ Goal for all grades:</strong> Students choose a tool, do their own work, stay focused, and clean up their stations. <strong>Minecraft:</strong> Only allowed for Grade 4 & 5 when coding on the same server—must show the instructor their code every 20 min.
+                    </div>
+                    <div class="grade-grid">
+                        <div class="grade-card">
+                            <h3>Grade 1</h3>
+                            <ul>
+                                <li>Walk in slowly, find your station, and start working.</li>
+                                <li>Choose one option: color-tile robots, yellow Bee-Bots, blocks, or computer (Scratch/Tinkercad).</li>
+                                <li>Do your own work and stay focused on your project.</li>
+                                <li>Clean up your station when finished.</li>
+                                <li>Raise your hand for help and wait patiently.</li>
+                                <li><strong>Minecraft is NOT allowed today.</strong></li>
+                            </ul>
+                            <div class="grade-links">
+                                <a href="/expectations.html">Full Expectations</a>
+                                <a href="/movement.html">Movement Lesson</a>
+                            </div>
+                        </div>
+                        <div class="grade-card">
+                            <h3>Grade 2</h3>
+                            <ul>
+                                <li>Walk in slowly, find your station, and start working.</li>
+                                <li>Choose one option: color-tile robots, yellow Bee-Bots, blocks, or computer (Scratch/Tinkercad).</li>
+                                <li>Do your own work and stay focused on your project.</li>
+                                <li>Clean up your station when finished.</li>
+                                <li>Raise your hand for help and wait patiently.</li>
+                                <li><strong>Minecraft is NOT allowed today.</strong></li>
+                            </ul>
+                            <div class="grade-links">
+                                <a href="/expectations.html">Full Expectations</a>
+                                <a href="/collision.html">Collectibles Lesson</a>
+                            </div>
+                        </div>
+                        <div class="grade-card">
+                            <h3>Grade 3</h3>
+                            <ul>
+                                <li>Walk in slowly, find your station, and get started.</li>
+                                <li>Choose one option: color-tile robots, yellow Bee-Bots, blocks, or computer (Scratch/Tinkercad).</li>
+                                <li>Do your own work and stay focused until class ends.</li>
+                                <li>Clean up your station and put everything away.</li>
+                                <li>Raise your hand for help and wait patiently.</li>
+                                <li><strong>Minecraft is NOT allowed today.</strong></li>
+                            </ul>
+                            <div class="grade-links">
+                                <a href="/expectations.html">Full Expectations</a>
+                                <a href="/2-player-controller.html">2-Player Lesson</a>
+                                <a href="/scratch-tutorials-code.html">Scratch Code</a>
+                            </div>
+                        </div>
+                        <div class="grade-card">
+                            <h3>Grade 4</h3>
+                            <ul>
+                                <li>Walk in slowly, find your station, and begin working.</li>
+                                <li>Choose one option: color-tile robots, yellow Bee-Bots, blocks, or computer (Scratch/Tinkercad).</li>
+                                <li><strong>Minecraft:</strong> Allowed only if coding, all on the same server. Must show the instructor the code you are building every 20 min.</li>
+                                <li>Do your own work, stay focused, and complete your project.</li>
+                                <li>Clean up your station completely and help others when asked.</li>
+                                <li>Raise your hand for help and wait patiently.</li>
+                            </ul>
+                            <div class="grade-links">
+                                <a href="/expectations.html">Full Expectations</a>
+                                <a href="/lesson-4-projectiles-powerups.html">Projectiles Lesson</a>
+                                <a href="/scratch-geometry-dash.html">Geometry Dash</a>
+                            </div>
+                        </div>
+                        <div class="grade-card">
+                            <h3>Grade 5</h3>
+                            <ul>
+                                <li>Walk in slowly, find your station, and start working.</li>
+                                <li>Choose one option: color-tile robots, yellow Bee-Bots, blocks, or computer (Scratch/Tinkercad).</li>
+                                <li><strong>Minecraft:</strong> Allowed only if coding, all on the same server. Must show the instructor the code you are building every 20 min.</li>
+                                <li>Do your own work, stay focused, and finish your project.</li>
+                                <li>Clean up your station, help others, and be ready to share.</li>
+                                <li>Raise your hand for help and wait patiently.</li>
+                            </ul>
+                            <div class="grade-links">
+                                <a href="/expectations.html">Full Expectations</a>
+                                <a href="/tinkercad-tutorials.html">Tinkercad</a>
+                                <a href="/learn-html.html">Build a Web Page</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📅 Today</h3>
+                <div id="sidebar-date-time-weather-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; font-size: clamp(0.9rem, 1.8vw, 1.1rem);"></div>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">💡 Quick Tips</h3>
+                <div class="tip-of-day">
+                    <span class="tip-icon">💡</span>
+                    <p class="tip-text">Students are generally self-directed. Let them work on their projects and assist when needed.</p>
+                </div>
+                <div class="tip-of-day" style="margin-top: 1rem;">
+                    <span class="tip-icon">📋</span>
+                    <p class="tip-text">If you're unsure about something, don't hesitate to ask the main office or a neighboring teacher.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Collapse buttons -->
+    <button class="sidebar-collapse-btn left" id="collapse-left-btn" aria-label="Toggle left sidebar">◀</button>
+    <button class="sidebar-collapse-btn right" id="collapse-right-btn" aria-label="Toggle right sidebar">▶</button>
+
+    <!-- Bottom Navbar -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script src="scripts.js"></script>
+    <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+
+            setTheme(currentTheme);
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date, Time, and Weather display for Bridgeport CT
+        (function() {
+            var dateTimeWeatherDisplay = document.getElementById('sidebar-date-time-weather-display');
+            if (!dateTimeWeatherDisplay) return;
+
+            async function updateDateTimeWeather() {
+                try {
+                    var now = new Date();
+                    var weekday = now.toLocaleDateString('en-US', { weekday: 'short' });
+                    var month = now.toLocaleDateString('en-US', { month: 'short' });
+                    var day = now.getDate();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+
+                    var timeFormatted = `${hours}:${minutes}:${seconds}`;
+                    var dateFormatted = `${weekday}, ${month} ${day}`;
+
+                    var weatherText = '🌤️ Bridgeport, CT'; // Default fallback
+
+                    // Fetch weather
+                    var apiKey = 'demo'; // Replace with actual API key if needed
+                    var city = 'Bridgeport';
+                    var state = 'CT';
+                    var country = 'US';
+                    var url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${state},${country}&units=imperial&appid=${apiKey}`;
+
+                    try {
+                        var response = await fetch(url);
+                        if (response.ok) {
+                            var data = await response.json();
+                            var temp = Math.round(data.main.temp);
+                            var description = data.weather[0].description;
+                            weatherText = `🌤️ ${temp}°F`; // Compact weather display
+                        }
+                    } catch (e) {
+                        console.error('Weather API error:', e);
+                    }
+
+                    dateTimeWeatherDisplay.innerHTML = `📅 ${dateFormatted}<br>🕐 ${timeFormatted} ${weatherText}`;
+
+                } catch (e) {
+                    console.error('Date/Time/Weather error:', e);
+                    dateTimeWeatherDisplay.textContent = 'Error loading info';
+                }
+            }
+
+            updateDateTimeWeather();
+            setInterval(updateDateTimeWeather, 1000); // Update every second
+        })();
+
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+
+        // Dropdown toggles
+        (function() {
+            // MGE Experiments dropdown
+            var mgeToggle = document.getElementById('mge-experiments-dropdown');
+            var mgeMenu = document.getElementById('mge-experiments-menu');
+
+            if (mgeToggle && mgeMenu) {
+                mgeToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mgeMenu.classList.toggle('show');
+                });
+            }
+
+            // Mobile misc dropdown
+            var mobileMiscToggle = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMiscMenu = document.getElementById('mobile-quick-links-menu');
+
+            if (mobileMiscToggle && mobileMiscMenu) {
+                mobileMiscToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    mobileMiscMenu.classList.toggle('show');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (mgeMenu && !mgeMenu.contains(e.target) && mgeToggle && !mgeToggle.contains(e.target)) {
+                    mgeMenu.classList.remove('show');
+                }
+                if (mobileMiscMenu && !mobileMiscMenu.contains(e.target) && mobileMiscToggle && !mobileMiscToggle.contains(e.target)) {
+                    mobileMiscMenu.classList.remove('show');
+                }
+            });
+        })();
+
+        // Sidebar collapse functionality
+        (function() {
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var collapseLeftBtn = document.getElementById('collapse-left-btn');
+            var collapseRightBtn = document.getElementById('collapse-right-btn');
+            var dashboardContainer = document.getElementById('dashboard-container');
+
+            function toggleSidebar(sidebar, button, isLeft) {
+                var isCollapsed = sidebar.classList.contains('collapsed');
+                sidebar.classList.toggle('collapsed', !isCollapsed);
+                button.classList.toggle('collapsed', !isCollapsed);
+                button.textContent = isCollapsed ? (isLeft ? '◀' : '▶') : (isLeft ? '▶' : '◀');
+                dashboardContainer.classList.toggle('left-collapsed', isLeft && !isCollapsed);
+                dashboardContainer.classList.toggle('right-collapsed', !isLeft && !isCollapsed);
+            }
+
+            if (collapseLeftBtn && leftSidebar) {
+                collapseLeftBtn.addEventListener('click', function() {
+                    toggleSidebar(leftSidebar, collapseLeftBtn, true);
+                });
+            }
+            if (collapseRightBtn && rightSidebar) {
+                collapseRightBtn.addEventListener('click', function() {
+                    toggleSidebar(rightSidebar, collapseRightBtn, false);
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>

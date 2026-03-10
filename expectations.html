@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Class Expectations | Mr. Gonzalez STEM</title>
+        <meta name="description"
+            content="Class expectations for grades 1-5: individual work, finding your focus, and choosing your path." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <script src="status-bar.js" defer></script>
+        <script src="ticker-nav.js" defer></script>
+        <style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            --primary-color: #6B8E9F;
+            --secondary-color: #8FA8B5;
+            --accent-color: #A8C4D0;
+            --bg-gradient-1: #F5F7FA;
+            --bg-gradient-2: #E8ECF1;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #CBD5E1;
+            --shadow-sm: rgba(0, 0, 0, 0.05);
+            --shadow-md: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4A90A4;
+            --secondary-color: #6B9DB5;
+            --accent-color: #7FB3C8;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        .expectations-intro {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+            border: 3px solid rgba(59, 130, 246, 0.4);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+        }
+
+        .expectations-intro h2 {
+            color: #1e40af;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        .expectations-intro p {
+            color: #475569;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            line-height: 1.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .grade-section {
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px var(--shadow-md);
+        }
+
+        .grade-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid var(--border-color);
+        }
+
+        .grade-number {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+            border: 2px solid rgba(59, 130, 246, 0.4);
+            border-radius: 15px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1e40af;
+            flex-shrink: 0;
+        }
+
+        .grade-title {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .expectations-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .expectations-list li {
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.6), rgba(219, 234, 254, 0.4));
+            border-left: 4px solid rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            line-height: 1.7;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .expectations-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+            border-left-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .expectations-list li strong {
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        .choice-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .choice-highlight h3 {
+            color: #065f46;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .choice-highlight p {
+            color: #047857;
+            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        body.dark-mode .expectations-intro {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.25));
+            border-color: rgba(96, 165, 250, 0.5);
+        }
+
+        body.dark-mode .expectations-intro h2 {
+            color: #60a5fa;
+        }
+
+        body.dark-mode .expectations-intro p {
+            color: #c7d2fe;
+        }
+
+        body.dark-mode .grade-number {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.3), rgba(59, 130, 246, 0.3));
+            border-color: rgba(96, 165, 250, 0.6);
+            color: #60a5fa;
+        }
+
+        body.dark-mode .expectations-list li {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(37, 99, 235, 0.2));
+            border-left-color: rgba(96, 165, 250, 0.6);
+            color: #c7d2fe;
+        }
+
+        body.dark-mode .expectations-list li strong {
+            color: #60a5fa;
+        }
+
+        body.dark-mode .choice-highlight {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25));
+            border-color: rgba(16, 185, 129, 0.6);
+        }
+
+        body.dark-mode .choice-highlight h3 {
+            color: #6ee7b7;
+        }
+
+        body.dark-mode .choice-highlight p {
+            color: #34d399;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="background"></div>
+
+        <!-- Fixed Top Nav - Status Bar -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <div class="status-bar" id="status-bar">
+                    <!-- Breadcrumbs and status will be generated by status-bar.js -->
+                </div>
+                <div class="navbar-actions">
+                    <a href="/" class="navbar-brand" title="Home">⚡</a>
+                    <button class="theme-toggle" id="theme-toggle"
+                        aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/" class="sidebar-link">🏠 Home</a>
+                        <a href="/expectations.html" class="sidebar-link">⭐
+                            Class Expectations</a>
+                        <a href="/student-work.html" class="sidebar-link">🎨
+                            Student Work</a>
+                        <a href="/portfolio.html" class="sidebar-link">📁 My
+                            Portfolio</a>
+                        <a href="/submit-portfolio.html" class="sidebar-link">📮
+                            Submit Project</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                    <header class="header"
+                        style="margin-bottom: 2rem; position: relative; z-index: 1;">
+                        <img src="static/imgs/mrg-stem-hd.png"
+                            alt="Mr. Gonzalez's STEM Class Logo"
+                            class="header-logo">
+                        <h1>Class Expectations</h1>
+                        <p class="subtitle">Building Your Path to Success |
+                            Grades 1-5</p>
+                    </header>
+
+                    <!-- Grade 1 -->
+                    <section class="grade-section">
+                        <div class="grade-header">
+                            <div class="grade-number">1</div>
+                            <h2 class="grade-title">Grade 1 Expectations</h2>
+                        </div>
+                        <ul class="expectations-list">
+                            <li><strong>Walk in slowly and find your
+                                    station</strong></li>
+                            <li><strong>Choose your tools—computer, blocks, or
+                                    digital—and start working</strong></li>
+                            <li><strong>Do your own work and stay focused on
+                                    your project</strong></li>
+                            <li><strong>Clean up your station when you're
+                                    done</strong></li>
+                            <li><strong>Treat everything with respect—the
+                                    bricks,
+                                    the computers, and all tools</strong></li>
+                            <li><strong>Raise your hand if you need help and wait
+                                    patiently for Mr. Gonzalez</strong></li>
+                        </ul>
+                        <div class="choice-highlight">
+                            <h3>🎯 Your Choice Matters</h3>
+                            <p>You get to decide: work on the computer with
+                                Scratch or Tinkercad, build with blocks, or
+                                explore digital tools. Choose what you want to
+                                learn.</p>
+                        </div>
+                    </section>
+
+                    <!-- Grade 2 -->
+                    <section class="grade-section">
+                        <div class="grade-header">
+                            <div class="grade-number">2</div>
+                            <h2 class="grade-title">Grade 2 Expectations</h2>
+                        </div>
+                        <ul class="expectations-list">
+                            <li><strong>Walk in slowly and find your
+                                    station</strong></li>
+                            <li><strong>Choose your tools—computer, blocks, or
+                                    digital—and start working</strong></li>
+                            <li><strong>Do your own work and stay focused on
+                                    your project</strong></li>
+                            <li><strong>Clean up your station when you're
+                                    done</strong></li>
+                            <li><strong>Treat everything with respect—the
+                                    bricks,
+                                    the computers, and all tools</strong></li>
+                            <li><strong>Raise your hand if you need help and wait
+                                    patiently for Mr. Gonzalez</strong></li>
+                        </ul>
+                        <div class="choice-highlight">
+                            <h3>🎯 Your Choice Matters</h3>
+                            <p>You choose: work on computer programming, build
+                                structures with blocks, or explore digital
+                                design. Pick what you want to do.</p>
+                        </div>
+                    </section>
+
+                    <!-- Grade 3 -->
+                    <section class="grade-section">
+                        <div class="grade-header">
+                            <div class="grade-number">3</div>
+                            <h2 class="grade-title">Grade 3 Expectations</h2>
+                        </div>
+                        <ul class="expectations-list">
+                            <li><strong>Walk in slowly, find your station, and
+                                    get started right away</strong></li>
+                            <li><strong>Choose your tools—computer, blocks, or
+                                    digital—and work on your
+                                    project</strong></li>
+                            <li><strong>Do your own work and stay focused until
+                                    class ends</strong></li>
+                            <li><strong>Clean up your station and put everything
+                                    away when finished</strong></li>
+                            <li><strong>Treat everything with respect—the
+                                    bricks,
+                                    the computers, and all tools</strong></li>
+                            <li><strong>Raise your hand if you need help and wait
+                                    patiently for Mr. Gonzalez</strong></li>
+                        </ul>
+                        <div class="choice-highlight">
+                            <h3>🎯 Your Choice Matters</h3>
+                            <p>You choose: computer programming and game design,
+                                engineering with blocks, or digital art and
+                                design. The choice is yours.</p>
+                        </div>
+                    </section>
+
+                    <!-- Grade 4 -->
+                    <section class="grade-section">
+                        <div class="grade-header">
+                            <div class="grade-number">4</div>
+                            <h2 class="grade-title">Grade 4 Expectations</h2>
+                        </div>
+                        <ul class="expectations-list">
+                            <li><strong>Walk in slowly, find your station, and
+                                    begin working immediately</strong></li>
+                            <li><strong>Choose your tools—computer, blocks, or
+                                    digital—and stick with your
+                                    choice</strong></li>
+                            <li><strong>Do your own work, stay focused, and
+                                    complete your projects</strong></li>
+                            <li><strong>Clean up your station completely and
+                                    help others when asked</strong></li>
+                            <li><strong>Treat everything with respect—the
+                                    bricks,
+                                    the computers, and all tools</strong></li>
+                            <li><strong>Raise your hand if you need help and wait
+                                    patiently for Mr. Gonzalez</strong></li>
+                        </ul>
+                        <div class="choice-highlight">
+                            <h3>🎯 Your Choice Matters</h3>
+                            <p>You decide: computer programming and game
+                                development, structures with blocks, or digital
+                                art. The choice is yours.</p>
+                        </div>
+                    </section>
+
+                    <!-- Grade 5 -->
+                    <section class="grade-section">
+                        <div class="grade-header">
+                            <div class="grade-number">5</div>
+                            <h2 class="grade-title">Grade 5 Expectations</h2>
+                        </div>
+                        <ul class="expectations-list">
+                            <li><strong>Walk in slowly, find your station, and
+                                    start working right away</strong></li>
+                            <li><strong>Choose your tools—computer, blocks, or
+                                    digital—and work independently</strong></li>
+                            <li><strong>Do your own work, stay focused the
+                                    entire class, and finish your
+                                    projects</strong></li>
+                            <li><strong>Clean up your station, help others, and
+                                    be ready to share your work</strong></li>
+                            <li><strong>Treat everything with respect—the
+                                    bricks,
+                                    the computers, and all tools</strong></li>
+                            <li><strong>Raise your hand if you need help and wait
+                                    patiently for Mr. Gonzalez</strong></li>
+                        </ul>
+                        <div class="choice-highlight">
+                            <h3>🎯 Your Choice Matters</h3>
+                            <p>You choose: computer programming and game
+                                development, engineering with blocks, or digital
+                                experiences. The choice is yours.</p>
+                        </div>
+                    </section>
+
+                    <div class="expectations-intro" style="margin-top: 2rem;">
+                        <h2>What I Expect from Everyone</h2>
+
+                        <p>I want you to do <strong>your own work</strong>. Find
+                            something you love and keep working on it all year
+                            long.</p>
+                        <p><strong>You decide:</strong> Do you want to work on
+                            the computer? Or with blocks? Or with digital tools?
+                            You choose! I will help you learn whatever you
+                            pick.</p>
+                    </div>
+
+                </div>
+            </main>
+
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display"
+                        style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center;"></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+        <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                document.body.className = theme === 'dark' ? 'dark-mode' : '';
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+            
+            setTheme(currentTheme);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date display
+        (function() {
+            try {
+                var now = new Date();
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var month = now.toLocaleDateString('en-US', { month: 'short' });
+                var day = now.getDate();
+                var formatted = weekday + ', ' + month + ' ' + day;
+                
+                var sidebarDateEl = document.getElementById('sidebar-date-display');
+                if (sidebarDateEl) sidebarDateEl.textContent = '📅 ' + formatted;
+            } catch (e) {
+                console.error('Date error:', e);
+            }
+        })();
+
+        // Dropdown toggles
+        (function() {
+                        var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' },
+                { toggle: 'mobile-quick-links-dropdown', menu: 'mobile-quick-links-menu' }
+            ];
+            
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns
+                        dropdowns.forEach(function(d) {
+                            if (d.menu !== dropdown.menu) {
+                                var otherMenu = document.getElementById(d.menu);
+                                if (otherMenu) otherMenu.classList.remove('show');
+                            }
+                        });
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+            });
+        })();
+        </script>
+    </body>
+</html>

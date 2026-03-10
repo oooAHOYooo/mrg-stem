@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch Tutorials | Mr. Gonzalez's STEM Class</title>
+    <meta name="description" content="Complete collection of Scratch programming tutorials and lessons for students.">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tutorials-hero {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+            border-radius: 20px;
+            margin-bottom: 3rem;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+        .tutorials-hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: #1e40af;
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+        .tutorials-hero p {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: #475569;
+        }
+        .tutorials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .tutorial-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tutorial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        .tutorial-card > a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .tutorial-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .tutorial-card h3 {
+            color: #1e40af;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .tutorial-card .lesson-number {
+            color: #3b82f6;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tutorial-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .tutorial-card.featured {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        .tutorial-card.beginner {
+            border-left: 4px solid #10b981;
+        }
+        .tutorial-card.intermediate {
+            border-left: 4px solid #f59e0b;
+        }
+        .tutorial-card.advanced {
+            border-left: 4px solid #ef4444;
+        }
+        .pdf-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid rgba(239, 68, 68, 0.4);
+            border-radius: 8px;
+            color: #991b1b;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .pdf-link:hover {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .tutorial-card .pdf-links {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed rgba(59, 130, 246, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+        }
+        .tutorial-card.featured .pdf-links {
+            border-top-color: rgba(59, 130, 246, 0.3);
+        }
+        .tutorial-card .pdf-links .pdf-link {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.75rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <!-- Fixed Top Nav -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">⚡ Home</a>
+            <a href="/portfolio.html" class="navbar-brand">📁 My Portfolio</a>
+            <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+            <a href="/lesson-plans.html" class="navbar-brand">🏠 Take Home Projects</a>
+            <a href="/portfolio" class="navbar-brand">🏫 Class Portfolios</a>
+            <a href="/submit-portfolio.html" class="navbar-brand">📮 Submit</a>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Dashboard Layout -->
+    <div class="dashboard-container" id="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar sidebar-left" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📚 Quick Links</h3>
+                <nav class="sidebar-nav">
+                    <a href="/" class="sidebar-link">🏠 Home</a>
+                    <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                </nav>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">🎯 All Tutorials</h3>
+                <nav class="sidebar-nav">
+                    <a href="/scratch-tutorials.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)); border: 2px solid rgba(59, 130, 246, 0.3); font-weight: 700;">📚 Scratch Tutorials</a>
+                    <a href="/unreal-engine-level-design.html" class="sidebar-link">🏔️ Unreal Engine</a>
+                    <a href="/learn-html.html" class="sidebar-link">👑 HTML & CSS</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="tutorials-hero">
+                    <h1>🎮 Scratch Tutorials</h1>
+                    <p>Learn to code with Scratch! Start with the basics and build your way up to creating amazing games.</p>
+                </div>
+
+                <div class="tutorials-grid">
+                    <!-- Setup Tutorial -->
+                    <a href="/scratch-setup.html" class="tutorial-card beginner">
+                        <span class="icon">⚙️</span>
+                        <div class="lesson-number">Getting Started</div>
+                        <h3>Scratch Setup</h3>
+                        <p>Learn how to create a Scratch account and get started with your first project.</p>
+                    </a>
+
+                    <!-- Lesson 1: Movement -->
+                    <div class="tutorial-card beginner featured">
+                        <a href="/movement.html" style="text-decoration: none; color: inherit; display: block;">
+                            <span class="icon">🎮</span>
+                            <div class="lesson-number">Lesson 1</div>
+                            <h3>Movement</h3>
+                            <p>Learn the basics of sprite movement using arrow keys and WASD controls.</p>
+                        </a>
+                        <div class="pdf-links">
+                            <a href="/data/scratch/concepts/slp-move-1.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Movement PDF</a>
+                            <a href="/data/scratch/concepts/slp-jumpMechanics.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Jump Mechanics PDF</a>
+                        </div>
+                    </div>
+
+                    <!-- Lesson 2: Collision -->
+                    <a href="/collision.html" class="tutorial-card beginner">
+                        <span class="icon">💥</span>
+                        <div class="lesson-number">Lesson 2</div>
+                        <h3>Collision Detection</h3>
+                        <p>Detect when sprites touch each other and create interactive games.</p>
+                    </a>
+
+                    <!-- Lesson 3: 2-Player -->
+                    <a href="/2-player-controller.html" class="tutorial-card intermediate">
+                        <span class="icon">👥</span>
+                        <div class="lesson-number">Lesson 3</div>
+                        <h3>2-Player Controller</h3>
+                        <p>Create battle games with separate controls for two players.</p>
+                    </a>
+
+                    <!-- Lesson 4: Projectiles -->
+                    <a href="/lesson-4-projectiles-powerups.html" class="tutorial-card intermediate">
+                        <span class="icon">🚀</span>
+                        <div class="lesson-number">Lesson 4</div>
+                        <h3>Projectiles & Power-ups</h3>
+                        <p>Add shooting mechanics, clones, and power-up items to your games.</p>
+                    </a>
+
+                    <!-- Geometry Dash Tutorial -->
+                    <a href="/scratch-geometry-dash.html" class="tutorial-card intermediate">
+                        <span class="icon">⭐</span>
+                        <div class="lesson-number">Featured Tutorial</div>
+                        <h3>Geometry Dash</h3>
+                        <p>Build your own Geometry Dash-style endless runner game in Scratch.</p>
+                    </a>
+
+                    <!-- Project Handouts -->
+                    <div class="tutorial-card intermediate featured">
+                        <div style="text-decoration: none; color: inherit; display: block;">
+                            <span class="icon">🎨</span>
+                            <div class="lesson-number">Featured Tutorial</div>
+                            <h3>Project Handouts</h3>
+                            <p>Complete step-by-step PDF guides for building full games and projects from start to finish.</p>
+                        </div>
+                        <div class="pdf-links">
+                            <a href="/data/scratch/handouts/slp-pong.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Pong</a>
+                            <a href="/data/scratch/handouts/slp-catch.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Catch</a>
+                            <a href="/data/scratch/handouts/slp-maze.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Maze</a>
+                            <a href="/data/scratch/handouts/slp-fly.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Fly</a>
+                            <a href="/data/scratch/handouts/slp-face.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Face</a>
+                            <a href="/data/scratch/handouts/slp-pet.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Pet</a>
+                            <a href="/data/scratch/handouts/slp-story.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" onclick="event.stopPropagation();">📥 Story</a>
+                        </div>
+                    </div>
+
+                    <!-- Final Challenge -->
+                    <a href="/major-student-challenge.html" class="tutorial-card advanced">
+                        <span class="icon">🏆</span>
+                        <div class="lesson-number">Final Challenge</div>
+                        <h3>Create Your Own Game</h3>
+                        <p>Put it all together! Plan, build, and share your own complete Scratch game.</p>
+                    </a>
+                </div>
+
+                <!-- PDF Resources Section -->
+                <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)); border: 3px solid rgba(59, 130, 246, 0.4); box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15); border-radius: 20px; padding: 2rem; margin-top: 3rem; text-align: center;">
+                    <div style="margin-bottom: 1rem;">
+                        <span style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 1px;">📚 All Step-by-Step PDF Resources</span>
+                    </div>
+                    <h2 style="color: #1e40af; font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 1rem;">Download Complete Tutorial PDFs</h2>
+                    <p style="color: #475569; font-size: clamp(1rem, 2vw, 1.2rem); margin-bottom: 2rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+                        Get the complete step-by-step PDF guides for all our Scratch tutorials. Perfect for offline learning or printing!
+                    </p>
+                    
+                    <!-- Concept PDFs -->
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #1e40af; font-size: clamp(1.2rem, 2.5vw, 1.5rem); margin-bottom: 1rem;">🎯 Concept Tutorials</h3>
+                        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1rem;">Step-by-step guides for core Scratch concepts:</p>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem;">
+                            <a href="/data/scratch/concepts/slp-move-1.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 1rem; padding: 0.75rem 1.25rem;">📥 Movement Tutorial PDF</a>
+                            <a href="/data/scratch/concepts/slp-jumpMechanics.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 1rem; padding: 0.75rem 1.25rem;">📥 Jump Mechanics PDF</a>
+                        </div>
+                        <p style="color: #64748b; font-size: 0.85rem; font-style: italic;">📍 Location: <code style="background: rgba(59, 130, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">/data/scratch/concepts/</code></p>
+                    </div>
+
+                    <!-- Project Handout PDFs -->
+                    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px dashed rgba(59, 130, 246, 0.3);">
+                        <h3 style="color: #1e40af; font-size: clamp(1.2rem, 2.5vw, 1.5rem); margin-bottom: 1rem;">🎨 Project Handouts</h3>
+                        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1rem;">Complete project tutorials for building full games:</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                            <a href="/data/scratch/handouts/slp-pong.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Pong Game PDF</a>
+                            <a href="/data/scratch/handouts/slp-catch.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Catch Game PDF</a>
+                            <a href="/data/scratch/handouts/slp-maze.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Maze Game PDF</a>
+                            <a href="/data/scratch/handouts/slp-fly.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Fly Game PDF</a>
+                            <a href="/data/scratch/handouts/slp-face.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Face Animation PDF</a>
+                            <a href="/data/scratch/handouts/slp-pet.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Pet Simulator PDF</a>
+                            <a href="/data/scratch/handouts/slp-story.pdf" target="_blank" rel="noopener noreferrer" class="pdf-link" style="font-size: 0.9rem; padding: 0.6rem 1rem;">📥 Story Game PDF</a>
+                        </div>
+                        <p style="color: #64748b; font-size: 0.85rem; font-style: italic;">📍 Location: <code style="background: rgba(59, 130, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">/data/scratch/handouts/</code></p>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 10px; border-left: 4px solid rgba(59, 130, 246, 0.5); text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <p style="color: #1e40af; margin: 0; font-size: 0.95rem; line-height: 1.6;">
+                            <strong>💡 Tip:</strong> Each PDF contains detailed instructions, code examples, and visual guides. Download them to follow along offline or share with classmates!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">📅 Today</h3>
+                <div id="sidebar-date-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center;"></div>
+                <div id="sidebar-time-weather-display" style="font-weight: 500; color: var(--text-secondary); font-size: clamp(0.75rem, 1.4vw, 0.9rem); margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center; line-height: 1.4;"></div>
+                <div class="sidebar-divider"></div>
+                <h3 class="sidebar-title">💡 Tip of the Day</h3>
+                <div class="tip-of-day">
+                    <span class="tip-icon">💡</span>
+                    <p class="tip-text">Start with Lesson 1 if you're new to Scratch! Each lesson builds on the previous one.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Fixed Bottom Nav -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+            
+            setTheme(currentTheme);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date display
+        (function() {
+            try {
+                var now = new Date();
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var month = now.toLocaleDateString('en-US', { month: 'short' });
+                var day = now.getDate();
+                var formatted = weekday + ', ' + month + ' ' + day;
+                
+                var sidebarDateEl = document.getElementById('sidebar-date-display');
+                if (sidebarDateEl) sidebarDateEl.textContent = '📅 ' + formatted;
+            } catch (e) {
+                console.error('Date error:', e);
+            }
+        })();
+
+        // Combined Time and Weather display
+        (function() {
+            var weatherData = '🌤️ Bridgeport, CT';
+            
+            async function updateWeather() {
+                try {
+                    var city = 'Bridgeport';
+                    var state = 'CT';
+                    var country = 'US';
+                    var url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${state},${country}&units=imperial&appid=demo`;
+                    
+                    try {
+                        var response = await fetch(url);
+                        if (response.ok) {
+                            var data = await response.json();
+                            var temp = Math.round(data.main.temp);
+                            weatherData = `🌤️ ${temp}°F`;
+                        } else {
+                            weatherData = '🌤️ Bridgeport, CT';
+                        }
+                    } catch (e) {
+                        weatherData = '🌤️ Bridgeport, CT';
+                    }
+                    updateCombinedDisplay();
+                } catch (e) {
+                    console.error('Weather error:', e);
+                }
+            }
+            
+            function updateCombinedDisplay() {
+                try {
+                    var now = new Date();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+                    var timeFormatted = hours + ':' + minutes + ':' + seconds;
+                    
+                    var combinedDisplay = document.getElementById('sidebar-time-weather-display');
+                    if (combinedDisplay) {
+                        combinedDisplay.innerHTML = `<span>🕐 ${timeFormatted}</span> <span style="margin-left: 0.5rem;">${weatherData}</span>`;
+                    }
+                } catch (e) {
+                    console.error('Time error:', e);
+                }
+            }
+            
+            updateWeather();
+            updateCombinedDisplay();
+            setInterval(updateCombinedDisplay, 1000);
+            setInterval(updateWeather, 1800000);
+        })();
+
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>

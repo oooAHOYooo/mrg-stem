@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Submit Your Work to Mr. G | MRG STEM Class</title>
+        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="portfolio.css">
+        <script src="portfolio-api.js" defer></script>
+        <script src="portfolio.js" defer></script>
+        <script src="status-bar.js" defer></script>
+        <style>
+            .portfolio-page {
+                min-height: 100vh;
+                padding: 1rem;
+            }
+
+            .portfolio-hero {
+                text-align: center;
+                padding: 3rem 2rem;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15));
+                border-radius: 25px;
+                margin-bottom: 3rem;
+                border: 3px solid rgba(59, 130, 246, 0.3);
+            }
+
+            .portfolio-hero h1 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #1e40af;
+                margin-bottom: 1rem;
+                font-weight: 900;
+                text-shadow: 2px 2px 4px rgba(59, 130, 246, 0.2);
+            }
+
+            .portfolio-hero p {
+                font-size: clamp(1.2rem, 3vw, 1.8rem);
+                color: #475569;
+                margin-bottom: 2rem;
+                line-height: 1.6;
+            }
+
+            .big-button {
+                display: inline-block;
+                padding: 1.5rem 3rem;
+                font-size: clamp(1.3rem, 4vw, 2rem);
+                font-weight: 800;
+                border-radius: 20px;
+                text-decoration: none;
+                border: 4px solid;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                margin: 0.5rem;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            }
+
+            .big-button:hover {
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            }
+
+            .big-button-primary {
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+                border-color: #1e40af;
+            }
+
+            .big-button-primary:hover {
+                background: linear-gradient(135deg, #2563eb, #1e40af);
+            }
+
+            .big-button-secondary {
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                border-color: #047857;
+            }
+
+            .big-button-secondary:hover {
+                background: linear-gradient(135deg, #059669, #047857);
+            }
+
+            .big-button-tertiary {
+                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                color: white;
+                border-color: #6b21a8;
+            }
+
+            .big-button-tertiary:hover {
+                background: linear-gradient(135deg, #7c3aed, #6b21a8);
+            }
+
+            .instruction-card {
+                background: rgba(255, 255, 255, 0.95);
+                border: 3px solid rgba(59, 130, 246, 0.3);
+                border-radius: 20px;
+                padding: 2.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 8px 24px rgba(59, 130, 246, 0.1);
+            }
+
+            .instruction-card h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #1e40af;
+                margin-bottom: 1.5rem;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .instruction-card ol {
+                font-size: clamp(1.1rem, 3vw, 1.4rem);
+                line-height: 2.2;
+                color: #475569;
+                padding-left: 2rem;
+            }
+
+            .instruction-card li {
+                margin-bottom: 1rem;
+                font-weight: 500;
+            }
+
+            .instruction-card li strong {
+                color: #1e40af;
+                font-size: 1.1em;
+            }
+
+            .emoji-large {
+                font-size: 3rem;
+                display: inline-block;
+                margin: 0 0.5rem;
+            }
+
+            .project-type-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 2rem;
+                margin: 2rem 0;
+            }
+
+            .project-type-card {
+                background: rgba(239, 246, 255, 0.9);
+                border: 4px solid rgba(59, 130, 246, 0.4);
+                border-radius: 20px;
+                padding: 2rem;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+
+            .project-type-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: 0 12px 30px rgba(59, 130, 246, 0.3);
+                border-color: rgba(59, 130, 246, 0.7);
+            }
+
+            .project-type-card .emoji {
+                font-size: 4rem;
+                margin-bottom: 1rem;
+            }
+
+            .project-type-card h3 {
+                font-size: clamp(1.5rem, 4vw, 2rem);
+                color: #1e40af;
+                margin-bottom: 1rem;
+                font-weight: 800;
+            }
+
+            .project-type-card p {
+                font-size: clamp(1rem, 2.5vw, 1.2rem);
+                color: #64748b;
+                line-height: 1.7;
+                margin-bottom: 1.5rem;
+            }
+
+            .student-name-display {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+                border: 3px solid rgba(16, 185, 129, 0.4);
+                border-radius: 20px;
+                padding: 2rem;
+                margin-bottom: 2rem;
+                text-align: center;
+            }
+
+            .student-name-display h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #065f46;
+                margin-bottom: 0.5rem;
+                font-weight: 800;
+            }
+
+            .student-name-display p {
+                font-size: clamp(1.1rem, 3vw, 1.4rem);
+                color: #047857;
+                margin: 0;
+            }
+
+            .change-name-btn {
+                margin-top: 1rem;
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+                background: rgba(16, 185, 129, 0.2);
+                border: 2px solid rgba(16, 185, 129, 0.5);
+                border-radius: 10px;
+                color: #065f46;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+
+            .change-name-btn:hover {
+                background: rgba(16, 185, 129, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .portfolio-stats {
+                display: flex;
+                justify-content: center;
+                gap: 2rem;
+                margin: 2rem 0;
+                flex-wrap: wrap;
+            }
+
+            .stat-box {
+                background: rgba(255, 255, 255, 0.9);
+                border: 3px solid rgba(59, 130, 246, 0.3);
+                border-radius: 15px;
+                padding: 1.5rem 2rem;
+                text-align: center;
+                min-width: 150px;
+            }
+
+            .stat-number {
+                font-size: clamp(2.5rem, 6vw, 4rem);
+                font-weight: 900;
+                color: #1e40af;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-label {
+                font-size: clamp(1rem, 2.5vw, 1.3rem);
+                color: #64748b;
+                font-weight: 600;
+            }
+
+            .empty-portfolio {
+                text-align: center;
+                padding: 4rem 2rem;
+                background: rgba(239, 246, 255, 0.5);
+                border: 3px dashed rgba(59, 130, 246, 0.4);
+                border-radius: 20px;
+                margin: 2rem 0;
+            }
+
+            .empty-portfolio .emoji {
+                font-size: 5rem;
+                margin-bottom: 1rem;
+            }
+
+            .empty-portfolio h3 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #1e40af;
+                margin-bottom: 1rem;
+                font-weight: 800;
+            }
+
+            .empty-portfolio p {
+                font-size: clamp(1.1rem, 3vw, 1.4rem);
+                color: #64748b;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+
+            .help-section {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.1));
+                border: 3px solid rgba(245, 158, 11, 0.4);
+                border-radius: 20px;
+                padding: 2.5rem;
+                margin-top: 3rem;
+            }
+
+            .help-section h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                color: #92400e;
+                margin-bottom: 1.5rem;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .help-item {
+                background: rgba(255, 255, 255, 0.8);
+                border: 2px solid rgba(245, 158, 11, 0.3);
+                border-radius: 15px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .help-item h4 {
+                font-size: clamp(1.3rem, 3.5vw, 1.6rem);
+                color: #b45309;
+                margin-bottom: 0.75rem;
+                font-weight: 700;
+            }
+
+            .help-item p {
+                font-size: clamp(1rem, 2.5vw, 1.2rem);
+                color: #78350f;
+                line-height: 1.7;
+                margin: 0;
+            }
+
+            @media (max-width: 768px) {
+                .big-button {
+                    display: block;
+                    width: 100%;
+                    margin: 0.5rem 0;
+                }
+
+                .portfolio-stats {
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .stat-box {
+                    width: 100%;
+                    max-width: 300px;
+                }
+            }
+
+            body.dark-mode .instruction-card {
+                background: rgba(15, 15, 26, 0.95);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .instruction-card h2 {
+                color: #60a5fa;
+            }
+
+            body.dark-mode .instruction-card li {
+                color: #c7d2fe;
+            }
+
+            body.dark-mode .instruction-card li strong {
+                color: #93c5fd;
+            }
+
+            body.dark-mode .project-type-card {
+                background: rgba(30, 58, 138, 0.3);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .project-type-card h3 {
+                color: #60a5fa;
+            }
+
+            body.dark-mode .project-type-card p {
+                color: #c7d2fe;
+            }
+
+            body.dark-mode .student-name-display {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+                border-color: rgba(16, 185, 129, 0.5);
+            }
+
+            body.dark-mode .student-name-display h2 {
+                color: #6ee7b7;
+            }
+
+            body.dark-mode .student-name-display p {
+                color: #34d399;
+            }
+
+            body.dark-mode .stat-box {
+                background: rgba(15, 15, 26, 0.9);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .stat-number {
+                color: #60a5fa;
+            }
+
+            body.dark-mode .stat-label {
+                color: #93c5fd;
+            }
+
+            body.dark-mode .empty-portfolio {
+                background: rgba(30, 58, 138, 0.3);
+                border-color: rgba(96, 165, 250, 0.4);
+            }
+
+            body.dark-mode .empty-portfolio h3 {
+                color: #60a5fa;
+            }
+
+            body.dark-mode .empty-portfolio p {
+                color: #c7d2fe;
+            }
+
+            body.dark-mode .help-section {
+                background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+                border-color: rgba(245, 158, 11, 0.5);
+            }
+
+            body.dark-mode .help-section h2 {
+                color: #fbbf24;
+            }
+
+            body.dark-mode .help-item {
+                background: rgba(15, 15, 26, 0.8);
+                border-color: rgba(245, 158, 11, 0.4);
+            }
+
+            body.dark-mode .help-item h4 {
+                color: #fbbf24;
+            }
+
+            body.dark-mode .help-item p {
+                color: #fde68a;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="background"></div>
+        
+        <!-- Fixed Top Nav - Status Bar -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <div class="status-bar" id="status-bar">
+                    <!-- Breadcrumbs and status will be generated by status-bar.js -->
+                </div>
+                <div class="navbar-actions">
+                    <a href="/" class="navbar-brand" title="Home">⚡</a>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar Collapse Buttons -->
+        <button class="sidebar-collapse-btn left" id="collapse-left-btn" title="Toggle left sidebar">◀</button>
+        <button class="sidebar-collapse-btn right" id="collapse-right-btn" title="Toggle right sidebar">▶</button>
+        
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container" id="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left" id="sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/portfolio.html" class="sidebar-link">📮 Submit to Mr. G</a>
+                        <a href="/" class="sidebar-link">⚡ Home</a>
+                        <a href="/student-work.html" class="sidebar-link">🎨 Student Work</a>
+                        <a href="/lesson-plans.html" class="sidebar-link">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="sidebar-link">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2)); border-color: rgba(245, 158, 11, 0.4); font-weight: 700;">📮 Submit Project</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Lessons</h3>
+                    <div class="sidebar-dropdown">
+                        <button class="sidebar-dropdown-toggle" id="scratch-lessons-dropdown-sidebar" aria-haspopup="true" aria-expanded="false" style="width: 100%; text-align: left; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(239, 246, 255, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); color: #1e40af; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;">
+                            <span>🎮 Scratch Lessons</span>
+                            <span style="font-size: 0.7rem;">▼</span>
+                        </button>
+                        <nav class="sidebar-nav sidebar-dropdown-menu" id="scratch-lessons-menu-sidebar" style="display: none; margin-top: 0.5rem; padding-left: 0.5rem;">
+                            <a href="/movement.html" class="sidebar-link">🎮 Lesson 1: Movement</a>
+                            <a href="/collision.html" class="sidebar-link">💥 Lesson 2: Collision</a>
+                            <a href="/2-player-controller.html" class="sidebar-link">👥 Lesson 3: 2-Player</a>
+                            <a href="/lesson-4-projectiles-powerups.html" class="sidebar-link">🚀 Lesson 4: Projectiles</a>
+                            <a href="/major-student-challenge.html" class="sidebar-link">🏆 Final Challenge</a>
+                        </nav>
+                    </div>
+                    <nav class="sidebar-nav" style="margin-top: 0.5rem;">
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">🎨 Unreal Engine</a>
+                        <a href="/learn-html.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); border-color: rgba(16, 185, 129, 0.4);">👑 Build Your Empire!</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🧪 MGE Experiments</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/mge.html" class="sidebar-link">🧪 All Experiments</a>
+                        <a href="/mge-skating.html" class="sidebar-link">⛸️ Skating Game</a>
+                        <a href="/mge-smash.html" class="sidebar-link">⚔️ Super Smash Fighters</a>
+                        <a href="/mge-parkour.html" class="sidebar-link">🏃 Parkour Runner</a>
+                        <a href="/mge-dash3d.html" class="sidebar-link">💥 3D Dash</a>
+                    </nav>
+                </div>
+            </aside>
+            
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <div class="portfolio-page">
+                    <!-- Hero Section -->
+                    <div class="portfolio-hero">
+                        <h1>📮 Send Your Work to Mr. Gonzalez</h1>
+                        <p>Collect your amazing projects and send them to Mr. G to immortalize your work!<br>Your creations will be preserved and celebrated!</p>
+                        
+                        <!-- Student Name Display -->
+                        <div class="student-name-display" id="student-name-display">
+                            <h2 id="student-name-text">Loading...</h2>
+                            <p>Collect your projects here, then submit them to Mr. G!</p>
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(245, 158, 11, 0.2); border-radius: 10px; border: 2px solid rgba(245, 158, 11, 0.4);">
+                                <p style="margin: 0; color: #92400e; font-size: 0.95rem; font-weight: 600;">
+                                    ⭐ <strong>Your work matters!</strong> When you submit to Mr. G, your projects will be saved forever and celebrated!
+                                </p>
+                            </div>
+                            <button class="change-name-btn" onclick="changeStudentName()" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #92400e;">✏️ Change My Name</button>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="margin-top: 2rem;">
+                            <button class="big-button big-button-primary" onclick="showAddProjectForm()">
+                                ➕ Add a Project to Submit
+                            </button>
+                            <a href="/submit-portfolio.html" class="big-button" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #92400e; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-size: clamp(1.3rem, 4vw, 2rem);">
+                                📮 Submit All to Mr. G
+                            </a>
+                        </div>
+
+                        <!-- Portfolio Stats -->
+                        <div class="portfolio-stats" id="portfolio-stats" style="display: none;">
+                            <div class="stat-box">
+                                <div class="stat-number" id="total-projects">0</div>
+                                <div class="stat-label">Projects</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-number" id="total-types">0</div>
+                                <div class="stat-label">Types</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="instruction-card">
+                        <h2><span class="emoji-large">📋</span> How to Prepare Your Work for Mr. G</h2>
+                        <ol>
+                            <li><strong>Click the big blue button</strong> that says "➕ Add a Project to Submit"</li>
+                            <li><strong>Fill out the form:</strong>
+                                <ul style="margin-top: 0.5rem; padding-left: 2rem; font-size: 0.9em;">
+                                    <li>Give your project a name (like "My Awesome Game")</li>
+                                    <li>Choose what type it is (Tinkercad, Scratch, Video, or Other)</li>
+                                    <li>Write about what you made and what you learned</li>
+                                    <li>Add links to your work (like your Scratch project URL)</li>
+                                    <li>Add tags (like "game" or "coding")</li>
+                                </ul>
+                            </li>
+                            <li><strong>Click "Add to Collection"</strong> - Your project is now ready to submit!</li>
+                            <li><strong>When you're ready, click "📮 Submit All to Mr. G"</strong> to send all your work to Mr. Gonzalez to immortalize it!</li>
+                        </ol>
+                    </div>
+
+                    <!-- Project Types -->
+                    <div class="instruction-card">
+                        <h2><span class="emoji-large">🎯</span> What Can You Add?</h2>
+                        <div class="project-type-cards">
+                            <div class="project-type-card">
+                                <div class="emoji">🌍</div>
+                                <h3>Tinkercad World</h3>
+                                <p>3D designs you created in Tinkercad! Buildings, characters, or anything you designed!</p>
+                                <button class="big-button big-button-primary" onclick="showAddProjectForm('tinkercad')" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+                                    Add Tinkercad Project
+                                </button>
+                            </div>
+                            <div class="project-type-card">
+                                <div class="emoji">🎮</div>
+                                <h3>Scratch Game</h3>
+                                <p>Games you made in Scratch! Platformers, puzzles, or any game you coded!</p>
+                                <button class="big-button big-button-primary" onclick="showAddProjectForm('scratch')" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+                                    Add Scratch Game
+                                </button>
+                            </div>
+                            <div class="project-type-card">
+                                <div class="emoji">🎬</div>
+                                <h3>Video Project</h3>
+                                <p>Videos you filmed and edited! Stories, tutorials, or anything you created!</p>
+                                <button class="big-button big-button-primary" onclick="showAddProjectForm('video')" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+                                    Add Video Project
+                                </button>
+                            </div>
+                            <div class="project-type-card">
+                                <div class="emoji">✨</div>
+                                <h3>Other Project</h3>
+                                <p>Anything else you created! Art, music, writing, or any creative project!</p>
+                                <button class="big-button big-button-primary" onclick="showAddProjectForm('other')" style="font-size: 1rem; padding: 0.75rem 1.5rem;">
+                                    Add Other Project
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projects Ready to Submit Section -->
+                    <div class="instruction-card">
+                        <h2><span class="emoji-large">📦</span> Projects Ready to Submit</h2>
+                        <p style="font-size: clamp(1.1rem, 3vw, 1.4rem); color: #475569; margin-bottom: 1.5rem; line-height: 1.7;">
+                            These are the projects you've collected. When you're ready, click <strong>"📮 Submit All to Mr. G"</strong> to send them all to Mr. Gonzalez to immortalize your amazing work!
+                        </p>
+                        <div id="portfolio-items-container">
+                            <div class="empty-portfolio">
+                                <div class="emoji">📭</div>
+                                <h3>No Projects Yet</h3>
+                                <p>Start collecting your amazing projects!<br>Click the big blue button above to add your first project!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submission Section -->
+                    <div class="help-section" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15)); border-color: rgba(245, 158, 11, 0.5);">
+                        <h2><span class="emoji-large">⭐</span> Immortalize Your Work with Mr. Gonzalez</h2>
+                        <div class="help-item" style="background: rgba(255, 255, 255, 0.9); border-color: rgba(245, 158, 11, 0.4);">
+                            <h4 style="color: #92400e;">📮 Submit Your Work to Be Preserved Forever</h4>
+                            <p style="color: #78350f; margin-bottom: 1rem; font-size: clamp(1.1rem, 3vw, 1.4rem); line-height: 1.8;">
+                                When you submit your work to Mr. G, it will be <strong>saved forever</strong> and celebrated! Mr. Gonzalez will review your amazing projects and make sure they're preserved for everyone to see.
+                            </p>
+                            <p style="color: #78350f; margin-bottom: 1rem; font-size: clamp(1rem, 2.5vw, 1.2rem); line-height: 1.7;">
+                                You can submit:
+                            </p>
+                            <ul style="color: #78350f; padding-left: 1.5rem; line-height: 2; margin-bottom: 1.5rem; font-size: clamp(1rem, 2.5vw, 1.2rem);">
+                                <li>✅ Completed projects (games, designs, videos)</li>
+                                <li>💡 Ideas and concepts you want to build</li>
+                                <li>⭐ Reviews of games, apps, or websites</li>
+                                <li>🚧 Work-in-progress projects</li>
+                                <li>✨ Any creative work you're proud of!</li>
+                            </ul>
+                            <div style="margin-top: 1.5rem; text-align: center;">
+                                <a href="/submit-portfolio.html" class="big-button" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-color: #92400e; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-size: clamp(1.3rem, 4vw, 2rem); padding: 1.5rem 3rem;">
+                                    📮 Submit All to Mr. G →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Help Section -->
+                    <div class="help-section">
+                        <h2><span class="emoji-large">💡</span> Need Help?</h2>
+                        <div class="help-item">
+                            <h4>❓ How do I add a project to submit?</h4>
+                            <p>Click the big blue "➕ Add a Project to Submit" button at the top of the page. Fill out the form with information about your project!</p>
+                        </div>
+                        <div class="help-item">
+                            <h4>✏️ Can I edit my projects before submitting?</h4>
+                            <p>Yes! Click the ✏️ Edit button on any project to change the information. Make sure everything is perfect before you submit to Mr. G!</p>
+                        </div>
+                        <div class="help-item">
+                            <h4>🗑️ How do I remove a project from my collection?</h4>
+                            <p>Click the 🗑️ Delete button on any project. It will ask you to confirm before removing it from your collection.</p>
+                        </div>
+                        <div class="help-item">
+                            <h4>📮 When should I submit to Mr. G?</h4>
+                            <p>Submit whenever you have projects you're proud of! You can submit multiple times throughout the year. Mr. G will review and immortalize all your amazing work!</p>
+                        </div>
+                        <div class="help-item">
+                            <h4>⭐ What happens after I submit?</h4>
+                            <p>Mr. Gonzalez will review your work and make sure it's saved forever! Your projects will be celebrated and preserved for everyone to see!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right" id="sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center;"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">💡 Tip of the Day</h3>
+                    <div class="tip-of-day">
+                        <span class="tip-icon">💡</span>
+                        <p class="tip-text">Start building your portfolio today! Every project you create is a step toward showcasing your creativity.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+        <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+            
+            setTheme(currentTheme);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Student name display
+        function updateStudentNameDisplay() {
+            const studentName = localStorage.getItem('student_name') || 'Student';
+            const nameText = document.getElementById('student-name-text');
+            if (nameText) {
+                nameText.textContent = `${studentName}'s Work Collection`;
+            }
+        }
+
+        function changeStudentName() {
+            const newName = prompt('Enter your name:', localStorage.getItem('student_name') || '');
+            if (newName && newName.trim()) {
+                localStorage.setItem('student_name', newName.trim());
+                updateStudentNameDisplay();
+                if (window.portfolioManager) {
+                    window.portfolioManager.currentStudent = newName.trim();
+                    window.portfolioManager.renderPortfolioList();
+                }
+            }
+        }
+
+        function showAddProjectForm(type = 'other') {
+            if (window.portfolioManager) {
+                window.portfolioManager.showPortfolioForm(type);
+            }
+        }
+
+        async         // Removed refreshPortfolio and exportPortfolio functions - not needed for submission-focused workflow
+
+        async function updateStats() {
+            if (!window.portfolioManager) return;
+            
+            const portfolios = await window.portfolioManager.getPortfolios();
+            const totalProjects = portfolios.length;
+            const totalTypes = new Set(portfolios.map(p => p.projectType)).size;
+            
+            document.getElementById('total-projects').textContent = totalProjects;
+            document.getElementById('total-types').textContent = totalTypes;
+            
+            const statsDiv = document.getElementById('portfolio-stats');
+            if (statsDiv) {
+                statsDiv.style.display = totalProjects > 0 ? 'flex' : 'none';
+            }
+        }
+
+        // Check if viewing another student's portfolio (from admin)
+        function checkViewMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewStudent = urlParams.get('view') || localStorage.getItem('view_student_portfolio');
+            
+            if (viewStudent) {
+                // Viewing another student's collection (admin view)
+                localStorage.removeItem('view_student_portfolio');
+                const studentName = decodeURIComponent(viewStudent);
+                document.getElementById('student-name-text').textContent = `${studentName}'s Work Collection`;
+                document.querySelector('.student-name-display p').textContent = 'Viewing this student\'s work collection';
+                document.querySelector('.change-name-btn').style.display = 'none';
+                
+                // Load that student's collection
+                if (window.portfolioManager) {
+                    window.portfolioManager.currentStudent = studentName;
+                    window.portfolioManager.renderPortfolioList();
+                }
+                
+                // Hide add buttons
+                document.querySelectorAll('.big-button-primary').forEach(btn => {
+                    if (btn.textContent.includes('Add')) {
+                        btn.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkViewMode();
+            updateStudentNameDisplay();
+            
+            // Wait for portfolio manager to initialize
+            setTimeout(async () => {
+                if (window.portfolioManager) {
+                    await window.portfolioManager.renderPortfolioList();
+                    updateStats();
+                    
+                    // Update stats when portfolio changes
+                    const observer = new MutationObserver(() => {
+                        updateStats();
+                    });
+                    const container = document.getElementById('portfolio-items-container');
+                    if (container) {
+                        observer.observe(container, { childList: true, subtree: true });
+                    }
+                }
+            }, 500);
+        });
+
+        // Date display
+        (function() {
+            try {
+                var now = new Date();
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var month = now.toLocaleDateString('en-US', { month: 'short' });
+                var day = now.getDate();
+                var formatted = weekday + ', ' + month + ' ' + day;
+                
+                var sidebarDateEl = document.getElementById('sidebar-date-display');
+                if (sidebarDateEl) sidebarDateEl.textContent = '📅 ' + formatted;
+            } catch (e) {
+                console.error('Date error:', e);
+            }
+        })();
+
+        // Sidebar collapse functionality
+        (function() {
+            var leftBtn = document.getElementById('collapse-left-btn');
+            var rightBtn = document.getElementById('collapse-right-btn');
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var dashboard = document.getElementById('dashboard-container');
+            
+            if (!leftBtn || !rightBtn || !leftSidebar || !rightSidebar || !dashboard) return;
+            
+            var leftCollapsed = localStorage.getItem('leftSidebarCollapsed') === 'true' || false;
+            var rightCollapsed = localStorage.getItem('rightSidebarCollapsed') === 'true' || false;
+            
+            function updateDashboardClass() {
+                dashboard.classList.remove('left-collapsed', 'right-collapsed', 'both-collapsed');
+                if (leftCollapsed && rightCollapsed) {
+                    dashboard.classList.add('both-collapsed');
+                } else if (leftCollapsed) {
+                    dashboard.classList.add('left-collapsed');
+                } else if (rightCollapsed) {
+                    dashboard.classList.add('right-collapsed');
+                }
+            }
+            
+            function applyLeftState() {
+                if (leftCollapsed) {
+                    leftSidebar.classList.add('collapsed');
+                    leftBtn.innerHTML = '▶';
+                    leftBtn.classList.add('collapsed');
+                } else {
+                    leftSidebar.classList.remove('collapsed');
+                    leftBtn.innerHTML = '◀';
+                    leftBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            function applyRightState() {
+                if (rightCollapsed) {
+                    rightSidebar.classList.add('collapsed');
+                    rightBtn.innerHTML = '◀';
+                    rightBtn.classList.add('collapsed');
+                } else {
+                    rightSidebar.classList.remove('collapsed');
+                    rightBtn.innerHTML = '▶';
+                    rightBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+            
+            applyLeftState();
+            applyRightState();
+            
+            if (leftBtn) {
+                leftBtn.addEventListener('click', function() {
+                    leftCollapsed = !leftCollapsed;
+                    localStorage.setItem('leftSidebarCollapsed', leftCollapsed);
+                    applyLeftState();
+                });
+            }
+            
+            if (rightBtn) {
+                rightBtn.addEventListener('click', function() {
+                    rightCollapsed = !rightCollapsed;
+                    localStorage.setItem('rightSidebarCollapsed', rightCollapsed);
+                    applyRightState();
+                });
+            }
+        })();
+
+        // Sidebar dropdown toggle
+        (function() {
+            var sidebarToggle = document.getElementById('scratch-lessons-dropdown-sidebar');
+            var sidebarMenu = document.getElementById('scratch-lessons-menu-sidebar');
+            
+            if (sidebarToggle && sidebarMenu) {
+                sidebarToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var isVisible = sidebarMenu.style.display === 'block';
+                    sidebarMenu.style.display = isVisible ? 'none' : 'block';
+                    var arrow = sidebarToggle.querySelector('span:last-child');
+                    if (arrow) {
+                        arrow.textContent = isVisible ? '▼' : '▲';
+                    }
+                });
+            }
+        })();
+        </script>
+    
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
+

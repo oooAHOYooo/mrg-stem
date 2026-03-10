@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Home Projects | Mr. G STEM</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .plans-hero {
+        text-align: center;
+        padding: 2.5rem 2rem;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.12));
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        border: 2px solid rgba(16, 185, 129, 0.35);
+      }
+      .plans-hero h1 {
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        color: #065f46;
+        margin-bottom: 0.5rem;
+        font-weight: 900;
+      }
+      .plans-hero p {
+        color: #047857;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .month-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(59, 130, 246, 0.2);
+        border-radius: 20px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+      }
+      .month-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      .month-title h2 {
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        color: #1e40af;
+        font-weight: 900;
+        margin: 0;
+      }
+      .month-title .sub {
+        color: #64748b;
+        font-weight: 700;
+      }
+      .weeks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+      }
+      .week-card {
+        background: rgba(239, 246, 255, 0.75);
+        border: 2px solid rgba(59, 130, 246, 0.25);
+        border-radius: 16px;
+        padding: 1.25rem;
+      }
+      .week-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: #1e40af;
+        font-weight: 900;
+        font-size: 1.25rem;
+      }
+      .week-card ul {
+        margin: 0.75rem 0 0 1.25rem;
+        color: #475569;
+        line-height: 1.8;
+        font-weight: 500;
+      }
+      .week-card a {
+        color: #1e40af;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .week-card a:hover {
+        text-decoration: underline;
+      }
+      .homework-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+        border: 2px solid rgba(245, 158, 11, 0.4);
+        border-radius: 8px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+      .week-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: #1e40af;
+        font-weight: 900;
+        font-size: 1.25rem;
+      }
+      .note {
+        background: rgba(245, 158, 11, 0.1);
+        border-left: 4px solid rgba(245, 158, 11, 0.6);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-top: 1.25rem;
+        color: #78350f;
+        font-weight: 600;
+      }
+      .construction-notice {
+        background: rgba(239, 68, 68, 0.15);
+        border: 3px solid rgba(239, 68, 68, 0.5);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        color: #991b1b;
+        font-weight: 700;
+        font-size: clamp(1.1rem, 2vw, 1.4rem);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+      }
+      .construction-notice strong {
+        display: block;
+        font-size: clamp(1.3rem, 3vw, 1.8rem);
+        margin-bottom: 0.5rem;
+        color: #dc2626;
+      }
+      body.dark-mode .construction-notice {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.6);
+        color: #fca5a5;
+      }
+      body.dark-mode .construction-notice strong {
+        color: #f87171;
+      }
+      body.dark-mode .plans-hero { border-color: rgba(16, 185, 129, 0.5); }
+      body.dark-mode .plans-hero h1 { color: #6ee7b7; }
+      body.dark-mode .plans-hero p { color: #34d399; }
+      body.dark-mode .month-card { background: rgba(15, 15, 26, 0.95); border-color: rgba(96, 165, 250, 0.35); }
+      body.dark-mode .month-title h2 { color: #60a5fa; }
+      body.dark-mode .month-title .sub { color: #93c5fd; }
+      body.dark-mode .week-card { background: rgba(30, 58, 138, 0.25); border-color: rgba(96, 165, 250, 0.35); }
+      body.dark-mode .week-card h3 { color: #93c5fd; }
+      body.dark-mode .week-card ul { color: #c7d2fe; }
+      body.dark-mode .week-card a { color: #bfdbfe; }
+      body.dark-mode .homework-badge {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(251, 191, 36, 0.25));
+        border-color: rgba(245, 158, 11, 0.5);
+        color: #fbbf24;
+      }
+      body.dark-mode .note { color: #fde68a; background: rgba(245, 158, 11, 0.16); border-left-color: rgba(245, 158, 11, 0.7); }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+
+    <nav class="navbar navbar-top">
+      <div class="navbar-container">
+        <a href="/" class="navbar-brand">⚡ Home</a>
+        <a href="/lesson-plans.html" class="navbar-brand">🏠 Take Home Projects</a>
+        <a href="/movement.html" class="navbar-brand">🎮 Scratch</a>
+        <a href="/unreal-engine-level-design.html" class="navbar-brand">🏔️ Unreal</a>
+        <a href="/learn-html.html" class="navbar-brand">👑 Build Empire</a>
+        <div style="display:flex; align-items:center; gap: 1rem;">
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="dashboard-main">
+      <div class="main-content-scroll">
+        <div class="plans-hero">
+          <h1>🏠 Take Home Projects</h1>
+          <p>
+            Organized by month, then week (Week 1, Week 2, Week 3, etc.). Work on these projects at home at your own pace!
+          </p>
+          <div style="margin-top: 1.5rem; padding: 1.25rem; background: rgba(245, 158, 11, 0.15); border-radius: 12px; border: 2px solid rgba(245, 158, 11, 0.3);">
+            <strong style="display: block; color: #92400e; font-size: 1.1rem; margin-bottom: 0.5rem;">🏠 Optional Homework</strong>
+            <p style="color: #78350f; margin: 0; font-size: 1rem; line-height: 1.6;">
+              Students: All lessons on this page can be completed at home as <strong>optional homework</strong>! 
+              Work at your own pace, practice what we learned in class, or get ahead. 
+              No pressure - this is extra practice to help you learn! 📚✨
+            </p>
+          </div>
+        </div>
+
+          <div class="construction-notice">
+          <strong>🚧 Under Construction 🚧</strong>
+          Take home projects are currently being updated. Content may change as lessons are finalized.
+        </div>
+
+        <!-- JANUARY -->
+        <section class="month-card" id="jan">
+          <div class="month-title">
+            <h2>January</h2>
+            <div class="sub">Scratch platformer unit</div>
+          </div>
+          <div class="construction-notice" style="margin-bottom: 1.5rem;">
+            <strong>🚧 Under Construction 🚧</strong>
+            January take home projects are currently being developed and updated.
+          </div>
+          <div class="weeks-grid">
+            <div class="week-card" id="jan-w1">
+              <h3>Week 1 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/movement.html">Lesson 1: Movement</a> (left/right + jump basics)</li>
+                <li>Mini challenge: reach the flag</li>
+                <li>Exit ticket: 1 screenshot + 1 sentence</li>
+              </ul>
+            </div>
+            <div class="week-card" id="jan-w2">
+              <h3>Week 2 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/collision.html">Lesson 2: Collision</a> (platforms + danger zones)</li>
+                <li>Mini challenge: add checkpoints</li>
+                <li>Vocabulary: sprite, backdrop, variable</li>
+              </ul>
+            </div>
+            <div class="week-card" id="jan-w3">
+              <h3>Week 3 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/2-player-controller.html">Lesson 3: 2-Player</a> (two controls + co-op)</li>
+                <li>Mini challenge: player vs player tag</li>
+                <li>Portfolio: submit best screenshot + link</li>
+              </ul>
+            </div>
+            <div class="week-card" id="jan-w4">
+              <h3>Week 4 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/lesson-4-projectiles-powerups.html">Lesson 4: Projectiles + Powerups</a></li>
+                <li>Mini challenge: add 1 powerup + 1 enemy</li>
+                <li>Test & debug day</li>
+              </ul>
+            </div>
+            <div class="week-card" id="jan-w5">
+              <h3>Week 5 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/major-student-challenge.html">Final Challenge</a> (build your own game)</li>
+                <li>Peer playtesting day</li>
+                <li>Submit to teacher for showcase</li>
+              </ul>
+            </div>
+          </div>
+          <div class="note">
+            <strong>Teacher note:</strong> This page is meant to be edited weekly. The links above point to your existing lesson pages.
+            <br><br>
+            <strong>Student note:</strong> All lessons are optional homework you can complete at home! Work at your own pace and practice what we learned in class. 🏠✨
+          </div>
+        </section>
+
+        <!-- FEBRUARY -->
+        <section class="month-card" id="feb">
+          <div class="month-title">
+            <h2>February</h2>
+            <div class="sub">3D design + prototyping</div>
+          </div>
+          <div class="weeks-grid">
+            <div class="week-card" id="feb-w1">
+              <h3>Week 1 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Tinkercad basics: shapes, align, group</li>
+                <li>Mini build: name tag / keychain</li>
+              </ul>
+            </div>
+            <div class="week-card" id="feb-w2">
+              <h3>Week 2 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Build a "world": buildings + scenery</li>
+                <li>Portfolio: 1 screenshot + 1 link</li>
+              </ul>
+            </div>
+            <div class="week-card" id="feb-w3">
+              <h3>Week 3 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Challenges: bridges, towers, vehicles</li>
+                <li>Peer feedback</li>
+              </ul>
+            </div>
+            <div class="week-card" id="feb-w4">
+              <h3>Week 4 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Showcase week: "best design"</li>
+                <li>Submit to teacher for class page</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- MARCH -->
+        <section class="month-card" id="mar">
+          <div class="month-title">
+            <h2>March</h2>
+            <div class="sub">Video + storytelling</div>
+          </div>
+          <div class="weeks-grid">
+            <div class="week-card" id="mar-w1">
+              <h3>Week 1 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Storyboarding + filming basics</li>
+                <li>Mini project: 30-second tutorial</li>
+              </ul>
+            </div>
+            <div class="week-card" id="mar-w2">
+              <h3>Week 2 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Editing day: cuts, music, titles</li>
+                <li>Submit link + reflection</li>
+              </ul>
+            </div>
+            <div class="week-card" id="mar-w3">
+              <h3>Week 3 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Group video challenge</li>
+                <li>Peer review day</li>
+              </ul>
+            </div>
+            <div class="week-card" id="mar-w4">
+              <h3>Week 4 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Showcase week</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- APRIL -->
+        <section class="month-card" id="apr">
+          <div class="month-title">
+            <h2>April</h2>
+            <div class="sub">Unreal Engine level design (advanced)</div>
+          </div>
+          <div class="weeks-grid">
+            <div class="week-card" id="apr-w1">
+              <h3>Week 1 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/unreal-engine/starting-a-project.html">Starting a Project</a></li>
+                <li>Camera + movement basics</li>
+              </ul>
+            </div>
+            <div class="week-card" id="apr-w2">
+              <h3>Week 2 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/unreal-engine/lesson1-rocks-caves.html">Lesson 1: Rocks + Caves</a></li>
+              </ul>
+            </div>
+            <div class="week-card" id="apr-w3">
+              <h3>Week 3 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/unreal-engine/lesson2-water-grass.html">Lesson 2: Water + Grass</a></li>
+              </ul>
+            </div>
+            <div class="week-card" id="apr-w4">
+              <h3>Week 4 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/unreal-engine/lesson3-effects-landscape.html">Lesson 3: Effects + Landscape</a></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- MAY -->
+        <section class="month-card" id="may">
+          <div class="month-title">
+            <h2>May</h2>
+            <div class="sub">HTML projects + “Build Your Empire”</div>
+          </div>
+          <div class="weeks-grid">
+            <div class="week-card" id="may-w1">
+              <h3>Week 1 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li><a href="/learn-html.html">Build Your Empire</a> (HTML + CSS basics)</li>
+                <li>Mini build: personal homepage</li>
+              </ul>
+            </div>
+            <div class="week-card" id="may-w2">
+              <h3>Week 2 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Styling + layout</li>
+                <li>Mini build: menu + gallery</li>
+              </ul>
+            </div>
+            <div class="week-card" id="may-w3">
+              <h3>Week 3 <span class="homework-badge">🏠 Optional Homework</span></h3>
+              <ul>
+                <li>Final website showcase</li>
+                <li>Submit to teacher for portfolio</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+      // Theme toggle
+      (function() {
+        var themeToggle = document.getElementById('theme-toggle');
+        var currentTheme = localStorage.getItem('theme') || 'light';
+        function setTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+          var icon = themeToggle.querySelector('.theme-icon');
+          if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        setTheme(currentTheme);
+        if (themeToggle) {
+          themeToggle.addEventListener('click', function() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(currentTheme);
+          });
+        }
+      })();
+    </script>
+  
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
+

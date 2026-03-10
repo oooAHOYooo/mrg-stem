@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Minecraft Education Edition | Mr. Gonzalez STEM</title>
+        <meta name="description" content="Learn STEM skills with Minecraft Education Edition! Discover coding, engineering, math, science, and creative problem-solving through Minecraft. Grades 1-5." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <script src="status-bar.js" defer></script>
+        <script src="ticker-nav.js" defer></script>
+        <style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            --primary-color: #22c55e;
+            --secondary-color: #16a34a;
+            --accent-color: #15803d;
+            --bg-gradient-1: #f0fdf4;
+            --bg-gradient-2: #dcfce7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #bbf7d0;
+            --shadow-sm: rgba(34, 197, 94, 0.1);
+            --shadow-md: rgba(34, 197, 94, 0.2);
+            --shadow-lg: rgba(34, 197, 94, 0.3);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #22c55e;
+            --secondary-color: #16a34a;
+            --accent-color: #15803d;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(34, 197, 94, 0.2);
+            --shadow-md: rgba(34, 197, 94, 0.3);
+            --shadow-lg: rgba(34, 197, 94, 0.4);
+        }
+
+        .card {
+            background: var(--card-bg) !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px var(--shadow-md);
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+        
+        .card h3 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+        }
+        
+        .card p,
+        .card ul,
+        .card li {
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .card a {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        
+        .step-box {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        [data-theme="dark"] .step-box {
+            background: rgba(34, 197, 94, 0.2);
+        }
+        
+        .highlight-box {
+            background: rgba(34, 197, 94, 0.15);
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        [data-theme="dark"] .highlight-box {
+            background: rgba(34, 197, 94, 0.25);
+            border-color: rgba(34, 197, 94, 0.6);
+        }
+        
+        .start-here-widget {
+            background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
+            border: 3px solid var(--accent-color);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .start-here-widget h2 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+        }
+        
+        .start-here-widget p {
+            color: var(--text-secondary);
+            font-size: clamp(1rem, 2vw, 1.2rem);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-md);
+            border-color: var(--accent-color);
+        }
+
+        .feature-card h3 {
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .icon-large {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
+            border: 2px solid rgba(34, 197, 94, 0.4);
+            border-radius: 10px;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            margin: 0.5rem;
+        }
+
+        .project-button:hover {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.3));
+            border-color: var(--accent-color);
+            transform: translateX(3px);
+        }
+        </style>
+        <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+        </script>
+    </head>
+    <body>
+        <div class="background"></div>
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <div class="status-bar" id="status-bar">
+                    <!-- Breadcrumbs and status will be generated by status-bar.js -->
+                </div>
+                <div class="navbar-actions">
+                    <a href="/" class="navbar-brand" title="Home">⚡</a>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/" class="sidebar-link">🏠 Homepage</a>
+                        <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
+                        <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">⛏️ Minecraft Education</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/minecraft.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2)); border: 2px solid rgba(34, 197, 94, 0.4); font-weight: 700;">⛏️ Minecraft Education</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Other Resources</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/scratch-tutorials.html" class="sidebar-link">💻 Scratch Tutorials</a>
+                        <a href="/tinkercad-tutorials.html" class="sidebar-link">🌍 Tinkercad</a>
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">🎮 Unreal Engine</a>
+                    </nav>
+                </div>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                <header><div class="wrap">
+                <h1 class="title">⛏️ Minecraft Education Edition</h1>
+                <p style="color:var(--muted);margin-top:8px">Learn STEM skills through the power of Minecraft! Build, code, and explore while learning real-world concepts.</p>
+            </div></header>
+
+            <div class="start-here-widget">
+                <h2>🎮 Welcome to Minecraft Education!</h2>
+                <p>Minecraft Education Edition is a special version of Minecraft designed for learning. It combines the fun of building and exploring with powerful tools for teaching coding, engineering, math, science, and more!</p>
+            </div>
+
+            <div class="card">
+                <h2>🌟 What is Minecraft Education Edition?</h2>
+                <p>Minecraft Education Edition is a game-based learning platform that promotes creativity, collaboration, and problem-solving in an immersive digital environment. It's like regular Minecraft, but with special features designed for classrooms and learning!</p>
+                
+                <div class="highlight-box">
+                    <h3>✨ Key Features:</h3>
+                    <ul>
+                        <li><strong>Code Builder:</strong> Learn to code using MakeCode, Python, or JavaScript while building in Minecraft</li>
+                        <li><strong>Camera & Portfolio:</strong> Take screenshots and document your learning journey</li>
+                        <li><strong>Chalkboards:</strong> Teachers can add instructions and information directly in the game</li>
+                        <li><strong>NPCs (Non-Player Characters):</strong> Interactive characters that can provide guidance and information</li>
+                        <li><strong>Classroom Mode:</strong> Teachers can manage students, set boundaries, and control the learning environment</li>
+                        <li><strong>Lesson Plans:</strong> Pre-built worlds and activities for teaching specific subjects</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💻 Learning to Code with Minecraft</h2>
+                <p>One of the most exciting features of Minecraft Education Edition is Code Builder, which lets you learn programming while playing!</p>
+                
+                <div class="step-box">
+                    <h3>🎯 How Code Builder Works</h3>
+                    <p>Code Builder connects Minecraft to coding platforms where you can write code to control characters, build structures, and solve challenges automatically.</p>
+                </div>
+
+                <h3>📚 Coding Languages You Can Learn:</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="icon-large">🎨</div>
+                        <h3>MakeCode</h3>
+                        <p>Perfect for beginners! Use block-based coding (like Scratch) to control Minecraft. Drag and drop blocks to create programs.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🐍</div>
+                        <h3>Python</h3>
+                        <p>Learn real programming with Python! Write code to build structures, create patterns, and automate tasks in Minecraft.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">⚡</div>
+                        <h3>JavaScript</h3>
+                        <p>Advanced coding with JavaScript! Create complex programs and learn web development skills while building in Minecraft.</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>💡 Coding Projects You Can Try:</h3>
+                    <ul>
+                        <li><strong>Build a House:</strong> Write code to automatically build a house with walls, roof, and doors</li>
+                        <li><strong>Create Patterns:</strong> Use loops to build repeating patterns like checkerboards or spirals</li>
+                        <li><strong>Automated Farming:</strong> Program a robot to plant and harvest crops</li>
+                        <li><strong>Maze Generator:</strong> Code a program that creates random mazes</li>
+                        <li><strong>Art Generator:</strong> Use code to create pixel art and designs</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🏗️ Engineering & Design Skills</h2>
+                <p>Minecraft is an excellent tool for learning engineering and design principles. When you build in Minecraft, you're practicing real engineering skills!</p>
+                
+                <h3>🔨 Engineering Concepts You'll Learn:</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="icon-large">🏛️</div>
+                        <h3>Architecture</h3>
+                        <p>Design buildings, bridges, and structures. Learn about load-bearing walls, foundations, and structural integrity.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🌉</div>
+                        <h3>Civil Engineering</h3>
+                        <p>Build bridges, roads, and infrastructure. Understand how structures support weight and span distances.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">⚙️</div>
+                        <h3>Redstone Engineering</h3>
+                        <p>Learn about circuits, logic gates, and automation using Minecraft's Redstone system (like electrical engineering!).</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🏭</div>
+                        <h3>Mechanical Systems</h3>
+                        <p>Create machines using pistons, hoppers, and Redstone to automate tasks and solve problems.</p>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🎯 Design Challenges:</h3>
+                    <ul>
+                        <li><strong>Build a Bridge:</strong> Design a bridge that can support weight and span a gap</li>
+                        <li><strong>Create a Roller Coaster:</strong> Design a fun and safe roller coaster using minecarts</li>
+                        <li><strong>Design a City:</strong> Plan and build a complete city with roads, buildings, and infrastructure</li>
+                        <li><strong>Build a Farm:</strong> Create an efficient automated farm using Redstone</li>
+                        <li><strong>Design a Castle:</strong> Build a castle with defensive features and functional rooms</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🔬 Science & Math in Minecraft</h2>
+                <p>Minecraft Education Edition includes special features for teaching science and math concepts through interactive exploration!</p>
+                
+                <h3>🧪 Science Topics:</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="icon-large">⚗️</div>
+                        <h3>Chemistry</h3>
+                        <p>Use the Chemistry Update to create compounds, experiment with elements, and learn about chemical reactions!</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🌱</div>
+                        <h3>Biology</h3>
+                        <p>Explore ecosystems, study animal behavior, and learn about life cycles in Minecraft's diverse biomes.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🌍</div>
+                        <h3>Earth Science</h3>
+                        <p>Study geology, weather patterns, and environmental science by exploring different biomes and terrain.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">⚡</div>
+                        <h3>Physics</h3>
+                        <p>Learn about gravity, momentum, and forces through building, mining, and Redstone mechanics.</p>
+                    </div>
+                </div>
+
+                <h3>📐 Math Concepts:</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="icon-large">📏</div>
+                        <h3>Geometry</h3>
+                        <p>Build 3D shapes, calculate area and volume, and explore spatial relationships using blocks.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">🔢</div>
+                        <h3>Measurement</h3>
+                        <p>Practice measuring distances, calculating volumes, and working with coordinates in 3D space.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon-large">📊</div>
+                        <h3>Patterns & Sequences</h3>
+                        <p>Create repeating patterns, explore sequences, and learn about mathematical relationships.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🤝 Collaboration & Problem-Solving</h2>
+                <p>Minecraft Education Edition is designed for collaborative learning. Work together with classmates to solve challenges and build amazing projects!</p>
+                
+                <div class="highlight-box">
+                    <h3>🌟 Collaboration Skills:</h3>
+                    <ul>
+                        <li><strong>Team Building:</strong> Work together to plan and construct large projects</li>
+                        <li><strong>Communication:</strong> Practice explaining your ideas and listening to others</li>
+                        <li><strong>Division of Labor:</strong> Learn to assign tasks and work efficiently as a team</li>
+                        <li><strong>Problem-Solving:</strong> Tackle challenges together and find creative solutions</li>
+                        <li><strong>Sharing Ideas:</strong> Present your builds and learn from classmates' designs</li>
+                    </ul>
+                </div>
+
+                <h3>🎯 Collaborative Projects:</h3>
+                <ul>
+                    <li><strong>Class City:</strong> Each student builds a different part of a shared city</li>
+                    <li><strong>Historical Recreations:</strong> Work together to recreate historical landmarks or events</li>
+                    <li><strong>Science Experiments:</strong> Collaborate on building models of scientific concepts</li>
+                    <li><strong>Story Worlds:</strong> Create interactive stories where each student builds a different scene</li>
+                </ul>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1)); border: 3px solid rgba(59, 130, 246, 0.4);">
+                <h2 style="color: #1e40af;">👥 Working Together in a Shared Server</h2>
+                <p style="font-size: 1.1rem; font-weight: 600; color: #1e40af; margin-bottom: 1.5rem;">How students collaborate on coding projects in one shared Minecraft world</p>
+                
+                <div class="step-box" style="background: rgba(59, 130, 246, 0.15); border-left: 4px solid rgba(59, 130, 246, 0.6);">
+                    <h3 style="color: #1e40af;">🌐 Setting Up a Shared World</h3>
+                    <p style="color: #1e3a8a; font-weight: 600;">For Instructors:</p>
+                    <ol style="color: #1e3a8a;">
+                        <li><strong>Create a World:</strong> In Minecraft Education Edition, create a new world or open an existing one</li>
+                        <li><strong>Start a Multiplayer Session:</strong> Click "Play" → "New" or "My Worlds" → Select your world → Click "Host"</li>
+                        <li><strong>Share the Join Code:</strong> Students will see a 6-digit join code (like "ABC123") - share this with your class</li>
+                        <li><strong>Students Join:</strong> Students enter the join code in Minecraft Education Edition to connect to your world</li>
+                        <li><strong>Everyone Works Together:</strong> All students can now build, code, and collaborate in the same world!</li>
+                    </ol>
+                </div>
+
+                <div class="step-box" style="background: rgba(34, 197, 94, 0.15); border-left: 4px solid rgba(34, 197, 94, 0.6);">
+                    <h3 style="color: #15803d;">💻 Collaborative Coding Projects</h3>
+                    <p style="color: #14532d; font-weight: 600;">How students can work together on coding goals:</p>
+                    <ul style="color: #14532d;">
+                        <li><strong>Divide the Work:</strong> Each student or group codes a different part of a larger project (e.g., one codes buildings, another codes roads, another codes decorations)</li>
+                        <li><strong>Shared Code Library:</strong> Students can share code snippets with each other using the Camera tool to take screenshots of their code</li>
+                        <li><strong>Test Together:</strong> Students can test each other's code and provide feedback</li>
+                        <li><strong>Combine Functions:</strong> Different students create different functions that work together (e.g., one creates a "build house" function, another creates a "build garden" function)</li>
+                        <li><strong>Code Review:</strong> Students can review and improve each other's code before finalizing the project</li>
+                        <li><strong>Documentation:</strong> Students can add comments explaining their code so teammates understand it</li>
+                    </ul>
+                </div>
+
+                <div class="step-box" style="background: rgba(245, 158, 11, 0.15); border-left: 4px solid rgba(245, 158, 11, 0.6);">
+                    <h3 style="color: #92400e;">🎯 Example: Building a City Together</h3>
+                    <p style="color: #78350f;">Here's how a class might collaborate on coding a city:</p>
+                    <ol style="color: #78350f;">
+                        <li><strong>Planning Phase:</strong> Class discusses what the city needs (houses, roads, parks, shops)</li>
+                        <li><strong>Assign Roles:</strong> Teacher assigns different areas or building types to different students/groups</li>
+                        <li><strong>Code Development:</strong> Each group writes code to build their assigned part (e.g., Group 1 codes houses, Group 2 codes roads)</li>
+                        <li><strong>Testing:</strong> Groups test their code in their assigned area of the shared world</li>
+                        <li><strong>Integration:</strong> All code runs together to create the complete city</li>
+                        <li><strong>Presentation:</strong> Class presents the final collaborative project</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(126, 34, 206, 0.1)); border: 3px solid rgba(147, 51, 234, 0.4);">
+                <h2 style="color: #6b21a8;">🎛️ Instructor Controls & Permissions</h2>
+                <p style="font-size: 1.1rem; font-weight: 600; color: #6b21a8; margin-bottom: 1.5rem;">How teachers manage students and control the learning environment</p>
+                
+                <div class="step-box" style="background: rgba(147, 51, 234, 0.15); border-left: 4px solid rgba(147, 51, 234, 0.6);">
+                    <h3 style="color: #6b21a8;">📱 Classroom Mode</h3>
+                    <p style="color: #581c87; font-weight: 600;">Classroom Mode is a separate app that gives instructors powerful control over the Minecraft world:</p>
+                    <ul style="color: #581c87;">
+                        <li><strong>Download:</strong> Available as a separate app (Classroom Mode) or web interface</li>
+                        <li><strong>Connect:</strong> Connect to your hosted world using the join code</li>
+                        <li><strong>Manage Students:</strong> See all connected students, their locations, and what they're doing</li>
+                        <li><strong>Control Permissions:</strong> Give or remove permissions for building, breaking blocks, using Code Builder, etc.</li>
+                        <li><strong>Teleport Students:</strong> Instantly move students to specific locations in the world</li>
+                        <li><strong>Send Messages:</strong> Broadcast messages to all students or send private messages</li>
+                    </ul>
+                </div>
+
+                <div class="step-box" style="background: rgba(59, 130, 246, 0.15); border-left: 4px solid rgba(59, 130, 246, 0.6);">
+                    <h3 style="color: #1e40af;">🔐 Setting Permissions</h3>
+                    <p style="color: #1e3a8a; font-weight: 600;">Instructors can control what students can do:</p>
+                    <ul style="color: #1e3a8a;">
+                        <li><strong>Building Permissions:</strong> Allow or prevent students from placing/breaking blocks</li>
+                        <li><strong>Code Builder Access:</strong> Control who can use Code Builder and coding features</li>
+                        <li><strong>World Boundaries:</strong> Set invisible walls to keep students in specific areas</li>
+                        <li><strong>Item Restrictions:</strong> Control which items students can use (helpful for focused projects)</li>
+                        <li><strong>PvP (Player vs Player):</strong> Enable or disable students interacting with each other</li>
+                        <li><strong>Camera Tool:</strong> Control who can take screenshots and document their work</li>
+                    </ul>
+                </div>
+
+                <div class="step-box" style="background: rgba(34, 197, 94, 0.15); border-left: 4px solid rgba(34, 197, 94, 0.6);">
+                    <h3 style="color: #15803d;">👨‍🏫 Managing Student Groups</h3>
+                    <p style="color: #14532d; font-weight: 600;">Best practices for organizing collaborative coding projects:</p>
+                    <ul style="color: #14532d;">
+                        <li><strong>Assign Areas:</strong> Use world boundaries to give each group their own building area</li>
+                        <li><strong>Set Clear Goals:</strong> Use Chalkboards or NPCs to explain what each group should code</li>
+                        <li><strong>Monitor Progress:</strong> Use Classroom Mode to check in on each group's work</li>
+                        <li><strong>Provide Resources:</strong> Place example code or tutorials in specific areas using Chalkboards</li>
+                        <li><strong>Facilitate Sharing:</strong> Create a "code sharing area" where students can leave code examples for others</li>
+                        <li><strong>Review Code Together:</strong> Use teleport to bring groups together for code reviews</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box" style="background: rgba(147, 51, 234, 0.2); border: 2px solid rgba(147, 51, 234, 0.5);">
+                    <h3 style="color: #6b21a8;">💡 Tips for Instructors</h3>
+                    <ul style="color: #581c87;">
+                        <li><strong>Start with Boundaries:</strong> Set world boundaries before students join to prevent them from building in wrong areas</li>
+                        <li><strong>Use Chalkboards:</strong> Place Chalkboards with instructions, coding challenges, or project requirements</li>
+                        <li><strong>Create Checkpoints:</strong> Use NPCs or Chalkboards to mark progress checkpoints for coding projects</li>
+                        <li><strong>Monitor Code Builder:</strong> Check in on students' code to ensure they understand what they're writing</li>
+                        <li><strong>Encourage Collaboration:</strong> Use teleport to bring students together for discussions and code sharing</li>
+                        <li><strong>Save Progress:</strong> Regularly save the world so collaborative work isn't lost</li>
+                        <li><strong>Use World Templates:</strong> Create starter worlds with pre-built structures or code examples for students to build upon</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📚 How We Use Minecraft in Class</h2>
+                <p>In our STEM class, we use Minecraft Education Edition in many different ways to enhance learning!</p>
+                
+                <div class="step-box">
+                    <h3>🎮 In-Class Activities</h3>
+                    <ul>
+                        <li><strong>Coding Challenges:</strong> Complete coding tasks using Code Builder and MakeCode</li>
+                        <li><strong>Building Projects:</strong> Design and construct structures based on engineering principles</li>
+                        <li><strong>Science Exploration:</strong> Explore pre-built worlds that teach specific science concepts</li>
+                        <li><strong>Math Challenges:</strong> Solve math problems by building and measuring in Minecraft</li>
+                        <li><strong>Creative Projects:</strong> Express creativity while learning STEM concepts</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3>📝 Portfolio Projects</h3>
+                    <p>Many of your Minecraft builds can be added to your portfolio! Use the Camera tool to take screenshots and document your learning.</p>
+                    <ul>
+                        <li>Take screenshots of your builds</li>
+                        <li>Write descriptions explaining what you learned</li>
+                        <li>Share your code if you used Code Builder</li>
+                        <li>Document your problem-solving process</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3>🏆 Challenges & Competitions</h3>
+                    <p>Sometimes we have special challenges where you can showcase your skills!</p>
+                    <ul>
+                        <li>Build contests with specific themes</li>
+                        <li>Coding challenges with prizes</li>
+                        <li>Collaborative class projects</li>
+                        <li>Showcase events where you present your builds</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🚀 Getting Started</h2>
+                <p>Ready to start learning with Minecraft? Here's what you need to know!</p>
+                
+                <div class="highlight-box" style="background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.4); margin-bottom: 1.5rem;">
+                    <h3 style="color: #991b1b;">⚠️ Important: Read the Class Rules First!</h3>
+                    <p style="color: #7f1d1d; font-weight: 600;">Before you start coding, make sure you read and understand our <a href="#class-rules" style="color: #991b1b; text-decoration: underline;">Class Rules & Expectations</a> below. These rules help ensure you actually learn and understand the code, not just copy it!</p>
+                </div>
+                
+                <div class="step-box">
+                    <h3>📥 Accessing Minecraft Education Edition</h3>
+                    <p>Minecraft Education Edition is available through your school. Your teacher will provide:</p>
+                    <ul>
+                        <li>Login instructions for your school account</li>
+                        <li>Access to class worlds and activities</li>
+                        <li>Guidance on using Code Builder and other features</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3>💡 Tips for Success</h3>
+                    <ul>
+                        <li><strong>Start Simple:</strong> Begin with basic building before trying complex projects</li>
+                        <li><strong>Experiment:</strong> Don't be afraid to try new things and make mistakes!</li>
+                        <li><strong>Ask Questions:</strong> If you're stuck, ask your teacher or classmates for help</li>
+                        <li><strong>Take Notes:</strong> Use the Camera tool to document your progress</li>
+                        <li><strong>Have Fun:</strong> Learning is more effective when you're enjoying yourself!</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🎯 Your First Project Ideas:</h3>
+                    <ul>
+                        <li>Build a simple house with at least 3 rooms</li>
+                        <li>Create a garden with different types of plants</li>
+                        <li>Design a bridge that spans at least 10 blocks</li>
+                        <li>Use Code Builder to build a simple structure automatically</li>
+                        <li>Recreate a building from your school or neighborhood</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" id="class-rules" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border: 3px solid rgba(239, 68, 68, 0.4);">
+                <h2 style="color: #991b1b;">📋 Class Rules & Expectations</h2>
+                <p style="font-size: 1.1rem; font-weight: 600; color: #991b1b; margin-bottom: 1.5rem;">Important: You CANNOT just copy and paste code without understanding it! Follow these rules:</p>
+                
+                <div class="step-box" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid rgba(239, 68, 68, 0.6);">
+                    <ol style="color: #7f1d1d; font-size: 1.1rem; line-height: 2;">
+                        <li><strong>Understand Before You Use:</strong> If you find code online or from a tutorial, you MUST be able to explain what each part does.</li>
+                        <li><strong>Type It Yourself:</strong> Don't copy-paste - type it out so you see each command and understand it.</li>
+                        <li><strong>Modify and Customize:</strong> Always change something about the code to make it your own - add features, change colors, or modify behavior.</li>
+                        <li><strong>Test and Experiment:</strong> Run the code, see what happens, then try changing values and testing different approaches.</li>
+                        <li><strong>Explain Your Code:</strong> Be prepared to explain what your code does and why you made your changes to the teacher or classmates.</li>
+                        <li><strong>Build On What You Learn:</strong> Use what you learned to create something new and different, not just copy the example.</li>
+                    </ol>
+                </div>
+
+                <div class="highlight-box" style="background: rgba(34, 197, 94, 0.2); border: 2px solid rgba(34, 197, 94, 0.5); margin-top: 1.5rem;">
+                    <h3 style="color: #15803d;">🎯 Remember: The Goal is Learning!</h3>
+                    <p style="color: #14532d; font-size: 1.1rem; font-weight: 600;">Understanding code is more important than having perfect code. It's okay to make mistakes and ask for help - but you must understand what you're doing!</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📖 Resources & Learning More</h2>
+                <p>Want to learn more about Minecraft Education Edition? Check out these resources!</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🌐 Official Website</h3>
+                        <p>Visit <a href="https://education.minecraft.net" target="_blank" rel="noopener noreferrer">education.minecraft.net</a> for lesson plans, tutorials, and more!</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📚 Lesson Library</h3>
+                        <p>Explore hundreds of pre-built lessons covering coding, science, math, and more!</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>💻 Code Builder Tutorials</h3>
+                        <p>Learn to code with step-by-step tutorials for MakeCode, Python, and JavaScript.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🎥 Video Tutorials</h3>
+                        <p>Watch videos on YouTube to learn building techniques and coding skills.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>❓ Frequently Asked Questions</h2>
+                
+                <div class="step-box">
+                    <h3>Is Minecraft Education Edition the same as regular Minecraft?</h3>
+                    <p>Minecraft Education Edition is based on Minecraft but includes special features for learning, like Code Builder, Camera, Chalkboards, and classroom management tools. It's designed specifically for education!</p>
+                </div>
+
+                <div class="step-box">
+                    <h3>Do I need to know how to code to use Minecraft?</h3>
+                    <p>No! You can start by just building and exploring. Code Builder is optional and you can learn coding gradually as you get more comfortable with Minecraft.</p>
+                </div>
+
+                <div class="step-box">
+                    <h3>Can I play Minecraft Education Edition at home?</h3>
+                    <p>If your school provides access, you may be able to use it at home. Check with your teacher about home access policies.</p>
+                </div>
+
+                <div class="step-box">
+                    <h3>What if I make a mistake while building?</h3>
+                    <p>That's okay! Mistakes are part of learning. You can always break blocks and rebuild. Minecraft is a safe space to experiment and try new things.</p>
+                </div>
+
+                <div class="step-box">
+                    <h3>How do I share my builds with the class?</h3>
+                    <p>Use the Camera tool to take screenshots, then you can add them to your portfolio or share them during class presentations!</p>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.15)); border: 3px solid rgba(34, 197, 94, 0.4);">
+                <h2>🎮 Ready to Start Building?</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem;">Minecraft Education Edition is an amazing tool for learning STEM skills while having fun. Start with simple builds, try Code Builder, and don't forget to document your learning in your portfolio!</p>
+                <div>
+                    <a href="/portfolio.html" class="project-button" style="font-size: 1.1rem; padding: 1rem 2rem;">📁 View My Portfolio →</a>
+                    <a href="/" class="project-button" style="font-size: 1.1rem; padding: 1rem 2rem;">🏠 Back to Homepage →</a>
+                </div>
+            </div>
+
+                </div>
+            </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center;"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">💡 Minecraft Tip</h3>
+                    <div class="tip-of-day" id="tip-of-day">
+                        <span class="tip-icon">⛏️</span>
+                        <p class="tip-text" id="tip-text">Start with simple builds and gradually try more complex projects. Every build teaches you something new!</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+        
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+        
+        <script>
+        // Theme toggle
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle.querySelector('.theme-icon');
+                if (icon) {
+                    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                }
+            }
+            
+            setTheme(currentTheme);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    currentTheme = newTheme;
+                    setTheme(newTheme);
+                });
+            }
+        })();
+
+        // Date display
+        (function() {
+            try {
+                var now = new Date();
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var month = now.toLocaleDateString('en-US', { month: 'short' });
+                var day = now.getDate();
+                var formatted = weekday + ', ' + month + ' ' + day;
+                
+                var sidebarDateEl = document.getElementById('sidebar-date-display');
+                if (sidebarDateEl) sidebarDateEl.textContent = '📅 ' + formatted;
+            } catch (e) {
+                console.error('Date error:', e);
+            }
+        })();
+        </script>
+    
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>

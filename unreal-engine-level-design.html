@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Unreal Engine - Level Design | Mr. Gonzalez STEM</title>
+        <meta name="description" content="Learn to design levels in Unreal Engine 5! Create a 4-season world you can walk through using third person perspective. Grades 1-5." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <style>
+        /* Theme CSS Variables */
+        :root {
+            --theme-name: 'light';
+            /* Light Theme (Soft Matte) */
+            --primary-color: #6B8E9F;
+            --secondary-color: #8FA8B5;
+            --accent-color: #A8C4D0;
+            --bg-gradient-1: #F5F7FA;
+            --bg-gradient-2: #E8ECF1;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #CBD5E1;
+            --shadow-sm: rgba(0, 0, 0, 0.05);
+            --shadow-md: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4A90A4;
+            --secondary-color: #6B9DB5;
+            --accent-color: #7FB3C8;
+            --bg-gradient-1: #1E293B;
+            --bg-gradient-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.4);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="neon"] {
+            --primary-color: #00F5FF;
+            --secondary-color: #FF00FF;
+            --accent-color: #00FF00;
+            --bg-gradient-1: #0A0A0A;
+            --bg-gradient-2: #1A0A1A;
+            --card-bg: #1A1A2E;
+            --text-primary: #00F5FF;
+            --text-secondary: #FF00FF;
+            --border-color: #00FF00;
+            --shadow-sm: rgba(0, 245, 255, 0.2);
+            --shadow-md: rgba(0, 245, 255, 0.3);
+            --shadow-lg: rgba(0, 245, 255, 0.4);
+        }
+
+        [data-theme="christmas"] {
+            --primary-color: #DC2626;
+            --secondary-color: #16A34A;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF2F2;
+            --bg-gradient-2: #F0FDF4;
+            --card-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --shadow-sm: rgba(220, 38, 38, 0.1);
+            --shadow-md: rgba(220, 38, 38, 0.2);
+            --shadow-lg: rgba(220, 38, 38, 0.3);
+        }
+
+        [data-theme="thanksgiving"] {
+            --primary-color: #D97706;
+            --secondary-color: #92400E;
+            --accent-color: #F59E0B;
+            --bg-gradient-1: #FEF3C7;
+            --bg-gradient-2: #FDE68A;
+            --card-bg: #FFFFFF;
+            --text-primary: #78350F;
+            --text-secondary: #92400E;
+            --border-color: #FCD34D;
+            --shadow-sm: rgba(217, 119, 6, 0.1);
+            --shadow-md: rgba(217, 119, 6, 0.2);
+            --shadow-lg: rgba(217, 119, 6, 0.3);
+        }
+        
+        /* Override dark card background to use theme colors */
+        .card {
+            background: var(--card-bg) !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px var(--shadow-md);
+            color: var(--text-primary);
+        }
+        
+        .card h2 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card p,
+        .card ul,
+        .card li {
+            color: var(--text-primary);
+        }
+        
+        .card a {
+            color: var(--accent-color);
+        }
+        
+        .step-box {
+            background: rgba(255, 255, 255, 0.5);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        [data-theme="dark"] .step-box {
+            background: rgba(30, 41, 59, 0.5);
+        }
+        
+        .highlight-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        [data-theme="dark"] .highlight-box {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .start-here-widget {
+            background: linear-gradient(135deg, var(--bg-gradient-1), var(--bg-gradient-2));
+            border: 3px solid var(--accent-color);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .start-here-widget h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .start-here-widget p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        </style>
+        <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+        </script>
+    </head>
+    <body>
+        <div class="background"></div>
+        <!-- Fixed Top Nav -->
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <a href="/" class="navbar-brand">⚡ Home</a>
+                <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="theme-selector">
+                        <select class="theme-select" id="theme-selector" aria-label="Select theme" title="Choose a theme">
+                            <option value="light">☀️ Light</option>
+                            <option value="dark">🌙 Dark</option>
+                            <option value="neon">💜 Neon</option>
+                            <option value="christmas">🎄 Christmas</option>
+                            <option value="thanksgiving">🦃 Thanksgiving</option>
+                        </select>
+                    </div>
+                    <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Dashboard Layout -->
+        <div class="dashboard-container">
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/#santa-house-tutorial" class="sidebar-link">🎄 Santa's House Tutorial</a>
+                        <a href="/#featured-tutorials" class="sidebar-link">⭐ Featured Tutorials</a>
+                        <a href="/#assignment-of-day" class="sidebar-link">🎮 Assignment of the Day</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Lessons</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/movement.html" class="sidebar-link">Lesson 1: Movement</a>
+                        <a href="/collision.html" class="sidebar-link">Lesson 2: Collision</a>
+                        <a href="/2-player-controller.html" class="sidebar-link">Lesson 3: 2-Player</a>
+                        <a href="/lesson-4-projectiles-powerups.html" class="sidebar-link">Lesson 4: Projectiles</a>
+                        <a href="/major-student-challenge.html" class="sidebar-link">Final Challenge</a>
+                        <a href="/unreal-engine-level-design.html" class="sidebar-link">Unreal Engine</a>
+                    </nav>
+                </div>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                <header><div class="wrap">
+                <h1 class="title">Unreal Engine 5 - Level Design</h1>
+                <p style="color:var(--muted);margin-top:8px">Create your own 4-season world you can walk through!</p>
+            </div></header>
+
+<div class="start-here-widget">
+                <h2>🎮 Start Here for Unreal Engine!</h2>
+                <p>Follow these steps to download Unreal Engine and start building your world!</p>
+            </div>
+
+            <div class="card">
+                <h2>📥 Step 1: Download Unreal Engine at Home</h2>
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Go to the Unreal Engine Website</h3>
+                    <p>Visit <a href="https://www.unrealengine.com/" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;">www.unrealengine.com</a></p>
+                    <p>Click the big <strong>"Download Now"</strong> button at the top of the page.</p>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Create a Free Account</h3>
+                    <p>You'll need to make an account (it's free!). Ask a parent or guardian to help you:</p>
+                    <ul>
+                        <li>Click <strong>"Sign Up"</strong> or <strong>"Create Account"</strong></li>
+                        <li>Enter your email address (or your parent's email)</li>
+                        <li>Create a password (write it down somewhere safe!)</li>
+                        <li>Check your email and click the link to confirm your account</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Download Epic Games Launcher</h3>
+                    <p>After you sign in, you'll download the <strong>Epic Games Launcher</strong>:</p>
+                    <ul>
+                        <li>Click <strong>"Download"</strong> for the Epic Games Launcher</li>
+                        <li>Run the installer (ask a parent for help if needed)</li>
+                        <li>Sign in to the launcher with your account</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">4</span> Install Unreal Engine</h3>
+                    <p>In the Epic Games Launcher:</p>
+                    <ul>
+                        <li>Click on <strong>"Unreal Engine"</strong> in the left menu</li>
+                        <li>Click <strong>"Install Engine"</strong></li>
+                        <li>Choose the latest version (like 5.3 or 5.4)</li>
+                        <li>Click <strong>"Install"</strong> - this will take a while (maybe 30-60 minutes)</li>
+                        <li>Go get a snack while it downloads! 🍎</li>
+                    </ul>
+                    <p><strong>Important:</strong> Unreal Engine is BIG (about 10-15 GB), so make sure you have enough space on your computer!</p>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>💡 Tips for Parents</h3>
+                    <ul>
+                        <li>Unreal Engine is completely FREE for students and learning</li>
+                        <li>It works on Windows and Mac computers</li>
+                        <li>Make sure your computer has enough space (at least 20 GB free)</li>
+                        <li>The download might take 30-60 minutes depending on your internet</li>
+                        <li>If you have any problems, check the Unreal Engine website for help</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎨 Step 2: Getting Started with Free Assets</h2>
+                <p>Unreal Engine comes with lots of FREE stuff you can use to build your world!</p>
+
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Open Unreal Engine</h3>
+                    <p>After Unreal Engine finishes installing:</p>
+                    <ul>
+                        <li>Open the Epic Games Launcher</li>
+                        <li>Click <strong>"Launch"</strong> next to Unreal Engine</li>
+                        <li>When it opens, click <strong>"New Project"</strong></li>
+                        <li>Choose <strong>"Games"</strong> → <strong>"Third Person"</strong> template</li>
+                        <li>Give your project a name like "My4SeasonWorld"</li>
+                        <li>Click <strong>"Create"</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Get Free Assets from the Marketplace</h3>
+                    <p>Unreal Engine has a FREE marketplace with tons of stuff:</p>
+                    <ul>
+                        <li>In Unreal Engine, click <strong>"Edit"</strong> → <strong>"Plugins"</strong></li>
+                        <li>Or go to <a href="https://www.unrealengine.com/marketplace" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600;">unrealengine.com/marketplace</a></li>
+                        <li>Look for things marked <strong>"FREE"</strong> or <strong>"Free for the Month"</strong></li>
+                        <li>Click on something you like, then click <strong>"Add to Project"</strong></li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Great Free Assets to Start With</h3>
+                    <p>Here are some FREE things perfect for making a 4-season world:</p>
+                    <ul>
+                        <li><strong>Starter Content</strong> - Already in your project! Trees, rocks, and more</li>
+                        <li><strong>Landscape Materials</strong> - Search for "grass", "snow", "autumn leaves"</li>
+                        <li><strong>Nature Packs</strong> - Look for "free nature" or "free trees"</li>
+                        <li><strong>Weather Effects</strong> - Search for "snow", "rain", "sun" effects</li>
+                    </ul>
+                    <p><strong>Remember:</strong> Always look for the <strong>"FREE"</strong> label before adding anything!</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🌍 Step 3: Create Your 4-Season World</h2>
+                <p>Now let's build a world with four different seasons you can walk through!</p>
+
+                <div class="step-box">
+                    <h3><span class="step-number">1</span> Set Up Your World</h3>
+                    <p>When your project opens, you'll see a character in a gray world:</p>
+                    <ul>
+                        <li>Press <kbd class="kbd">F</kbd> to focus on your character</li>
+                        <li>You can click and drag to look around</li>
+                        <li>Use the mouse wheel to zoom in and out</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">2</span> Make Four Different Areas (One for Each Season)</h3>
+                    <p>We'll create four sections: Spring, Summer, Fall, and Winter!</p>
+                    
+                    <h4 style="color:var(--good);margin-top:1rem;">🌱 Spring Area:</h4>
+                    <ul>
+                        <li>In the Content Browser (bottom), search for "grass" or "flowers"</li>
+                        <li>Drag green grass and colorful flowers into your world</li>
+                        <li>Add some small trees with green leaves</li>
+                        <li>Place this in the front-left area of your world</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">☀️ Summer Area:</h4>
+                    <ul>
+                        <li>Add bright green grass and big trees</li>
+                        <li>Maybe add a sun or bright lighting</li>
+                        <li>Place this in the front-right area</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">🍂 Fall Area:</h4>
+                    <ul>
+                        <li>Search for "autumn" or "fall" materials</li>
+                        <li>Add trees with orange, red, and yellow leaves</li>
+                        <li>Add some fallen leaves on the ground</li>
+                        <li>Place this in the back-left area</li>
+                    </ul>
+
+                    <h4 style="color:var(--good);margin-top:1rem;">❄️ Winter Area:</h4>
+                    <ul>
+                        <li>Search for "snow" materials</li>
+                        <li>Add white snow on the ground</li>
+                        <li>Add trees without leaves (bare branches)</li>
+                        <li>Maybe add some snowflakes or ice</li>
+                        <li>Place this in the back-right area</li>
+                    </ul>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">3</span> Use Third Person Perspective</h3>
+                    <p>The <strong>Third Person</strong> template means you'll see your character from behind as you walk around!</p>
+                    <ul>
+                        <li>Your project already has third person set up - that's why we chose that template!</li>
+                        <li>To test it, click the <strong>"Play"</strong> button (green triangle) at the top</li>
+                        <li>Use <kbd class="kbd">W</kbd> <kbd class="kbd">A</kbd> <kbd class="kbd">S</kbd> <kbd class="kbd">D</kbd> keys to move</li>
+                        <li>Use your mouse to look around</li>
+                        <li>Press <kbd class="kbd">Space</kbd> to jump!</li>
+                        <li>Press <kbd class="kbd">Esc</kbd> to stop playing</li>
+                    </ul>
+                    <p><strong>Tip:</strong> Make sure you're in third person view (seeing your character from behind) when you play!</p>
+                </div>
+
+                <div class="step-box">
+                    <h3><span class="step-number">4</span> Connect Your Seasons</h3>
+                    <p>Make paths between your four season areas so you can walk from one to another:</p>
+                    <ul>
+                        <li>Add paths or roads between the areas</li>
+                        <li>You can use the landscape tool to make smooth ground</li>
+                        <li>Add signs or markers to show which season you're entering</li>
+                        <li>Test it by playing and walking from Spring → Summer → Fall → Winter!</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h3>🎯 Your Goal</h3>
+                    <p>Create ONE world with FOUR different seasons that you can walk through using third person view!</p>
+                    <ul>
+                        <li>✅ Spring area with flowers and green grass</li>
+                        <li>✅ Summer area with bright trees and sunshine</li>
+                        <li>✅ Fall area with colorful autumn leaves</li>
+                        <li>✅ Winter area with snow and bare trees</li>
+                        <li>✅ Paths connecting all four areas</li>
+                        <li>✅ Third person camera so you see your character walking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Helpful Tips</h2>
+                <ul class="checklist">
+                    <li><strong>Save often!</strong> Press <kbd class="kbd">Ctrl</kbd> + <kbd class="kbd">S</kbd> (or <kbd class="kbd">Cmd</kbd> + <kbd class="kbd">S</kbd> on Mac) to save your work</li>
+                    <li><strong>Experiment!</strong> Try dragging different things into your world - you can always delete them</li>
+                    <li><strong>Use the search bar</strong> in the Content Browser to find things quickly</li>
+                    <li><strong>Ask for help</strong> if you get stuck - Mr. Gonzalez is here to help!</li>
+                    <li><strong>Have fun!</strong> There's no wrong way to make your world - be creative!</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>🎓 What You're Learning</h2>
+                <p>By making this 4-season world, you're learning:</p>
+                <ul class="checklist">
+                    <li>How to use professional game design tools</li>
+                    <li>How to organize and plan a project</li>
+                    <li>How to use free resources and assets</li>
+                    <li>How to create different environments</li>
+                    <li>How to test and play your creations</li>
+                </ul>
+            </div>
+                </div>
+            </main>
+            
+            <!-- Right Sidebar -->
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px; font-size: clamp(1rem, 2vw, 1.25rem); margin-bottom: 0.5rem; padding: 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color);"></div>
+                    <div id="sidebar-time-display" style="font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px; font-size: clamp(0.9rem, 1.8vw, 1.1rem); margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color); text-align: center;"></div>
+                    <div id="sidebar-time-display" style="font-weight: 600; color: var(--text-secondary); letter-spacing: 0.5px; font-size: clamp(0.9rem, 1.8vw, 1.1rem); margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: var(--card-bg); border-radius: 10px; border: 2px solid var(--border-color); text-align: center;"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Quick Actions</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/student-work.html" class="sidebar-link">Student Work</a>
+                        <a href="https://scratch.mit.edu/" class="sidebar-link" target="_blank" rel="noopener noreferrer">Scratch Website</a>
+                        <a href="https://www.tinkercad.com/" class="sidebar-link" target="_blank" rel="noopener noreferrer">Tinkercad</a>
+                        <a href="https://code.org/" class="sidebar-link" target="_blank" rel="noopener noreferrer">Code.org</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">📋 Class Rules</h3>
+                    <ol style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8; padding-left: 1.25rem; margin: 0;">
+                        <li>No Yelling</li>
+                        <li>Sit in your Seat</li>
+                        <li>Raise your hand for help</li>
+                        <li>Listen when Mr G instructs</li>
+                    </ol>
+                </div>
+            </aside>
+        </div>
+        
+        <!-- Fixed Bottom Nav -->
+        <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+        <footer class="footer" style="display: none;"></footer>
+        
+        <script>
+        (function () {
+            try {
+                var now = new Date();
+                var mm = String(now.getMonth() + 1).padStart(2, '0');
+                var dd = String(now.getDate()).padStart(2, '0');
+                var yyyy = String(now.getFullYear());
+                var weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+                var formatted = mm + '-' + dd + '-' + yyyy + ' - ' + weekday;
+                
+                // Update time display
+                var hours = String(now.getHours()).padStart(2, '0');
+                var minutes = String(now.getMinutes()).padStart(2, '0');
+                var seconds = String(now.getSeconds()).padStart(2, '0');
+                var timeFormatted = hours + ':' + minutes + ':' + seconds;
+                
+                var sidebarTimeDisplay = document.getElementById('sidebar-time-display');
+                if (sidebarTimeDisplay) {
+                    sidebarTimeDisplay.textContent = '🕐 🕐 ' + timeFormatted;
+                }
+                
+                // Update time every second
+                setInterval(function() {
+                    var now = new Date();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+                    var timeFormatted = hours + ':' + minutes + ':' + seconds;
+                    var sidebarTimeDisplay = document.getElementById('sidebar-time-display');
+                    if (sidebarTimeDisplay) {
+                        sidebarTimeDisplay.textContent = '🕐 🕐 ' + timeFormatted;
+                    }
+                }, 1000);
+                
+                // Update time display
+                var hours = String(now.getHours()).padStart(2, '0');
+                var minutes = String(now.getMinutes()).padStart(2, '0');
+                var seconds = String(now.getSeconds()).padStart(2, '0');
+                var timeFormatted = hours + ':' + minutes + ':' + seconds;
+                
+                var sidebarTimeDisplay = document.getElementById('sidebar-time-display');
+                if (sidebarTimeDisplay) {
+                    sidebarTimeDisplay.textContent = '🕐 🕐 ' + timeFormatted;
+                }
+                
+                // Update time every second
+                setInterval(function() {
+                    var now = new Date();
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+                    var timeFormatted = hours + ':' + minutes + ':' + seconds;
+                    var sidebarTimeDisplay = document.getElementById('sidebar-time-display');
+                    if (sidebarTimeDisplay) {
+                        sidebarTimeDisplay.textContent = '🕐 🕐 ' + timeFormatted;
+                    }
+                }, 1000);
+                
+                // Update top date display
+                var topDateDisplay = document.getElementById('top-date-display');
+                if (topDateDisplay) {
+                    topDateDisplay.textContent = formatted;
+                }
+                
+                // Update sidebar date display
+                var sidebarDateDisplay = document.getElementById('sidebar-date-display');
+                if (sidebarDateDisplay) {
+                    sidebarDateDisplay.textContent = formatted;
+                }
+            } catch (e) {
+                console.error('Date display error:', e);
+            }
+        })();
+        </script>
+        <script>
+        // Mobile navbar toggle
+        (function() {
+            var toggle = document.getElementById('navbar-toggle');
+            var menu = document.getElementById('navbar-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function() {
+                    toggle.classList.toggle('active');
+                    menu.classList.toggle('active');
+                });
+            }
+        })();
+        </script>
+        <script>
+        </script>
+        <script>
+        // Theme selector with dynamic style updates
+        (function() {
+            var themeSelector = document.getElementById('theme-selector');
+            var html = document.documentElement;
+            
+            // Theme color mappings
+            var themeColors = {
+                light: {
+                    primary: '#6B8E9F',
+                    secondary: '#8FA8B5',
+                    accent: '#A8C4D0',
+                    bg1: '#F5F7FA',
+                    bg2: '#E8ECF1',
+                    card: '#FFFFFF',
+                    text1: '#1E293B',
+                    text2: '#64748B',
+                    border: '#CBD5E1'
+                },
+                dark: {
+                    primary: '#4A90A4',
+                    secondary: '#6B9DB5',
+                    accent: '#7FB3C8',
+                    bg1: '#1E293B',
+                    bg2: '#0F172A',
+                    card: '#1E293B',
+                    text1: '#F1F5F9',
+                    text2: '#94A3B8',
+                    border: '#334155'
+                },
+                neon: {
+                    primary: '#00F5FF',
+                    secondary: '#FF00FF',
+                    accent: '#00FF00',
+                    bg1: '#0A0A0A',
+                    bg2: '#1A0A1A',
+                    card: '#1A1A2E',
+                    text1: '#00F5FF',
+                    text2: '#FF00FF',
+                    border: '#00FF00'
+                },
+                christmas: {
+                    primary: '#DC2626',
+                    secondary: '#16A34A',
+                    accent: '#F59E0B',
+                    bg1: '#FEF2F2',
+                    bg2: '#F0FDF4',
+                    card: '#FFFFFF',
+                    text1: '#1F2937',
+                    text2: '#6B7280',
+                    border: '#E5E7EB'
+                },
+                thanksgiving: {
+                    primary: '#D97706',
+                    secondary: '#92400E',
+                    accent: '#F59E0B',
+                    bg1: '#FEF3C7',
+                    bg2: '#FDE68A',
+                    card: '#FFFFFF',
+                    text1: '#78350F',
+                    text2: '#92400E',
+                    border: '#FCD34D'
+                }
+            };
+            
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                var colors = themeColors[theme];
+                if (colors) {
+                    html.style.setProperty('--primary-color', colors.primary);
+                    html.style.setProperty('--secondary-color', colors.secondary);
+                    html.style.setProperty('--accent-color', colors.accent);
+                    html.style.setProperty('--bg-gradient-1', colors.bg1);
+                    html.style.setProperty('--bg-gradient-2', colors.bg2);
+                    html.style.setProperty('--card-bg', colors.card);
+                    html.style.setProperty('--text-primary', colors.text1);
+                    html.style.setProperty('--text-secondary', colors.text2);
+                    html.style.setProperty('--border-color', colors.border);
+                }
+            }
+            
+            if (themeSelector) {
+                // Set initial value
+                var currentTheme = localStorage.getItem('theme') || 'thanksgiving';
+                themeSelector.value = currentTheme;
+                applyTheme(currentTheme);
+                
+                // Handle theme change
+                themeSelector.addEventListener('change', function() {
+                    applyTheme(this.value);
+                });
+            }
+        })();
+
+        // Mobile Misc dropdown toggle
+        (function() {
+            var mobileDropdown = document.getElementById('mobile-quick-links-dropdown');
+            var mobileMenu = document.getElementById('mobile-quick-links-menu');
+            
+            if (mobileDropdown && mobileMenu) {
+                mobileDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileDropdown.classList.toggle('active');
+                    mobileMenu.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    }
+                });
+                
+                var dropdownItems = mobileMenu.querySelectorAll('.mobile-dropdown-item');
+                dropdownItems.forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        mobileDropdown.classList.remove('active');
+                        mobileMenu.classList.remove('show');
+                    });
+                });
+            }
+        })();
+        </script>
+    
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function() {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function(dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                dropdowns.forEach(function(dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+                
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                     mobileDropdown.classList.remove('active');
+                     mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+</body>
+</html>
