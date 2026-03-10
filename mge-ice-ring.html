@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Ring Sky - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1e3a8a 0%, #0f172a 100%);
+            color: white;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Top Center Popup UI - CRITICAL REQUIREMENT */
+        .fact-popup {
+            position: fixed;
+            top: -200px; /* Hidden by default */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 191, 255, 0.3);
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+            text-align: center;
+        }
+
+        .fact-popup.show {
+            top: 4rem; /* Lowered a bit to avoid overlapping the header/back button if it was there */
+        }
+
+        .fact-popup h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #00d2ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+
+        .fact-popup p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        .fact-popup .close-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .fact-popup .close-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .score-panel {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
+            min-width: 150px;
+        }
+
+        .score-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #00d2ff;
+        }
+
+        .controls-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            backdrop-filter: blur(5px);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #000;
+            backdrop-filter: blur(10px);
+            border: 2px solid #00d2ff;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            pointer-events: auto;
+            z-index: 2000; /* Priority UI */
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Atmosphere indicators */
+        .layer-info {
+            position: fixed;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .layer-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .layer-dot.active {
+            background: #00d2ff;
+            box-shadow: 0 0 10px #00d2ff;
+            transform: scale(1.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <div class="ui-overlay">
+        <a href="mge.html" class="back-button">← Back to Experiments</a>
+
+        <!-- Top Center Popup -->
+        <div id="fact-popup" class="fact-popup">
+            <h2>Sky Discovery!</h2>
+            <p id="fact-text">Did you know the sky is blue because of Rayleigh scattering?</p>
+            <button class="close-btn" onclick="hideFact()">Got it!</button>
+        </div>
+
+        <div class="score-panel">
+            <div class="score-label">Facts Found</div>
+            <div class="score-value" id="score-val">0</div>
+        </div>
+
+        <div class="layer-info" id="layer-info">
+            <div class="layer-dot" title="Exosphere"></div>
+            <div class="layer-dot" title="Thermosphere"></div>
+            <div class="layer-dot" title="Mesosphere"></div>
+            <div class="layer-dot" title="Stratosphere"></div>
+            <div class="layer-dot active" title="Troposphere"></div>
+        </div>
+
+        <div class="controls-hint">
+            Use WASD or Arrows to Glide • Collect Cosmic Orbs for Sky Facts
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let score = 0;
+        let factsUnlocked = 0;
+        const skyFacts = [
+            "The sky is blue because white light from the sun is scattered by molecules in the atmosphere, a process called Rayleigh scattering!",
+            "Our atmosphere has 5 main layers: Troposphere, Stratosphere, Mesosphere, Thermosphere, and Exosphere!",
+            "Clouds are actually formed by billions of tiny water droplets or ice crystals suspended in the air.",
+            "The sun is a medium-sized star classified as a 'Yellow Dwarf'. It's over 4.6 billion years old!",
+            "Stars twinkle because their light is bent as it passes through the turbulent layers of Earth's atmosphere.",
+            "The Ozone Layer, located in the Stratosphere, acts as a planetary shield, protecting us from harmful UV rays.",
+            "The Northern Lights (Aurora Borealis) are caused by solar wind particles colliding with gases in our atmosphere.",
+            "Light takes approximately 8 minutes and 20 seconds to travel from the Sun to your eyes on Earth!",
+            "The Milky Way is a barred spiral galaxy containing between 100 to 400 billion stars, including our sun.",
+            "Sunset and sunrise look red because sunlight travels through more atmosphere, scattering away the blue light first."
+        ];
+
+        // Three.js Setup
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('game-container').appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        mainLight.position.set(20, 100, 20);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+
+        // Ice Ring
+        const ringGeo = new THREE.CylinderGeometry(20, 20, 1, 64);
+        const ringMat = new THREE.MeshStandardMaterial({ 
+            color: 0x88ccff, 
+            roughness: 0.1, 
+            metalness: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.y = -0.5;
+        ring.receiveShadow = true;
+        scene.add(ring);
+
+        // Inner glowing ring
+        const innerRingGeo = new THREE.TorusGeometry(19.5, 0.2, 16, 100);
+        const innerRingMat = new THREE.MeshBasicMaterial({ color: 0x00d2ff });
+        const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+        innerRing.rotation.x = Math.PI/2;
+        scene.add(innerRing);
+
+        // Starfield
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 5000;
+        const starPos = new Float32Array(starCount * 3);
+        const starSizes = new Float32Array(starCount);
+
+        for(let i=0; i<starCount*3; i++) {
+            starPos[i] = (Math.random() - 0.5) * 1000;
+        }
+        for(let i=0; i<starCount; i++) {
+            starSizes[i] = Math.random() * 2;
+        }
+
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7 });
+        const starField = new THREE.Points(starGeo, starMat);
+        scene.add(starField);
+
+        // Player (The Skater)
+        const playerGroup = new THREE.Group();
+        const playerBody = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x00d2ff, emissiveIntensity: 0.5 })
+        );
+        playerBody.position.y = 0.5;
+        playerBody.castShadow = true;
+        playerGroup.add(playerBody);
+
+        // Skater trail/glow
+        const light = new THREE.PointLight(0x00d2ff, 1, 10);
+        light.position.y = 1;
+        playerGroup.add(light);
+
+        scene.add(playerGroup);
+
+        // Variables for movement
+        let moveState = { forward: false, backward: false, left: false, right: false };
+        let velocity = new THREE.Vector3();
+        let acceleration = 0.015;
+        let friction = 0.96;
+        let maxSpeed = 0.25;
+
+        // Fact Orbs
+        const orbs = [];
+        function createOrb() {
+            const orbGeo = new THREE.SphereGeometry(0.6, 16, 16);
+            const orbMat = new THREE.MeshStandardMaterial({ 
+                color: 0xffe600, 
+                emissive: 0xffaa00, 
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.9
+            });
+            const orb = new THREE.Mesh(orbGeo, orbMat);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 5 + Math.random() * 12;
+            orb.position.set(Math.cos(angle) * radius, 0.6, Math.sin(angle) * radius);
+            
+            scene.add(orb);
+            orbs.push(orb);
+
+            // Add inner glow sprite if possible, or just a point light
+            const orbLight = new THREE.PointLight(0xffe600, 0.5, 5);
+            orb.add(orbLight);
+        }
+
+        // Initialize first orbs
+        for(let i=0; i<3; i++) createOrb();
+
+        // Input Handling
+        window.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': moveState.forward = true; break;
+                case 's': case 'arrowdown': moveState.backward = true; break;
+                case 'a': case 'arrowleft': moveState.left = true; break;
+                case 'd': case 'arrowright': moveState.right = true; break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': moveState.forward = false; break;
+                case 's': case 'arrowdown': moveState.backward = false; break;
+                case 'a': case 'arrowleft': moveState.left = false; break;
+                case 'd': case 'arrowright': moveState.right = false; break;
+            }
+        });
+
+        // UI Functions
+        function showFact() {
+            const popup = document.getElementById('fact-popup');
+            const factText = document.getElementById('fact-text');
+            const index = factsUnlocked % skyFacts.length;
+            factText.innerText = skyFacts[index];
+            popup.classList.add('show');
+            factsUnlocked++;
+            score++;
+            document.getElementById('score-val').innerText = score;
+
+            // Pause movement briefly or just let them read
+            setTimeout(() => {
+                // Potential auto-hide if needed
+            }, 5000);
+        }
+
+        function hideFact() {
+            document.getElementById('fact-popup').classList.remove('show');
+        }
+
+        // Game Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Movement logic
+            if (moveState.forward) velocity.z -= acceleration;
+            if (moveState.backward) velocity.z += acceleration;
+            if (moveState.left) velocity.x -= acceleration;
+            if (moveState.right) velocity.x += acceleration;
+
+            velocity.x *= friction;
+            velocity.z *= friction;
+
+            // Clamp velocity
+            const currentSpeed = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
+            if (currentSpeed > maxSpeed) {
+                velocity.x = (velocity.x / currentSpeed) * maxSpeed;
+                velocity.z = (velocity.z / currentSpeed) * maxSpeed;
+            }
+
+            playerGroup.position.x += velocity.x;
+            playerGroup.position.z += velocity.z;
+
+            // Boundary Check
+            const distFromCenter = Math.sqrt(playerGroup.position.x ** 2 + playerGroup.position.z ** 2);
+            if (distFromCenter > 19.5) {
+                const angle = Math.atan2(playerGroup.position.z, playerGroup.position.x);
+                playerGroup.position.x = Math.cos(angle) * 19.5;
+                playerGroup.position.z = Math.sin(angle) * 19.5;
+                velocity.x *= -0.5; // Bounce back
+                velocity.z *= -0.5;
+            }
+
+            // Orb collision
+            for (let i = orbs.length - 1; i >= 0; i--) {
+                const orb = orbs[i];
+                const dx = playerGroup.position.x - orb.position.x;
+                const dz = playerGroup.position.z - orb.position.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                
+                if (dist < 1.2) {
+                    scene.remove(orb);
+                    orbs.splice(i, 1);
+                    showFact();
+                    createOrb();
+                }
+
+                // Animation for orb
+                orb.position.y = 0.6 + Math.sin(Date.now() * 0.003) * 0.1;
+                orb.rotation.y += 0.02;
+            }
+
+            // Animate starfield
+            starField.rotation.y += 0.0002;
+            starField.rotation.x += 0.0001;
+
+            // Camera follow (relaxed)
+            camera.position.x += (playerGroup.position.x - camera.position.x) * 0.05;
+            camera.position.z += (playerGroup.position.z + 15 - camera.position.z) * 0.05;
+            camera.position.y = 10;
+            camera.lookAt(playerGroup.position.x, 0, playerGroup.position.z);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
