@@ -213,6 +213,66 @@
             0% { background: rgba(255, 255, 255, 0.3); }
             100% { background: rgba(0, 210, 255, 0.1); }
         }
+
+        #math-popup {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+        }
+
+        #math-question {
+            color: #ff4757;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff4757;
+            text-align: center;
+        }
+
+        #math-input {
+            font-size: 2rem;
+            padding: 10px;
+            text-align: center;
+            background: #222;
+            color: #00d2ff;
+            border: 2px solid #00d2ff;
+            outline: none;
+        }
+
+        .cards-panel {
+            position: fixed;
+            left: 360px;
+            bottom: 50px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+            max-width: calc(100% - 400px);
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .molecule-card {
+            min-width: 80px;
+            height: 110px;
+            background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+            border-radius: 10px;
+            border: 2px solid #FFF;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px;
+            animation: hit-flash 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -258,10 +318,17 @@
 
     <div id="combo-text">PERFECT!</div>
 
+    <div id="cards-panel" class="cards-panel"></div>
+
     <div class="status-footer">
         <div>STEM LAB EXPERIMENT v2.1</div>
         <div id="status-msg">READY TO INFUSE...</div>
         <a href="mge.html" class="exit-btn">RETURN TO HUB [ESC]</a>
+    </div>
+
+    <div id="math-popup">
+        <div id="math-question">SYSTEM ERROR! SOLVE TO CONTINUE: <br><span id="math-eq"></span></div>
+        <input type="number" id="math-input" placeholder="Enter Answer" autofocus autocomplete="off">
     </div>
 
     <script>
@@ -298,6 +365,96 @@
         critter.add(nucleus);
 
         camera.position.z = 5;
+
+        // Orbiting synthesized molecules
+        const moleculesGroup = new THREE.Group();
+        scene.add(moleculesGroup);
+
+        // 3D Timer using Canvas
+        const timerCanvas = document.createElement('canvas');
+        timerCanvas.width = 256;
+        timerCanvas.height = 128;
+        const timerCtx = timerCanvas.getContext('2d');
+        const timerTex = new THREE.CanvasTexture(timerCanvas);
+        const timerMat = new THREE.MeshBasicMaterial({ map: timerTex, transparent: true, blending: THREE.AdditiveBlending });
+        const timerMesh = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.5), timerMat);
+        timerMesh.position.set(2, 3, 0);
+        scene.add(timerMesh);
+
+        let timeLeft = 60;
+        let level = 1;
+        let arrowSpeed = 4;
+        let spawnRate = 800;
+
+        function updateTimer3D() {
+            timerCtx.clearRect(0, 0, 256, 128);
+            timerCtx.fillStyle = '#ff4757';
+            timerCtx.font = 'bold 80px Outfit';
+            timerCtx.textAlign = 'center';
+            timerCtx.textBaseline = 'middle';
+            timerCtx.fillText("T:" + Math.ceil(timeLeft), 128, 64);
+            timerTex.needsUpdate = true;
+        }
+        updateTimer3D();
+
+        setInterval(() => {
+            if (!isPaused && !isWinning && timeLeft > 0) {
+                timeLeft -= 1;
+                updateTimer3D();
+                if (level >= 2) {
+                   arrowSpeed += 0.2; // Gets faster and faster
+                   spawnRate = Math.max(200, spawnRate - 10);
+                }
+            }
+        }, 1000);
+
+        // Win animation particles
+        let isWinning = false;
+        let particles = null;
+
+        // Math Popup Logic
+        let isPaused = false;
+        let expectedAnswer = 0;
+        const mathPopup = document.getElementById('math-popup');
+        const mathEq = document.getElementById('math-eq');
+        const mathInput = document.getElementById('math-input');
+
+        function triggerMathPopup() {
+            if (isWinning) return; // Don't interrupt the win animation!
+            isPaused = true;
+            const a = Math.floor(Math.random() * 12) + 2;
+            const b = Math.floor(Math.random() * 12) + 2;
+            expectedAnswer = a * b;
+            mathEq.innerText = `${a} x ${b} = ?`;
+            mathPopup.style.display = 'flex';
+            mathInput.value = '';
+            mathInput.focus();
+        }
+
+        mathInput.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                if(parseInt(mathInput.value) === expectedAnswer) {
+                    mathPopup.style.display = 'none';
+                    isPaused = false;
+                } else {
+                    mathInput.value = ''; // Try again
+                    mathInput.style.borderColor = 'red';
+                    setTimeout(() => mathInput.style.borderColor = '#00d2ff', 300);
+                }
+            }
+        });
+
+        // Trigger math randomly every 15-30 seconds
+        function scheduleMath() {
+            const delay = Math.random() * 15000 + 15000;
+            setTimeout(() => {
+                if (!isWinning) {
+                    triggerMathPopup();
+                    scheduleMath();
+                }
+            }, delay);
+        }
+        scheduleMath();
 
         // --- RHYTHM LOGIC ---
         const arrows = [];
@@ -344,18 +501,43 @@
         function animate(time) {
             requestAnimationFrame(animate);
 
+            if (isPaused) return; // Freeze game when math is on
+
+            if (isWinning) {
+                // Awesome Win Animation
+                critter.rotation.y += 0.05;
+                critter.rotation.x += 0.05;
+                moleculesGroup.rotation.y -= 0.02;
+                if (particles) {
+                    particles.rotation.y += 0.01;
+                    const positions = particles.geometry.attributes.position.array;
+                    for (let i = 0; i < positions.length; i += 3) {
+                        positions[i] += (Math.random() - 0.5) * 0.1;
+                        positions[i+1] += (Math.random() - 0.5) * 0.1;
+                        positions[i+2] += (Math.random() - 0.5) * 0.1;
+                    }
+                    particles.geometry.attributes.position.needsUpdate = true;
+                    
+                    critterMat.color.setHSL((time % 2000) / 2000, 1, 0.5);
+                }
+            } else {
+                critter.rotation.y += 0.01;
+                critter.rotation.x += 0.005;
+            }
+
             // Spawn arrows
-            if(time - lastSpawn > 800) {
+            if(!isWinning && time - lastSpawn > spawnRate) {
                 spawnArrow();
                 lastSpawn = time;
             }
 
             // Move arrows
-            const hitZoneTop = 100;
             for(let i = arrows.length-1; i >= 0; i--) {
                 const a = arrows[i];
-                a.y = (a.y || 0) + 4; // Speed
-                a.el.style.top = (window.innerHeight - a.y) + 'px';
+                if (!isWinning) {
+                    a.y = (a.y || 0) + arrowSpeed; // Speed
+                    a.el.style.top = (window.innerHeight - a.y) + 'px';
+                }
 
                 // Remove if off screen
                 if(a.y > window.innerHeight + 100) {
@@ -364,11 +546,15 @@
                 }
             }
 
-            // Animate Critter
-            critter.rotation.y += 0.01;
-            critter.rotation.x += 0.005;
             const s = growth + Math.sin(time * 0.002) * 0.05;
             critter.scale.set(s, s, s);
+
+            moleculesGroup.rotation.y += 0.005;
+            moleculesGroup.children.forEach((mol, i) => {
+                mol.rotation.x += 0.01;
+                mol.rotation.y += 0.02;
+                mol.position.y = Math.sin(time * 0.003 + i) * 1.5;
+            });
 
             renderer.render(scene, camera);
         }
@@ -376,6 +562,13 @@
 
         // --- INPUT & ACCURACY ---
         window.addEventListener('keydown', (e) => {
+            if (isPaused || isWinning) {
+                if (isPaused && e.key !== 'Escape') {
+                    // Do not process rhythm keys while paused unless it's handled by mathInput keydown
+                    return;
+                }
+            }
+
             const zoneTop = 100;
             const tolerance = 50;
 
@@ -438,8 +631,17 @@
                     document.getElementById('status-msg').style.color = "#000";
                     applyGrowth(r.grow);
                     clearUsedAtoms(r.formula);
+                    addPokemonCard(r.name, r.formula.join('+'));
                 }
             });
+        }
+
+        function addPokemonCard(name, formula) {
+            const panel = document.getElementById('cards-panel');
+            const card = document.createElement('div');
+            card.className = 'molecule-card';
+            card.innerHTML = `<div style="font-size:1.5rem">🌟</div><div>${name}</div><div style="font-size:0.6rem; color:#444; margin-top:5px;">${formula}</div>`;
+            panel.appendChild(card);
         }
 
         function hasFormula(formula) {
@@ -463,19 +665,87 @@
             updateBufferUI();
         }
 
+        function spawnMolecule() {
+            // Visual representation of a synthesized element orbiting
+            const molGeo = new THREE.DodecahedronGeometry(0.3);
+            const molMat = new THREE.MeshStandardMaterial({ 
+                color: Math.random() * 0xffffff,
+                emissive: Math.random() * 0xffffff,
+                emissiveIntensity: 0.5,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const mol = new THREE.Mesh(molGeo, molMat);
+            
+            const radius = 2 + Math.random() * 2;
+            const angle = Math.random() * Math.PI * 2;
+            mol.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+            
+            moleculesGroup.add(mol);
+        }
+
+        function triggerWinAnimation() {
+            if (level === 1) {
+                level = 2;
+                document.getElementById('status-msg').innerText = "LEVEL 2: SYSTEM OVERDRIVE!";
+                document.getElementById('status-msg').style.color = "#ff4757";
+                growth = 1.0; // reset
+                arrowSpeed = 6;
+                spawnRate = 600;
+                timeLeft += 60;
+                document.getElementById('growth-fill').style.width = '10%';
+                document.getElementById('growth-percent').innerText = '10';
+                
+                const combo = document.getElementById('combo-text');
+                combo.style.opacity = '1';
+                combo.innerHTML = "LEVEL 2<br>OVERDRIVE!";
+                combo.style.animation = "hit-flash 0.5s infinite alternate";
+                setTimeout(() => { combo.style.opacity = '0'; combo.style.animation = ''; }, 2000);
+            } else {
+                isWinning = true;
+                document.getElementById('status-msg').innerText = "MAX GROWTH ACHIEVED! SYSTEM OVERLOAD!";
+                document.getElementById('status-msg').style.color = "#ff4757";
+                critterMat.wireframe = false;
+                
+                // Fireworks particles
+                const pGeo = new THREE.BufferGeometry();
+                const pCount = 2000;
+                const pPos = new Float32Array(pCount * 3);
+                for(let i=0; i<pCount*3; i++) {
+                    pPos[i] = (Math.random() - 0.5) * 10;
+                }
+                pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+                const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+                particles = new THREE.Points(pGeo, pMat);
+                scene.add(particles);
+
+                // Confetti UI text
+                const combo = document.getElementById('combo-text');
+                combo.style.opacity = '1';
+                combo.innerHTML = "ELEMENTAL<br>MASTERY!";
+                combo.style.animation = "hit-flash 0.5s infinite alternate";
+            }
+        }
+
         function applyGrowth(amount) {
             growth += amount / 100;
-            const percent = Math.min(Math.floor(growth * 10), 100);
-            document.getElementById('growth-fill').style.width = percent + '%';
-            document.getElementById('growth-percent').innerText = percent;
+            let currentPct = document.getElementById('growth-percent').innerText;
+            if (currentPct === '100') return; // already won
+            
+            let percentDisplay = Math.min(Math.floor(growth * 10), 100);
+            
+            document.getElementById('growth-fill').style.width = percentDisplay + '%';
+            document.getElementById('growth-percent').innerText = percentDisplay;
+            
+            // Spawn a visual 3D molecule
+            spawnMolecule();
             
             // Visual feedback on critter
             critterMat.emissiveIntensity = 2;
             setTimeout(() => critterMat.emissiveIntensity = 0.5, 500);
             
-            if(percent >= 100) {
-                document.getElementById('status-msg').innerText = "MAX GROWTH ACHIEVED!";
-                critterMat.wireframe = false;
+            if(percentDisplay >= 100 && !isWinning) {
+                triggerWinAnimation();
             }
         }
 
