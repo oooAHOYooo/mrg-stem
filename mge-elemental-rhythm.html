@@ -356,6 +356,7 @@
     </div>
     <div style="position: fixed; top: 135px; left: 400px; z-index: 10; font-weight: bold; font-size: 0.8rem;">CRITTER
         GROWTH: <span id="growth-percent">10</span>%</div>
+    <div style="position: fixed; top: 135px; right: 50px; z-index: 10; font-weight: bold; font-size: 1.2rem; color: #ffd700;">SCORE: <span id="score">0</span></div>
 
     <div id="combo-text">PERFECT!</div>
 
@@ -368,9 +369,23 @@
     </div>
 
     <div id="math-popup">
-        <div id="math-question">CODE CHALLENGE! COMPLETE TO CONTINUE: <br><span id="math-eq"
-                style="font-family: 'JetBrains Mono', monospace; font-size: 0.8em; color: #7bed9f;"></span></div>
-        <input type="text" id="math-input" placeholder="Type code answer" autofocus autocomplete="off">
+        <div id="math-question">MATH CHALLENGE! COMPLETE TO CONTINUE: <br><span id="math-eq"
+                style="font-family: 'JetBrains Mono', monospace; font-size: 1.2em; color: #7bed9f;"></span></div>
+        <input type="text" id="math-input" placeholder="Type answer (Enter to submit)" autofocus autocomplete="off">
+        <button id="skip-math-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1rem; background: #ff4757; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Outfit'; box-shadow: 0 0 10px #ff4757;">Give Up / Skip [Space] (-50 pts)</button>
+    </div>
+
+    <!-- Fact Display -->
+    <div id="fact-display" style="position: fixed; bottom: 50px; right: 50px; width: 300px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #00d2ff; z-index: 5; opacity: 0; transition: opacity 1s;">
+        <h4 style="color: #00d2ff; margin-bottom: 5px; font-size: 0.9em;">COMPUTER FACT</h4>
+        <div id="fact-text" style="font-size: 0.8rem; line-height: 1.4; color: #fff;"></div>
+    </div>
+
+    <!-- Lesson Popup -->
+    <div id="lesson-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;">
+        <h2 style="color: #00d2ff; font-size: 3rem; margin-bottom: 20px; text-shadow: 0 0 20px #00d2ff;">STEM LESSON</h2>
+        <div id="lesson-text" style="color: #fff; font-size: 1.8rem; max-width: 800px; line-height: 1.6; margin-bottom: 40px;"></div>
+        <button id="lesson-btn" style="padding: 15px 40px; font-size: 1.5rem; background: #00d2ff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px #00d2ff; font-family: 'Outfit';">I UNDERSTAND</button>
     </div>
 
     <script>
@@ -411,6 +426,44 @@
         // Orbiting synthesized molecules
         const moleculesGroup = new THREE.Group();
         scene.add(moleculesGroup);
+
+        // --- 3D BACKGROUND ARROWS ---
+        const bgArrows = new THREE.Group();
+        scene.add(bgArrows);
+        
+        const arrowShape = new THREE.Shape();
+        arrowShape.moveTo(0, 0);
+        arrowShape.lineTo(0.5, 0.5);
+        arrowShape.lineTo(0.2, 0.5);
+        arrowShape.lineTo(0.2, 1.5);
+        arrowShape.lineTo(-0.2, 1.5);
+        arrowShape.lineTo(-0.2, 0.5);
+        arrowShape.lineTo(-0.5, 0.5);
+        arrowShape.lineTo(0, 0);
+
+        const extrudeSettings = { depth: 0.1, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
+        const arrowGeo3D = new THREE.ExtrudeGeometry(arrowShape, extrudeSettings);
+        
+        for (let i = 0; i < 60; i++) {
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color().setHSL(Math.random(), 1, 0.5), 
+                emissive: new THREE.Color().setHSL(Math.random(), 1, 0.2),
+                transparent: true,
+                opacity: 0.3
+            });
+            const mesh = new THREE.Mesh(arrowGeo3D, mat);
+            mesh.position.set((Math.random() - 0.5) * 60, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40 - 10);
+            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            
+            mesh.userData = {
+                vx: 0,
+                vy: 0,
+                vz: Math.random() * 0.15 + 0.05,
+                rx: Math.random() * 0.02,
+                ry: Math.random() * 0.02
+            };
+            bgArrows.add(mesh);
+        }
 
         // 3D Timer using Canvas
         const timerCanvas = document.createElement('canvas');
@@ -458,27 +511,85 @@
         let isPaused = false;
         let expectedAnswer = "";
         let successfulHits = 0;
+        let popupsTriggered = 0;
+        let score = 0;
+        
+        function updateScore(points) {
+            score += points;
+            document.getElementById('score').innerText = score;
+        }
+
         const mathPopup = document.getElementById('math-popup');
         const mathEq = document.getElementById('math-eq');
         const mathInput = document.getElementById('math-input');
 
-        const codingQuestions = [
-            { text: '// Add "O" to the end of the array<br>let atoms = ["H", "H"];<br>atoms.____("O");', answer: 'push' },
-            { text: '// Concatenate the strings<br>let water = "H2" __ "O";', answer: '+' },
-            { text: '// Add 2 to carbon<br>let carbon = 6;<br>let oxygen = carbon __ 2;', answer: '+' },
-            { text: '// Get the number of items in the array<br>let e = ["H", "O"];<br>e.____;', answer: 'length' },
-            { text: '// Check if NOT full<br>let full = true;<br>if (___full) {', answer: '!' },
-            { text: '// Declare a variable that can change<br>____ atom = "H";', answer: 'let' },
-            { text: '// Declare a variable that cannot change<br>_____ max = 100;', answer: 'const' },
-            { text: '// Write to console<br>console.____("Hello");', answer: 'log' }
+        // Facts loop
+        let facts = [];
+        fetch('data/computer-facts.json')
+            .then(res => res.json())
+            .then(data => {
+                facts = data.facts;
+                setTimeout(showNextFact, 2000);
+            })
+            .catch(err => {
+                facts = [{text: "The first computer bug was an actual bug! A moth got stuck in the Harvard Mark II in 1947."}];
+                setTimeout(showNextFact, 2000);
+            });
+
+        function showNextFact() {
+            if (!facts || !facts.length) return;
+            const f = facts[Math.floor(Math.random() * facts.length)];
+            const display = document.getElementById('fact-display');
+            document.getElementById('fact-text').innerText = f.text;
+            display.style.opacity = '1';
+            setTimeout(() => {
+                display.style.opacity = '0';
+                setTimeout(showNextFact, 4000); // 4 seconds between facts
+            }, 8000); // shows for 8 seconds
+        }
+
+        // Lessons content
+        const lessons = [
+            "H2O is Water! It's made of 2 Hydrogen atoms and 1 Oxygen atom. Water covers 71% of Earth's surface!",
+            "CO2 is Carbon Dioxide! Plants breathe this in to make oxygen for us to breathe.",
+            "Variables in programming are like storage boxes! You put data in them and give them a name to use later.",
+            "DDR stands for Dance Dance Revolution! It helped popularize rhythm games in arcades.",
+            "Atoms are the basic building blocks of all matter. Everything you see, feel, and touch is made of tiny atoms!"
         ];
+
+        function triggerLessonPopup() {
+            if (isWinning) return;
+            isPaused = true;
+            document.getElementById('lesson-text').innerText = lessons[Math.floor(Math.random() * lessons.length)];
+            document.getElementById('lesson-popup').style.display = 'flex';
+        }
+
+        document.getElementById('lesson-btn').addEventListener('click', () => {
+            document.getElementById('lesson-popup').style.display = 'none';
+            isPaused = false;
+        });
 
         function triggerCodingPopup() {
             if (isWinning) return; // Don't interrupt the win animation!
             isPaused = true;
-            const q = codingQuestions[Math.floor(Math.random() * codingQuestions.length)];
-            expectedAnswer = q.answer;
-            mathEq.innerHTML = q.text;
+            
+            // Generate basic math: addition or subtraction
+            const isAdd = Math.random() > 0.5;
+            const a = Math.floor(Math.random() * 20) + 1;
+            const b = Math.floor(Math.random() * 20) + 1;
+            let text, ans;
+            if (isAdd) {
+                text = `What is ${a} + ${b}?`;
+                ans = (a + b).toString();
+            } else {
+                const max = Math.max(a, b);
+                const min = Math.min(a, b);
+                text = `What is ${max} - ${min}?`;
+                ans = (max - min).toString();
+            }
+            
+            expectedAnswer = ans;
+            mathEq.innerHTML = text;
             mathPopup.style.display = 'flex';
             mathInput.value = '';
             mathInput.focus();
@@ -487,14 +598,29 @@
         mathInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 if (mathInput.value.trim().toLowerCase() === expectedAnswer.toLowerCase()) {
+                    updateScore(50); // Bonus for getting it right
                     mathPopup.style.display = 'none';
                     isPaused = false;
                 } else {
-                    mathInput.value = ''; // Try again
-                    mathInput.style.borderColor = 'red';
-                    setTimeout(() => mathInput.style.borderColor = '#00d2ff', 300);
+                    updateScore(-50); // Deduct for getting it wrong
+                    mathPopup.style.display = 'none';
+                    isPaused = false;
+                    // Flash red to indicate incorrect logic before hiding
+                    document.getElementById('hit-zone').classList.add('flash');
+                    setTimeout(() => document.getElementById('hit-zone').classList.remove('flash'), 200);
                 }
+            } else if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault(); // prevent typing space in input
+                updateScore(-50);
+                mathPopup.style.display = 'none';
+                isPaused = false;
             }
+        });
+
+        document.getElementById('skip-math-btn').addEventListener('click', () => {
+            updateScore(-50);
+            mathPopup.style.display = 'none';
+            isPaused = false;
         });
 
         // --- RHYTHM LOGIC ---
@@ -597,6 +723,18 @@
                 mol.position.y = Math.sin(time * 0.003 + i) * 1.5;
             });
 
+            // Move 3D background arrows
+            bgArrows.children.forEach(mesh => {
+                mesh.position.z += mesh.userData.vz;
+                mesh.rotation.x += mesh.userData.rx;
+                mesh.rotation.y += mesh.userData.ry;
+                if (mesh.position.z > 10) {
+                    mesh.position.z = -40; // reset far away
+                    mesh.position.x = (Math.random() - 0.5) * 60;
+                    mesh.position.y = (Math.random() - 0.5) * 40;
+                }
+            });
+
             renderer.render(scene, camera);
         }
         animate(0);
@@ -645,11 +783,18 @@
             combo.innerText = atom + " COLLECTED!";
             setTimeout(() => combo.style.opacity = '0', 300);
 
+            updateScore(10); // score points for hits
+
             addToBuffer(atom);
 
             successfulHits++;
             if (successfulHits % 15 === 0) {
-                triggerCodingPopup();
+                popupsTriggered++;
+                if (popupsTriggered % 2 === 0) {
+                    triggerLessonPopup();
+                } else {
+                    triggerCodingPopup(); // Actually math popup now
+                }
             }
         }
 
@@ -675,6 +820,7 @@
                 if (hasFormula(r.formula)) {
                     document.getElementById('status-msg').innerText = `SYNTHESIZED ${r.name.toUpperCase()}!`;
                     document.getElementById('status-msg').style.color = "#000";
+                    updateScore(r.grow * 10); // Add more score points
                     applyGrowth(r.grow);
                     clearUsedAtoms(r.formula);
                     addPokemonCard(r.name, r.formula.join('+'));

@@ -219,7 +219,9 @@
             <strong>Controls:</strong><br>
             Left Click: Draw 3D Paint<br>
             Right Click + Drag: Rotate Camera<br>
-            Scroll: Zoom In/Out<br><br>
+            Scroll: Zoom In/Out<br>
+            C Key: Change Background Color<br>
+            Any Key: Button Smash for Random Bursts!<br><br>
             <em>Draw furiously to fuse colors!</em>
         </div>
 
@@ -269,6 +271,7 @@
         function init() {
             // Setup Scene
             scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
             scene.fog = new THREE.FogExp2(0x1a1a2e, 0.015);
 
             // Setup Camera
@@ -313,6 +316,7 @@
 
             // Events
             window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('keydown', onKeyDown, false);
             
             const container = document.getElementById('canvas-container');
             container.addEventListener('pointerdown', onPointerDown);
@@ -326,6 +330,44 @@
             document.getElementById('btn-clear').onclick = clearCanvas;
 
             animate();
+        }
+
+        function onKeyDown(event) {
+            // Do nothing if color fact panel is open or if we hit an input field (just in case)
+            if (document.getElementById('color-fact-panel').style.display === 'block') return;
+
+            const key = event.key.toLowerCase();
+            
+            if (key === 'c') {
+                // Smoothly change the background and fog to a random color
+                const randomColor = new THREE.Color().setHSL(Math.random(), 0.7, 0.15);
+                scene.background = randomColor;
+                scene.fog.color = randomColor;
+            } else {
+                // Button mashing spawns random shapes/paint in a larger radius and boosts fusion
+                const baseTarget = new THREE.Vector3();
+                controls.target.clone(baseTarget);
+
+                const pos = new THREE.Vector3(
+                    baseTarget.x + (Math.random() - 0.5) * 80,
+                    baseTarget.y + (Math.random() - 0.5) * 80,
+                    baseTarget.z + (Math.random() - 0.5) * 80
+                );
+                
+                fusionMeter += 30; // Button mashing builds meter faster!
+                hueCursor = (hueCursor + 25) % 360; // Shifts color rapidly
+                
+                // Temporarily randomize the tool type just for the button smash
+                const prevTool = currentTool;
+                const toolTypes = ['paint', 'spray', 'shape'];
+                currentTool = toolTypes[Math.floor(Math.random() * toolTypes.length)];
+                
+                drawStroke(pos);
+                
+                currentTool = prevTool; // Restore selected UI tool
+                
+                checkFusionEvent();
+            }
         }
 
         function setTool(toolName) {

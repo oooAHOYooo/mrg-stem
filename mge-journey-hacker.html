@@ -43,10 +43,12 @@
             z-index: 10;
             pointer-events: none;
             display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            grid-template-rows: 150px 1fr 200px;
+            grid-template-columns: 280px 1fr 280px;
+            grid-template-rows: auto 1fr;
             gap: 20px;
             padding: 20px;
+            padding-top: 100px;
+            padding-bottom: 60px;
         }
 
         .screen-panel {
@@ -89,10 +91,103 @@
         }
 
         /* Panels */
-        .panel-left { grid-row: 1 / 3; }
-        .panel-right { grid-row: 1 / 3; }
-        .panel-top { grid-column: 2; text-align: center; }
-        .panel-bottom { grid-column: 1 / 4; display: flex; gap: 20px; }
+        .panel-left { grid-column: 1; grid-row: 1 / 3; }
+        .panel-right { grid-column: 3; grid-row: 1 / 3; }
+        .panel-top { grid-column: 2; grid-row: 1; text-align: center; border: 2px solid #0f0; background: rgba(0, 40, 0, 0.9); }
+        .panel-center { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; border: 2px solid #0f0; }
+
+        .mainframe-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 50, 0, 0.8);
+            border: 3px solid #0f0;
+            padding: 15px;
+            font-size: 1.5rem;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            margin-top: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .type-hint {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            white-space: nowrap;
+            text-shadow: 0 0 10px #ff0;
+            animation: bounce 0.5s alternate infinite;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0% { top: -40px; }
+            100% { top: -30px; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); }
+        }
+
+        #terminal-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+            text-shadow: 0 0 5px #fff;
+        }
+
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+            color: #0f0;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake {
+            animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes crazy-shake {
+            0% { transform: translate(5px, 5px) rotate(0deg) scale(1.05); }
+            10% { transform: translate(-5px, -6px) rotate(-3deg) scale(0.95); }
+            20% { transform: translate(-7px, 0px) rotate(3deg) scale(1.1); }
+            30% { transform: translate(7px, 6px) rotate(0deg) scale(0.9); }
+            40% { transform: translate(5px, -5px) rotate(3deg) scale(1.05); }
+            50% { transform: translate(-5px, 6px) rotate(-3deg) scale(0.95); }
+            60% { transform: translate(-7px, 5px) rotate(0deg) scale(1.1); }
+            70% { transform: translate(7px, 5px) rotate(-3deg) scale(0.9); }
+            80% { transform: translate(-5px, -5px) rotate(3deg) scale(1.05); }
+            90% { transform: translate(5px, 6px) rotate(0deg) scale(0.95); }
+            100% { transform: translate(5px, -6px) rotate(-3deg) scale(1.1); }
+        }
+        .crazy-shake {
+            animation: crazy-shake 0.1s infinite;
+        }
 
         h2 { font-size: 0.9rem; margin-bottom: 10px; color: #fff; background: #040; padding: 2px 5px; }
 
@@ -243,7 +338,7 @@
 
     <div class="hacker-overlay">
         <!-- Explorer / C: Drive structure -->
-        <div class="screen-panel panel-left" style="margin-top: 80px;">
+        <div class="screen-panel panel-left">
             <h2>FILE EXPLORER: C:\</h2>
             <div class="file-list" id="file-explorer">
                 <div class="file-item dir">[DIR] Windows</div>
@@ -263,45 +358,45 @@
                     DRIVE: SSD_NVME_0
                 </div>
             </div>
-        </div>
-
-        <!-- System Logs / Mission -->
-        <div class="screen-panel panel-top" style="margin-top: 80px;">
-            <h2>CURRENT DIRECTORY: <span id="current-dir">C:\</span></h2>
-            <div class="terminal-text" id="objective-text">
-                PENETRATING C:\ DRIVE... SOLVE THE MATH LAYER TO ACCESS SUB-FOLDERS.
-            </div>
-        </div>
-
-        <!-- Network Traffic / Scrolling Data -->
-        <div class="screen-panel panel-right" style="margin-top: 80px;">
-            <h2>LIVE NETWORK TRAFFIC</h2>
-            <div class="scroll-text terminal-text" id="network-log">
-                <!-- Spammed with fake hacker logs -->
-            </div>
-        </div>
-
-        <!-- Terminal / Commands -->
-        <div class="screen-panel panel-bottom" style="margin-bottom: 50px;">
-            <div style="flex: 1;">
-                <h2>HACKER_CONSOLE</h2>
-                <div class="scroll-text terminal-text" id="console-output" style="height: 120px;">
-                    > SYSTEM INITIALIZED...<br>
-                    > WELCOME USER...<br>
-                    > TYPE 'help' FOR COMMANDS<br>
-                </div>
-                <div style="display: flex; align-items: center; margin-top: 5px;">
-                    <span>> </span>
-                    <input type="text" id="terminal-input" style="background:transparent; border:none; color:#0f0; width:100%; outline:none; font-family:inherit;" autofocus>
-                </div>
-            </div>
-            <div style="width: 300px;">
+            <div style="margin-top: 20px;">
                 <h2>SYSTEM STATS</h2>
                 <div class="terminal-text">
                     NODES VISITED: <span id="nodes-count">0</span><br>
                     FILES CRACKED: <span id="files-count">0</span><br>
                     MATH BYPASS: <span id="math-count">0</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- System Logs / Mission -->
+        <div class="screen-panel panel-top">
+            <h2 style="font-size: 1.2rem; background: #060; padding: 5px;">CURRENT OBJECTIVE: <span id="current-dir">C:\</span></h2>
+            <div class="terminal-text" id="objective-text" style="font-size: 1.1rem; padding: 10px; color: #fff;">
+                PENETRATING C:\ DRIVE... MASH BUTTONS OR TYPE COMMANDS TO ACCESS SUB-FOLDERS.
+            </div>
+        </div>
+
+        <!-- Terminal / Commands (Mainframe Center) -->
+        <div class="screen-panel panel-center" id="mainframe-center">
+            <h2 style="font-size: 1.2rem; text-align: center;">MAINFRAME TERMINAL</h2>
+            <div class="scroll-text terminal-text" id="console-output" style="flex: 1; padding: 10px; font-size: 1.1rem;">
+                > SYSTEM INITIALIZED...<br>
+                > WELCOME USER...<br>
+                > START TYPING TO INITIATE HACK...<br>
+                > OR TYPE 'help' FOR COMMANDS<br>
+            </div>
+            <div class="mainframe-input-container" onclick="document.getElementById('terminal-input').focus()">
+                <div class="type-hint">⬇️ CLICK HERE AND MASH KEYS FAST! ⬇️</div>
+                <span class="blinking-cursor">USER@MAINFRAME:~$ </span>
+                <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" autofocus>
+            </div>
+        </div>
+
+        <!-- Network Traffic / Scrolling Data -->
+        <div class="screen-panel panel-right">
+            <h2>LIVE NETWORK TRAFFIC</h2>
+            <div class="scroll-text terminal-text" id="network-log">
+                <!-- Spammed with fake hacker logs -->
             </div>
         </div>
     </div>
@@ -344,19 +439,64 @@
         const gridHelper = new THREE.GridHelper(100, 50, 0x00ff00, 0x004400);
         scene.add(gridHelper);
 
-        // Floating Data Blocks
-        const cubes = [];
-        const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-        const cubeMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        // 3D Robot
+        const robot = new THREE.Group();
+        
+        // Materials
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, roughness: 0.4, metalness: 0.8 });
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const darkMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
 
-        for(let i=0; i<50; i++) {
-            const cube = new THREE.Mesh(cubeGeo, cubeMat);
-            cube.position.set((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
-            scene.add(cube);
-            cubes.push(cube);
-        }
+        // Head
+        const headGeo = new THREE.BoxGeometry(2, 2, 2);
+        const head = new THREE.Mesh(headGeo, metalMat);
+        head.position.y = 3;
+        robot.add(head);
 
-        camera.position.z = 5;
+        // Eyes
+        const eyeGeo = new THREE.BoxGeometry(0.5, 0.5, 0.2);
+        const leftEye = new THREE.Mesh(eyeGeo, glowMat);
+        leftEye.position.set(-0.5, 3.2, 1.05);
+        robot.add(leftEye);
+        const rightEye = new THREE.Mesh(eyeGeo, glowMat);
+        rightEye.position.set(0.5, 3.2, 1.05);
+        robot.add(rightEye);
+
+        // Body
+        const bodyGeo = new THREE.BoxGeometry(3, 4, 2);
+        const body = new THREE.Mesh(bodyGeo, metalMat);
+        body.position.y = 0;
+        robot.add(body);
+
+        // Arms
+        const armGeo = new THREE.CylinderGeometry(0.5, 0.5, 3);
+        const leftArm = new THREE.Mesh(armGeo, darkMat);
+        leftArm.position.set(-2.2, 0, 0);
+        leftArm.rotation.z = Math.PI / 4;
+        robot.add(leftArm);
+        const rightArm = new THREE.Mesh(armGeo, darkMat);
+        rightArm.position.set(2.2, 0, 0);
+        rightArm.rotation.z = -Math.PI / 4;
+        robot.add(rightArm);
+
+        // Floating Base
+        const baseGeo = new THREE.CylinderGeometry(1.5, 0.5, 1);
+        const base = new THREE.Mesh(baseGeo, darkMat);
+        base.position.y = -2.5;
+        robot.add(base);
+
+        scene.add(robot);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+
+        camera.position.set(0, 0, 15);
+
+        let nosActive = false;
 
         // --- GAME LOGIC ---
         let stats = { nodes: 0, files: 0, math: 0 };
@@ -392,13 +532,40 @@
 [ROOT ACCESS GRANTED]`;
         let codeIndex = 0;
 
+        // Sound Effects setup
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(freq, type, dur, vol) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
+        }
+
         inputEl.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') {
                 const cmd = inputEl.value.toLowerCase().trim();
                 inputEl.value = '';
                 processCommand(cmd);
+                playBeep(400, 'square', 0.1, 0.1);
             } else if (e.key.length === 1) {
                 keystrokeCount++;
+
+                // Audio SFX on type
+                playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
+
+                // CSS SFX on type (shake the mainframe)
+                const mainframe = document.getElementById('mainframe-center');
+                mainframe.classList.remove('shake');
+                void mainframe.offsetWidth; // trigger reflow
+                mainframe.classList.add('shake');
+
                 // Provide hackertyper button mashing feedback
                 if (keystrokeCount % 2 === 0) {
                     const chunk = codeSnippet.substring(codeIndex, codeIndex + 15).replace(/\n/g, '<br>');
@@ -440,6 +607,63 @@
                 consoleEl.innerHTML = '';
             } else if(cmd === 'info') {
                 log('THE C: DRIVE IS YOUR MAIN STORAGE HUB.');
+            } else if(cmd === 'lion') {
+                log('ROARRRRR!!! 🦁', '#f80');
+                playBeep(150, 'sawtooth', 0.8, 0.3);
+                document.body.style.filter = 'hue-rotate(300deg) contrast(150%)';
+                document.getElementById('mainframe-center').classList.add('crazy-shake');
+                setTimeout(() => {
+                    document.body.style.filter = '';
+                    document.getElementById('mainframe-center').classList.remove('crazy-shake');
+                }, 1000);
+            } else if(cmd === 'poop' || cmd === 'fart') {
+                log('SYSTEM ERROR: TOXIC GAS DETECTED 💩', '#a52a2a');
+                playBeep(150, 'sawtooth', 0.1, 0.2);
+                setTimeout(() => playBeep(100, 'sawtooth', 0.1, 0.2), 100);
+                setTimeout(() => playBeep(80, 'sawtooth', 0.3, 0.2), 200);
+                document.body.style.background = '#2a1a00';
+                document.getElementById('mainframe-center').classList.add('crazy-shake');
+                setTimeout(() => {
+                    document.body.style.background = '#000';
+                    document.getElementById('mainframe-center').classList.remove('crazy-shake');
+                }, 1000);
+            } else if(cmd === 'pizza') {
+                log('PIZZA PARTY OVERRIDE INITIATED! 🍕', '#ff0');
+                playBeep(600, 'sine', 0.1, 0.1);
+                setTimeout(() => playBeep(800, 'sine', 0.2, 0.1), 150);
+                document.body.style.filter = 'hue-rotate(90deg) drop-shadow(0 0 20px yellow)';
+                setTimeout(() => document.body.style.filter = '', 2000);
+            } else if(cmd === 'dance') {
+                log('SYSTEM DANCE MODE ACTIVATED 💃🕺', '#f0f');
+                let count = 0;
+                let danceInterval = setInterval(() => {
+                    document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    playBeep(300 + Math.random()*500, 'square', 0.1, 0.1);
+                    count++;
+                    if(count > 10) {
+                        clearInterval(danceInterval);
+                        document.body.style.filter = '';
+                    }
+                }, 200);
+            } else if(cmd === 'nos') {
+                log('WARNING: INJECTING NITROUS OXIDE INTO MAINFRAME 🏁💨', '#0ff');
+                nosActive = true;
+                // Engine Rev Sound
+                playBeep(200, 'sawtooth', 0.5, 0.5);
+                setTimeout(() => playBeep(300, 'sawtooth', 0.5, 0.6), 500);
+                setTimeout(() => playBeep(500, 'sawtooth', 1.0, 0.8), 1000);
+                
+                document.body.style.filter = 'blur(2px) contrast(150%) hue-rotate(-50deg)';
+                setTimeout(() => {
+                    nosActive = false;
+                    camera.position.set(0, 0, 15);
+                    document.body.style.filter = '';
+                }, 3000);
+            } else if(cmd === 'family') {
+                log('I DON\'T GOT FRIENDS. I GOT FAMILY. 🚗💨', '#fff');
+                playBeep(400, 'square', 0.1, 0.2);
+                setTimeout(() => playBeep(600, 'square', 0.4, 0.3), 200);
+                document.getElementById('objective-text').innerText = "THE FAST AND THE FURIOUS: TOKYO DRIFT C:\\ DRIVE";
             } else {
                 log(`UNKNOWN COMMAND: ${cmd}`, '#f00');
             }
@@ -525,16 +749,26 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            cubes.forEach((c, i) => {
-                c.rotation.x += 0.01;
-                c.rotation.y += 0.01;
-                c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01;
-            });
+            if (nosActive) {
+                // NOS hyper speed crazy tilt
+                camera.position.z -= 0.5;
+                robot.rotation.y += 0.5;
+                robot.rotation.x = Math.PI / 4;
+            } else {
+                // Normal robot bobbing
+                robot.rotation.y += 0.01;
+                robot.rotation.x = 0;
+                robot.position.y = Math.sin(Date.now() * 0.002) * 0.5 - 1;
+                
+                leftArm.rotation.x = Math.sin(Date.now() * 0.005) * 0.5;
+                rightArm.rotation.x = Math.sin(Date.now() * 0.005 + Math.PI) * 0.5;
+
+                camera.position.x = Math.sin(Date.now() * 0.0005) * 5;
+                camera.position.z = Math.cos(Date.now() * 0.0005) * 5 + 15;
+                camera.lookAt(0, 0, 0);
+            }
 
             gridHelper.rotation.y += 0.001;
-            camera.position.x = Math.sin(Date.now() * 0.0005) * 10;
-            camera.position.z = Math.cos(Date.now() * 0.0005) * 10;
-            camera.lookAt(0, 0, 0);
 
             renderer.render(scene, camera);
         }

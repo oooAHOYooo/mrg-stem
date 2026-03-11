@@ -305,12 +305,33 @@
 
         scene.add(playerGroup);
 
-        // Variables for movement
         let moveState = { forward: false, backward: false, left: false, right: false };
         let velocity = new THREE.Vector3();
-        let acceleration = 0.015;
+        let acceleration = 0.02;     // Increased from 0.015 for difficulty
         let friction = 0.96;
-        let maxSpeed = 0.25;
+        let maxSpeed = 0.35;         // Increased from 0.25
+        let isFalling = false;
+        
+        // Lasers
+        const lasers = [];
+        let level = 0;
+
+        function spawnLaser() {
+            const laserGeo = new THREE.CylinderGeometry(0.2, 0.2, 50, 8);
+            const laserMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const laser = new THREE.Mesh(laserGeo, laserMat);
+            laser.rotation.z = Math.PI / 2; // Lay flat
+            laser.position.set(-30, 0.5, (Math.random() - 0.5) * 35);
+            
+            // Randomize direction to cross the platform
+            const speedX = 0.15 + (level * 0.02);
+            scene.add(laser);
+            lasers.push({
+                mesh: laser,
+                speedX: speedX,
+                speedZ: (Math.random() - 0.5) * 0.05
+            });
+        }
 
         // Fact Orbs
         const orbs = [];
@@ -368,6 +389,7 @@
             popup.classList.add('show');
             factsUnlocked++;
             score++;
+            level = Math.floor(score / 2); // Every 2 facts is a level up
             document.getElementById('score-val').innerText = score;
 
             // Pause movement briefly or just let them read
@@ -385,17 +407,19 @@
             requestAnimationFrame(animate);
 
             // Movement logic
-            if (moveState.forward) velocity.z -= acceleration;
-            if (moveState.backward) velocity.z += acceleration;
-            if (moveState.left) velocity.x -= acceleration;
-            if (moveState.right) velocity.x += acceleration;
+            if (!isFalling) {
+                if (moveState.forward) velocity.z -= acceleration;
+                if (moveState.backward) velocity.z += acceleration;
+                if (moveState.left) velocity.x -= acceleration;
+                if (moveState.right) velocity.x += acceleration;
+            }
 
             velocity.x *= friction;
             velocity.z *= friction;
 
             // Clamp velocity
             const currentSpeed = Math.sqrt(velocity.x ** 2 + velocity.z ** 2);
-            if (currentSpeed > maxSpeed) {
+            if (currentSpeed > maxSpeed && !isFalling) {
                 velocity.x = (velocity.x / currentSpeed) * maxSpeed;
                 velocity.z = (velocity.z / currentSpeed) * maxSpeed;
             }
@@ -403,33 +427,82 @@
             playerGroup.position.x += velocity.x;
             playerGroup.position.z += velocity.z;
 
-            // Boundary Check
-            const distFromCenter = Math.sqrt(playerGroup.position.x ** 2 + playerGroup.position.z ** 2);
-            if (distFromCenter > 19.5) {
-                const angle = Math.atan2(playerGroup.position.z, playerGroup.position.x);
-                playerGroup.position.x = Math.cos(angle) * 19.5;
-                playerGroup.position.z = Math.sin(angle) * 19.5;
-                velocity.x *= -0.5; // Bounce back
-                velocity.z *= -0.5;
+            if (isFalling) {
+                velocity.y = (velocity.y || 0) - 0.01; // Gravity
+                playerGroup.position.y += velocity.y;
+                
+                if (playerGroup.position.y < -20) {
+                    // Reset game
+                    isFalling = false;
+                    playerGroup.position.set(0, 0.5, 0);
+                    velocity.set(0, 0, 0);
+                    score = 0;
+                    level = 0;
+                    factsUnlocked = 0;
+                    document.getElementById('score-val').innerText = score;
+                    
+                    // Clear lasers
+                    for (let l of lasers) scene.remove(l.mesh);
+                    lasers.length = 0;
+                }
+            } else {
+                // Boundary Check - fall off instead of bouncing
+                const distFromCenter = Math.sqrt(playerGroup.position.x ** 2 + playerGroup.position.z ** 2);
+                if (distFromCenter > 19.5) {
+                    isFalling = true;
+                    velocity.y = 0;
+                }
+            }
+
+            // Lasers Logic
+            if (level >= 1 && !isFalling) {
+                // Spawn chance increases with level
+                if (Math.random() < 0.005 + (level * 0.002)) {
+                    spawnLaser();
+                }
+            }
+
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                let l = lasers[i];
+                l.mesh.position.x += l.speedX;
+                l.mesh.position.z += l.speedZ;
+                
+                if (!isFalling) {
+                    // Simple AABB collision check
+                    const dx = Math.abs(playerGroup.position.x - l.mesh.position.x);
+                    const dz = Math.abs(playerGroup.position.z - l.mesh.position.z);
+                    // Cylinder is length 50 along X, radius 0.2 along Z
+                    if (dx < 25 && dz < 0.7) {
+                        isFalling = true;
+                        velocity.y = 0; // Trigger fall
+                    }
+                }
+
+                if (l.mesh.position.x > 35 || Math.abs(l.mesh.position.z) > 35) {
+                    scene.remove(l.mesh);
+                    lasers.splice(i, 1);
+                }
             }
 
             // Orb collision
-            for (let i = orbs.length - 1; i >= 0; i--) {
-                const orb = orbs[i];
-                const dx = playerGroup.position.x - orb.position.x;
-                const dz = playerGroup.position.z - orb.position.z;
-                const dist = Math.sqrt(dx*dx + dz*dz);
-                
-                if (dist < 1.2) {
-                    scene.remove(orb);
-                    orbs.splice(i, 1);
-                    showFact();
-                    createOrb();
-                }
+            if (!isFalling) {
+                for (let i = orbs.length - 1; i >= 0; i--) {
+                    const orb = orbs[i];
+                    const dx = playerGroup.position.x - orb.position.x;
+                    const dz = playerGroup.position.z - orb.position.z;
+                    const dist = Math.sqrt(dx*dx + dz*dz);
+                    
+                    if (dist < 1.2) {
+                        scene.remove(orb);
+                        orbs.splice(i, 1);
+                        showFact();
+                        createOrb();
+                    }
 
-                // Animation for orb
-                orb.position.y = 0.6 + Math.sin(Date.now() * 0.003) * 0.1;
-                orb.rotation.y += 0.02;
+                    // Animation for orb
+                    orb.position.y = 0.6 + Math.sin(Date.now() * 0.003) * 0.1;
+                    orb.rotation.y += 0.02;
+                }
             }
 
             // Animate starfield
