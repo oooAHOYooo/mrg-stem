@@ -426,6 +426,114 @@
                 font-size: 0.85rem;
             }
         }
+
+        /* Liquid Glass Effect */
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                inset 0 0 10px rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+        }
+
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: rotate_glass 10s linear infinite;
+        }
+
+        @keyframes rotate_glass {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .fact-overlay {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -20%);
+            z-index: 1000;
+            width: 80%;
+            max-width: 600px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fact-overlay.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+            pointer-events: auto;
+        }
+
+        .fact-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #a5f3fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(165, 243, 252, 0.5);
+        }
+
+        .fact-content {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #f1f5f9;
+        }
+
+        /* Fact Progress in Score Panel */
+        .fact-progress {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .p1-progress { background: #ff1744; }
+        .p2-progress { background: #00e5ff; }
+
+        .player-collected-all {
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            color: #fbbf24;
+            font-weight: 800;
+            text-align: center;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -456,6 +564,13 @@
                         <span id="goals1">🎯 0</span>
                         <span id="score1">Score: 0</span>
                     </div>
+                    <div class="fact-progress">
+                        <span>STEM Facts: <span id="fact-count1">0</span>/<span class="total-facts">0</span></span>
+                        <div class="progress-bar-container">
+                            <div id="fact-progress1" class="progress-bar p1-progress"></div>
+                        </div>
+                        <div id="collected-all1" class="player-collected-all">🌟 STEM MASTER! 🌟</div>
+                    </div>
                 </div>
                 <div style="font-size: 1.3rem;" id="score1-display">0</div>
             </div>
@@ -471,8 +586,22 @@
                         <span id="goals2">🎯 0</span>
                         <span id="score2">Score: 0</span>
                     </div>
+                    <div class="fact-progress">
+                        <span>STEM Facts: <span id="fact-count2">0</span>/<span class="total-facts">0</span></span>
+                        <div class="progress-bar-container">
+                            <div id="fact-progress2" class="progress-bar p2-progress"></div>
+                        </div>
+                        <div id="collected-all2" class="player-collected-all">🌟 STEM MASTER! 🌟</div>
+                    </div>
                 </div>
                 <div style="font-size: 1.3rem;" id="score2-display">0</div>
+            </div>
+        </div>
+
+        <div id="fact-overlay" class="fact-overlay">
+            <div class="liquid-glass">
+                <div class="fact-title">STEM FACT FOUND!</div>
+                <div id="fact-content" class="fact-content"></div>
             </div>
         </div>
 
@@ -720,34 +849,83 @@
 
         // Add floating 3D decorative elements
         const floatingDecorations = [];
-        for (let i = 0; i < 8; i++) {
-            const decoration = new THREE.Mesh(
-                new THREE.OctahedronGeometry(0.8, 0),
-                new THREE.MeshPhongMaterial({
-                    color: new THREE.Color().setHSL(Math.random(), 1, 0.6),
-                    emissive: new THREE.Color().setHSL(Math.random(), 1, 0.3),
-                    emissiveIntensity: 0.7,
-                    transparent: true,
-                    opacity: 0.8
-                })
-            );
-            const baseY = 5 + Math.random() * 5;
-            decoration.position.set(
-                (Math.random() - 0.5) * 60,
-                baseY,
-                (Math.random() - 0.5) * 60
-            );
-            decoration.userData.rotationSpeed = {
-                x: (Math.random() - 0.5) * 0.02,
-                y: (Math.random() - 0.5) * 0.02,
-                z: (Math.random() - 0.5) * 0.02
-            };
-            decoration.userData.floatSpeed = Math.random() * 0.01 + 0.005;
-            decoration.userData.floatOffset = Math.random() * Math.PI * 2;
-            decoration.userData.baseY = baseY;
-            scene.add(decoration);
-            floatingDecorations.push(decoration);
+        
+        // Function to create an atom
+        function createAtom(color, size = 0.5) {
+            const group = new THREE.Group();
+            const geometry = new THREE.SphereGeometry(size, 20, 20);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                emissive: color,
+                emissiveIntensity: 0.3,
+                shininess: 100
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            group.add(mesh);
+            
+            // Add electron rings
+            for (let i = 0; i < 2; i++) {
+                const ringGeo = new THREE.TorusGeometry(size * 1.8, 0.03, 8, 32);
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.random() * Math.PI;
+                ring.rotation.y = Math.random() * Math.PI;
+                group.add(ring);
+            }
+            return group;
         }
+
+        // Function to create a molecule (H2O)
+        function createH2O() {
+            const group = new THREE.Group();
+            const oxygen = createAtom(0xff1744, 0.6); // Red
+            group.add(oxygen);
+            
+            const h1 = createAtom(0xffffff, 0.3); // White
+            h1.position.set(0.6, 0.4, 0);
+            group.add(h1);
+            
+            const h2 = createAtom(0xffffff, 0.3); // White
+            h2.position.set(-0.6, 0.4, 0);
+            group.add(h2);
+            
+            return group;
+        }
+
+        // Spawn background STEM elements
+        for (let i = 0; i < 15; i++) {
+            let element;
+            const rand = Math.random();
+            if (rand < 0.4) element = createAtom(new THREE.Color().setHSL(Math.random(), 0.7, 0.5), 0.4 + Math.random() * 0.4);
+            else if (rand < 0.7) element = createH2O();
+            else {
+                // Carbon atom (Black/Grey)
+                element = createAtom(0x333333, 0.7);
+            }
+            
+            const dist = 35 + Math.random() * 20;
+            const angle = Math.random() * Math.PI * 2;
+            const baseY = 2 + Math.random() * 15;
+            
+            element.position.set(
+                Math.cos(angle) * dist,
+                baseY,
+                Math.sin(angle) * dist
+            );
+            
+            element.userData.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.03,
+                y: (Math.random() - 0.5) * 0.03,
+                z: (Math.random() - 0.5) * 0.03
+            };
+            element.userData.floatSpeed = Math.random() * 0.01 + 0.005;
+            element.userData.floatOffset = Math.random() * Math.PI * 2;
+            element.userData.baseY = baseY;
+            
+            scene.add(element);
+            floatingDecorations.push(element);
+        }
+
 
         // Add ground plane for better depth perception
         const groundPlane = new THREE.Mesh(
@@ -908,6 +1086,18 @@
         const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
+        // STEM Facts Data
+        const stemFacts = [
+            { id: 0, title: "Friction", fact: "Ice is slippery because a thin layer of liquid water forms on its surface, reducing friction!" },
+            { id: 1, title: "Velocity", fact: "In skating, your velocity is your speed in a specific direction. Change either, and you're accelerating!" },
+            { id: 2, title: "Angular Momentum", fact: "Skaters spin faster by pulling their arms in, which conserves angular momentum!" },
+            { id: 3, title: "Surface Tension", fact: "Water's surface tension is what allows small insects to walk on it, unlike our skaters!" },
+            { id: 4, title: "Center of Mass", fact: "Keeping your center of mass low helps you stay balanced while skating on ice!" },
+            { id: 5, title: "Thermodynamics", fact: "As you skate, the pressure of your blades actually melts a tiny bit of ice into water!" },
+            { id: 6, title: "States of Matter", fact: "Ice is the solid state of water. It's unique because it's less dense than its liquid form!" },
+            { id: 7, title: "Newton's 3rd Law", fact: "To move forward, you push back on the ice. The ice pushes you forward with equal force!" }
+        ];
+
         // Game state
         const keys = {};
         let score1 = 0;
@@ -929,6 +1119,16 @@
         const COLLISION_DISTANCE = 2.2; // Adjusted for larger players (1.5 * 1.5 scale)
         const KNOCKBACK_FORCE = 0.5;
 
+        // Fact tracking
+        let collectedFacts1 = new Set();
+        let collectedFacts2 = new Set();
+        let activeGems = [];
+        const MAX_GEMS = 3;
+        
+        // Initialize fact UI
+        document.querySelectorAll('.total-facts').forEach(el => el.textContent = stemFacts.length);
+
+
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
@@ -948,6 +1148,24 @@
             document.getElementById('goals2').textContent = `🎯 ${goals2}`;
             document.getElementById('score1').textContent = `Score: ${score1}`;
             document.getElementById('score2').textContent = `Score: ${score2}`;
+            
+            // Update Fact Progress
+            document.getElementById('fact-count1').textContent = collectedFacts1.size;
+            document.getElementById('fact-count2').textContent = collectedFacts2.size;
+            
+            const progress1 = (collectedFacts1.size / stemFacts.length) * 100;
+            const progress2 = (collectedFacts2.size / stemFacts.length) * 100;
+            
+            document.getElementById('fact-progress1').style.width = `${progress1}%`;
+            document.getElementById('fact-progress2').style.width = `${progress2}%`;
+            
+            if (collectedFacts1.size === stemFacts.length) {
+                document.getElementById('collected-all1').style.display = 'block';
+            }
+            if (collectedFacts2.size === stemFacts.length) {
+                document.getElementById('collected-all2').style.display = 'block';
+            }
+            
             updateLives();
         }
 
@@ -1250,8 +1468,94 @@
             }, 2000);
         }
 
+        // Create gem collectible
+        function createGem() {
+            if (activeGems.length >= MAX_GEMS) return;
+
+            // Pick a fact that hasn't been collected by both players if possible
+            const availableFacts = stemFacts.filter(f => !collectedFacts1.has(f.id) || !collectedFacts2.has(f.id));
+            if (availableFacts.length === 0) return;
+
+            const fact = availableFacts[Math.floor(Math.random() * availableFacts.length)];
+            
+            const geometry = new THREE.OctahedronGeometry(0.5, 0);
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x00ff00,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.5,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const gem = new THREE.Mesh(geometry, material);
+            gem.position.set(
+                (Math.random() - 0.5) * 35,
+                0.8,
+                (Math.random() - 0.5) * 35
+            );
+            
+            // Ensure gem is not in the hole
+            const distFromCenter = Math.sqrt(gem.position.x * gem.position.x + gem.position.z * gem.position.z);
+            if (distFromCenter < GOAL_RADIUS + 2) {
+                gem.position.x += 10;
+            }
+
+            gem.userData.fact = fact;
+            gem.userData.rotationSpeed = 0.05;
+            gem.userData.floatSpeed = 0.05;
+            
+            scene.add(gem);
+            activeGems.push(gem);
+        }
+
+        // Show Fact with Liquid Glass effect
+        function showFact(fact) {
+            const overlay = document.getElementById('fact-overlay');
+            const content = document.getElementById('fact-content');
+            
+            content.innerHTML = `<strong>${fact.title}:</strong><br>${fact.fact}`;
+            overlay.classList.add('show');
+            
+            setTimeout(() => {
+                overlay.classList.remove('show');
+            }, 6000);
+        }
+
+        // Check Gem Collection
+        function checkGemCollection(playerGroup, playerNum) {
+            for (let i = activeGems.length - 1; i >= 0; i--) {
+                const gem = activeGems[i];
+                const dist = playerGroup.position.distanceTo(gem.position);
+                
+                if (dist < 1.5) {
+                    const fact = gem.userData.fact;
+                    const collectedSet = playerNum === 1 ? collectedFacts1 : collectedFacts2;
+                    
+                    if (!collectedSet.has(fact.id)) {
+                        collectedSet.add(fact.id);
+                        if (playerNum === 1) score1 += 50;
+                        else score2 += 50;
+                        showFact(fact);
+                        updateScore();
+                    }
+                    
+                    scene.remove(gem);
+                    activeGems.splice(i, 1);
+                    
+                    // Spawn another gem after a delay
+                    setTimeout(createGem, 3000);
+                }
+            }
+        }
+
         // Create initial orb
         createOrb();
+        
+        // Create initial gems
+        for (let i = 0; i < MAX_GEMS; i++) {
+            createGem();
+        }
 
         // Animation loop
         let frame = 0;
@@ -1344,6 +1648,9 @@
                 checkOrbPickup(skater1Group, 1);
                 checkOrbPickup(skater2Group, 2);
                 
+                checkGemCollection(skater1Group, 1);
+                checkGemCollection(skater2Group, 2);
+                
                 // Check goal scoring
                 checkGoal(skater1Group, 1);
                 checkGoal(skater2Group, 2);
@@ -1400,6 +1707,16 @@
                 decoration.rotation.y += decoration.userData.rotationSpeed.y;
                 decoration.rotation.z += decoration.userData.rotationSpeed.z;
                 decoration.position.y = decoration.userData.baseY + Math.sin(frame * decoration.userData.floatSpeed + decoration.userData.floatOffset) * 1.5;
+            });
+
+            // Animate Gems
+            activeGems.forEach(gem => {
+                gem.rotation.y += gem.userData.rotationSpeed;
+                gem.position.y = 0.8 + Math.sin(frame * gem.userData.floatSpeed) * 0.2;
+                
+                // Pulse gem color (Green pulsing)
+                const pulse = Math.sin(frame * 0.05) * 0.2 + 0.8;
+                gem.material.emissiveIntensity = pulse;
             });
 
             // Camera animation - enhanced for better 3D feel
