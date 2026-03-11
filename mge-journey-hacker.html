@@ -291,17 +291,25 @@
         }
 
         .exit-btn {
-            background: #000;
-            color: #0f0;
+            background: #f00;
+            color: #fff;
             text-decoration: none;
-            padding: 4px 15px;
+            padding: 8px 25px;
+            border: 2px solid #fff;
             border-radius: 4px;
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px #fff;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
             transition: all 0.3s;
+            text-transform: uppercase;
         }
 
         .exit-btn:hover {
             background: #fff;
-            color: #000;
+            color: #f00;
+            border-color: #f00;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 1);
+            transform: scale(1.05);
         }
 
         /* Educational Ticker */
@@ -330,9 +338,9 @@
 </head>
 <body>
     <div id="intro-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #0f0;">
-        <h1 style="font-size: 4rem; margin-bottom: 2rem; text-shadow: 0 0 20px #0f0; font-family: 'Fira Code', monospace;">ENTER HACKER NAME</h1>
-        <input type="text" id="hacker-name-input" placeholder="JOURNEYS" style="font-size: 3rem; background: transparent; border: none; border-bottom: 4px solid #0f0; color: #fff; text-align: center; outline: none; text-transform: uppercase; font-family: 'Fira Code', monospace; width: 500px;" autofocus autocomplete="off" spellcheck="false">
-        <button onclick="startGame()" style="margin-top: 3rem; font-size: 2rem; padding: 15px 40px; background: #040; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-transform: uppercase; font-family: 'Fira Code', monospace; font-weight: bold; transition: all 0.3s;" onmouseover="this.style.background='#0f0';this.style.color='#000'" onmouseout="this.style.background='#040';this.style.color='#0f0'">INITIALIZE</button>
+        <h1 style="font-size: 4rem; margin-bottom: 2rem; text-shadow: 0 0 20px #0f0; font-family: 'Fira Code', monospace;">ENTER YOUR HACKER NAME</h1>
+        <input type="text" id="hacker-name-input" placeholder="HACKER" style="font-size: 3rem; background: transparent; border: none; border-bottom: 4px solid #0f0; color: #fff; text-align: center; outline: none; text-transform: uppercase; font-family: 'Fira Code', monospace; width: 500px;" autofocus autocomplete="off" spellcheck="false">
+        <button onclick="startGame()" style="margin-top: 3rem; font-size: 2rem; padding: 15px 40px; background: #040; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-transform: uppercase; font-family: 'Fira Code', monospace; font-weight: bold; transition: all 0.3s;" onmouseover="this.style.background='#0f0';this.style.color='#000';this.style.boxShadow='0 0 30px #0f0'" onmouseout="this.style.background='#040';this.style.color='#0f0';this.style.boxShadow='none'">INITIALIZE SYSTEM</button>
     </div>
 
     <div class="main-header" id="main-header-text">
@@ -520,14 +528,26 @@
             osc.stop(audioCtx.currentTime + dur);
         }
 
-        // Intro Screen Setup
         function startGame() {
             let nameInput = document.getElementById('hacker-name-input').value.trim().toUpperCase();
-            if (!nameInput) nameInput = 'JOURNEYS';
+            if (!nameInput) nameInput = 'ANONYMOUS';
             document.getElementById('main-header-text').innerText = `${nameInput} HACKING GAME`;
-            document.getElementById('intro-screen').style.display = 'none';
-            playBeep(400, 'square', 0.2, 0.2);
-            document.getElementById('terminal-input').focus();
+            
+            // Epic Initialization Sequence
+            playBeep(200, 'square', 0.5, 0.5);
+            setTimeout(() => playBeep(400, 'square', 0.5, 0.6), 300);
+            setTimeout(() => playBeep(800, 'square', 1.0, 0.8), 600);
+            
+            document.body.style.filter = 'contrast(200%) brightness(150%) hue-rotate(90deg)';
+            let zoomIn = setInterval(() => { camera.position.z -= 0.5; }, 30);
+            
+            setTimeout(() => {
+                clearInterval(zoomIn);
+                camera.position.z = 15;
+                document.body.style.filter = '';
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('terminal-input').focus();
+            }, 1200);
         }
 
         document.getElementById('hacker-name-input').addEventListener('keydown', (e) => {
@@ -580,6 +600,13 @@
 
                 // Audio SFX on type
                 playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
+
+                // Change colors on mashing
+                document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                if (window.mashTimeout) clearTimeout(window.mashTimeout);
+                window.mashTimeout = setTimeout(() => {
+                    document.body.style.filter = '';
+                }, 150);
 
                 // CSS SFX on type (shake the mainframe)
                 const mainframe = document.getElementById('mainframe-center');
