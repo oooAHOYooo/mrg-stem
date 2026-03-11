@@ -232,6 +232,60 @@
             to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
+        .restart-countdown {
+            margin-top: 1rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffeb3b;
+            text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+        }
+
+        .fact-overlay {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
+                        inset 0 0 20px rgba(255, 255, 255, 0.1);
+            color: white;
+            z-index: 1000;
+            text-align: center;
+            display: none;
+            animation: factSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes factSlideIn {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .fact-overlay h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #4ecdc4;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .fact-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .fact-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
         .game-over h2 {
             font-size: 3rem;
             margin-bottom: 1rem;
@@ -506,7 +560,14 @@
         <div class="game-over" id="game-over">
             <h2 id="winner-text">Player 1 Wins!</h2>
             <p style="font-size: 1.2rem; margin-top: 1rem;">Great fight! 🎉</p>
-            <button onclick="restartGame()">Play Again</button>
+            <div id="restart-countdown" class="restart-countdown">Restarting in 5...</div>
+            <button onclick="restartGame()">Play Again Now</button>
+        </div>
+
+        <div id="fact-overlay" class="fact-overlay">
+            <span class="fact-icon">🔬</span>
+            <h3>STEM Fact!</h3>
+            <div id="fact-text" class="fact-text">Did you know? Light travels at approximately 299,792,458 meters per second!</div>
         </div>
     </div>
 
@@ -526,6 +587,26 @@
         let lastHitTime = { p1: 0, p2: 0 };
         let comboCount = { p1: 0, p2: 0 };
         let comboDisplayTimer = 0;
+        let restartTimer = null;
+        let restartCountdownValue = 5;
+
+        const STEM_FACTS = [
+            "The human brain has about 86 billion neurons!",
+            "DNA is so long that if uncoiled, it would reach the sun and back 4 times!",
+            "A single teaspoon of a neutron star would weigh 6 billion tons!",
+            "Water can boil and freeze at the same time in a vacuum (triple point)!",
+            "There are more trees on Earth than stars in the Milky Way galaxy!",
+            "Diamonds are made from highly compressed carbon atoms!",
+            "The Eiffel Tower can be 15 cm taller during the summer due to thermal expansion!",
+            "A hummingbird's heart beats over 1,200 times per minute!",
+            "Sound travels 4.3 times faster in water than in air!",
+            "An octopus has three hearts and blue blood!",
+            "Bananas are slightly radioactive because they contain potassium!",
+            "Venus is the hottest planet in our solar system, with surface temperatures over 450°C!",
+            "The largest living organism on Earth is a fungus in Oregon that covers 2,385 acres!",
+            "Antarctica is technically a desert because it receives very little precipitation!",
+            "Light from the sun takes about 8 minutes and 20 seconds to reach Earth!"
+        ];
 
         // Player stats
         const players = {
@@ -593,7 +674,8 @@
             SPEED: { icon: '⚡', name: 'Speed Boost', color: 0xffeb3b },
             DAMAGE: { icon: '💥', name: 'Damage Boost', color: 0xf44336 },
             SHIELD: { icon: '🛡️', name: 'Shield', color: 0x2196f3 },
-            HEALTH: { icon: '❤️', name: 'Health Restore', color: 0x4caf50 }
+            HEALTH: { icon: '❤️', name: 'Health Restore', color: 0x4caf50 },
+            FACT: { icon: '🎓', name: 'STEM Fact', color: 0x4ecdc4 }
         };
 
         // Initialize Three.js scene
@@ -1370,9 +1452,26 @@
                     player.percentage = Math.max(0, player.percentage - 30);
                     updateHealthBars();
                     break;
+                case 'FACT':
+                    showStemFact();
+                    break;
             }
             
             updatePowerupDisplay();
+        }
+
+        function showStemFact() {
+            const overlay = document.getElementById('fact-overlay');
+            const factText = document.getElementById('fact-text');
+            const randomFact = STEM_FACTS[Math.floor(Math.random() * STEM_FACTS.length)];
+            
+            factText.textContent = randomFact;
+            overlay.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 5000);
         }
 
         function updatePlayerPowerups(playerKey) {
@@ -1674,6 +1773,27 @@
             }
             
             document.getElementById('game-over').classList.add('show');
+            
+            // Start automatic restart countdown
+            startRestartCountdown();
+        }
+
+        function startRestartCountdown() {
+            if (restartTimer) clearInterval(restartTimer);
+            
+            restartCountdownValue = 5;
+            const countdownDisplay = document.getElementById('restart-countdown');
+            countdownDisplay.textContent = `Restarting in ${restartCountdownValue}...`;
+            
+            restartTimer = setInterval(() => {
+                restartCountdownValue--;
+                if (restartCountdownValue <= 0) {
+                    clearInterval(restartTimer);
+                    restartGame();
+                } else {
+                    countdownDisplay.textContent = `Restarting in ${restartCountdownValue}...`;
+                }
+            }, 1000);
         }
 
         function updateMatchScore() {
@@ -1771,6 +1891,12 @@
             updateTimer();
             document.getElementById('game-over').classList.remove('show');
             gameRunning = true;
+            
+            // Clear restart timer if it exists
+            if (restartTimer) {
+                clearInterval(restartTimer);
+                restartTimer = null;
+            }
             
             // Spawn initial powerup
             setTimeout(() => spawnPowerup(), 2000);
