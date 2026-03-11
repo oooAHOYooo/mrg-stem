@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Chess 3D - Mr. Gonzalez Experiments</title>
+    <title>Cosmic Chess - Mr. Gonzalez Experiments</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap');
 
@@ -17,8 +18,8 @@
 
         body {
             background-color: #000;
-            color: #0ff;
-            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
             overflow: hidden;
             height: 100vh;
         }
@@ -37,284 +38,601 @@
             top: 0;
             width: 100%;
             height: 80px;
-            background: rgba(0, 20, 40, 0.8);
-            backdrop-filter: blur(20px);
-            color: #0ff;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 900;
-            border-bottom: 2px solid #0ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 1000;
-            text-shadow: 0 0 20px #0ff;
-            letter-spacing: 10px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            letter-spacing: 5px;
+            font-family: 'Orbitron', sans-serif;
         }
 
-        .ui-overlay {
+        .ui-panel {
             position: fixed;
             top: 100px;
             right: 20px;
-            width: 300px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #0ff;
+            width: 280px;
+            background: rgba(10, 10, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
             padding: 20px;
             z-index: 10;
-            border-radius: 10px;
-            pointer-events: auto;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
         }
 
-        .info-panel {
-            position: fixed;
-            bottom: 60px;
-            left: 20px;
-            width: 400px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #f0f;
-            padding: 20px;
-            z-index: 10;
-            border-radius: 10px;
-            color: #f0f;
-        }
-
-        h2 { font-size: 1rem; margin-bottom: 10px; text-transform: uppercase; color: #fff; }
-
-        .status-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 40px;
-            background: #0ff;
-            color: #000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            font-weight: bold;
-            z-index: 2000;
-        }
-
-        .exit-btn {
-            background: #000;
-            color: #0ff;
-            text-decoration: none;
-            padding: 4px 15px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-
-        #selection-text {
+        .status-panel {
             position: fixed;
             top: 100px;
             left: 20px;
-            font-size: 1.5rem;
-            color: #fff;
+            padding: 15px 25px;
+            background: rgba(10, 10, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 50px;
             z-index: 10;
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
-            border-left: 5px solid #0ff;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .crt-effect {
+        .turn-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .turn-white .turn-indicator { background: #fff; box-shadow: 0 0 15px #fff; }
+        .turn-black .turn-indicator { background: #f0f; box-shadow: 0 0 15px #f0f; }
+
+        .status-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 10px 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        #move-history {
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #0ff;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        #move-history::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #move-history::-webkit-scrollbar-thumb {
+            background: #0ff;
+            border-radius: 5px;
+        }
+
+        .selection-hint {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #0ff;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .crt-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
-            z-index: 100;
+            z-index: 2000;
         }
 
-        .control-hint {
-            margin-top: 10px;
-            font-size: 0.7rem;
-            color: #888;
-            line-height: 1.4;
+        #winner-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #winner-text {
+            font-size: 5rem;
+            color: #0ff;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 20px;
+            text-shadow: 0 0 50px #0ff;
+        }
+
+        .controls-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            text-align: right;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-    <div class="header">QUANTUM CHESS 3D</div>
-    <div class="crt-effect"></div>
+    <div class="header">COSMIC CHESS</div>
+    <div class="crt-overlay"></div>
 
     <div id="game-container"></div>
 
-    <div id="selection-text">SELECT A TRANSMUTATION VECTOR...</div>
+    <div class="status-panel" id="turn-panel">
+        <div class="turn-indicator"></div>
+        <span id="turn-text">WHITE'S TURN</span>
+    </div>
 
-    <div class="ui-overlay">
-        <h2>QUANTUM STATUS</h2>
-        <div style="font-size: 0.8rem; color: #0ff;">
-            DIMENSIONS ACTIVE: 3<br>
-            TEMPORAL SYNC: 99.9%<br>
-            PLAYER: WHITE (STASIS)<br>
-            OPPONENT: BLACK (VOID)<br>
-        </div>
-        <div class="control-hint">
-            * Drag to Rotate Dimension<br>
-            * Click Piece to Select<br>
-            * Vertical Z-Axis movement allowed!<br>
+    <div class="ui-panel">
+        <h2 style="font-size: 0.9rem; letter-spacing: 2px; color: #0ff; margin-bottom: 15px;">TRANSCOSMIC LOG</h2>
+        <div id="move-history">
+            <div>--- SYSTEM READY ---</div>
         </div>
     </div>
 
-    <div class="info-panel">
-        <h2>3D CHESS RULES (X-Y-Z)</h2>
-        <div style="font-size: 0.75rem;">
-            This is not your grandfather's chess. In <b>Quantum Chess</b>, pieces can jump between dimensional planes (Level 1, 2, and 3).<br><br>
-            - <b>Rooks</b> move in straight lines across any plane or vertical axis.<br>
-            - <b>Knights</b> can jump through space-time (L-shape across layers).<br>
-            - <b>Queens</b> have total mastery over the 3D grid.
-        </div>
-    </div>
+    <div class="selection-hint" id="status-message">Select a piece to begin</div>
 
     <div class="status-footer">
-        <div>NEURAL LINK: STABLE</div>
-        <div>LEVEL: MULTI-PLANAR 0-1-2</div>
-        <a href="mge.html" class="exit-btn">ABORT MISSION [ESC]</a>
+        <button class="btn" onclick="resetGame()">REINITIALIZE BOARD</button>
+        <a href="mge.html" class="btn">EXIT TO HUB</a>
+    </div>
+
+    <div class="controls-info">
+        LEFT CLICK: SELECT / MOVE<br>
+        RIGHT CLICK DRAG: ORBIT CAMERA<br>
+        SCROLL: ZOOM
+    </div>
+
+    <div id="winner-screen">
+        <div id="winner-text">CHECKMATE</div>
+        <div style="color: #fff; margin-bottom: 40px; font-size: 1.5rem;">The galaxy has been conquered.</div>
+        <button class="btn" onclick="resetGame()" style="padding: 15px 40px; font-size: 1.2rem;">PLAY AGAIN</button>
     </div>
 
     <script>
+        // --- CHESS LOGIC ---
+        const game = new Chess();
+        
         // --- 3D ENVIRONMENT ---
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('game-container').appendChild(renderer.domElement);
 
-        scene.background = new THREE.Color(0x000210);
-        scene.fog = new THREE.FogExp2(0x000210, 0.01);
+        // Background
+        scene.background = new THREE.Color(0x020205);
+        scene.fog = new THREE.FogExp2(0x020205, 0.001);
 
         // Lights
-        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        const ambientLight = new THREE.AmbientLight(0x404040, 1);
         scene.add(ambientLight);
 
-        const spotLight = new THREE.SpotLight(0xffffff, 2);
-        spotLight.position.set(20, 50, 20);
-        scene.add(spotLight);
+        const mainLight = new THREE.PointLight(0x00ffff, 2, 100);
+        mainLight.position.set(10, 20, 10);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
 
-        // Dimensional Boards
+        const subLight = new THREE.PointLight(0xff00ff, 1.5, 100);
+        subLight.position.set(-10, 20, -10);
+        scene.add(subLight);
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.5);
+        scene.add(hemiLight);
+
+        // --- DECORATIVE INSANE BACKGROUND ---
+        const backgroundGroup = new THREE.Group();
+        scene.add(backgroundGroup);
+
+        function createDebris() {
+            const geometries = [
+                new THREE.IcosahedronGeometry(Math.random() * 2, 0),
+                new THREE.TorusGeometry(Math.random() * 2, 0.2, 8, 16),
+                new THREE.OctahedronGeometry(Math.random() * 1.5, 0),
+                new THREE.BoxGeometry(0.5, 0.5, 0.5)
+            ];
+
+            for (let i = 0; i < 60; i++) {
+                const geo = geometries[Math.floor(Math.random() * geometries.length)];
+                const mat = new THREE.MeshStandardMaterial({
+                    color: Math.random() > 0.5 ? 0x00ffff : 0xff00ff,
+                    emissive: Math.random() > 0.5 ? 0x008888 : 0x880088,
+                    emissiveIntensity: 0.5,
+                    wireframe: Math.random() > 0.7
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                
+                const r = 50 + Math.random() * 200;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                
+                mesh.position.set(
+                    r * Math.sin(phi) * Math.cos(theta),
+                    r * Math.sin(phi) * Math.sin(theta),
+                    r * Math.cos(phi)
+                );
+                
+                mesh.userData.rotationSpeed = {
+                    x: (Math.random() - 0.5) * 0.02,
+                    y: (Math.random() - 0.5) * 0.02,
+                    z: (Math.random() - 0.5) * 0.02
+                };
+                
+                mesh.userData.orbitSpeed = (Math.random() - 0.5) * 0.005;
+                
+                backgroundGroup.add(mesh);
+            }
+        }
+        createDebris();
+
+        // Stars
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 5000;
+        const posArray = new Float32Array(starsCount * 3);
+        for(let i=0; i < starsCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 1000;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starsMat = new THREE.PointsMaterial({ size: 0.5, color: 0xffffff });
+        const stars = new THREE.Points(starsGeo, starsMat);
+        scene.add(stars);
+
+        // --- BOARD ---
         const boardSize = 8;
         const squareSize = 2;
-        const boardGap = 10;
-        const boards = [];
+        const boardSquares = [];
+        const piecesGroup = new THREE.Group();
+        const squaresGroup = new THREE.Group();
+        scene.add(squaresGroup);
+        scene.add(piecesGroup);
 
-        function createBoard(yOffset, color1, color2) {
-            const boardGroup = new THREE.Group();
-            for (let i = 0; i < boardSize; i++) {
-                for (let j = 0; j < boardSize; j++) {
-                    const geometry = new THREE.BoxGeometry(squareSize, 0.2, squareSize);
-                    const material = new THREE.MeshStandardMaterial({
-                        color: (i + j) % 2 === 0 ? color1 : color2,
-                        transparent: true,
-                        opacity: 0.7,
-                        emissive: (i + j) % 2 === 0 ? color1 : color2,
-                        emissiveIntensity: 0.2
-                    });
-                    const square = new THREE.Mesh(geometry, material);
-                    square.position.set(i * squareSize - 7, yOffset, j * squareSize - 7);
-                    boardGroup.add(square);
+        const squareGeo = new THREE.BoxGeometry(squareSize, 0.4, squareSize);
+
+        for (let i = 0; i < boardSize; i++) {
+            for (let j = 0; j < boardSize; j++) {
+                const isBlack = (i + j) % 2 === 1;
+                const mat = new THREE.MeshStandardMaterial({
+                    color: isBlack ? 0x111111 : 0x444444,
+                    emissive: isBlack ? 0x110011 : 0x001111,
+                    emissiveIntensity: 0.2,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                const square = new THREE.Mesh(squareGeo, mat);
+                square.position.set(i * squareSize - 7, -0.2, j * squareSize - 7);
+                square.userData = { i, j, rank: 8 - j, file: String.fromCharCode(97 + i) };
+                square.receiveShadow = true;
+                squaresGroup.add(square);
+                boardSquares.push(square);
+            }
+        }
+
+        // Board Frame
+        const frameGeo = new THREE.BoxGeometry(16.5, 0.2, 16.5);
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, wireframe: true });
+        const frame = new THREE.Mesh(frameGeo, frameMat);
+        frame.position.y = -0.4;
+        scene.add(frame);
+
+        // --- PIECES ---
+        const pieces = new Map(); // file+rank -> mesh
+
+        function getPieceGeometry(type) {
+            switch(type) {
+                case 'p': return new THREE.ConeGeometry(0.4, 0.8, 8);
+                case 'r': return new THREE.BoxGeometry(0.7, 1.2, 0.7);
+                case 'n': return new THREE.IcosahedronGeometry(0.6, 0);
+                case 'b': return new THREE.CylinderGeometry(0, 0.5, 1.1, 4);
+                case 'q': return new THREE.TorusKnotGeometry(0.4, 0.15, 64, 8);
+                case 'k': return new THREE.SphereGeometry(0.6, 16, 16);
+            }
+        }
+
+        function createPieceMesh(p, i, j) {
+            const geo = getPieceGeometry(p.type);
+            const isWhite = p.color === 'w';
+            const mat = new THREE.MeshStandardMaterial({
+                color: isWhite ? 0xffffff : 0x333333,
+                emissive: isWhite ? 0x00ffff : 0xff00ff,
+                emissiveIntensity: 0.8,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(i * squareSize - 7, 0.5, j * squareSize - 7);
+            mesh.castShadow = true;
+            mesh.userData = { i, j, color: p.color, type: p.type, pos: String.fromCharCode(97 + i) + (8 - j) };
+            
+            // Add a small light to important pieces
+            if (p.type === 'k' || p.type === 'q') {
+                const pLight = new THREE.PointLight(isWhite ? 0x00ffff : 0xff00ff, 0.5, 3);
+                mesh.add(pLight);
+            }
+
+            return mesh;
+        }
+
+        function updateBoard() {
+            // Clear existing pieces
+            while(piecesGroup.children.length > 0) {
+                piecesGroup.remove(piecesGroup.children[0]);
+            }
+            pieces.clear();
+
+            const board = game.board();
+            for (let j = 0; j < 8; j++) {
+                for (let i = 0; i < 8; i++) {
+                    const p = board[j][i];
+                    if (p) {
+                        const mesh = createPieceMesh(p, i, j);
+                        piecesGroup.add(mesh);
+                        pieces.set(mesh.userData.pos, mesh);
+                    }
                 }
             }
-            // Outline
-            const outlineGeo = new THREE.BoxGeometry(boardSize * squareSize + 0.5, 0.1, boardSize * squareSize + 0.5);
-            const outlineMat = new THREE.MeshBasicMaterial({ color: color1, wireframe: true });
-            const outline = new THREE.Mesh(outlineGeo, outlineMat);
-            outline.position.set(0, yOffset, 0);
-            boardGroup.add(outline);
+            
+            // Update UI
+            const turnText = document.getElementById('turn-text');
+            const turnPanel = document.getElementById('turn-panel');
+            if (game.turn() === 'w') {
+                turnText.innerText = "WHITE'S TURN";
+                turnPanel.className = 'status-panel turn-white';
+            } else {
+                turnText.innerText = "BLACK'S TURN";
+                turnPanel.className = 'status-panel turn-black';
+            }
 
-            scene.add(boardGroup);
-            boards.push(boardGroup);
+            if (game.in_checkmate()) {
+                document.getElementById('winner-screen').style.display = 'flex';
+                document.getElementById('winner-text').innerText = (game.turn() === 'w' ? 'BLACK' : 'WHITE') + ' WINS';
+            } else if (game.in_draw()) {
+                document.getElementById('winner-screen').style.display = 'flex';
+                document.getElementById('winner-text').innerText = 'DRAW';
+            }
         }
 
-        createBoard(0, 0x00ffff, 0x004444);  // Plane 0
-        createBoard(8, 0xff00ff, 0x440044);  // Plane 1
-        createBoard(16, 0xffff00, 0x444400); // Plane 2
+        updateBoard();
 
-        // Futuristic Pieces
-        const pieces = [];
-        function spawnPiece(x, y, z, type, side) {
-            let geo;
-            if(type === 'pawn') geo = new THREE.ConeGeometry(0.5, 1.2, 4);
-            else if(type === 'rook') geo = new THREE.BoxGeometry(0.8, 1.5, 0.8);
-            else if(type === 'knight') geo = new THREE.IcosahedronGeometry(0.7, 0);
-            else if(type === 'king') geo = new THREE.OctahedronGeometry(1, 0);
-            else geo = new THREE.SphereGeometry(0.7, 8, 8);
+        // --- INTERACTION ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let selectedPiece = null;
+        let legalMoves = [];
 
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: side === 'white' ? 0xffffff : 0x222222,
-                emissive: side === 'white' ? 0x00ffff : 0xff4757,
-                emissiveIntensity: 1,
-                wireframe: true
-            });
-            const piece = new THREE.Mesh(geo, mat);
-            piece.position.set(x * squareSize - 7, y, z * squareSize - 7);
-            scene.add(piece);
-            pieces.push(piece);
+        // Camera Controls
+        let isOrbiting = false;
+        let prevMouseX = 0;
+        let prevMouseY = 0;
+        let camPhi = Math.PI / 4;
+        let camTheta = 0;
+        let camRadius = 30;
 
-            // Aura
-            const aura = new THREE.PointLight(side === 'white' ? 0x00ffff : 0xff4757, 1, 5);
-            piece.add(aura);
+        function updateCamera() {
+            camera.position.x = camRadius * Math.sin(camPhi) * Math.sin(camTheta);
+            camera.position.y = camRadius * Math.cos(camPhi);
+            camera.position.z = camRadius * Math.sin(camPhi) * Math.cos(camTheta + Math.PI/2);
+            camera.lookAt(0, 0, 0);
         }
+        updateCamera();
 
-        // Setup 3D Board (Just a few to show the scale)
-        for(let i=0; i<8; i++) {
-            spawnPiece(i, 0.8, 1, 'pawn', 'white');
-            spawnPiece(i, 8.8, 1, 'pawn', 'white');
-            spawnPiece(i, 16.8, 1, 'pawn', 'black');
-        }
-        spawnPiece(0, 0.8, 0, 'rook', 'white');
-        spawnPiece(7, 0.8, 0, 'rook', 'white');
-        spawnPiece(4, 16.8, 7, 'king', 'black');
-
-        camera.position.set(20, 25, 30);
-        camera.lookAt(0, 8, 0);
-
-        // Interaction
-        let rotationActive = true;
-        let mouseX = 0;
-        let targetRotation = 0;
-
-        window.addEventListener('mousedown', () => rotationActive = true);
-        window.addEventListener('mouseup', () => {});
-        window.addEventListener('mousemove', (e) => {
-            if(rotationActive) {
-                const deltaX = e.clientX - mouseX;
-                scene.rotation.y += deltaX * 0.005;
-                mouseX = e.clientX;
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 2) {
+                isOrbiting = true;
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+            } else if (e.button === 0) {
+                handleMouseClick(e);
             }
         });
 
-        // Animation Loop
-        function animate(time) {
+        window.addEventListener('mouseup', () => isOrbiting = false);
+        window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        window.addEventListener('mousemove', (e) => {
+            if (isOrbiting) {
+                const dx = e.clientX - prevMouseX;
+                const dy = e.clientY - prevMouseY;
+                camTheta -= dx * 0.01;
+                camPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPhi - dy * 0.01));
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+                updateCamera();
+            }
+        });
+
+        window.addEventListener('wheel', (e) => {
+            camRadius = Math.max(10, Math.min(60, camRadius + e.deltaY * 0.05));
+            updateCamera();
+        });
+
+        function handleMouseClick(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check pieces first
+            const pieceIntersects = raycaster.intersectObjects(piecesGroup.children);
+            if (pieceIntersects.length > 0) {
+                const piece = pieceIntersects[0].object;
+                if (piece.userData.color === game.turn()) {
+                    selectPiece(piece);
+                    return;
+                }
+            }
+
+            // Check squares
+            const squareIntersects = raycaster.intersectObjects(squaresGroup.children);
+            if (squareIntersects.length > 0 && selectedPiece) {
+                const square = squareIntersects[0].object;
+                const targetPos = square.userData.file + square.userData.rank;
+                attemptMove(selectedPiece.userData.pos, targetPos);
+            } else {
+                deselectPiece();
+            }
+        }
+
+        function selectPiece(piece) {
+            deselectPiece();
+            selectedPiece = piece;
+            piece.material.emissiveIntensity = 2;
+            piece.scale.set(1.2, 1.2, 1.2);
+            
+            legalMoves = game.moves({ square: piece.userData.pos, verbose: true });
+            
+            // Highlight squares
+            boardSquares.forEach(s => {
+                const move = legalMoves.find(m => m.to === (s.userData.file + s.userData.rank));
+                if (move) {
+                    s.material.emissive.setHex(0x00ff00);
+                    s.material.emissiveIntensity = 0.5;
+                }
+            });
+
+            document.getElementById('status-message').innerText = "Select target destination for " + piece.userData.type.toUpperCase();
+        }
+
+        function deselectPiece() {
+            if (selectedPiece) {
+                selectedPiece.material.emissiveIntensity = 0.8;
+                selectedPiece.scale.set(1, 1, 1);
+            }
+            selectedPiece = null;
+            legalMoves = [];
+            
+            boardSquares.forEach(s => {
+                const isBlack = (s.userData.i + s.userData.j) % 2 === 1;
+                s.material.emissive.setHex(isBlack ? 0x110011 : 0x001111);
+                s.material.emissiveIntensity = 0.2;
+            });
+
+            document.getElementById('status-message').innerText = "Select a piece to begin";
+        }
+
+        function attemptMove(from, to) {
+            const move = game.move({ from, to, promotion: 'q' });
+            if (move) {
+                addMoveToHistory(move);
+                updateBoard();
+                deselectPiece();
+            } else {
+                deselectPiece();
+            }
+        }
+
+        function addMoveToHistory(move) {
+            const hist = document.getElementById('move-history');
+            const entry = document.createElement('div');
+            entry.innerText = `> ${move.color === 'w' ? 'WHITE' : 'BLACK'}: ${move.san}`;
+            hist.prepend(entry);
+        }
+
+        function resetGame() {
+            game.reset();
+            updateBoard();
+            deselectPiece();
+            document.getElementById('move-history').innerHTML = '<div>--- SYSTEM REINITIALIZED ---</div>';
+            document.getElementById('winner-screen').style.display = 'none';
+        }
+
+        // --- ANIMATION ---
+        const clock = new THREE.Clock();
+        function animate() {
             requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            // Background movement
+            backgroundGroup.rotation.y += 0.001;
+            backgroundGroup.children.forEach(mesh => {
+                mesh.rotation.x += mesh.userData.rotationSpeed.x;
+                mesh.rotation.y += mesh.userData.rotationSpeed.y;
+                mesh.rotation.z += mesh.userData.rotationSpeed.z;
+                
+                // Pulsing emissive
+                mesh.material.emissiveIntensity = 0.5 + Math.sin(time * 2 + mesh.position.x) * 0.3;
+            });
 
             // Pulse pieces
-            pieces.forEach((p, i) => {
-                p.rotation.y += 0.02;
-                p.position.y += Math.sin(time * 0.002 + i) * 0.005;
+            piecesGroup.children.forEach((p, i) => {
+                if (p === selectedPiece) {
+                    p.rotation.y += 0.05;
+                    p.position.y = 0.8 + Math.sin(time * 5) * 0.1;
+                } else {
+                    p.rotation.y += 0.01;
+                    p.position.y = 0.5 + Math.sin(time * 2 + i) * 0.05;
+                }
             });
 
-            // Rotate boards slightly
-            boards.forEach((b, i) => {
-                b.rotation.y = Math.sin(time * 0.0005 + i) * 0.05;
-            });
+            // Animate main lights
+            mainLight.position.x = 15 * Math.sin(time * 0.5);
+            subLight.position.x = 15 * Math.sin(time * 0.5 + Math.PI);
 
             renderer.render(scene, camera);
         }
-        animate(0);
+        animate();
 
-        // Handle Resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Abort to hub
-        window.addEventListener('keydown', (e) => {
-            if(e.key === 'Escape') window.location.href = 'mge.html';
         });
 
     </script>
