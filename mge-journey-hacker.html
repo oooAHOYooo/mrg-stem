@@ -556,6 +556,8 @@
         });
 
         // --- GAME LOGIC ---
+        let aiMode = false;
+        let aiStep = 0;
         let stats = { nodes: 0, files: 0, math: 0 };
         const folders = [
             { name: "C:\\Windows", info: "The Operating System Brain. Contains System32.", fact: "Windows stores all the rules for the PC here." },
@@ -639,11 +641,65 @@
 
         function processCommand(cmd) {
             log(cmd, '#fff');
-            if(cmd === 'help') {
+            
+            if (aiMode) {
+                if (cmd === 'exit' || cmd === 'quit' || cmd === 'stop') {
+                    aiMode = false;
+                    log('AI: GOODBYE. RETURNING TO TERMINAL.', '#a0f');
+                    return;
+                }
+
+                log('AI: THINKING... 🤔', '#888');
+                
+                setTimeout(() => {
+                    if (aiStep === 0) {
+                        log('AI: HMM... I SENSE IT IS SOMETHING VERY COOL.', '#a0f');
+                        setTimeout(() => log('AI: IS IT BIGGER OR SMALLER THAN A DOG?', '#a0f'), 1000);
+                        aiStep++;
+                    } else if (aiStep === 1) {
+                        log('AI: I SEE. BEEP BOOP.', '#a0f');
+                        setTimeout(() => log('AI: WHAT COLOR IS IT?', '#a0f'), 1000);
+                        aiStep++;
+                    } else if (aiStep === 2) {
+                        log('AI: CALCULATING PROBABILITIES... [████████] 100%', '#a0f');
+                        setTimeout(() => log('AI: DOES IT MAKE A NOISE?', '#a0f'), 1500);
+                        aiStep++;
+                    } else if (aiStep === 3) {
+                        log('AI: I HAVE READ YOUR MIND.', '#a0f');
+                        setTimeout(() => {
+                            log('AI: YOU ARE THINKING OF EXACTLY WHAT YOU WANTED ME TO GUESS!', '#0f0');
+                            log('AI: WAS I RIGHT? (YES/NO)', '#a0f');
+                        }, 2000);
+                        aiStep++;
+                    } else if (aiStep === 4) {
+                        if (cmd === 'yes' || cmd === 'y') {
+                            log('AI: I KNEW IT! I AM THE SMARTEST AI IN THE WORLD. 🧠✨', '#0f0');
+                        } else {
+                            log('AI: WOW, YOU STUMPED ME! YOU ARE VERY SMART. 🏆', '#0f0');
+                        }
+                        setTimeout(() => log('--- TYPE "ai" TO PLAY AGAIN, OR "help" FOR NORMAL COMMANDS ---', '#ff0'), 1500);
+                        aiMode = false;
+                        aiStep = 0;
+                    }
+                }, 1000);
+                return;
+            }
+
+            if(cmd === 'ai' || cmd === 'chat') {
+                aiMode = true;
+                aiStep = 0;
+                log('AI: INITIATING NEURAL NETWORK MIND-READER...', '#a0f');
+                playBeep(900, 'sine', 0.2, 0.1);
+                setTimeout(() => {
+                    log('AI: I CAN GUESS WHAT YOU ARE THINKING OF.', '#a0f');
+                    log('AI: THINK OF AN ANIMAL, PLACE, OR TOY. TYPE "ready" WHEN YOU HAVE ONE!', '#a0f');
+                }, 1000);
+            } else if(cmd === 'help') {
                 log('AVAILABLE COMMANDS:');
                 log('ls - List Files');
                 log('cd [folder] - Change Directory');
                 log('hack - Breach Next Sector');
+                log('ai - Talk to the Mainframe AI');
                 log('info - About C: Drive');
                 log('clear - Clear Console');
             } else if(cmd === 'ls') {
