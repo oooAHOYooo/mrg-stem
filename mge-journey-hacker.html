@@ -362,6 +362,7 @@
                 <div class="file-item sys">bootmgr.ini</div>
                 <div class="file-item sys">pagefile.sys</div>
                 <div class="file-item sys">hiberfil.sys</div>
+                <div class="file-item sys" style="color: #f90; font-weight: bold; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('terminal-input').value='family'; processCommand('family');">f_and_f_tokyo_drift.exe</div>
             </div>
             <div style="margin-top: 20px;">
                 <h2>SECTOR STATUS</h2>
@@ -575,7 +576,9 @@
         let aiMode = false;
         let aiStep = 0;
         let vibeMode = false;
+        let vibeSelectMode = false;
         let vibeCodeIndex = 0;
+        let selectedVibeTemplate = '';
         let stats = { nodes: 0, files: 0, math: 0 };
         const folders = [
             { name: "C:\\Windows", info: "The Operating System Brain. Contains System32.", fact: "Windows stores all the rules for the PC here." },
@@ -609,7 +612,8 @@
 [ROOT ACCESS GRANTED]`;
         let codeIndex = 0;
         
-        const vibeTemplate = `<!DOCTYPE html>
+        const vibeTemplates = {
+            runner: `<!DOCTYPE html>
 <html>
 <head>
     <title>My Vibe Code Game</title>
@@ -653,10 +657,45 @@
         });
     <\/script>
 </body>
-</html>`;
+</html>`,
+            racer: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Neon Racer</title>
+    <style>
+        body { background: #111; overflow: hidden; margin: 0; font-family: monospace; color: #fff; text-align: center; }
+        .car { width: 50px; height: 100px; background: red; position: absolute; bottom: 20px; border-radius: 10px; box-shadow: 0 0 20px red; transition: 0.1s left; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .road { width: 300px; height: 100vh; background: #333; margin: 0 auto; border-left: 5px dashed white; border-right: 5px dashed white; position: relative; }
+        h1 { margin-top: 50px; text-shadow: 0 0 10px #0f0; }
+    </style>
+</head>
+<body>
+    <h1>NEON RACER</h1>
+    <p>PRESS ARROW KEYS (LEFT/RIGHT)</p>
+    <div class="road">
+        <div class="car" id="mycar"></div>
+    </div>
+    <script>
+        let cx = 150;
+        const car = document.getElementById('mycar');
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowLeft' || e.key === 'a') cx -= 40;
+            if(e.key === 'ArrowRight' || e.key === 'd') cx += 40;
+            if(cx < 25) cx = 25;
+            if(cx > 275) cx = 275;
+            car.style.left = cx + 'px';
+            const colors = ['#f00', '#0f0', '#0ff', '#f0f', '#ff0', '#f90'];
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            car.style.background = c;
+            car.style.boxShadow = '0 0 20px ' + c;
+        });
+    <\/script>
+</body>
+</html>`
+        };
 
         function saveVibeCode() {
-            const blob = new Blob([vibeTemplate.substring(0, vibeCodeIndex)], { type: 'text/html' });
+            const blob = new Blob([selectedVibeTemplate.substring(0, vibeCodeIndex)], { type: 'text/html' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -680,11 +719,11 @@
                 // Mash anything except Escape
                 playBeep(1000 + Math.random()*500, 'square', 0.05, 0.05);
                 const chunkSize = 25;
-                if (vibeCodeIndex < vibeTemplate.length) {
+                if (vibeCodeIndex < selectedVibeTemplate.length) {
                     vibeCodeIndex += chunkSize;
-                    if (vibeCodeIndex > vibeTemplate.length) vibeCodeIndex = vibeTemplate.length;
+                    if (vibeCodeIndex > selectedVibeTemplate.length) vibeCodeIndex = selectedVibeTemplate.length;
                     const ta = document.getElementById('vibe-textarea');
-                    ta.value = vibeTemplate.substring(0, vibeCodeIndex);
+                    ta.value = selectedVibeTemplate.substring(0, vibeCodeIndex);
                     ta.scrollTop = ta.scrollHeight;
                 }
                 
@@ -748,15 +787,35 @@
         function processCommand(cmd) {
             log(cmd, '#fff');
 
+            if (vibeSelectMode) {
+                if (cmd === '1' || cmd === 'runner') {
+                    startVibeEditor('runner');
+                } else if (cmd === '2' || cmd === 'racer') {
+                    startVibeEditor('racer');
+                } else {
+                    log('ERROR: PLEASE SELECT 1 (RUNNER) OR 2 (RACER).', '#f00');
+                }
+                return;
+            }
+
             if (cmd === 'vibe' || cmd === 'code') {
+                vibeSelectMode = true;
+                log('VIBE CODING MODE: SELECT GAME TYPE', '#0ff');
+                log('TYPE 1 FOR "VIBE RUNNER"', '#ff0');
+                log('TYPE 2 FOR "NEON RACER"', '#ff0');
+                return;
+            }
+            
+            function startVibeEditor(type) {
+                vibeSelectMode = false;
                 vibeMode = true;
                 vibeCodeIndex = 0;
-                log('VIBE CODING MODE INITIATED...', '#0ff');
+                selectedVibeTemplate = vibeTemplates[type];
+                log(`GENERATING BLUEPRINT FOR [${type.toUpperCase()}]...`, '#0ff');
                 setTimeout(() => {
                     document.getElementById('vibe-editor').style.display = 'flex';
                     document.getElementById('vibe-textarea').value = '';
                 }, 500);
-                return;
             }
             
             if (aiMode) {
