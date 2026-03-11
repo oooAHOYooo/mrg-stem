@@ -407,11 +407,28 @@
             </div>
         </div>
 
-        <!-- Network Traffic / Scrolling Data -->
-        <div class="screen-panel panel-right">
-            <h2>LIVE NETWORK TRAFFIC</h2>
-            <div class="scroll-text terminal-text" id="network-log">
-                <!-- Spammed with fake hacker logs -->
+        <!-- Games and Town (Right Column) -->
+        <div class="screen-panel panel-right" style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="flex: 1.2; display: flex; flex-direction: column; border: 1px solid #0f0; padding: 5px; background: rgba(0, 30, 0, 0.8);">
+                <h2 style="margin-bottom: 5px;">MGE RUNNER (CLICK / SPACE)</h2>
+                <div id="runner-game" style="flex: 1; background: #111; position: relative; overflow: hidden; border: 1px solid #040; cursor: pointer; box-shadow: inset 0 0 10px #000;">
+                    <div id="runner-player" style="width: 20px; height: 20px; background: #0f0; position: absolute; bottom: 0; left: 20px; box-shadow: 0 0 10px #0f0; transition: background 0.2s;"></div>
+                    <div id="runner-obstacle" style="width: 15px; height: 20px; background: #f00; position: absolute; bottom: 0; left: 100%; box-shadow: 0 0 10px #f00;"></div>
+                    <div id="runner-score" style="position: absolute; top: 5px; right: 10px; color: #fff; font-size: 0.9rem; font-weight: bold; text-shadow: 0 0 5px #fff;">0</div>
+                </div>
+            </div>
+            
+            <div style="flex: 1; border: 1px solid #0f0; padding: 5px; display: flex; flex-direction: column; background: rgba(0, 30, 0, 0.8);">
+                <h2>APPS BUILT</h2>
+                <div id="apps-list" class="scroll-text terminal-text" style="flex: 1; font-size: 0.75rem;">
+                    > RUNNING VIBE OS...<br>
+                </div>
+            </div>
+
+            <div style="flex: 1.2; border: 1px solid #0f0; padding: 5px; display: flex; flex-direction: column; background: rgba(0, 30, 0, 0.8);">
+                <h2>VIBE TOWN POPULATION</h2>
+                <div id="vibe-town" class="scroll-text terminal-text" style="flex: 1; font-size: 0.75rem; color: #ff0; line-height: 1.2; white-space: pre;">_ _ _
+</div>
             </div>
         </div>
     </div>
@@ -702,6 +719,27 @@
             a.download = 'my_epic_game.html';
             a.click();
             window.URL.revokeObjectURL(url);
+            
+            // Progressive Town & Apps Logic
+            const appsList = document.getElementById('apps-list');
+            const appNames = ["Cyber App", "Neon Utility", "Quantum Script", "Turbo Engine", "Matrix Toolkit"];
+            const rName = appNames[Math.floor(Math.random()*appNames.length)] + " v" + Math.floor(Math.random()*9);
+            appsList.innerHTML += `<span style="color:#0ff">>> BUILT: ${rName}</span><br>`;
+            appsList.scrollTop = appsList.scrollHeight;
+
+            const town = document.getElementById('vibe-town');
+            const buildings = [
+                "  [___]\n   | |  ",
+                "   / \\\n  |___| ",
+                "  _|_|_\n | o o |",
+                "  .---.\n  |: :| "
+            ];
+            const b = buildings[Math.floor(Math.random()*buildings.length)];
+            town.innerHTML += b + "\n";
+            town.scrollTop = town.scrollHeight;
+            
+            playBeep(1200, 'square', 0.2, 0.2);
+            log(`SUCCESSFULLY COMPILED AND DOWNLOADED [${rName}]!`, '#0f0');
         }
 
         inputEl.addEventListener('keydown', (e) => {
@@ -1010,29 +1048,76 @@
             document.getElementById('files-count').innerText = stats.files;
         }
 
-        // Network Log Spam
-        const netLog = document.getElementById('network-log');
-        const fakeLogs = [
-            "INCOMING: 192.168.1.1 -> PORT 8080",
-            "PACKET DROPPED: CHECKSUM FAIL",
-            "OVERRIDE: KERNEL_PERMISSION_BYPASS",
-            "HANDSHAKE: AUTH_OK",
-            "ENCRYPTING: AES-256-GCM",
-            "WARNING: FIREWALL DETECTED",
-            "PING: TO SYSTEM32... 12ms",
-            "DELETING LOGS: RM -RF /LOGS",
-            "STOLEN_FACT: C:\\Users is for you!",
-            "STOLEN_FACT: C:\\Windows is the brain!"
-        ];
+        // --- MINI-RUNNER GAME ---
+        const runnerGame = document.getElementById('runner-game');
+        const rPlayer = document.getElementById('runner-player');
+        const rObstacle = document.getElementById('runner-obstacle');
+        const rScoreEl = document.getElementById('runner-score');
+        
+        let isJumping = false;
+        let rScore = 0;
+        let obPos = 100;
+        let obSpeed = 2; // initial speed
 
-        setInterval(() => {
-            const l = document.createElement('div');
-            l.innerText = fakeLogs[Math.floor(Math.random() * fakeLogs.length)];
-            netLog.prepend(l);
-            if(netLog.children.length > 30) netLog.removeChild(netLog.lastChild);
-        }, 1000);
+        function jumpRunner() {
+            if (isJumping) return;
+            isJumping = true;
+            playBeep(600, 'square', 0.1, 0.1);
+            rPlayer.style.bottom = '40px';
+            rPlayer.style.background = '#0ff';
+            rPlayer.style.boxShadow = '0 0 15px #0ff';
+            
+            setTimeout(() => {
+                rPlayer.style.bottom = '0px';
+                rPlayer.style.background = '#0f0';
+                rPlayer.style.boxShadow = '0 0 10px #0f0';
+                setTimeout(() => { isJumping = false; }, 200);
+            }, 300);
+        }
 
-        // Animation Loop
+        runnerGame.addEventListener('mousedown', jumpRunner);
+        document.addEventListener('keydown', (e) => {
+            if(e.code === 'Space') jumpRunner();
+        });
+
+        function gameLoop() {
+            // Move obstacle
+            obPos -= obSpeed;
+            if (obPos <= -10) {
+                obPos = 110;
+                rScore++;
+                rScoreEl.innerText = rScore;
+                obSpeed += 0.1; // progressive difficulty
+                rObstacle.style.background = `hsl(${Math.random()*360}, 100%, 50%)`; // dynamic colors
+            }
+            rObstacle.style.left = obPos + '%';
+
+            // Collision check
+            // player is let's say left 20px (about 10%), width 20px. Ob is 15px width.
+            const playerRect = rPlayer.getBoundingClientRect();
+            const obRect = rObstacle.getBoundingClientRect();
+            
+            if (
+                playerRect.left < obRect.right &&
+                playerRect.right > obRect.left &&
+                playerRect.bottom > obRect.top
+            ) {
+                // hit!
+                if (rScore > 0) {
+                    playBeep(200, 'sawtooth', 0.3, 0.2);
+                    rPlayer.style.background = '#f00';
+                    setTimeout(()=> rPlayer.style.background = '#0f0', 200);
+                }
+                rScore = 0;
+                rScoreEl.innerText = rScore;
+                obPos = 110;
+                obSpeed = 2; // reset speed
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+
+        // Animation Loop (3D Background)
         function animate() {
             requestAnimationFrame(animate);
 
