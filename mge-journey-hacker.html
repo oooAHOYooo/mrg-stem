@@ -329,7 +329,13 @@
     </style>
 </head>
 <body>
-    <div class="main-header">
+    <div id="intro-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #0f0;">
+        <h1 style="font-size: 4rem; margin-bottom: 2rem; text-shadow: 0 0 20px #0f0; font-family: 'Fira Code', monospace;">ENTER HACKER NAME</h1>
+        <input type="text" id="hacker-name-input" placeholder="JOURNEYS" style="font-size: 3rem; background: transparent; border: none; border-bottom: 4px solid #0f0; color: #fff; text-align: center; outline: none; text-transform: uppercase; font-family: 'Fira Code', monospace; width: 500px;" autofocus autocomplete="off" spellcheck="false">
+        <button onclick="startGame()" style="margin-top: 3rem; font-size: 2rem; padding: 15px 40px; background: #040; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-transform: uppercase; font-family: 'Fira Code', monospace; font-weight: bold; transition: all 0.3s;" onmouseover="this.style.background='#0f0';this.style.color='#000'" onmouseout="this.style.background='#040';this.style.color='#0f0'">INITIALIZE</button>
+    </div>
+
+    <div class="main-header" id="main-header-text">
         JOURNEYS HACKING GAME
     </div>
 
@@ -498,6 +504,37 @@
 
         let nosActive = false;
 
+        // Sound Effects setup
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(freq, type, dur, vol) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
+        }
+
+        // Intro Screen Setup
+        function startGame() {
+            let nameInput = document.getElementById('hacker-name-input').value.trim().toUpperCase();
+            if (!nameInput) nameInput = 'JOURNEYS';
+            document.getElementById('main-header-text').innerText = `${nameInput} HACKING GAME`;
+            document.getElementById('intro-screen').style.display = 'none';
+            playBeep(400, 'square', 0.2, 0.2);
+            document.getElementById('terminal-input').focus();
+        }
+
+        document.getElementById('hacker-name-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') startGame();
+            else if (e.key.length === 1) playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
+        });
+
         // --- GAME LOGIC ---
         let stats = { nodes: 0, files: 0, math: 0 };
         const folders = [
@@ -531,22 +568,6 @@
 [FIREWALL BYPASSED]
 [ROOT ACCESS GRANTED]`;
         let codeIndex = 0;
-
-        // Sound Effects setup
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playBeep(freq, type, dur, vol) {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + dur);
-        }
 
         inputEl.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') {
