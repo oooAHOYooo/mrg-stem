@@ -593,7 +593,6 @@
         let aiMode = false;
         let aiStep = 0;
         let vibeMode = false;
-        let vibeSelectMode = false;
         let vibeCodeIndex = 0;
         let selectedVibeTemplate = '';
         let stats = { nodes: 0, files: 0, math: 0 };
@@ -754,15 +753,31 @@
                     return;
                 }
                 
+                if (vibeCodeIndex >= selectedVibeTemplate.length) {
+                    saveVibeCode();
+                    vibeMode = false;
+                    document.getElementById('vibe-editor').style.display = 'none';
+                    inputEl.value = '';
+                    inputEl.focus();
+                    e.preventDefault();
+                    return;
+                }
+
                 // Mash anything except Escape
                 playBeep(1000 + Math.random()*500, 'square', 0.05, 0.05);
-                const chunkSize = 25;
+                const chunkSize = 35;
                 if (vibeCodeIndex < selectedVibeTemplate.length) {
                     vibeCodeIndex += chunkSize;
                     if (vibeCodeIndex > selectedVibeTemplate.length) vibeCodeIndex = selectedVibeTemplate.length;
                     const ta = document.getElementById('vibe-textarea');
                     ta.value = selectedVibeTemplate.substring(0, vibeCodeIndex);
                     ta.scrollTop = ta.scrollHeight;
+                    
+                    if (vibeCodeIndex >= selectedVibeTemplate.length) {
+                        log('BUILD COMPLETE. PRESS ANY KEY TO SAVE AND DOWNLOAD.', '#0f0');
+                        document.getElementById('vibe-textarea').value += '\n\n/* BUILD COMPLETE! PRESS ANY KEY TO SAVE! */';
+                        ta.scrollTop = ta.scrollHeight;
+                    }
                 }
                 
                 document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
@@ -831,27 +846,14 @@
         function processCommand(cmd) {
             log(cmd, '#fff');
 
-            if (vibeSelectMode) {
-                if (cmd === '1' || cmd === 'runner') {
-                    startVibeEditor('runner');
-                } else if (cmd === '2' || cmd === 'racer') {
-                    startVibeEditor('racer');
-                } else {
-                    log('ERROR: PLEASE SELECT 1 (RUNNER) OR 2 (RACER).', '#f00');
-                }
-                return;
-            }
-
             if (cmd === 'vibe' || cmd === 'code') {
-                vibeSelectMode = true;
-                log('VIBE CODING MODE: SELECT GAME TYPE', '#0ff');
-                log('TYPE 1 FOR "VIBE RUNNER"', '#ff0');
-                log('TYPE 2 FOR "NEON RACER"', '#ff0');
+                const keys = Object.keys(vibeTemplates);
+                const randomType = keys[Math.floor(Math.random() * keys.length)];
+                startVibeEditor(randomType);
                 return;
             }
             
             function startVibeEditor(type) {
-                vibeSelectMode = false;
                 vibeMode = true;
                 vibeCodeIndex = 0;
                 selectedVibeTemplate = vibeTemplates[type];
@@ -1019,13 +1021,24 @@
                 log('ACCESS DENIED. INCORRECT KEY.', '#f00');
             }
             mathModal.classList.remove('active');
+            inputEl.focus();
         }
 
         function skipMath() {
-            log('SECURITY BYPASSED. CAUTION: SOME DATA MAY BE LOST.', '#ff0');
-            unlockNext();
             mathModal.classList.remove('active');
+            log('SECURITY CHALLENGE BYPASSED BY USER. CAUTION: SOME DATA MAY BE LOST.', '#ff0');
+            unlockNext();
+            inputEl.focus();
         }
+
+        mathInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                checkMath();
+            } else if (e.key === ' ' || e.code === 'Space' || e.key === 'Escape') {
+                e.preventDefault();
+                skipMath();
+            }
+        });
 
         function unlockNext() {
             stats.math++;
@@ -1158,6 +1171,71 @@
             const now = new Date();
             document.getElementById('system-time').innerText = `CONNECTED: ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
         }, 1000);
+
+        // 60-Second Inactivity Reset
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(triggerCrazyReset, 60000);
+        }
+
+        function triggerCrazyReset() {
+            // Crazy distortion and sfx
+            playBeep(200, 'sawtooth', 0.5, 0.5);
+            setTimeout(() => playBeep(100, 'sawtooth', 0.5, 0.5), 500);
+            setTimeout(() => playBeep(50, 'square', 1.0, 0.8), 1000);
+
+            let hue = 0;
+            const crazyInt = setInterval(() => {
+                hue += 45;
+                document.body.style.filter = `hue-rotate(${hue}deg) invert(100%) contrast(200%)`;
+                document.body.style.transform = `scale(${1 + Math.random()*0.1}) rotate(${(Math.random()-0.5)*5}deg)`;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(crazyInt);
+                document.body.style.filter = '';
+                document.body.style.transform = '';
+                
+                // Clear the terminal and UI
+                consoleEl.innerHTML = '';
+                log('SYSTEM REBOOTED DUE TO INACTIVITY.', '#f00');
+                log('> WELCOME USER...', '#0f0');
+                log('> START TYPING TO INITIATE HACK...', '#0f0');
+                
+                stats = { nodes: 0, files: 0, math: 0 };
+                document.getElementById('nodes-count').innerText = '0';
+                document.getElementById('files-count').innerText = '0';
+                document.getElementById('math-count').innerText = '0';
+                
+                document.getElementById('file-explorer').innerHTML = `
+                    <div class="file-item dir">[DIR] Windows</div>
+                    <div class="file-item dir">[DIR] Users</div>
+                    <div class="file-item dir">[DIR] Program Files</div>
+                    <div class="file-item dir">[DIR] Program Files (x86)</div>
+                    <div class="file-item sys">bootmgr.ini</div>
+                    <div class="file-item sys">pagefile.sys</div>
+                    <div class="file-item sys">hiberfil.sys</div>
+                    <div class="file-item sys" style="color: #f90; font-weight: bold; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('terminal-input').value='family'; processCommand('family');">f_and_f_tokyo_drift.exe</div>
+                `;
+                document.getElementById('apps-list').innerHTML = '> RUNNING VIBE OS...<br>';
+                document.getElementById('vibe-town').innerHTML = '_ _ _\\n';
+                
+                vibeMode = false;
+                document.getElementById('vibe-editor').style.display = 'none';
+                document.getElementById('math-bypass').classList.remove('active');
+                
+                inputEl.value = '';
+                inputEl.focus();
+                
+                resetInactivityTimer();
+            }, 3000);
+        }
+
+        document.addEventListener('keydown', resetInactivityTimer);
+        document.addEventListener('mousemove', resetInactivityTimer);
+        document.addEventListener('mousedown', resetInactivityTimer);
+        resetInactivityTimer();
 
     </script>
 </body>
