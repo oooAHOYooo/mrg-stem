@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -115,12 +116,33 @@
             box-shadow: 0 0 10px currentColor;
         }
 
-        .atom-H { background: #fff; color: #000; }
-        .atom-O { background: #ff4757; color: #fff; }
-        .atom-C { background: #57606f; color: #fff; }
-        .atom-N { background: #3742fa; color: #fff; }
+        .atom-H {
+            background: #fff;
+            color: #000;
+        }
 
-        .recipe-list h3 { margin-bottom: 10px; color: #ffa502; text-transform: uppercase; font-size: 0.9rem; }
+        .atom-O {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .atom-C {
+            background: #57606f;
+            color: #fff;
+        }
+
+        .atom-N {
+            background: #3742fa;
+            color: #fff;
+        }
+
+        .recipe-list h3 {
+            margin-bottom: 10px;
+            color: #ffa502;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
         .recipe-item {
             background: rgba(255, 255, 255, 0.05);
             padding: 10px;
@@ -209,15 +231,24 @@
         .flash {
             animation: hit-flash 0.2s ease;
         }
+
         @keyframes hit-flash {
-            0% { background: rgba(255, 255, 255, 0.3); }
-            100% { background: rgba(0, 210, 255, 0.1); }
+            0% {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            100% {
+                background: rgba(0, 210, 255, 0.1);
+            }
         }
 
         #math-popup {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.9);
             z-index: 3000;
             flex-direction: column;
@@ -275,6 +306,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">ELEMENTAL RHYTHM ALCHEMY</div>
 
@@ -283,10 +315,18 @@
     <div class="rhythm-container">
         <div style="margin-top: 200px; text-align: center; opacity: 0.6; font-size: 0.8rem;">STEM DDR MODE</div>
         <div class="hit-zone" id="hit-zone">
-            <svg class="target-arrow" viewBox="0 0 24 24"><path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
-            <svg class="target-arrow" viewBox="0 0 24 24"><path fill="currentColor" d="M11,4H13V16L18.5,10.5L19.92,11.92L12,19.84L4.08,11.92L5.5,10.5L11,16V4Z"/></svg>
-            <svg class="target-arrow" viewBox="0 0 24 24"><path fill="currentColor" d="M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z"/></svg>
-            <svg class="target-arrow" viewBox="0 0 24 24"><path fill="currentColor" d="M4,13V11H16L10.5,5.5L11.92,4.08L19.84,12L11.92,19.92L10.5,18.5L16,13H4Z"/></svg>
+            <svg class="target-arrow" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+            </svg>
+            <svg class="target-arrow" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11,4H13V16L18.5,10.5L19.92,11.92L12,19.84L4.08,11.92L5.5,10.5L11,16V4Z" />
+            </svg>
+            <svg class="target-arrow" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z" />
+            </svg>
+            <svg class="target-arrow" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M4,13V11H16L10.5,5.5L11.92,4.08L19.84,12L11.92,19.92L10.5,18.5L16,13H4Z" />
+            </svg>
         </div>
     </div>
 
@@ -314,7 +354,8 @@
     <div class="growth-meter">
         <div class="growth-fill" id="growth-fill"></div>
     </div>
-    <div style="position: fixed; top: 135px; left: 400px; z-index: 10; font-weight: bold; font-size: 0.8rem;">CRITTER GROWTH: <span id="growth-percent">10</span>%</div>
+    <div style="position: fixed; top: 135px; left: 400px; z-index: 10; font-weight: bold; font-size: 0.8rem;">CRITTER
+        GROWTH: <span id="growth-percent">10</span>%</div>
 
     <div id="combo-text">PERFECT!</div>
 
@@ -327,8 +368,9 @@
     </div>
 
     <div id="math-popup">
-        <div id="math-question">SYSTEM ERROR! SOLVE TO CONTINUE: <br><span id="math-eq"></span></div>
-        <input type="number" id="math-input" placeholder="Enter Answer" autofocus autocomplete="off">
+        <div id="math-question">CODE CHALLENGE! COMPLETE TO CONTINUE: <br><span id="math-eq"
+                style="font-family: 'JetBrains Mono', monospace; font-size: 0.8em; color: #7bed9f;"></span></div>
+        <input type="text" id="math-input" placeholder="Type code answer" autofocus autocomplete="off">
     </div>
 
     <script>
@@ -348,8 +390,8 @@
         // Bio-Critter (A blob that grows)
         let growth = 1.0;
         const critterGeo = new THREE.SphereGeometry(1, 64, 64);
-        const critterMat = new THREE.MeshStandardMaterial({ 
-            color: 0x7bed9f, 
+        const critterMat = new THREE.MeshStandardMaterial({
+            color: 0x7bed9f,
             wireframe: true,
             emissive: 0x2ed573,
             emissiveIntensity: 0.5
@@ -402,8 +444,8 @@
                 timeLeft -= 1;
                 updateTimer3D();
                 if (level >= 2) {
-                   arrowSpeed += 0.2; // Gets faster and faster
-                   spawnRate = Math.max(200, spawnRate - 10);
+                    arrowSpeed += 0.2; // Gets faster and faster
+                    spawnRate = Math.max(200, spawnRate - 10);
                 }
             }
         }, 1000);
@@ -412,28 +454,39 @@
         let isWinning = false;
         let particles = null;
 
-        // Math Popup Logic
+        // Math/Coding Popup Logic
         let isPaused = false;
-        let expectedAnswer = 0;
+        let expectedAnswer = "";
+        let successfulHits = 0;
         const mathPopup = document.getElementById('math-popup');
         const mathEq = document.getElementById('math-eq');
         const mathInput = document.getElementById('math-input');
 
-        function triggerMathPopup() {
+        const codingQuestions = [
+            { text: '// Add "O" to the end of the array<br>let atoms = ["H", "H"];<br>atoms.____("O");', answer: 'push' },
+            { text: '// Concatenate the strings<br>let water = "H2" __ "O";', answer: '+' },
+            { text: '// Add 2 to carbon<br>let carbon = 6;<br>let oxygen = carbon __ 2;', answer: '+' },
+            { text: '// Get the number of items in the array<br>let e = ["H", "O"];<br>e.____;', answer: 'length' },
+            { text: '// Check if NOT full<br>let full = true;<br>if (___full) {', answer: '!' },
+            { text: '// Declare a variable that can change<br>____ atom = "H";', answer: 'let' },
+            { text: '// Declare a variable that cannot change<br>_____ max = 100;', answer: 'const' },
+            { text: '// Write to console<br>console.____("Hello");', answer: 'log' }
+        ];
+
+        function triggerCodingPopup() {
             if (isWinning) return; // Don't interrupt the win animation!
             isPaused = true;
-            const a = Math.floor(Math.random() * 12) + 2;
-            const b = Math.floor(Math.random() * 12) + 2;
-            expectedAnswer = a * b;
-            mathEq.innerText = `${a} x ${b} = ?`;
+            const q = codingQuestions[Math.floor(Math.random() * codingQuestions.length)];
+            expectedAnswer = q.answer;
+            mathEq.innerHTML = q.text;
             mathPopup.style.display = 'flex';
             mathInput.value = '';
             mathInput.focus();
         }
 
         mathInput.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') {
-                if(parseInt(mathInput.value) === expectedAnswer) {
+            if (e.key === 'Enter') {
+                if (mathInput.value.trim().toLowerCase() === expectedAnswer.toLowerCase()) {
                     mathPopup.style.display = 'none';
                     isPaused = false;
                 } else {
@@ -443,18 +496,6 @@
                 }
             }
         });
-
-        // Trigger math randomly every 15-30 seconds
-        function scheduleMath() {
-            const delay = Math.random() * 15000 + 15000;
-            setTimeout(() => {
-                if (!isWinning) {
-                    triggerMathPopup();
-                    scheduleMath();
-                }
-            }, delay);
-        }
-        scheduleMath();
 
         // --- RHYTHM LOGIC ---
         const arrows = [];
@@ -479,21 +520,21 @@
             const el = document.createElement('div');
             el.className = 'arrow';
             el.innerHTML = `<svg viewBox="0 0 24 24" style="color:${type.color}"><path fill="currentColor" d="${getArrowPath(type.dir)}"/></svg>`;
-            
+
             const xPos = 20 + types.indexOf(type) * 65;
             el.style.left = xPos + 'px';
             el.style.bottom = '-100px';
-            
+
             document.querySelector('.rhythm-container').appendChild(el);
-            
+
             arrows.push({ el, type, y: -100, hit: false });
         }
 
         function getArrowPath(dir) {
-            if(dir === 'left') return "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z";
-            if(dir === 'down') return "M11,4H13V16L18.5,10.5L19.92,11.92L12,19.84L4.08,11.92L5.5,10.5L11,16V4Z";
-            if(dir === 'up') return "M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z";
-            if(dir === 'right') return "M4,13V11H16L10.5,5.5L11.92,4.08L19.84,12L11.92,19.92L10.5,18.5L16,13H4Z";
+            if (dir === 'left') return "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z";
+            if (dir === 'down') return "M11,4H13V16L18.5,10.5L19.92,11.92L12,19.84L4.08,11.92L5.5,10.5L11,16V4Z";
+            if (dir === 'up') return "M13,20H11V8L5.5,13.5L4.08,12.08L12,4.16L19.92,12.08L18.5,13.5L13,8V20Z";
+            if (dir === 'right') return "M4,13V11H16L10.5,5.5L11.92,4.08L19.84,12L11.92,19.92L10.5,18.5L16,13H4Z";
         }
 
         // --- GAME LOOP ---
@@ -513,11 +554,11 @@
                     const positions = particles.geometry.attributes.position.array;
                     for (let i = 0; i < positions.length; i += 3) {
                         positions[i] += (Math.random() - 0.5) * 0.1;
-                        positions[i+1] += (Math.random() - 0.5) * 0.1;
-                        positions[i+2] += (Math.random() - 0.5) * 0.1;
+                        positions[i + 1] += (Math.random() - 0.5) * 0.1;
+                        positions[i + 2] += (Math.random() - 0.5) * 0.1;
                     }
                     particles.geometry.attributes.position.needsUpdate = true;
-                    
+
                     critterMat.color.setHSL((time % 2000) / 2000, 1, 0.5);
                 }
             } else {
@@ -526,13 +567,13 @@
             }
 
             // Spawn arrows
-            if(!isWinning && time - lastSpawn > spawnRate) {
+            if (!isWinning && time - lastSpawn > spawnRate) {
                 spawnArrow();
                 lastSpawn = time;
             }
 
             // Move arrows
-            for(let i = arrows.length-1; i >= 0; i--) {
+            for (let i = arrows.length - 1; i >= 0; i--) {
                 const a = arrows[i];
                 if (!isWinning) {
                     a.y = (a.y || 0) + arrowSpeed; // Speed
@@ -540,7 +581,7 @@
                 }
 
                 // Remove if off screen
-                if(a.y > window.innerHeight + 100) {
+                if (a.y > window.innerHeight + 100) {
                     a.el.remove();
                     arrows.splice(i, 1);
                 }
@@ -573,13 +614,13 @@
             const tolerance = 50;
 
             types.forEach((type, idx) => {
-                if(e.key === type.key) {
+                if (e.key === type.key) {
                     // Check for arrow in hit zone
                     let found = false;
-                    for(let i=0; i < arrows.length; i++) {
+                    for (let i = 0; i < arrows.length; i++) {
                         const a = arrows[i];
                         const currentTop = window.innerHeight - a.y;
-                        if(a.type.key === e.key && Math.abs(currentTop - zoneTop) < tolerance && !a.hit) {
+                        if (a.type.key === e.key && Math.abs(currentTop - zoneTop) < tolerance && !a.hit) {
                             a.hit = true;
                             a.el.style.opacity = '0';
                             successHit(type.atom);
@@ -587,7 +628,7 @@
                             break;
                         }
                     }
-                    if(!found) {
+                    if (!found) {
                         document.getElementById('status-msg').innerText = "MISS! TIMING IS OFF!";
                         document.getElementById('status-msg').style.color = "red";
                     }
@@ -605,6 +646,11 @@
             setTimeout(() => combo.style.opacity = '0', 300);
 
             addToBuffer(atom);
+
+            successfulHits++;
+            if (successfulHits % 15 === 0) {
+                triggerCodingPopup();
+            }
         }
 
         function addToBuffer(atom) {
@@ -626,7 +672,7 @@
 
         function checkRecipes() {
             recipes.forEach(r => {
-                if(hasFormula(r.formula)) {
+                if (hasFormula(r.formula)) {
                     document.getElementById('status-msg').innerText = `SYNTHESIZED ${r.name.toUpperCase()}!`;
                     document.getElementById('status-msg').style.color = "#000";
                     applyGrowth(r.grow);
@@ -647,12 +693,12 @@
         function hasFormula(formula) {
             const counts = {};
             buffer.forEach(a => counts[a] = (counts[a] || 0) + 1);
-            
+
             const req = {};
             formula.forEach(a => req[a] = (req[a] || 0) + 1);
 
-            for(let key in req) {
-                if((counts[key] || 0) < req[key]) return false;
+            for (let key in req) {
+                if ((counts[key] || 0) < req[key]) return false;
             }
             return true;
         }
@@ -660,7 +706,7 @@
         function clearUsedAtoms(formula) {
             formula.forEach(atom => {
                 const idx = buffer.indexOf(atom);
-                if(idx > -1) buffer.splice(idx, 1);
+                if (idx > -1) buffer.splice(idx, 1);
             });
             updateBufferUI();
         }
@@ -668,7 +714,7 @@
         function spawnMolecule() {
             // Visual representation of a synthesized element orbiting
             const molGeo = new THREE.DodecahedronGeometry(0.3);
-            const molMat = new THREE.MeshStandardMaterial({ 
+            const molMat = new THREE.MeshStandardMaterial({
                 color: Math.random() * 0xffffff,
                 emissive: Math.random() * 0xffffff,
                 emissiveIntensity: 0.5,
@@ -676,11 +722,11 @@
                 roughness: 0.2
             });
             const mol = new THREE.Mesh(molGeo, molMat);
-            
+
             const radius = 2 + Math.random() * 2;
             const angle = Math.random() * Math.PI * 2;
             mol.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-            
+
             moleculesGroup.add(mol);
         }
 
@@ -695,7 +741,7 @@
                 timeLeft += 60;
                 document.getElementById('growth-fill').style.width = '10%';
                 document.getElementById('growth-percent').innerText = '10';
-                
+
                 const combo = document.getElementById('combo-text');
                 combo.style.opacity = '1';
                 combo.innerHTML = "LEVEL 2<br>OVERDRIVE!";
@@ -706,12 +752,12 @@
                 document.getElementById('status-msg').innerText = "MAX GROWTH ACHIEVED! SYSTEM OVERLOAD!";
                 document.getElementById('status-msg').style.color = "#ff4757";
                 critterMat.wireframe = false;
-                
+
                 // Fireworks particles
                 const pGeo = new THREE.BufferGeometry();
                 const pCount = 2000;
                 const pPos = new Float32Array(pCount * 3);
-                for(let i=0; i<pCount*3; i++) {
+                for (let i = 0; i < pCount * 3; i++) {
                     pPos[i] = (Math.random() - 0.5) * 10;
                 }
                 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
@@ -731,29 +777,30 @@
             growth += amount / 100;
             let currentPct = document.getElementById('growth-percent').innerText;
             if (currentPct === '100') return; // already won
-            
+
             let percentDisplay = Math.min(Math.floor(growth * 10), 100);
-            
+
             document.getElementById('growth-fill').style.width = percentDisplay + '%';
             document.getElementById('growth-percent').innerText = percentDisplay;
-            
+
             // Spawn a visual 3D molecule
             spawnMolecule();
-            
+
             // Visual feedback on critter
             critterMat.emissiveIntensity = 2;
             setTimeout(() => critterMat.emissiveIntensity = 0.5, 500);
-            
-            if(percentDisplay >= 100 && !isWinning) {
+
+            if (percentDisplay >= 100 && !isWinning) {
                 triggerWinAnimation();
             }
         }
 
         // Escape to exit
         window.addEventListener('keydown', (e) => {
-            if(e.key === 'Escape') window.location.href = 'mge.html';
+            if (e.key === 'Escape') window.location.href = 'mge.html';
         });
 
     </script>
 </body>
+
 </html>
