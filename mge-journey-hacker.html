@@ -334,6 +334,102 @@
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
+
+        /* Vibe-Bit (Hacker Clippy) */
+        .clippie-container {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 300px;
+            pointer-events: none;
+        }
+
+        .clippie-sprite {
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            animation: clippie-float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.7));
+        }
+
+        .clippie-sprite img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        @keyframes clippie-float {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        .clippie-speech-bubble {
+            background: rgba(0, 40, 0, 0.95);
+            border: 2px solid #0ff;
+            color: #0ff;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            pointer-events: auto;
+            display: none;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .clippie-speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            right: 60px;
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #0ff transparent;
+            display: block;
+            width: 0;
+        }
+
+        .clippie-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .clippie-btn {
+            background: rgba(0, 100, 100, 0.3);
+            border: 1px solid #0ff;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.8rem;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .clippie-btn:hover {
+            background: #0ff;
+            color: #000;
+        }
+
+        .clippie-glitch {
+            animation: clippie-glitch-anim 0.2s infinite;
+        }
+
+        @keyframes clippie-glitch-anim {
+            0% { transform: translate(1px, 1px); filter: hue-rotate(0deg); }
+            50% { transform: translate(-1px, -1px); filter: hue-rotate(90deg); }
+            100% { transform: translate(1px, -1px); filter: hue-rotate(180deg); }
+        }
     </style>
 </head>
 <body>
@@ -437,7 +533,9 @@
     <div id="math-bypass" class="math-bypass">
         <h3>SECURITY BYPASS CHALLENGE</h3>
         <p style="font-size: 0.8rem;">DECRYPT SECTOR TO PROCEED</p>
+        <div id="math-timer" style="font-size: 1.5rem; color: #ff0; margin-top: 10px;">SECTOR LOCKING IN: 5s</div>
         <div class="equation" id="equation">2 + 2</div>
+        <div id="math-explanation" style="font-size: 0.9rem; color: #0ff; margin-bottom: 15px; min-height: 1.2rem; font-style: italic;"></div>
         <input type="number" id="math-input" class="answer-input">
         <br>
         <button class="btn" onclick="checkMath()">EXECUTE</button>
@@ -445,7 +543,16 @@
     </div>
 
     <!-- Vibe Code Editor Modal -->
-    <div id="vibe-editor" class="screen-panel" style="display: none; position: absolute; top: 10%; left: 5%; width: 90%; height: 80%; z-index: 200; background: rgba(0,20,0,0.95); border: 2px solid #0ff; flex-direction: column; box-shadow: 0 0 30px #0ff;">
+    <!-- Vibe-Bit Assistant -->
+    <div id="vibe-clippie" class="clippie-container">
+        <div id="clippie-bubble" class="clippie-speech-bubble">
+            <div id="clippie-text">...</div>
+            <div id="clippie-options" class="clippie-options"></div>
+        </div>
+        <div class="clippie-sprite" onclick="vibeBitInteraction()">
+            <img src="hacker_clippy_assistant_1773325854733.png" alt="Vibe-Bit">
+        </div>
+    </div>
         <div style="background: #0ff; color: #000; padding: 10px; font-weight: bold; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
             <span>⚡ VIBE.CODE // HYPER EDITOR & EMULATOR ⚡</span>
             <div style="display: flex; gap: 10px;">
@@ -592,6 +699,15 @@
                 log('PRESS [ENTER] TO INITIATE VIBE MODE...', '#ff0');
                 document.getElementById('terminal-input').value = 'vibe';
                 document.getElementById('terminal-input').focus();
+
+                // Introduce Vibe-Bit
+                setTimeout(() => {
+                    vClippie.style.display = 'flex';
+                    showClippie("HI! I'M VIBE-BIT! Ready to hack the mainframe? You can click me anytime for help, or type 'vibe' to code!", [
+                        { label: "LET'S GO!", action: () => hideClippie() },
+                        { label: "WHAT ARE YOU?", action: () => showClippie("I'm your digital assistant! I make vibe coding 100% more EPIC.", [{ label: "NICE", action: () => hideClippie() }]) }
+                    ]);
+                }, 2000);
             }, 1200);
         }
 
@@ -599,6 +715,73 @@
             if (e.key === 'Enter') startGame();
             else if (e.key.length === 1) playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
         });
+
+        // --- VIBE-BIT AI ASSISTANT LOGIC ---
+        const vClippie = document.getElementById('vibe-clippie');
+        const vBubble = document.getElementById('clippie-bubble');
+        const vText = document.getElementById('clippie-text');
+        const vOptions = document.getElementById('clippie-options');
+        
+        const clippieMessages = [
+            "It looks like you're trying to breach the mainframe. Want some help with that?",
+            "I noticed you're mashing keys... that's the spirit! Want to VIBE CODE something?",
+            "Need a hand, hacker? I can help you build some epic scripts.",
+            "SYSTEM OVERLOAD! Just kidding, it's just me, Vibe-Bit! Ready to code?",
+            "My sensors indicate you are a COOL HACKER. Let's build something together!"
+        ];
+
+        function showClippie(msg, options = []) {
+            vClippie.style.display = 'flex';
+            vBubble.style.display = 'block';
+            vText.innerText = '';
+            vOptions.innerHTML = '';
+            
+            // Typing effect
+            let i = 0;
+            const timer = setInterval(() => {
+                vText.innerText += msg[i];
+                i++;
+                if (i >= msg.length) {
+                    clearInterval(timer);
+                    renderOptions(options);
+                }
+            }, 30);
+            
+            playBeep(1200, 'sine', 0.1, 0.05);
+        }
+
+        function renderOptions(options) {
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'clippie-btn';
+                btn.innerText = `> ${opt.label}`;
+                btn.onclick = () => {
+                    vBubble.style.display = 'none';
+                    opt.action();
+                };
+                vOptions.appendChild(btn);
+            });
+        }
+
+        function vibeBitInteraction() {
+            const randomMsg = clippieMessages[Math.floor(Math.random() * clippieMessages.length)];
+            const options = [
+                { label: "LET'S VIBE CODE!", action: () => processCommand('vibe') },
+                { label: "TEACH ME A HACKER FACT", action: () => {
+                    const fact = folders[Math.floor(Math.random()*folders.length)].fact;
+                    showClippie(`DID YOU KNOW? ${fact}`, [{ label: "COOL!", action: () => hideClippie() }]);
+                }},
+                { label: "GO AWAY, CLIPPED ONE", action: () => hideClippie() }
+            ];
+            showClippie(randomMsg, options);
+            document.querySelector('.clippie-sprite').classList.add('clippie-glitch');
+            setTimeout(() => document.querySelector('.clippie-sprite').classList.remove('clippie-glitch'), 500);
+        }
+
+        function hideClippie() {
+            vBubble.style.display = 'none';
+            playBeep(600, 'sine', 0.1, 0.05);
+        }
 
         // --- GAME LOGIC ---
         let aiMode = false;
@@ -719,6 +902,43 @@
             car.style.background = c;
             car.style.boxShadow = '0 0 20px ' + c;
         });
+    <\/script>
+</body>
+</html>`,
+            matrix: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Matrix Rain</title>
+    <style>
+        body { background: black; margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        for (let i = 0; i < columns; i++) drops[i] = 1;
+        function draw() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0F0";
+            ctx.font = fontSize + "px arial";
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(Math.floor(Math.random() * letters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 33);
     <\/script>
 </body>
 </html>`
@@ -894,9 +1114,12 @@
             log(cmd, '#fff');
 
             if (cmd === 'vibe' || cmd === 'code') {
-                const keys = Object.keys(vibeTemplates);
-                const randomType = keys[Math.floor(Math.random() * keys.length)];
-                startVibeEditor(randomType);
+                showClippie("CHOOSE YOUR DESTINY, HACKER. WHAT SHALL WE BUILD?", [
+                    { label: "NEON RUNNER GAME", action: () => startVibeEditor('runner') },
+                    { label: "HIGH-SPEED RACER", action: () => startVibeEditor('racer') },
+                    { label: "CYBER MATRIX TEXT", action: () => startVibeEditor('matrix') },
+                    { label: "NEVERMIND", action: () => hideClippie() }
+                ]);
                 return;
             }
             
@@ -1052,7 +1275,10 @@
         const mathModal = document.getElementById('math-bypass');
         const mathInput = document.getElementById('math-input');
         const eqEl = document.getElementById('equation');
+        const timerEl = document.getElementById('math-timer');
+        const explainEl = document.getElementById('math-explanation');
         let currentAnswer = 0;
+        let mathTimerInterval;
 
         function triggerMath() {
             const a = Math.floor(Math.random() * 10) + 1;
@@ -1060,12 +1286,40 @@
             const op = Math.random() > 0.5 ? '+' : '-';
             currentAnswer = op === '+' ? a + b : a - b;
             eqEl.innerText = `${a} ${op} ${b}`;
+            
             mathModal.classList.add('active');
             mathInput.value = '';
             mathInput.focus();
+            explainEl.innerText = '';
+            
+            let timeLeft = 5;
+            timerEl.innerText = `SECTOR LOCKING IN: ${timeLeft}s`;
+            timerEl.style.color = '#ff0';
+
+            clearInterval(mathTimerInterval);
+            mathTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    timerEl.innerText = `SECTOR LOCKING IN: ${timeLeft}s`;
+                } else {
+                    clearInterval(mathTimerInterval);
+                    timerEl.innerText = `ANSWER REVEALED!`;
+                    timerEl.style.color = '#0f0';
+                    mathInput.value = currentAnswer;
+                    
+                    // Educational explanation
+                    if (op === '+') {
+                        explainEl.innerText = `Hacker Tip: Adding ${b} to ${a} gives you ${currentAnswer}! It's like having ${a} and getting ${b} more.`;
+                    } else {
+                        explainEl.innerText = `Hacker Tip: Taking away ${b} from ${a} leaves you with ${currentAnswer}!`;
+                    }
+                    playBeep(1000, 'sine', 0.2, 0.1);
+                }
+            }, 1000);
         }
 
         function checkMath() {
+            clearInterval(mathTimerInterval);
             if(parseInt(mathInput.value) === currentAnswer) {
                 log('ACCESS GRANTED. SECTOR DECRYPTED.', '#0f0');
                 unlockNext();
@@ -1077,6 +1331,7 @@
         }
 
         function skipMath() {
+            clearInterval(mathTimerInterval);
             mathModal.classList.remove('active');
             log('SECURITY CHALLENGE BYPASSED BY USER. CAUTION: SOME DATA MAY BE LOST.', '#ff0');
             unlockNext();

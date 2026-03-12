@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elemental Rhythm - STEM Alchemy</title>
+    <title>AGGRESSIVE STEM</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -92,7 +92,7 @@
             overflow-y: auto;
         }
 
-        .molecule-buffer {
+        .code-block-buffer {
             display: flex;
             gap: 10px;
             min-height: 50px;
@@ -104,36 +104,51 @@
             border: 1px solid #444;
         }
 
-        .atom {
-            width: 35px;
+        .code-block {
+            width: 80px;
             height: 35px;
-            border-radius: 50%;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 900;
-            font-size: 0.8rem;
+            font-weight: 700;
+            font-size: 0.7rem;
             box-shadow: 0 0 10px currentColor;
+            font-family: 'JetBrains Mono', monospace;
         }
 
-        .atom-H {
+        .block-print, .atom-print {
             background: #fff;
             color: #000;
         }
 
-        .atom-O {
+        .block-if, .atom-if {
             background: #ff4757;
             color: #fff;
         }
 
-        .atom-C {
+        .block-var, .atom-var {
             background: #57606f;
             color: #fff;
         }
 
-        .atom-N {
+        .block-loop, .atom-loop {
             background: #3742fa;
             color: #fff;
+        }
+
+        .atom {
+            width: 80px;
+            height: 35px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.7rem;
+            box-shadow: 0 0 10px currentColor;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
         }
 
         .recipe-list h3 {
@@ -189,6 +204,16 @@
             border-bottom: 2px solid #00d2ff;
             z-index: 1000;
             text-shadow: 0 0 15px rgba(0, 210, 255, 0.7);
+            letter-spacing: 5px;
+            animation: glitch-header 2s infinite;
+        }
+
+        @keyframes glitch-header {
+            0% { text-shadow: 2px 2px #ff4757, -2px -2px #00d2ff; transform: translate(0); }
+            2% { text-shadow: 5px 0 #ff4757, -5px 0 #00d2ff; transform: translate(2px, -2px); }
+            4% { transform: translate(-2px, 2px); }
+            6% { transform: translate(0); }
+            100% { transform: translate(0); }
         }
 
         .status-footer {
@@ -212,6 +237,17 @@
             text-decoration: none;
             padding: 4px 15px;
             border-radius: 4px;
+        }
+
+        .shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
         #combo-text {
@@ -242,7 +278,7 @@
             }
         }
 
-        #math-popup {
+        #quiz-popup {
             display: none;
             position: fixed;
             top: 0;
@@ -254,14 +290,29 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 3rem;
+            padding: 40px;
         }
 
-        #math-question {
-            color: #ff4757;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px #ff4757;
+        #quiz-question {
+            color: #00d2ff;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00d2ff;
             text-align: center;
+            font-size: 2.5rem;
+            max-width: 800px;
+        }
+
+        #quiz-input {
+            font-size: 2rem;
+            padding: 15px;
+            text-align: center;
+            background: #222;
+            color: #7bed9f;
+            border: 2px solid #7bed9f;
+            outline: none;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
         }
 
         #math-input {
@@ -287,33 +338,33 @@
         }
 
         .molecule-card {
-            min-width: 80px;
-            height: 110px;
-            background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+            min-width: 100px;
+            height: 130px;
+            background: linear-gradient(135deg, #2f3542 0%, #050510 100%);
             border-radius: 10px;
-            border: 2px solid #FFF;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            border: 2px solid #00d2ff;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #000;
+            color: #00d2ff;
             font-weight: 900;
             font-size: 0.8rem;
             text-align: center;
-            padding: 5px;
+            padding: 10px;
             animation: hit-flash 0.5s;
         }
     </style>
 </head>
 
 <body>
-    <div class="header">ELEMENTAL RHYTHM ALCHEMY</div>
+    <div class="header">AGGRESSIVE STEM</div>
 
     <div id="game-container"></div>
 
     <div class="rhythm-container">
-        <div style="margin-top: 200px; text-align: center; opacity: 0.6; font-size: 0.8rem;">STEM DDR MODE</div>
+        <div style="margin-top: 200px; text-align: center; opacity: 0.6; font-size: 0.8rem;">CODE BEAT MODE</div>
         <div class="hit-zone" id="hit-zone">
             <svg class="target-arrow" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
@@ -331,30 +382,30 @@
     </div>
 
     <div class="alchemy-panel">
-        <h3>Current Elements Buffer</h3>
-        <div class="molecule-buffer" id="buffer">
+        <h3>Current Code Script Buffer</h3>
+        <div class="code-block-buffer" id="buffer">
             <!-- Filled by rhythm hits -->
         </div>
 
         <div class="recipe-list">
-            <h3>Alchemy Recipes</h3>
-            <div class="recipe-item"><span>Water (H<sub>2</sub>O)</span> <span>H+H+O</span></div>
-            <div class="recipe-item"><span>Methane (CH<sub>4</sub>)</span> <span>C+H+H+H+H</span></div>
-            <div class="recipe-item"><span>Oxygen Gas (O<sub>2</sub>)</span> <span>O+O</span></div>
-            <div class="recipe-item"><span>Ammonia (NH<sub>3</sub>)</span> <span>N+H+H+H</span></div>
-            <div class="recipe-item"><span>Carbon Dioxide (CO<sub>2</sub>)</span> <span>C+O+O</span></div>
+            <h3>Script Recipes</h3>
+            <div class="recipe-item"><span>Hello World</span> <span>print+print+var</span></div>
+            <div class="recipe-item"><span>Logic Engine</span> <span>if+if+var+print</span></div>
+            <div class="recipe-item"><span>Infinite Spin</span> <span>loop+loop+print</span></div>
+            <div class="recipe-item"><span>Data Stack</span> <span>var+var+var+print</span></div>
+            <div class="recipe-item"><span>Smart Link</span> <span>if+loop+print</span></div>
         </div>
 
         <div style="margin-top: 20px; font-size: 0.75rem; color: #888;">
-            * Hit arrows in rhythm to collect atoms.<br>
-            * Complete molecules to make your Bio-Critter grow!
+            * Hit arrows or 1-4 in rhythm to collect code blocks.<br>
+            * Complete scripts to build better programs!
         </div>
     </div>
 
     <div class="growth-meter">
         <div class="growth-fill" id="growth-fill"></div>
     </div>
-    <div style="position: fixed; top: 135px; left: 400px; z-index: 10; font-weight: bold; font-size: 0.8rem;">CRITTER
+    <div style="position: fixed; top: 135px; left: 400px; z-index: 10; font-weight: bold; font-size: 0.8rem;">SYSTEM
         GROWTH: <span id="growth-percent">10</span>%</div>
     <div style="position: fixed; top: 135px; right: 50px; z-index: 10; font-weight: bold; font-size: 1.2rem; color: #ffd700;">SCORE: <span id="score">0</span></div>
 
@@ -364,15 +415,15 @@
 
     <div class="status-footer">
         <div>STEM LAB EXPERIMENT v2.1</div>
-        <div id="status-msg">READY TO INFUSE...</div>
+        <div id="status-msg">READY TO COMPILE...</div>
         <a href="mge.html" class="exit-btn">RETURN TO HUB [ESC]</a>
     </div>
 
-    <div id="math-popup">
-        <div id="math-question">MATH CHALLENGE! COMPLETE TO CONTINUE: <br><span id="math-eq"
+    <div id="quiz-popup">
+        <div id="quiz-question">CODING QUIZ! TYPE THE ANSWER:<br><span id="quiz-text"
                 style="font-family: 'JetBrains Mono', monospace; font-size: 1.2em; color: #7bed9f;"></span></div>
-        <input type="text" id="math-input" placeholder="Type answer (Enter to submit)" autofocus autocomplete="off">
-        <button id="skip-math-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1rem; background: #ff4757; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Outfit'; box-shadow: 0 0 10px #ff4757;">Give Up / Skip [Space] (-50 pts)</button>
+        <input type="text" id="quiz-input" placeholder="Answer here..." autofocus autocomplete="off">
+        <button id="skip-quiz-btn" style="margin-top: 20px; padding: 10px 20px; font-size: 1rem; background: #ff4757; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-family: 'Outfit'; box-shadow: 0 0 10px #ff4757;">Skip Lesson (-50 pts)</button>
     </div>
 
     <!-- Fact Display -->
@@ -423,9 +474,26 @@
 
         camera.position.z = 5;
 
-        // Orbiting synthesized molecules
-        const moleculesGroup = new THREE.Group();
-        scene.add(moleculesGroup);
+        // Orbiting synthesized code structures
+        const structuresGroup = new THREE.Group();
+        scene.add(structuresGroup);
+
+        // --- GALAXY FORMATION ---
+        const galaxyGroup = new THREE.Group();
+        scene.add(galaxyGroup);
+        const starGeo = new THREE.SphereGeometry(0.02, 8, 8);
+        const stars = [];
+
+        function createStar(dist) {
+            const starMat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(Math.random() * 0.2 + 0.6, 1, 0.8) });
+            const star = new THREE.Mesh(starGeo, starMat);
+            const angle = Math.random() * Math.PI * 2;
+            const radius = dist + Math.random() * 0.5;
+            star.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 0.2, Math.sin(angle) * radius);
+            star.userData = { angle, radius, speed: 0.01 / (radius + 1) };
+            galaxyGroup.add(star);
+            stars.push(star);
+        }
 
         // --- 3D BACKGROUND ARROWS ---
         const bgArrows = new THREE.Group();
@@ -523,16 +591,25 @@
         const mathEq = document.getElementById('math-eq');
         const mathInput = document.getElementById('math-input');
 
-        // Facts loop
-        let facts = [];
+        const codingFactsFordisplay = [
+            {text: "A loop is like a song on repeat!"},
+            {text: "Variables are like pockets to store things."},
+            {text: "If-statements help computers make choices."},
+            {text: "Algorithms are step-by-step recipes."},
+            {text: "A bug is a mistake in the code."},
+            {text: "Functions are like mini-superpowers."},
+            {text: "Computers only speak in 1s and 0s!"},
+            {text: "Binary is the secret language of computers."}
+        ];
+
         fetch('data/computer-facts.json')
             .then(res => res.json())
             .then(data => {
-                facts = data.facts;
+                facts = [...codingFactsFordisplay, ...data.facts];
                 setTimeout(showNextFact, 2000);
             })
             .catch(err => {
-                facts = [{text: "The first computer bug was an actual bug! A moth got stuck in the Harvard Mark II in 1947."}];
+                facts = codingFactsFordisplay;
                 setTimeout(showNextFact, 2000);
             });
 
@@ -560,7 +637,15 @@
         function triggerLessonPopup() {
             if (isWinning) return;
             isPaused = true;
-            document.getElementById('lesson-text').innerText = lessons[Math.floor(Math.random() * lessons.length)];
+            const codingFacts = [
+                "A 'VARIABLE' is like a storage box. It holds info like your name or your game score!",
+                "A 'LOOP' tells the computer: 'Do this again and again!' Like a beat in a song.",
+                "An 'IF STATEMENT' is a choice. IF you press 1, THEN the computer prints code!",
+                "An 'ALGORITHM' is just a recipe. It's a list of steps to finish a job.",
+                "A 'BUG' is a tiny mistake in code. Fix the bug to make the game work!",
+                "A 'FUNCTION' is a group of code with a name. It's like a superpower you can use anytime."
+            ];
+            document.getElementById('lesson-text').innerText = codingFacts[Math.floor(Math.random() * codingFacts.length)];
             document.getElementById('lesson-popup').style.display = 'flex';
         }
 
@@ -570,30 +655,48 @@
         });
 
         function triggerCodingPopup() {
-            if (isWinning) return; // Don't interrupt the win animation!
+            if (isWinning) return; 
             isPaused = true;
             
-            // Generate basic math: addition or subtraction
-            const isAdd = Math.random() > 0.5;
-            const a = Math.floor(Math.random() * 20) + 1;
-            const b = Math.floor(Math.random() * 20) + 1;
-            let text, ans;
-            if (isAdd) {
-                text = `What is ${a} + ${b}?`;
-                ans = (a + b).toString();
-            } else {
-                const max = Math.max(a, b);
-                const min = Math.min(a, b);
-                text = `What is ${max} - ${min}?`;
-                ans = (max - min).toString();
-            }
-            
-            expectedAnswer = ans;
-            mathEq.innerHTML = text;
-            mathPopup.style.display = 'flex';
-            mathInput.value = '';
-            mathInput.focus();
+            const quizzes = [
+                { q: "What is a storage box for info?", a: "variable" },
+                { q: "What repeats code again and again?", a: "loop" },
+                { q: "What tells a computer to make a choice?", a: "if" },
+                { q: "What is a list of steps to finish a job?", a: "algorithm" },
+                { q: "What is a mistake in a program called?", a: "bug" },
+                { q: "What is a group of code with a name?", a: "function" }
+            ];
+
+            const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
+            expectedAnswer = quiz.a;
+            document.getElementById('quiz-text').innerHTML = quiz.q;
+            document.getElementById('quiz-popup').style.display = 'flex';
+            document.getElementById('quiz-input').value = '';
+            document.getElementById('quiz-input').focus();
         }
+
+        document.getElementById('quiz-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (document.getElementById('quiz-input').value.trim().toLowerCase() === expectedAnswer.toLowerCase()) {
+                    updateScore(100);
+                    document.getElementById('quiz-popup').style.display = 'none';
+                    isPaused = false;
+                } else {
+                    updateScore(-20);
+                    // Stay open or just close? Let's close for flow but penalize
+                    document.getElementById('quiz-popup').style.display = 'none';
+                    isPaused = false;
+                    document.getElementById('hit-zone').classList.add('flash');
+                    setTimeout(() => document.getElementById('hit-zone').classList.remove('flash'), 200);
+                }
+            }
+        });
+
+        document.getElementById('skip-quiz-btn').addEventListener('click', () => {
+            updateScore(-50);
+            document.getElementById('quiz-popup').style.display = 'none';
+            isPaused = false;
+        });
 
         mathInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -626,19 +729,19 @@
         // --- RHYTHM LOGIC ---
         const arrows = [];
         const types = [
-            { dir: 'left', key: 'ArrowLeft', atom: 'H', color: '#fff' },
-            { dir: 'down', key: 'ArrowDown', atom: 'N', color: '#3742fa' },
-            { dir: 'up', key: 'ArrowUp', atom: 'O', color: '#ff4757' },
-            { dir: 'right', key: 'ArrowRight', atom: 'C', color: '#57606f' }
+            { dir: 'left', key: 'ArrowLeft', num: '1', atom: 'print', color: '#fff' },
+            { dir: 'down', key: 'ArrowDown', num: '2', atom: 'if', color: '#ff4757' },
+            { dir: 'up', key: 'ArrowUp', num: '3', atom: 'var', color: '#57606f' },
+            { dir: 'right', key: 'ArrowRight', num: '4', atom: 'loop', color: '#3742fa' }
         ];
 
         let buffer = [];
         const recipes = [
-            { name: "Water", formula: ["H", "H", "O"], grow: 15 },
-            { name: "Methane", formula: ["C", "H", "H", "H", "H"], grow: 25 },
-            { name: "Oxygen", formula: ["O", "O"], grow: 10 },
-            { name: "Ammonia", formula: ["N", "H", "H", "H"], grow: 20 },
-            { name: "CO2", formula: ["C", "O", "O"], grow: 18 }
+            { name: "Hello World", formula: ["print", "print", "var"], grow: 15 },
+            { name: "Logic Engine", formula: ["if", "if", "var", "print"], grow: 25 },
+            { name: "Infinite Spin", formula: ["loop", "loop", "print"], grow: 10 },
+            { name: "Data Stack", formula: ["var", "var", "var", "print"], grow: 20 },
+            { name: "Smart Link", formula: ["if", "loop", "print"], grow: 18 }
         ];
 
         function spawnArrow() {
@@ -713,14 +816,35 @@
                 }
             }
 
-            const s = growth + Math.sin(time * 0.002) * 0.05;
+            const s = growth + Math.sin(time * 0.005) * 0.1; // More aggressive pulse
             critter.scale.set(s, s, s);
+            
+            // Change core color as it grows
+            nucleus.material.color.setHSL(0.6, 1, 0.4 + (growth * 0.05));
+            critterMat.emissiveIntensity = 0.5 + (growth * 0.2);
 
-            moleculesGroup.rotation.y += 0.005;
-            moleculesGroup.children.forEach((mol, i) => {
-                mol.rotation.x += 0.01;
-                mol.rotation.y += 0.02;
-                mol.position.y = Math.sin(time * 0.003 + i) * 1.5;
+            // Animate Galaxy
+            galaxyGroup.rotation.y += 0.002;
+            stars.forEach(s => {
+                s.userData.angle += s.userData.speed;
+                s.position.x = Math.cos(s.userData.angle) * s.userData.radius;
+                s.position.z = Math.sin(s.userData.angle) * s.userData.radius;
+                // Spiral effect
+                s.userData.radius += 0.001 * growth;
+                if (s.userData.radius > 15) s.userData.radius = 0.2;
+            });
+
+            structuresGroup.rotation.y += 0.01;
+            structuresGroup.children.forEach((struct, i) => {
+                struct.rotation.x += 0.01;
+                struct.rotation.z += 0.01;
+                
+                // Move towards center galaxy core
+                struct.userData.angle += 0.02;
+                const r = struct.userData.targetRadius + Math.sin(time * 0.002 + i) * 0.2;
+                struct.position.x = Math.cos(struct.userData.angle) * r;
+                struct.position.z = Math.sin(struct.userData.angle) * r;
+                struct.position.y += Math.sin(time * 0.005 + i) * 0.01;
             });
 
             // Move 3D background arrows
@@ -752,13 +876,13 @@
             const tolerance = 50;
 
             types.forEach((type, idx) => {
-                if (e.key === type.key) {
+                if (e.key === type.key || e.key === type.num) {
                     // Check for arrow in hit zone
                     let found = false;
                     for (let i = 0; i < arrows.length; i++) {
                         const a = arrows[i];
                         const currentTop = window.innerHeight - a.y;
-                        if (a.type.key === e.key && Math.abs(currentTop - zoneTop) < tolerance && !a.hit) {
+                        if (a.type.key === type.key && Math.abs(currentTop - zoneTop) < tolerance && !a.hit) {
                             a.hit = true;
                             a.el.style.opacity = '0';
                             successHit(type.atom);
@@ -789,12 +913,10 @@
 
             successfulHits++;
             if (successfulHits % 15 === 0) {
-                popupsTriggered++;
-                if (popupsTriggered % 2 === 0) {
-                    triggerLessonPopup();
-                } else {
-                    triggerCodingPopup(); // Actually math popup now
-                }
+                 triggerLessonPopup();
+            }
+            if (successfulHits % 25 === 0) {
+                 triggerCodingPopup();
             }
         }
 
@@ -818,21 +940,24 @@
         function checkRecipes() {
             recipes.forEach(r => {
                 if (hasFormula(r.formula)) {
-                    document.getElementById('status-msg').innerText = `SYNTHESIZED ${r.name.toUpperCase()}!`;
-                    document.getElementById('status-msg').style.color = "#000";
+                    document.getElementById('status-msg').innerText = `COMPILED ${r.name.toUpperCase()}!`;
+                    document.getElementById('status-msg').style.color = "#00d2ff";
+                    document.body.classList.add('shake');
+                    setTimeout(() => document.body.classList.remove('shake'), 300);
                     updateScore(r.grow * 10); // Add more score points
                     applyGrowth(r.grow);
                     clearUsedAtoms(r.formula);
-                    addPokemonCard(r.name, r.formula.join('+'));
+                    addCodeCard(r.name, r.formula.join('+'));
+                    spawnStructure(r.name);
                 }
             });
         }
 
-        function addPokemonCard(name, formula) {
+        function addCodeCard(name, formula) {
             const panel = document.getElementById('cards-panel');
             const card = document.createElement('div');
             card.className = 'molecule-card';
-            card.innerHTML = `<div style="font-size:1.5rem">🌟</div><div>${name}</div><div style="font-size:0.6rem; color:#444; margin-top:5px;">${formula}</div>`;
+            card.innerHTML = `<div style="font-size:1.5rem">💻</div><div style="margin-top:5px">${name}</div><div style="font-size:0.6rem; color:#888; margin-top:5px; font-family:'JetBrains Mono'">${formula}</div>`;
             panel.appendChild(card);
         }
 
@@ -857,23 +982,56 @@
             updateBufferUI();
         }
 
-        function spawnMolecule() {
-            // Visual representation of a synthesized element orbiting
-            const molGeo = new THREE.DodecahedronGeometry(0.3);
-            const molMat = new THREE.MeshStandardMaterial({
-                color: Math.random() * 0xffffff,
-                emissive: Math.random() * 0xffffff,
+        function spawnStructure(name) {
+            // Create a 3D block representation
+            const group = new THREE.Group();
+            
+            const blockGeo = new THREE.BoxGeometry(0.8, 0.4, 0.2);
+            const blockMat = new THREE.MeshStandardMaterial({
+                color: 0x00d2ff,
+                emissive: 0x00d2ff,
                 emissiveIntensity: 0.5,
                 metalness: 0.8,
-                roughness: 0.2
+                roughness: 0.2,
+                transparent: true,
+                opacity: 0.9
             });
-            const mol = new THREE.Mesh(molGeo, molMat);
+            const block = new THREE.Mesh(blockGeo, blockMat);
+            group.add(block);
 
-            const radius = 2 + Math.random() * 2;
+            // Add text label to block
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 128, 64);
+            ctx.fillStyle = '#00d2ff';
+            ctx.font = 'bold 24px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(name.split(' ')[0], 64, 32);
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            const labelGeo = new THREE.PlaneGeometry(0.7, 0.3);
+            const labelMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+            const label = new THREE.Mesh(labelGeo, labelMat);
+            label.position.z = 0.11;
+            group.add(label);
+
+            const radius = 3 + Math.random() * 2;
             const angle = Math.random() * Math.PI * 2;
-            mol.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+            group.position.set(Math.cos(angle) * radius, (Math.random()-0.5)*4, Math.sin(angle) * radius);
+            group.userData = { 
+                speed: 0.02, 
+                targetRadius: 0.5 + Math.random() * 0.5,
+                angle: angle
+            };
 
-            moleculesGroup.add(mol);
+            structuresGroup.add(group);
+            
+            // Add stars to galaxy as we grow
+            for(let i=0; i<30; i++) createStar(growth * 1.5);
         }
 
         function triggerWinAnimation() {
@@ -895,26 +1053,29 @@
                 setTimeout(() => { combo.style.opacity = '0'; combo.style.animation = ''; }, 2000);
             } else {
                 isWinning = true;
-                document.getElementById('status-msg').innerText = "MAX GROWTH ACHIEVED! SYSTEM OVERLOAD!";
-                document.getElementById('status-msg').style.color = "#ff4757";
+                document.getElementById('status-msg').innerText = "MAX POWER REACHED! SYSTEM OPTIMIZED!";
+                document.getElementById('status-msg').style.color = "#00d2ff";
                 critterMat.wireframe = false;
 
                 // Fireworks particles
                 const pGeo = new THREE.BufferGeometry();
-                const pCount = 2000;
+                const pCount = 5000; // More aggressive!
                 const pPos = new Float32Array(pCount * 3);
                 for (let i = 0; i < pCount * 3; i++) {
-                    pPos[i] = (Math.random() - 0.5) * 10;
+                    pPos[i] = (Math.random() - 0.5) * 20;
                 }
                 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-                const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
+                const pMat = new THREE.PointsMaterial({ color: 0x00d2ff, size: 0.05, transparent: true, blending: THREE.AdditiveBlending });
                 particles = new THREE.Points(pGeo, pMat);
                 scene.add(particles);
+
+                // Make galaxy go wild
+                for(let i=0; i<500; i++) createStar(Math.random() * 10);
 
                 // Confetti UI text
                 const combo = document.getElementById('combo-text');
                 combo.style.opacity = '1';
-                combo.innerHTML = "ELEMENTAL<br>MASTERY!";
+                combo.innerHTML = "SYSTEM<br>OPTIMIZED!";
                 combo.style.animation = "hit-flash 0.5s infinite alternate";
             }
         }
@@ -929,9 +1090,9 @@
             document.getElementById('growth-fill').style.width = percentDisplay + '%';
             document.getElementById('growth-percent').innerText = percentDisplay;
 
-            // Spawn a visual 3D molecule
-            spawnMolecule();
-
+            // Growth now spawns stars directly too
+            for(let i=0; i<20; i++) createStar(growth * 1.2);
+            
             // Visual feedback on critter
             critterMat.emissiveIntensity = 2;
             setTimeout(() => critterMat.emissiveIntensity = 0.5, 500);
