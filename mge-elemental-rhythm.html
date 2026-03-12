@@ -84,12 +84,14 @@
             top: 100px;
             width: 300px;
             height: calc(100vh - 200px);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #ff4757;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 20px;
             z-index: 10;
             overflow-y: auto;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .code-block-buffer {
@@ -191,44 +193,101 @@
 
         .header {
             position: fixed;
-            top: 0;
-            width: 100%;
-            height: 80px;
-            background: rgba(0, 0, 0, 0.9);
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            min-width: 400px;
+            padding: 0 40px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            z-index: 1000;
             color: #00d2ff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             font-weight: 900;
-            border-bottom: 2px solid #00d2ff;
-            z-index: 1000;
             text-shadow: 0 0 15px rgba(0, 210, 255, 0.7);
-            letter-spacing: 5px;
-            animation: glitch-header 2s infinite;
+            letter-spacing: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
-        @keyframes glitch-header {
-            0% { text-shadow: 2px 2px #ff4757, -2px -2px #00d2ff; transform: translate(0); }
-            2% { text-shadow: 5px 0 #ff4757, -5px 0 #00d2ff; transform: translate(2px, -2px); }
-            4% { transform: translate(-2px, 2px); }
-            6% { transform: translate(0); }
-            100% { transform: translate(0); }
+        /* Subtle nav animation */
+        .header:hover {
+            border-color: rgba(0, 210, 255, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .rhythm-container {
+            position: fixed;
+            left: 30px;
+            bottom: 30px;
+            top: 30px;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            z-index: 10;
+            overflow: hidden;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .hit-zone {
+            position: absolute;
+            bottom: 120px;
+            width: 100%;
+            height: 90px;
+            border-top: 1px solid rgba(0, 210, 255, 0.3);
+            border-bottom: 1px solid rgba(0, 210, 255, 0.3);
+            background: rgba(0, 210, 255, 0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20px;
+            align-items: center;
+        }
+
+        .alchemy-panel {
+            position: fixed;
+            right: 30px;
+            top: 100px;
+            width: 310px;
+            height: calc(100vh - 160px);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 25px;
+            z-index: 10;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         }
 
         .status-footer {
             position: fixed;
-            bottom: 0;
-            width: 100%;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: auto;
+            padding: 0 30px;
             height: 40px;
-            background: #00d2ff;
-            color: #000;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            color: rgba(255, 255, 255, 0.7);
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            padding: 0 20px;
+            gap: 20px;
+            font-size: 0.8rem;
             font-weight: bold;
             z-index: 2000;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .exit-btn {
@@ -748,7 +807,14 @@
             const type = types[Math.floor(Math.random() * types.length)];
             const el = document.createElement('div');
             el.className = 'arrow';
-            el.innerHTML = `<svg viewBox="0 0 24 24" style="color:${type.color}"><path fill="currentColor" d="${getArrowPath(type.dir)}"/></svg>`;
+            el.innerHTML = `
+                <div style="position:relative; width:50px; height:50px;">
+                    <svg viewBox="0 0 24 24" style="color:${type.color}; position:absolute; top:0; left:0; width:100%; height:100%;">
+                        <path fill="currentColor" d="${getArrowPath(type.dir)}"/>
+                    </svg>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-weight:900; font-size:1.2rem; text-shadow: 0 0 5px #000;">${type.num}</div>
+                </div>
+            `;
 
             const xPos = 20 + types.indexOf(type) * 65;
             el.style.left = xPos + 'px';
@@ -777,7 +843,7 @@
                 // Awesome Win Animation
                 critter.rotation.y += 0.05;
                 critter.rotation.x += 0.05;
-                moleculesGroup.rotation.y -= 0.02;
+                structuresGroup.rotation.y -= 0.02;
                 if (particles) {
                     particles.rotation.y += 0.01;
                     const positions = particles.geometry.attributes.position.array;
@@ -801,12 +867,12 @@
                 lastSpawn = time;
             }
 
-            // Move arrows
+            // Move arrows (FALLING DOWN)
             for (let i = arrows.length - 1; i >= 0; i--) {
                 const a = arrows[i];
                 if (!isWinning) {
-                    a.y = (a.y || 0) + arrowSpeed; // Speed
-                    a.el.style.top = (window.innerHeight - a.y) + 'px';
+                    a.y += arrowSpeed; 
+                    a.el.style.top = a.y + 'px';
                 }
 
                 // Remove if off screen
@@ -872,8 +938,8 @@
                 }
             }
 
-            const zoneTop = 100;
-            const tolerance = 50;
+            const zonePos = window.innerHeight - 120 - 45; // middle of hit zone
+            const tolerance = 60;
 
             types.forEach((type, idx) => {
                 if (e.key === type.key || e.key === type.num) {
@@ -881,8 +947,7 @@
                     let found = false;
                     for (let i = 0; i < arrows.length; i++) {
                         const a = arrows[i];
-                        const currentTop = window.innerHeight - a.y;
-                        if (a.type.key === type.key && Math.abs(currentTop - zoneTop) < tolerance && !a.hit) {
+                        if (a.type.key === type.key && Math.abs(a.y - zonePos) < tolerance && !a.hit) {
                             a.hit = true;
                             a.el.style.opacity = '0';
                             successHit(type.atom);
