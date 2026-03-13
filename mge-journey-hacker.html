@@ -847,6 +847,10 @@
         let vibeCodeIndex = 0;
         let selectedVibeTemplate = '';
         let gameLibrary = [];
+        let vibeQueueIndex = 0;
+        let isAutoLoadingTerminal = false;
+        let autoLoadTemplate = '';
+        let autoLoadIndex = 0;
         let stats = { nodes: 0, files: 0, math: 0 };
         const folders = [
             { name: "C:\\Windows", info: "The Operating System Brain. Contains System32.", fact: "Windows stores all the rules for the PC here." },
@@ -1192,6 +1196,34 @@
                 return;
             }
 
+            if (isAutoLoadingTerminal) {
+                // Audio SFX on type
+                playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
+
+                const chunk = autoLoadTemplate.substring(autoLoadIndex, autoLoadIndex + 60).replace(/\n/g, '<br>').replace(/\s/g, '&nbsp;');
+                autoLoadIndex += 60;
+                
+                const div = document.createElement('div');
+                div.style.color = '#0ff';
+                div.style.opacity = '0.9';
+                div.style.fontSize = '0.7rem';
+                div.style.fontFamily = 'Fira Code, monospace';
+                div.innerHTML = chunk;
+                consoleEl.appendChild(div);
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+
+                if (autoLoadIndex >= autoLoadTemplate.length) {
+                    isAutoLoadingTerminal = false;
+                    const typeNames = Object.keys(vibeTemplates);
+                    const lastType = typeNames[(vibeQueueIndex - 1) % typeNames.length];
+                    log(`AUTO-BUILD [${lastType.toUpperCase()}] COMPLETE. INITIALIZING EMULATOR...`, "#0f0");
+                    setTimeout(() => startVibeEditor(lastType, true), 500);
+                }
+                
+                e.preventDefault(); // Don't type into the input box while auto-loading
+                return;
+            }
+
                 if (vBubble.style.display === 'block') {
                     const keyNum = parseInt(e.key);
                     if (!isNaN(keyNum) && keyNum > 0 && keyNum <= clippieActiveOptions.length) {
@@ -1238,17 +1270,19 @@
                 }
                 lastKeyTime = now;
 
-                if (mashStartTime > 0 && now - mashStartTime > 5000 && !mashingTriggered && !vibeMode) {
+                if (mashStartTime > 0 && now - mashStartTime > 5000 && !mashingTriggered && !vibeMode && !isAutoLoadingTerminal) {
                     mashingTriggered = true;
-                    log("INSANE MASHING DETECTED! OVERRIDING TO VIBE MODE...", "#f0f");
+                    const typeNames = Object.keys(vibeTemplates);
+                    const rType = typeNames[vibeQueueIndex % typeNames.length];
+                    vibeQueueIndex++;
+                    
+                    log(`CRITICAL OVERRIDE: SEQUENTIAL VIBE PROTOCOL ${vibeQueueIndex}...`, "#f0f");
+                    log(`STREAMING [${rType.toUpperCase()}] SOURCE CODE TO TERMINAL...`, "#0ff");
                     playBeep(1200, 'sawtooth', 0.5, 0.4);
                     
-                    // Auto-load a random game immediately
-                    setTimeout(() => {
-                        const types = Object.keys(vibeTemplates);
-                        const rType = types[Math.floor(Math.random() * types.length)];
-                        startVibeEditor(rType);
-                    }, 500);
+                    isAutoLoadingTerminal = true;
+                    autoLoadTemplate = vibeTemplates[rType];
+                    autoLoadIndex = 0;
                 }
 
                 keystrokeCount++;
@@ -1292,14 +1326,40 @@
             }
         });
 
+        function startVibeEditor(type, autoMode = false) {
+            vibeMode = true;
+            selectedVibeTemplate = vibeTemplates[type];
+            vibeCodeIndex = autoMode ? selectedVibeTemplate.length : 0;
+            mashingTriggered = false; // reset for next time
+            log(`GENERATING BLUEPRINT FOR [${type.toUpperCase()}]...`, '#0ff');
+            setTimeout(() => {
+                document.getElementById('vibe-editor').style.display = 'flex';
+                const ta = document.getElementById('vibe-textarea');
+                ta.value = autoMode ? selectedVibeTemplate : '';
+                
+                if (autoMode) {
+                    document.getElementById('vibe-preview-btn').style.display = 'block';
+                    document.getElementById('vibe-download-btn').style.display = 'block';
+                    document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [S] DOWNLOAD | [ESC] BACK";
+                    previewVibeCode();
+                } else {
+                    document.getElementById('vibe-emulator-container').style.display = 'none';
+                    document.getElementById('vibe-download-btn').style.display = 'none';
+                    document.getElementById('vibe-preview-btn').style.display = 'none';
+                    document.getElementById('vibe-footer-hint').innerText = "MASH BUTTONS FAST TO WRITE CODE! | PRESS ESC TO RETURN TO TERMINAL.";
+                }
+            }, 500);
+        }
+
         function processCommand(cmd) {
             log(cmd, '#fff');
 
             if (cmd === 'vibe' || cmd === 'code') {
-                if (mashingTriggered) {
-                    // Auto-load a random one if triggered by mashing
+                if (mashingTriggered || isAutoLoadingTerminal) {
                     const types = Object.keys(vibeTemplates);
-                    startVibeEditor(types[Math.floor(Math.random() * types.length)]);
+                    const rType = types[vibeQueueIndex % types.length];
+                    vibeQueueIndex++;
+                    startVibeEditor(rType, true);
                 } else {
                     showClippie("CHOOSE YOUR DESTINY, HACKER. WHAT SHALL WE BUILD?", [
                         { label: "NEON RUNNER GAME", action: () => startVibeEditor('runner') },
@@ -1311,22 +1371,6 @@
                     ]);
                 }
                 return;
-            }
-            
-            function startVibeEditor(type) {
-                vibeMode = true;
-                vibeCodeIndex = 0;
-                selectedVibeTemplate = vibeTemplates[type];
-                mashingTriggered = false; // reset for next time
-                log(`GENERATING BLUEPRINT FOR [${type.toUpperCase()}]...`, '#0ff');
-                setTimeout(() => {
-                    document.getElementById('vibe-editor').style.display = 'flex';
-                    document.getElementById('vibe-textarea').value = '';
-                    document.getElementById('vibe-emulator-container').style.display = 'none';
-                    document.getElementById('vibe-download-btn').style.display = 'none';
-                    document.getElementById('vibe-preview-btn').style.display = 'none';
-                    document.getElementById('vibe-footer-hint').innerText = "MASH BUTTONS FAST TO WRITE CODE! | PRESS ESC TO RETURN TO TERMINAL.";
-                }, 500);
             }
             
             if (aiMode) {
