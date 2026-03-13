@@ -250,55 +250,56 @@
 
         .fact-overlay {
             position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.1);
+            bottom: 1rem;
+            left: 1rem;
+            width: 280px;
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 2rem;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
-                inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1rem;
+            border: 2px solid #4ecdc4;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             color: white;
             z-index: 1000;
-            text-align: center;
-            display: none;
-            animation: factSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: left;
+            display: block; /* Always visible or triggered */
+            animation: factSlideIn 0.5s ease;
         }
 
         @keyframes factSlideIn {
             from {
-                transform: translate(-50%, -100%);
+                transform: translateX(-100%);
                 opacity: 0;
             }
 
             to {
-                transform: translate(-50%, 0);
+                transform: translateX(0);
                 opacity: 1;
             }
         }
 
         .fact-overlay h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
             color: #4ecdc4;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .fact-text {
-            font-size: 1.25rem;
-            line-height: 1.6;
-            font-weight: 500;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            font-weight: 400;
+            opacity: 0.9;
         }
 
         .fact-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 0;
+            display: inline-block;
         }
 
         .game-over h2 {
@@ -382,7 +383,7 @@
         .powerup-indicator {
             position: fixed;
             bottom: 1rem;
-            left: 1rem;
+            left: 20rem; /* Moved out of the way of the fact box */
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
             border-radius: 15px;
@@ -633,6 +634,7 @@
         let restartCountdownValue = 5;
         let backgroundObjects = [];
         let factObjects = [];
+        let bonusPlatforms = [];
 
         const STEM_FACTS = [
             "The human brain has about 86 billion neurons!",
@@ -733,10 +735,10 @@
             scene.background = new THREE.Color(0x0a0a1a);
             scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
 
-            // Camera
+            // Camera (Floor pushed lower)
             camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            camera.position.set(0, 8, 15);
-            camera.lookAt(0, 0, 0);
+            camera.position.set(0, 7, 18);
+            camera.lookAt(0, 5, 0);
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -920,23 +922,29 @@
         }
 
         function createBackground() {
-            // Floating platforms
-            for (let i = 0; i < 3; i++) {
+            // Floating platforms (Interactable)
+            bonusPlatforms = [];
+            for (let i = 0; i < 4; i++) {
+                const px = (Math.random() - 0.5) * 18;
+                const py = 4 + i * 3;
                 const smallPlatform = new THREE.Mesh(
-                    new THREE.BoxGeometry(3, 0.3, 2),
+                    new THREE.BoxGeometry(6, 0.5, 4), // Much bigger/easier to land on
                     new THREE.MeshStandardMaterial({
                         color: 0x4a4a6a,
                         emissive: 0x4a4a6a,
                         emissiveIntensity: 0.2
                     })
                 );
-                smallPlatform.position.set(
-                    (Math.random() - 0.5) * 15,
-                    3 + i * 2,
-                    (Math.random() - 0.5) * 5
-                );
+                smallPlatform.position.set(px, py, 0); // Interactive Z=0
                 smallPlatform.receiveShadow = true;
                 scene.add(smallPlatform);
+
+                // Add to interactive platforms
+                bonusPlatforms.push({
+                    y: py + (PLATFORM_TOP - 0), 
+                    xMin: px - 3,
+                    xMax: px + 3
+                });
             }
 
             // Particles
@@ -1132,13 +1140,35 @@
             player.position.y += player.velocity.y * 0.016;
 
             // Ground collision
-            if (player.position.y <= PLATFORM_TOP && player.position.x >= PLATFORM_LEFT && player.position.x <= PLATFORM_RIGHT) {
-                player.position.y = PLATFORM_TOP;
-                if (player.velocity.y < 0) {
+            let grounded = false;
+
+            // Main platform collision
+            if (player.position.y <= PLATFORM_TOP &&
+                player.position.x >= PLATFORM_LEFT &&
+                player.position.x <= PLATFORM_RIGHT) {
+                if (player.velocity.y <= 0) {
+                    player.position.y = PLATFORM_TOP;
                     player.velocity.y = 0;
-                    player.onGround = true;
+                    grounded = true;
                 }
             }
+
+            // Bonus platforms (One-way: pass through from below)
+            if (!grounded && player.velocity.y <= 0) {
+                bonusPlatforms.forEach(bp => {
+                    const prevY = player.position.y - (player.velocity.y * 0.016);
+                    if (player.position.x >= bp.xMin && player.position.x <= bp.xMax) {
+                        // Must be falling and have been above the threshold in previous frame
+                        if (player.position.y <= bp.y && prevY >= bp.y - 0.5) {
+                            player.position.y = bp.y;
+                            player.velocity.y = 0;
+                            grounded = true;
+                        }
+                    }
+                });
+            }
+
+            player.onGround = grounded;
 
             // Check for death (falling off)
             if (player.position.y < DEATH_Y ||
@@ -2029,7 +2059,8 @@
             lastHitTime = { p1: 0, p2: 0 };
 
             // Reset camera
-            camera.position.set(0, 8, 15);
+            camera.position.set(0, 6, 16);
+            camera.lookAt(0, 3, 0);
             shakeOffset = { x: 0, y: 0 };
 
             updateHealthBars();
@@ -2120,11 +2151,12 @@
                     shakeOffset.x *= 0.9;
                     shakeOffset.y *= 0.9;
                     camera.position.x = 0 + shakeOffset.x;
-                    camera.position.y = 8 + shakeOffset.y;
+                    camera.position.y = 7 + shakeOffset.y;
                     if (Math.abs(shakeOffset.x) < 0.01 && Math.abs(shakeOffset.y) < 0.01) {
                         shakeOffset.x = 0;
                         shakeOffset.y = 0;
-                        camera.position.set(0, 8, 15);
+                        camera.position.set(0, 7, 18);
+                        camera.lookAt(0, 5, 0);
                     }
                 }
             }
