@@ -631,6 +631,8 @@
         let comboDisplayTimer = 0;
         let restartTimer = null;
         let restartCountdownValue = 5;
+        let backgroundObjects = [];
+        let factObjects = [];
 
         const STEM_FACTS = [
             "The human brain has about 86 billion neurons!",
@@ -955,6 +957,100 @@
             });
             const particleSystem = new THREE.Points(particles, particleMaterial);
             scene.add(particleSystem);
+
+            // 3D Background Objects (Non-interactive)
+            const geometries = [
+                new THREE.IcosahedronGeometry(0.8, 0),
+                new THREE.TorusKnotGeometry(0.5, 0.15, 64, 8),
+                new THREE.OctahedronGeometry(1, 0),
+                new THREE.TetrahedronGeometry(1.2, 0),
+                new THREE.BoxGeometry(0.8, 0.8, 0.8)
+            ];
+
+            const colors = [0x9c27b0, 0x4ecdc4, 0xff6b6b, 0xffeb3b, 0x4caf50, 0x2196f3];
+
+            for (let i = 0; i < 20; i++) {
+                const geo = geometries[Math.floor(Math.random() * geometries.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const mat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.4,
+                    metalness: 0.8,
+                    roughness: 0.2,
+                    transparent: true,
+                    opacity: 0.5
+                });
+
+                const mesh = new THREE.Mesh(geo, mat);
+
+                // Position them far enough back or to the sides to not interfere with play space
+                mesh.position.set(
+                    (Math.random() - 0.5) * 60,
+                    Math.random() * 30 - 5,
+                    (Math.random() - 0.5) * 40 - 20 // Mostly behind
+                );
+
+                mesh.userData = {
+                    rotationSpeed: {
+                        x: (Math.random() - 0.5) * 0.02,
+                        y: (Math.random() - 0.5) * 0.02,
+                        z: (Math.random() - 0.5) * 0.02
+                    },
+                    floatSpeed: 0.001 + Math.random() * 0.002,
+                    floatOffset: Math.random() * Math.PI * 2
+                };
+
+                scene.add(mesh);
+                backgroundObjects.push(mesh);
+            }
+
+            // Floating STEM Facts (Non-interactive)
+            STEM_FACTS.forEach((fact, index) => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 1024;
+                canvas.height = 128;
+                
+                context.fillStyle = 'rgba(0, 0, 0, 0)';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                
+                context.font = 'bold 40px sans-serif';
+                context.fillStyle = '#ffffff';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                
+                // Draw with glow
+                context.shadowColor = '#00ffff';
+                context.shadowBlur = 10;
+                context.fillText(fact, canvas.width / 2, canvas.height / 2);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.MeshBasicMaterial({ 
+                    map: texture, 
+                    transparent: true, 
+                    opacity: 0.6,
+                    side: THREE.DoubleSide
+                });
+                
+                const plane = new THREE.Mesh(new THREE.PlaneGeometry(8, 1), material);
+                
+                // Position facts spread out in the deep background
+                plane.position.set(
+                    (Math.random() - 0.5) * 40,
+                    5 + (Math.random() * 15),
+                    -15 - (Math.random() * 15)
+                );
+                
+                plane.userData = {
+                    floatSpeed: 0.0005 + Math.random() * 0.001,
+                    floatOffset: Math.random() * Math.PI * 2,
+                    driftSpeed: (Math.random() - 0.5) * 0.005
+                };
+                
+                scene.add(plane);
+                factObjects.push(plane);
+            });
         }
 
         function onKeyDown(event) {
@@ -1020,7 +1116,16 @@
             }
 
             // Gravity
-            player.velocity.y += GRAVITY * 0.016;
+            // Enhanced Gravity - Faster drop for more intense gameplay
+            let currentGravity = GRAVITY;
+            if (player.velocity.y > 5) {
+                // If moving up fast, apply much more gravity to drop sooner
+                currentGravity *= 2.8;
+            } else if (player.velocity.y < 0) {
+                // Descend faster than you ascent
+                currentGravity *= 1.8;
+            }
+            player.velocity.y += currentGravity * 0.016;
 
             // Update position
             player.position.x += player.velocity.x * 0.016;
@@ -1946,6 +2051,24 @@
 
         function animate() {
             requestAnimationFrame(animate);
+
+            // Update background objects
+            backgroundObjects.forEach(obj => {
+                obj.rotation.x += obj.userData.rotationSpeed.x;
+                obj.rotation.y += obj.userData.rotationSpeed.y;
+                obj.rotation.z += obj.userData.rotationSpeed.z;
+                obj.position.y += Math.sin(Date.now() * obj.userData.floatSpeed + obj.userData.floatOffset) * 0.01;
+            });
+
+            // Update floating facts
+            factObjects.forEach(fact => {
+                fact.position.y += Math.sin(Date.now() * fact.userData.floatSpeed + fact.userData.floatOffset) * 0.005;
+                fact.position.x += fact.userData.driftSpeed;
+                
+                // Wrap around X
+                if (fact.position.x > 30) fact.position.x = -30;
+                if (fact.position.x < -30) fact.position.x = 30;
+            });
 
             if (gameRunning) {
                 // Player 1 controls (WASD + Q)
