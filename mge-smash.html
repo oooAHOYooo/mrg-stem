@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -228,8 +229,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
         .restart-countdown {
@@ -253,7 +261,7 @@
             padding: 2rem;
             border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3),
-                        inset 0 0 20px rgba(255, 255, 255, 0.1);
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
             color: white;
             z-index: 1000;
             text-align: center;
@@ -262,8 +270,15 @@
         }
 
         @keyframes factSlideIn {
-            from { transform: translate(-50%, -100%); opacity: 0; }
-            to { transform: translate(-50%, 0); opacity: 1; }
+            from {
+                transform: translate(-50%, -100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
         }
 
         .fact-overlay h3 {
@@ -409,13 +424,27 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(0.3); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(0.3);
+            }
         }
 
         @keyframes glow {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .combo-display {
@@ -439,9 +468,20 @@
         }
 
         @keyframes comboPop {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         .match-score {
@@ -470,6 +510,7 @@
         }
     </style>
 </head>
+
 <body>
     <a href="mge.html" class="back-button">← Back to Experiments</a>
 
@@ -567,7 +608,8 @@
         <div id="fact-overlay" class="fact-overlay">
             <span class="fact-icon">🔬</span>
             <h3>STEM Fact!</h3>
-            <div id="fact-text" class="fact-text">Did you know? Light travels at approximately 299,792,458 meters per second!</div>
+            <div id="fact-text" class="fact-text">Did you know? Light travels at approximately 299,792,458 meters per
+                second!</div>
         </div>
     </div>
 
@@ -589,7 +631,6 @@
         let comboDisplayTimer = 0;
         let restartTimer = null;
         let restartCountdownValue = 5;
-        let backgroundObjects = [];
 
         const STEM_FACTS = [
             "The human brain has about 86 billion neurons!",
@@ -669,7 +710,7 @@
         const POWERUP_SPAWN_INTERVAL = 600; // Frames (10 seconds at 60fps)
         const POWERUP_DURATION = 600; // Frames (10 seconds)
         const COMBO_TIMEOUT = 120; // Frames (2 seconds)
-        
+
         // Powerup types
         const POWERUP_TYPES = {
             SPEED: { icon: '⚡', name: 'Speed Boost', color: 0xffeb3b },
@@ -730,7 +771,7 @@
 
             // Platform
             const platformGeometry = new THREE.BoxGeometry(20, 1, 10);
-            const platformMaterial = new THREE.MeshStandardMaterial({ 
+            const platformMaterial = new THREE.MeshStandardMaterial({
                 color: 0x2a2a4a,
                 metalness: 0.3,
                 roughness: 0.7
@@ -752,9 +793,9 @@
 
             // Death zones (visual indicators - subtle warning)
             const deathZoneGeometry = new THREE.PlaneGeometry(3, 25);
-            const deathZoneMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0xff0000, 
-                transparent: true, 
+            const deathZoneMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                transparent: true,
                 opacity: 0.08,
                 side: THREE.DoubleSide
             });
@@ -766,7 +807,7 @@
             rightDeathZone.position.set(12, 5, 0);
             rightDeathZone.rotation.y = Math.PI / 2;
             scene.add(rightDeathZone);
-            
+
             // Bottom death zone
             const bottomDeathZone = new THREE.Mesh(
                 new THREE.PlaneGeometry(30, 3),
@@ -793,7 +834,7 @@
 
             // Start game loop
             animate();
-            
+
             // Initialize match score display
             updateMatchScore();
         }
@@ -804,7 +845,7 @@
 
             // Body
             const bodyGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.8);
-            const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            const bodyMaterial = new THREE.MeshStandardMaterial({
                 color: player.color,
                 emissive: player.color,
                 emissiveIntensity: 0.3
@@ -816,7 +857,7 @@
 
             // Head
             const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-            const headMaterial = new THREE.MeshStandardMaterial({ 
+            const headMaterial = new THREE.MeshStandardMaterial({
                 color: 0xffdbac,
                 emissive: 0xffdbac,
                 emissiveIntensity: 0.1
@@ -849,7 +890,7 @@
             rightArm.castShadow = true;
             rightArm.name = 'rightArm';
             group.add(rightArm);
-            
+
             // Store initial arm positions for animation
             player.leftArmBasePos = { x: -0.6, y: 0.8, z: 0 };
             player.rightArmBasePos = { x: 0.6, y: 0.8, z: 0 };
@@ -881,7 +922,7 @@
             for (let i = 0; i < 3; i++) {
                 const smallPlatform = new THREE.Mesh(
                     new THREE.BoxGeometry(3, 0.3, 2),
-                    new THREE.MeshStandardMaterial({ 
+                    new THREE.MeshStandardMaterial({
                         color: 0x4a4a6a,
                         emissive: 0x4a4a6a,
                         emissiveIntensity: 0.2
@@ -914,53 +955,6 @@
             });
             const particleSystem = new THREE.Points(particles, particleMaterial);
             scene.add(particleSystem);
-
-            // 3D Background Objects (Non-interactive)
-            const geometries = [
-                new THREE.IcosahedronGeometry(0.8, 0),
-                new THREE.TorusKnotGeometry(0.5, 0.15, 64, 8),
-                new THREE.OctahedronGeometry(1, 0),
-                new THREE.TetrahedronGeometry(1.2, 0),
-                new THREE.BoxGeometry(0.8, 0.8, 0.8)
-            ];
-
-            const colors = [0x9c27b0, 0x4ecdc4, 0xff6b6b, 0xffeb3b, 0x4caf50, 0x2196f3];
-
-            for (let i = 0; i < 20; i++) {
-                const geo = geometries[Math.floor(Math.random() * geometries.length)];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const mat = new THREE.MeshStandardMaterial({
-                    color: color,
-                    emissive: color,
-                    emissiveIntensity: 0.4,
-                    metalness: 0.8,
-                    roughness: 0.2,
-                    transparent: true,
-                    opacity: 0.5
-                });
-
-                const mesh = new THREE.Mesh(geo, mat);
-                
-                // Position them far enough back or to the sides to not interfere with play space
-                mesh.position.set(
-                    (Math.random() - 0.5) * 60,
-                    Math.random() * 30 - 5,
-                    (Math.random() - 0.5) * 40 - 20 // Mostly behind
-                );
-
-                mesh.userData = {
-                    rotationSpeed: {
-                        x: (Math.random() - 0.5) * 0.02,
-                        y: (Math.random() - 0.5) * 0.02,
-                        z: (Math.random() - 0.5) * 0.02
-                    },
-                    floatSpeed: 0.001 + Math.random() * 0.002,
-                    floatOffset: Math.random() * Math.PI * 2
-                };
-
-                scene.add(mesh);
-                backgroundObjects.push(mesh);
-            }
         }
 
         function onKeyDown(event) {
@@ -1015,7 +1009,7 @@
             } else {
                 player.velocity.x *= 0.8; // Friction
             }
-            
+
             // Update powerup timers
             updatePlayerPowerups(playerKey);
 
@@ -1026,16 +1020,7 @@
             }
 
             // Gravity
-            // Enhanced Gravity - Faster drop for more intense gameplay
-            let currentGravity = GRAVITY;
-            if (player.velocity.y > 5) {
-                // If moving up fast, apply much more gravity to drop sooner
-                currentGravity *= 2.8;
-            } else if (player.velocity.y < 0) {
-                // Descend faster than you ascent
-                currentGravity *= 1.8;
-            }
-            player.velocity.y += currentGravity * 0.016;
+            player.velocity.y += GRAVITY * 0.016;
 
             // Update position
             player.position.x += player.velocity.x * 0.016;
@@ -1051,8 +1036,8 @@
             }
 
             // Check for death (falling off)
-            if (player.position.y < DEATH_Y || 
-                player.position.x < -DEATH_X || 
+            if (player.position.y < DEATH_Y ||
+                player.position.x < -DEATH_X ||
                 player.position.x > DEATH_X) {
                 if (!player.isDead) {
                     player.isDead = true;
@@ -1084,7 +1069,7 @@
             // Update mesh
             playerMesh.position.set(player.position.x, player.position.y, player.position.z);
             playerMesh.rotation.y = player.facing === 1 ? 0 : Math.PI;
-            
+
             // Add slight tilt when moving for more dynamic feel
             if (moving) {
                 playerMesh.rotation.z = Math.sin(Date.now() * 0.01) * 0.1;
@@ -1118,15 +1103,15 @@
             const player = players[playerKey];
             const leftArm = playerMesh.getObjectByName('leftArm');
             const rightArm = playerMesh.getObjectByName('rightArm');
-            
+
             if (!leftArm || !rightArm) return;
-            
+
             // Attack animation - punch forward
             if (player.attackAnimation > 0) {
                 const progress = 1 - (player.attackAnimation / 15);
                 const punchDistance = Math.sin(progress * Math.PI) * 0.8;
                 const punchHeight = Math.sin(progress * Math.PI) * 0.2;
-                
+
                 // Animate the arm in the direction player is facing
                 if (player.facing === 1) {
                     rightArm.position.x = player.rightArmBasePos.x + punchDistance;
@@ -1137,7 +1122,7 @@
                     leftArm.position.y = player.leftArmBasePos.y + punchHeight;
                     leftArm.rotation.z = Math.sin(progress * Math.PI) * 0.5;
                 }
-                
+
                 player.attackAnimation--;
             } else {
                 // Return to base position
@@ -1154,13 +1139,13 @@
                 leftArm.rotation.z = 0;
                 rightArm.rotation.z = 0;
             }
-            
+
             // Special attack animation - both arms
             if (player.specialAnimation > 0) {
                 const progress = 1 - (player.specialAnimation / 20);
                 const punchDistance = Math.sin(progress * Math.PI) * 1.0;
                 const punchHeight = Math.sin(progress * Math.PI) * 0.3;
-                
+
                 if (player.facing === 1) {
                     rightArm.position.x = player.rightArmBasePos.x + punchDistance;
                     rightArm.position.y = player.rightArmBasePos.y + punchHeight;
@@ -1174,7 +1159,7 @@
                     rightArm.position.x = player.rightArmBasePos.x - punchDistance * 0.5;
                     rightArm.position.y = player.rightArmBasePos.y + punchHeight * 0.5;
                 }
-                
+
                 player.specialAnimation--;
             }
         }
@@ -1195,20 +1180,20 @@
                     createShieldBreakEffect(defender.position);
                     return;
                 }
-                
+
                 // Add percentage damage (with damage multiplier)
                 const damage = ATTACK_DAMAGE * attacker.damageMultiplier;
                 defender.percentage += damage;
-                
+
                 // Calculate knockback based on percentage (like Smash Bros)
                 const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING);
                 const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
                 defender.velocity.x += knockbackDir * knockbackStrength * 8;
                 defender.velocity.y += knockbackStrength * 4;
-                
+
                 // Invulnerability frames
                 defender.invulnerable = INVULNERABLE_TIME;
-                
+
                 // Combo system
                 const currentTime = Date.now();
                 if (currentTime - lastHitTime[attackerKey] < 2000) {
@@ -1218,11 +1203,11 @@
                     comboCount[attackerKey] = 1;
                 }
                 lastHitTime[attackerKey] = currentTime;
-                
+
                 // Visual effects
                 createHitEffect(defender.position, defender.color);
                 screenShake(0.1);
-                
+
                 updateHealthBars();
             }
         }
@@ -1243,20 +1228,20 @@
                     createShieldBreakEffect(defender.position);
                     return;
                 }
-                
+
                 // Add percentage damage (with damage multiplier)
                 const damage = SPECIAL_DAMAGE * attacker.damageMultiplier;
                 defender.percentage += damage;
-                
+
                 // Strong knockback that scales with percentage
                 const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * 1.5;
                 const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
                 defender.velocity.x += knockbackDir * knockbackStrength * 12;
                 defender.velocity.y += knockbackStrength * 6;
-                
+
                 // Invulnerability frames
                 defender.invulnerable = INVULNERABLE_TIME;
-                
+
                 // Combo system
                 const currentTime = Date.now();
                 if (currentTime - lastHitTime[attackerKey] < 2000) {
@@ -1266,7 +1251,7 @@
                     comboCount[attackerKey] = 1;
                 }
                 lastHitTime[attackerKey] = currentTime;
-                
+
                 // Visual effects
                 createSpecialEffect(attacker.position);
                 createHitEffect(defender.position, defender.color);
@@ -1319,7 +1304,7 @@
                 };
                 animate();
             }
-            
+
             // Add impact flash
             const flash = new THREE.Mesh(
                 new THREE.SphereGeometry(1.5, 16, 16),
@@ -1331,7 +1316,7 @@
             );
             flash.position.set(position.x, position.y, position.z);
             scene.add(flash);
-            
+
             let flashFrame = 0;
             const flashAnimate = () => {
                 flashFrame++;
@@ -1418,12 +1403,12 @@
             const types = Object.keys(POWERUP_TYPES);
             const type = types[Math.floor(Math.random() * types.length)];
             const powerupData = POWERUP_TYPES[type];
-            
+
             // Spawn on platform
             const x = (Math.random() - 0.5) * 15;
             const y = 2;
             const z = (Math.random() - 0.5) * 5;
-            
+
             // Create powerup mesh
             const geometry = new THREE.OctahedronGeometry(0.4, 0);
             const material = new THREE.MeshStandardMaterial({
@@ -1438,7 +1423,7 @@
             powerup.userData = { type, powerupData };
             powerup.rotation.set(0, 0, 0);
             scene.add(powerup);
-            
+
             // Add glow effect
             const glowGeometry = new THREE.OctahedronGeometry(0.5, 0);
             const glowMaterial = new THREE.MeshBasicMaterial({
@@ -1451,7 +1436,7 @@
             glow.scale.set(1.2, 1.2, 1.2);
             scene.add(glow);
             powerup.userData.glow = glow;
-            
+
             powerups.push(powerup);
         }
 
@@ -1464,7 +1449,7 @@
                     powerup.userData.glow.rotation.y -= 0.015;
                     powerup.userData.glow.position.y = powerup.position.y + Math.sin(Date.now() * 0.005) * 0.2;
                 }
-                
+
                 // Check collision with players
                 [players.p1, players.p2].forEach((player, playerIndex) => {
                     const playerKey = playerIndex === 0 ? 'p1' : 'p2';
@@ -1473,7 +1458,7 @@
                         Math.pow(player.position.y - powerup.position.y, 2) +
                         Math.pow(player.position.z - powerup.position.z, 2)
                     );
-                    
+
                     if (distance < 1) {
                         // Player collected powerup
                         applyPowerup(playerKey, powerup.userData.type);
@@ -1489,8 +1474,8 @@
         function applyPowerup(playerKey, type) {
             const player = players[playerKey];
             const powerupData = POWERUP_TYPES[type];
-            
-            switch(type) {
+
+            switch (type) {
                 case 'SPEED':
                     player.moveSpeedMultiplier = 1.5;
                     player.powerups.SPEED = POWERUP_DURATION;
@@ -1513,7 +1498,7 @@
                     showStemFact();
                     break;
             }
-            
+
             updatePowerupDisplay();
         }
 
@@ -1521,10 +1506,10 @@
             const overlay = document.getElementById('fact-overlay');
             const factText = document.getElementById('fact-text');
             const randomFact = STEM_FACTS[Math.floor(Math.random() * STEM_FACTS.length)];
-            
+
             factText.textContent = randomFact;
             overlay.style.display = 'block';
-            
+
             // Hide after 5 seconds
             setTimeout(() => {
                 overlay.style.display = 'none';
@@ -1534,15 +1519,15 @@
         function updatePlayerPowerups(playerKey) {
             const player = players[playerKey];
             let updated = false;
-            
+
             Object.keys(player.powerups).forEach(type => {
                 if (player.powerups[type] > 0) {
                     player.powerups[type]--;
                     if (player.powerups[type] <= 0) {
                         delete player.powerups[type];
                         updated = true;
-                        
-                        switch(type) {
+
+                        switch (type) {
                             case 'SPEED':
                                 player.moveSpeedMultiplier = 1;
                                 break;
@@ -1557,17 +1542,17 @@
                     }
                 }
             });
-            
+
             if (updated) updatePowerupDisplay();
         }
 
         function addShieldVisual(playerKey) {
             const playerMesh = playerKey === 'p1' ? player1 : player2;
             const player = players[playerKey];
-            
+
             // Remove existing shield if any
             removeShieldVisual(playerKey);
-            
+
             const shieldGeometry = new THREE.SphereGeometry(1.2, 16, 16);
             const shieldMaterial = new THREE.MeshStandardMaterial({
                 color: 0x2196f3,
@@ -1594,18 +1579,18 @@
             const indicator = document.getElementById('powerup-indicator');
             const list = document.getElementById('powerup-list');
             list.innerHTML = '';
-            
+
             let hasPowerups = false;
             [players.p1, players.p2].forEach((player, index) => {
                 const playerKey = index === 0 ? 'p1' : 'p2';
                 const playerName = index === 0 ? 'P1' : 'P2';
                 const playerColor = index === 0 ? '#ff6b6b' : '#4ecdc4';
-                
+
                 Object.keys(player.powerups).forEach(type => {
                     hasPowerups = true;
                     const powerupData = POWERUP_TYPES[type];
                     const timeLeft = Math.ceil(player.powerups[type] / 60);
-                    
+
                     const item = document.createElement('div');
                     item.className = 'powerup-item';
                     item.style.borderLeft = `3px solid ${playerColor}`;
@@ -1617,7 +1602,7 @@
                     list.appendChild(item);
                 });
             });
-            
+
             indicator.style.display = hasPowerups ? 'block' : 'none';
         }
 
@@ -1702,9 +1687,9 @@
             comboDisplay.textContent = `${count}x COMBO!`;
             comboDisplay.style.color = playerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
             comboDisplay.classList.add('show');
-            
+
             comboDisplayTimer = 60;
-            
+
             setTimeout(() => {
                 comboDisplay.classList.remove('show');
             }, 500);
@@ -1713,19 +1698,19 @@
         let lastTimerUpdate = 0;
         function updateTimer() {
             if (!gameRunning) return;
-            
+
             const now = Date.now();
             if (now - lastTimerUpdate >= 1000) {
                 matchTimer--;
                 lastTimerUpdate = now;
-                
+
                 const minutes = Math.floor(matchTimer / 60);
                 const seconds = matchTimer % 60;
                 const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
+
                 const timerDisplay = document.getElementById('timer-display');
                 timerDisplay.textContent = timeString;
-                
+
                 // Change color based on time
                 timerDisplay.classList.remove('warning', 'danger');
                 if (matchTimer <= 30) {
@@ -1733,13 +1718,13 @@
                 } else if (matchTimer <= 60) {
                     timerDisplay.classList.add('warning');
                 }
-                
+
                 // Time's up - check winner by percentage
                 if (matchTimer <= 0 && !matchEnded) {
                     matchEnded = true;
                     const p1Percent = players.p1.percentage;
                     const p2Percent = players.p2.percentage;
-                    
+
                     let winner = null;
                     if (p1Percent < p2Percent) {
                         winner = 'p1';
@@ -1781,7 +1766,7 @@
             // Change color based on percentage (green -> yellow -> orange -> red)
             const p1Bar = document.getElementById('health-bar-1');
             const p2Bar = document.getElementById('health-bar-2');
-            
+
             updateBarColor(p1Bar, p1.percentage);
             updateBarColor(p2Bar, p2.percentage);
         }
@@ -1800,7 +1785,7 @@
 
         function checkGameOver() {
             if (matchEnded) return;
-            
+
             if (players.p1.isDead && !players.p2.isDead) {
                 matchScore.p2++;
                 endMatch('Player 2', true);
@@ -1813,13 +1798,13 @@
         function endMatch(winner, isKO) {
             matchEnded = true;
             gameRunning = false;
-            
+
             const winText = isKO ? `${winner} Wins by KO!` : `${winner} Wins!`;
             document.getElementById('winner-text').textContent = winText;
-            
+
             // Update match score display
             updateMatchScore();
-            
+
             // Check if best of 3 is complete
             if (matchScore.p1 >= 2 || matchScore.p2 >= 2) {
                 const overallWinner = matchScore.p1 >= 2 ? 'Player 1' : 'Player 2';
@@ -1828,20 +1813,20 @@
             } else {
                 document.getElementById('game-over').querySelector('button').textContent = 'Next Match';
             }
-            
+
             document.getElementById('game-over').classList.add('show');
-            
+
             // Start automatic restart countdown
             startRestartCountdown();
         }
 
         function startRestartCountdown() {
             if (restartTimer) clearInterval(restartTimer);
-            
+
             restartCountdownValue = 5;
             const countdownDisplay = document.getElementById('restart-countdown');
             countdownDisplay.textContent = `Restarting in ${restartCountdownValue}...`;
-            
+
             restartTimer = setInterval(() => {
                 restartCountdownValue--;
                 if (restartCountdownValue <= 0) {
@@ -1872,7 +1857,7 @@
                 // Next match
                 currentMatch++;
             }
-            
+
             players.p1.percentage = 0;
             players.p2.percentage = 0;
             players.p1.position = { x: -3, y: 2, z: 0 };
@@ -1906,22 +1891,22 @@
             player2.position.set(3, 2, 0);
             player1.rotation.set(0, 0, 0);
             player2.rotation.set(0, Math.PI, 0);
-            
+
             // Reset arm positions
             const p1LeftArm = player1.getObjectByName('leftArm');
             const p1RightArm = player1.getObjectByName('rightArm');
             const p2LeftArm = player2.getObjectByName('leftArm');
             const p2RightArm = player2.getObjectByName('rightArm');
-            
+
             if (p1LeftArm) p1LeftArm.position.set(players.p1.leftArmBasePos.x, players.p1.leftArmBasePos.y, players.p1.leftArmBasePos.z);
             if (p1RightArm) p1RightArm.position.set(players.p1.rightArmBasePos.x, players.p1.rightArmBasePos.y, players.p1.rightArmBasePos.z);
             if (p2LeftArm) p2LeftArm.position.set(players.p2.leftArmBasePos.x, players.p2.leftArmBasePos.y, players.p2.leftArmBasePos.z);
             if (p2RightArm) p2RightArm.position.set(players.p2.rightArmBasePos.x, players.p2.rightArmBasePos.y, players.p2.rightArmBasePos.z);
-            
+
             // Remove shields
             removeShieldVisual('p1');
             removeShieldVisual('p2');
-            
+
             // Clear powerups
             powerups.forEach(powerup => {
                 scene.remove(powerup);
@@ -1929,15 +1914,15 @@
             });
             powerups = [];
             powerupSpawnTimer = 0;
-            
+
             // Reset timer
             matchTimer = 60;
             matchEnded = false;
-            
+
             // Reset combo
             comboCount = { p1: 0, p2: 0 };
             lastHitTime = { p1: 0, p2: 0 };
-            
+
             // Reset camera
             camera.position.set(0, 8, 15);
             shakeOffset = { x: 0, y: 0 };
@@ -1948,27 +1933,19 @@
             updateTimer();
             document.getElementById('game-over').classList.remove('show');
             gameRunning = true;
-            
+
             // Clear restart timer if it exists
             if (restartTimer) {
                 clearInterval(restartTimer);
                 restartTimer = null;
             }
-            
+
             // Spawn initial powerup
             setTimeout(() => spawnPowerup(), 2000);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-
-            // Update background objects
-            backgroundObjects.forEach(obj => {
-                obj.rotation.x += obj.userData.rotationSpeed.x;
-                obj.rotation.y += obj.userData.rotationSpeed.y;
-                obj.rotation.z += obj.userData.rotationSpeed.z;
-                obj.position.y += Math.sin(Date.now() * obj.userData.floatSpeed + obj.userData.floatOffset) * 0.01;
-            });
 
             if (gameRunning) {
                 // Player 1 controls (WASD + Q)
@@ -1991,13 +1968,13 @@
 
                 updatePlayer('p1', p1Controls, player1);
                 updatePlayer('p2', p2Controls, player2);
-                
+
                 // Check for deaths continuously
                 checkGameOver();
-                
+
                 // Update timer
                 updateTimer();
-                
+
                 // Powerup system
                 checkPowerupCollisions();
                 powerupSpawnTimer++;
@@ -2005,7 +1982,7 @@
                     spawnPowerup();
                     powerupSpawnTimer = 0;
                 }
-                
+
                 // Update combo display timer
                 if (comboDisplayTimer > 0) {
                     comboDisplayTimer--;
@@ -2014,7 +1991,7 @@
                         comboCount.p2 = 0;
                     }
                 }
-                
+
                 // Decay screen shake
                 if (shakeOffset.x !== 0 || shakeOffset.y !== 0) {
                     shakeOffset.x *= 0.9;
@@ -2042,4 +2019,5 @@
         init();
     </script>
 </body>
+
 </html>
