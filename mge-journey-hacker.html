@@ -13,7 +13,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            cursor: crosshair;
+            cursor: none; /* No mouse vibe */
         }
 
         body {
@@ -475,7 +475,8 @@
     <div id="intro-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #0f0;">
         <h1 style="font-size: 4rem; margin-bottom: 2rem; text-shadow: 0 0 20px #0f0; font-family: 'Fira Code', monospace;">ENTER YOUR HACKER NAME</h1>
         <input type="text" id="hacker-name-input" placeholder="HACKER" style="font-size: 3rem; background: transparent; border: none; border-bottom: 4px solid #0f0; color: #fff; text-align: center; outline: none; text-transform: uppercase; font-family: 'Fira Code', monospace; width: 500px;" autofocus autocomplete="off" spellcheck="false">
-        <button onclick="startGame()" style="margin-top: 3rem; font-size: 2rem; padding: 15px 40px; background: #040; color: #0f0; border: 2px solid #0f0; cursor: pointer; text-transform: uppercase; font-family: 'Fira Code', monospace; font-weight: bold; transition: all 0.3s;" onmouseover="this.style.background='#0f0';this.style.color='#000';this.style.boxShadow='0 0 30px #0f0'" onmouseout="this.style.background='#040';this.style.color='#0f0';this.style.boxShadow='none'">INITIALIZE SYSTEM</button>
+        <div style="margin-top: 2rem; font-size: 1.2rem; color: #ff0; animation: pulse 1s infinite;">[ PRESS ENTER TO INITIALIZE SYSTEM ]</div>
+        <button onclick="startGame()" style="display:none;">INITIALIZE SYSTEM</button>
     </div>
 
     <div class="main-header" id="main-header-text">
@@ -628,9 +629,13 @@
         <div style="display: flex; gap: 30px;">
             <span>SYSTEM STATUS: CONNECTED</span>
             <span id="system-time">CONNECTED: 10:47:27</span>
+            <span>BUILD: v1.1.<span id="build-number">202603130930</span></span>
             <span>ENCRYPTION: AES-256-HIGH-VOLTAGE</span>
         </div>
-        <a href="mge.html" class="exit-btn">RETURN TO MGE HUB</a>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <span style="font-size: 0.7rem; opacity: 0.7;">[ESC] TO EXIT HUB</span>
+            <a href="mge.html" class="exit-btn" id="exit-link">RETURN TO MGE HUB</a>
+        </div>
     </div>
 
     <script>
@@ -741,6 +746,12 @@
                 
                 log('SYSTEM READY. VIBE CODING PROTOCOL LOADED.', '#0ff');
                 log('PRESS [ENTER] TO INITIATE VIBE MODE...', '#ff0');
+                
+                // Set dynamic build number
+                const buildEl = document.getElementById('build-number');
+                const now = new Date();
+                buildEl.innerText = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
                 document.getElementById('terminal-input').value = 'vibe';
                 document.getElementById('terminal-input').focus();
 
@@ -794,11 +805,13 @@
             playBeep(1200, 'sine', 0.1, 0.05);
         }
 
+        let clippieActiveOptions = [];
         function renderOptions(options) {
-            options.forEach(opt => {
+            clippieActiveOptions = options;
+            options.forEach((opt, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'clippie-btn';
-                btn.innerText = `> ${opt.label}`;
+                btn.innerText = `[${index + 1}] > ${opt.label}`;
                 btn.onclick = () => {
                     vBubble.style.display = 'none';
                     opt.action();
@@ -833,6 +846,7 @@
         let vibeMode = false;
         let vibeCodeIndex = 0;
         let selectedVibeTemplate = '';
+        let gameLibrary = [];
         let stats = { nodes: 0, files: 0, math: 0 };
         const folders = [
             { name: "C:\\Windows", info: "The Operating System Brain. Contains System32.", fact: "Windows stores all the rules for the PC here." },
@@ -985,6 +999,77 @@
         setInterval(draw, 33);
     <\/script>
 </body>
+</html>`,
+            ninja: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Vibe Ninja</title>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Fira Code', monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        #game-area { width: 400px; height: 400px; border: 4px solid #f00; position: relative; background: #111; box-shadow: 0 0 20px #f00; }
+        .ninja { width: 30px; height: 30px; background: #fff; position: absolute; border-radius: 50%; box-shadow: 0 0 15px #fff; }
+        #ninja-player { bottom: 10px; left: 185px; }
+        .shuriken { width: 10px; height: 10px; background: #f00; position: absolute; border-radius: 2px; transform: rotate(45deg); }
+        h1 { color: #f00; text-shadow: 0 0 10px #f00; }
+    </style>
+</head>
+<body>
+    <h1>VIBE NINJA STRIKE</h1>
+    <p>ARROWS TO MOVE, SPACE TO STRIKE</p>
+    <div id="game-area">
+        <div class="ninja" id="ninja-player"></div>
+    </div>
+    <script>
+        const player = document.getElementById('ninja-player');
+        let x = 185;
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowLeft') x -= 15;
+            if(e.key === 'ArrowRight') x += 15;
+            if(x < 0) x = 0; if(x > 370) x = 370;
+            player.style.left = x + 'px';
+            if(e.key === ' ') {
+                const s = document.createElement('div');
+                s.className = 'shuriken';
+                s.style.left = (x + 10) + 'px';
+                s.style.bottom = '40px';
+                document.getElementById('game-area').appendChild(s);
+                let sp = 40;
+                const anim = setInterval(() => {
+                    sp += 10;
+                    s.style.bottom = sp + 'px';
+                    if(sp > 400) { clearInterval(anim); s.remove(); }
+                }, 20);
+            }
+        });
+    <\/script>
+</body>
+</html>`,
+            smash: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Vibe Smash</title>
+    <style>
+        body { background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .block { width: 80px; height: 80px; background: #0f0; border: 2px solid #fff; position: absolute; display: flex; justify-content: center; align-items: center; font-size: 2rem; box-shadow: 0 0 15px #0f0; }
+    </style>
+</head>
+<body>
+    <h1 style="position:fixed; top:20px; color:#fff; font-family:sans-serif;">SMASH THE BLOCKS! (PRESS KEYS)</h1>
+    <div id="container"></div>
+    <script>
+        const container = document.getElementById('container');
+        document.addEventListener('keydown', (e) => {
+            const b = document.createElement('div');
+            b.className = 'block';
+            b.style.left = Math.random()*80 + '%';
+            b.style.top = Math.random()*80 + '%';
+            b.innerText = e.key.toUpperCase();
+            b.style.background = 'hsl(' + Math.random()*360 + ', 100%, 50%)';
+            container.appendChild(b);
+            setTimeout(() => b.remove(), 500);
+        });
+    <\/script>
+</body>
 </html>`
         };
 
@@ -1000,19 +1085,19 @@
         }
 
         function saveVibeCode() {
-            const blob = new Blob([selectedVibeTemplate.substring(0, vibeCodeIndex)], { type: 'text/html' });
+            const code = selectedVibeTemplate.substring(0, vibeCodeIndex);
+            const blob = new Blob([code], { type: 'text/html' });
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'my_epic_game.html';
-            a.click();
-            window.URL.revokeObjectURL(url);
             
             // Progressive Town & Apps Logic
             const appsList = document.getElementById('apps-list');
             const appNames = ["Cyber App", "Neon Utility", "Quantum Script", "Turbo Engine", "Matrix Toolkit"];
             const rName = appNames[Math.floor(Math.random()*appNames.length)] + " v" + Math.floor(Math.random()*9);
-            appsList.innerHTML += `<span style="color:#0ff">>> BUILT: ${rName}</span><br>`;
+            
+            const gameObj = { name: rName, code: code, url: url };
+            gameLibrary.push(gameObj);
+            
+            appsList.innerHTML += `<div style="color:#0ff; cursor:pointer;" onclick="playFromLibrary(${gameLibrary.length-1})">[${gameLibrary.length}] >> BUILT: ${rName} (KEY ${gameLibrary.length})</div>`;
             appsList.scrollTop = appsList.scrollHeight;
 
             const town = document.getElementById('vibe-town');
@@ -1026,8 +1111,31 @@
             town.innerHTML += b + "\n";
             town.scrollTop = town.scrollHeight;
             
+            // Actually download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${rName.replace(/\s/g, '_')}.html`;
+            a.click();
+
             playBeep(1200, 'square', 0.2, 0.2);
-            log(`SUCCESSFULLY COMPILED AND DOWNLOADED [${rName}]!`, '#0f0');
+            log(`SUCCESSFULLY COMPILED AND DOWNLOADED [${rName}]! IT IS ADDED TO YOUR LIBRARY.`, '#0f0');
+        }
+
+        function playFromLibrary(index) {
+            if(gameLibrary[index]) {
+                const game = gameLibrary[index];
+                document.getElementById('vibe-editor').style.display = 'flex';
+                document.getElementById('vibe-textarea').value = game.code;
+                vibeMode = true;
+                vibeCodeIndex = game.code.length;
+                selectedVibeTemplate = game.code;
+                
+                document.getElementById('vibe-preview-btn').style.display = 'block';
+                document.getElementById('vibe-download-btn').style.display = 'block';
+                document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [S] DOWNLOAD again | [ESC] BACK";
+                previewVibeCode();
+                log(`RE-LOADING [${game.name}] FROM LIBRARY...`, '#ff0');
+            }
         }
 
         inputEl.addEventListener('keydown', (e) => {
@@ -1043,12 +1151,10 @@
                 }
                 
                 if (vibeCodeIndex >= selectedVibeTemplate.length) {
-                    saveVibeCode();
-                    vibeMode = false;
-                    document.getElementById('vibe-editor').style.display = 'none';
-                    inputEl.value = '';
-                    inputEl.focus();
-                    e.preventDefault();
+                    if (e.key.toLowerCase() === 'p') { previewVibeCode(); return; }
+                    if (e.key.toLowerCase() === 's') { saveVibeCode(); return; }
+                    
+                    // Already done, just wait for choice
                     return;
                 }
 
@@ -1069,7 +1175,7 @@
                         
                         document.getElementById('vibe-preview-btn').style.display = 'block';
                         document.getElementById('vibe-download-btn').style.display = 'block';
-                        document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! USE THE BUTTONS ABOVE TO PREVIEW OR SAVE.";
+                        document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [S] DOWNLOAD (.HTML) | [ESC] TERMINAL";
                         
                         // Automatically trigger preview for wow factor
                         previewVibeCode();
@@ -1086,7 +1192,33 @@
                 return;
             }
 
-            if(e.key === 'Enter') {
+                if (vBubble.style.display === 'block') {
+                    const keyNum = parseInt(e.key);
+                    if (!isNaN(keyNum) && keyNum > 0 && keyNum <= clippieActiveOptions.length) {
+                        const opt = clippieActiveOptions[keyNum - 1];
+                        vBubble.style.display = 'none';
+                        opt.action();
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                
+                // Library selection
+                if (!vibeMode && !isNaN(parseInt(e.key))) {
+                    const idx = parseInt(e.key) - 1;
+                    if (gameLibrary[idx]) {
+                        playFromLibrary(idx);
+                        e.preventDefault();
+                        return;
+                    }
+                }
+
+            if (e.key === 'Escape') {
+                document.getElementById('exit-link').click();
+                return;
+            }
+
+            if (e.key === 'Enter') {
                 const cmd = inputEl.value.toLowerCase().trim();
                 inputEl.value = '';
                 processCommand(cmd);
@@ -1106,11 +1238,17 @@
                 }
                 lastKeyTime = now;
 
-                if (mashStartTime > 0 && now - mashStartTime > 7000 && !mashingTriggered && !vibeMode) {
+                if (mashStartTime > 0 && now - mashStartTime > 5000 && !mashingTriggered && !vibeMode) {
                     mashingTriggered = true;
-                    log("7 SECONDS OF INSANE MASHING DETECTED! OVERRIDING TO VIBE MODE...", "#f0f");
+                    log("INSANE MASHING DETECTED! OVERRIDING TO VIBE MODE...", "#f0f");
                     playBeep(1200, 'sawtooth', 0.5, 0.4);
-                    setTimeout(() => processCommand('vibe'), 500);
+                    
+                    // Auto-load a random game immediately
+                    setTimeout(() => {
+                        const types = Object.keys(vibeTemplates);
+                        const rType = types[Math.floor(Math.random() * types.length)];
+                        startVibeEditor(rType);
+                    }, 500);
                 }
 
                 keystrokeCount++;
@@ -1158,12 +1296,20 @@
             log(cmd, '#fff');
 
             if (cmd === 'vibe' || cmd === 'code') {
-                showClippie("CHOOSE YOUR DESTINY, HACKER. WHAT SHALL WE BUILD?", [
-                    { label: "NEON RUNNER GAME", action: () => startVibeEditor('runner') },
-                    { label: "HIGH-SPEED RACER", action: () => startVibeEditor('racer') },
-                    { label: "CYBER MATRIX TEXT", action: () => startVibeEditor('matrix') },
-                    { label: "NEVERMIND", action: () => hideClippie() }
-                ]);
+                if (mashingTriggered) {
+                    // Auto-load a random one if triggered by mashing
+                    const types = Object.keys(vibeTemplates);
+                    startVibeEditor(types[Math.floor(Math.random() * types.length)]);
+                } else {
+                    showClippie("CHOOSE YOUR DESTINY, HACKER. WHAT SHALL WE BUILD?", [
+                        { label: "NEON RUNNER GAME", action: () => startVibeEditor('runner') },
+                        { label: "HIGH-SPEED RACER", action: () => startVibeEditor('racer') },
+                        { label: "CYBER MATRIX TEXT", action: () => startVibeEditor('matrix') },
+                        { label: "VIBE NINJA STRIKE", action: () => startVibeEditor('ninja') },
+                        { label: "VIBE SMASH BLOCKS", action: () => startVibeEditor('smash') },
+                        { label: "NEVERMIND", action: () => hideClippie() }
+                    ]);
+                }
                 return;
             }
             
