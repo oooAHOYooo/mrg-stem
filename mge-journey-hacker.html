@@ -1082,7 +1082,16 @@
             const blob = new Blob([code], { type: 'text/html' });
             const url = window.URL.createObjectURL(blob);
             document.getElementById('vibe-emulator-container').style.display = 'block';
-            document.getElementById('vibe-emulator').src = url;
+            const emulator = document.getElementById('vibe-emulator');
+            emulator.src = url;
+            
+            // Automatically focus the iframe so WASD and arrow keys work without needing to click
+            emulator.onload = function() {
+                this.contentWindow.focus();
+            };
+            setTimeout(() => {
+                if(emulator && emulator.contentWindow) emulator.contentWindow.focus();
+            }, 500);
             
             playBeep(1000, 'sine', 0.2, 0.2);
             log(`EMULATING [${selectedVibeTemplate.substring(0, 20)}...] IN SYSTEM VIEW`, '#ff0');
@@ -1264,6 +1273,13 @@
                 processCommand(cmd);
                 playBeep(400, 'square', 0.1, 0.1);
             } else if (e.key.length === 1) {
+                // Auto-start Vibe Mode on ANY key press! No more typing 'vibe' and hitting Enter.
+                if (!vibeMode && !isAutoLoadingTerminal) {
+                    e.preventDefault();
+                    processCommand('vibe');
+                    return;
+                }
+
                 // If they mash too many characters before hitting enter, auto refresh
                 if (inputEl.value.length > 120) {
                     window.location.reload();
