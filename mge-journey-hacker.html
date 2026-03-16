@@ -602,7 +602,6 @@
             <span>⚡ VIBE.CODE // HYPER EDITOR & EMULATOR ⚡</span>
             <div style="display: flex; gap: 10px;">
                 <button id="vibe-preview-btn" onclick="previewVibeCode()" style="display: none; background: #000; color: #ff0; border: 2px solid #000; cursor: pointer; padding: 5px 15px; font-weight: bold; font-family: inherit; font-size: 1rem; transition: 0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#000';this.style.color='#ff0'">👁️ LIVE PREVIEW</button>
-                <button id="vibe-download-btn" onclick="saveVibeCode()" style="display: none; background: #000; color: #0ff; border: 2px solid #000; cursor: pointer; padding: 5px 15px; font-weight: bold; font-family: inherit; font-size: 1rem; transition: 0.2s;" onmouseover="this.style.background='#fff';this.style.color='#000'" onmouseout="this.style.background='#000';this.style.color='#0ff'">⬇️ DOWNLOAD BUILD (.HTML)</button>
             </div>
         </div>
         <div style="flex: 1; display: flex; overflow: hidden;">
@@ -884,7 +883,8 @@
 [DOWNLOADING ENCRYPTED CHUNK]
 [DECODING...]
 [FIREWALL BYPASSED]
-[ROOT ACCESS GRANTED]`;
+[ROOT ACCESS GRANTED]
+// git push when done`;
         let codeIndex = 0;
         
         const vibeTemplates = {
@@ -967,43 +967,7 @@
     <\/script>
 </body>
 </html>`,
-            matrix: `<!DOCTYPE html>
-<html>
-<head>
-    <title>Matrix Rain</title>
-    <style>
-        body { background: black; margin: 0; overflow: hidden; }
-        canvas { display: block; }
-    </style>
-</head>
-<body>
-    <canvas id="canvas"></canvas>
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        const fontSize = 16;
-        const columns = canvas.width / fontSize;
-        const drops = [];
-        for (let i = 0; i < columns; i++) drops[i] = 1;
-        function draw() {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#0F0";
-            ctx.font = fontSize + "px arial";
-            for (let i = 0; i < drops.length; i++) {
-                const text = letters.charAt(Math.floor(Math.random() * letters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
-        }
-        setInterval(draw, 33);
-    <\/script>
-</body>
-</html>`,
+
             ninja: `<!DOCTYPE html>
 <html>
 <head>
@@ -1124,16 +1088,8 @@
             town.innerHTML += b + "\n";
             town.scrollTop = town.scrollHeight;
             
-            // Actually download
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${rName.replace(/\s/g, '_')}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
             playBeep(1200, 'square', 0.2, 0.2);
-            log(`SUCCESSFULLY COMPILED AND DOWNLOADED [${rName}]! IT IS ADDED TO YOUR LIBRARY.`, '#0f0');
+            log(`SUCCESSFULLY COMPILED [${rName}]! IT IS ADDED TO YOUR LIBRARY.`, '#0f0');
         }
 
         function playFromLibrary(index) {
@@ -1146,18 +1102,241 @@
                 selectedVibeTemplate = game.code;
                 
                 document.getElementById('vibe-preview-btn').style.display = 'block';
-                document.getElementById('vibe-download-btn').style.display = 'block';
-                document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [S] DOWNLOAD again | [ESC] BACK";
+                document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [ESC] BACK";
                 previewVibeCode();
                 log(`RE-LOADING [${game.name}] FROM LIBRARY...`, '#ff0');
             }
         }
 
-        inputEl.addEventListener('keydown', (e) => {
+        let vibeGameTimerInterval;
+        let isMashingPhase = false;
+        let mashingTimerInterval;
+
+        function startMashingTimer() {
+            let timeLeft = 10;
+            isMashingPhase = true;
+            
+            const timerEl = document.createElement('div');
+            timerEl.id = 'vibe-mashing-timer';
+            timerEl.style.position = 'absolute';
+            timerEl.style.top = '10px';
+            timerEl.style.right = '20px';
+            timerEl.style.fontSize = '4rem';
+            timerEl.style.color = '#ff0';
+            timerEl.style.fontWeight = 'bold';
+            timerEl.style.textShadow = '0 0 20px #ff0';
+            timerEl.style.zIndex = '3000';
+            timerEl.innerText = timeLeft + "s";
+            
+            const editor = document.getElementById('vibe-editor');
+            if (document.getElementById('vibe-mashing-timer')) {
+                document.getElementById('vibe-mashing-timer').remove();
+            }
+            editor.appendChild(timerEl);
+            
+            if (mashingTimerInterval) clearInterval(mashingTimerInterval);
+            mashingTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    timerEl.innerText = timeLeft + "s";
+                } else {
+                    clearInterval(mashingTimerInterval);
+                    timerEl.remove();
+                    isMashingPhase = false;
+                    
+                    // Auto complete the rest of the code!
+                    vibeCodeIndex = selectedVibeTemplate.length;
+                    document.getElementById('vibe-textarea').value = selectedVibeTemplate + '\n\n/* TIME IS UP! AUTO-COMPILING... */';
+                    document.getElementById('vibe-textarea').scrollTop = document.getElementById('vibe-textarea').scrollHeight;
+                    
+                    log('HACKING TIME COMPLETED. COMPILING CODE.', '#0f0');
+                    
+                    document.getElementById('vibe-preview-btn').style.display = 'block';
+                    document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [ESC] TERMINAL";
+                    
+                    previewVibeCode();
+                    
+                    setTimeout(() => {
+                        saveVibeCode();
+                        log('AUTO-SAVED AND COMPILED VIBE CODE.', '#0ff');
+                        startVibeGameTimer();
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        let isTransitioning = false;
+        function transitionToNextGame() {
+            if (isTransitioning) return;
+            isTransitioning = true;
+            document.getElementById('vibe-editor').style.display = 'none';
+            vibeMode = false;
+            document.getElementById('console-output').innerHTML = '';
+            inputEl.value = '';
+            mashingTriggered = false;
+            isAutoLoadingTerminal = false;
+
+            const cdEl = document.createElement('div');
+            cdEl.style.position = 'fixed';
+            cdEl.style.top = '0';
+            cdEl.style.left = '0';
+            cdEl.style.width = '100%';
+            cdEl.style.height = '100%';
+            cdEl.style.display = 'flex';
+            cdEl.style.flexDirection = 'column';
+            cdEl.style.justifyContent = 'center';
+            cdEl.style.alignItems = 'center';
+            cdEl.style.fontSize = '12rem';
+            cdEl.style.color = '#0ff';
+            cdEl.style.fontWeight = '900';
+            cdEl.style.zIndex = '9999';
+            cdEl.style.background = 'rgba(0,10,0,0.9)';
+            cdEl.style.textShadow = '0 0 50px #0ff';
+            cdEl.id = 'transition-overlay';
+            
+            const hint = document.createElement('div');
+            hint.style.fontSize = '2rem';
+            hint.style.color = '#ff0';
+            hint.style.marginTop = '20px';
+            hint.innerText = 'PREPARING NEXT SECTOR...';
+            
+            const count = document.createElement('div');
+            cdEl.appendChild(count);
+            cdEl.appendChild(hint);
+            document.body.appendChild(cdEl);
+            
+            let currCd = 3;
+            count.innerText = currCd;
+            playBeep(600, 'square', 0.2, 0.5);
+            
+            let cdInterval = setInterval(() => {
+                currCd--;
+                if (currCd > 0) {
+                    count.innerText = currCd;
+                    playBeep(600, 'square', 0.2, 0.5);
+                } else {
+                    clearInterval(cdInterval);
+                    count.innerText = "HACK!";
+                    hint.style.display = 'none';
+                    playBeep(1000, 'square', 0.5, 0.8);
+                    
+                    setTimeout(() => {
+                        cdEl.remove();
+                        isTransitioning = false;
+                        const types = Object.keys(vibeTemplates);
+                        const rType = types[vibeQueueIndex % types.length];
+                        vibeQueueIndex++;
+                        startVibeEditor(rType, false);
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function startVibeGameTimer() {
+            let timeLeft = 10;
+            const timerEl = document.createElement('div');
+            timerEl.id = 'vibe-game-timer';
+            timerEl.style.position = 'absolute';
+            timerEl.style.top = '10px';
+            timerEl.style.right = '20px';
+            timerEl.style.fontSize = '4rem';
+            timerEl.style.color = '#f0f';
+            timerEl.style.fontWeight = 'bold';
+            timerEl.style.textShadow = '0 0 20px #f0f';
+            timerEl.style.zIndex = '3000';
+            timerEl.innerText = timeLeft;
+            
+            const editor = document.getElementById('vibe-editor');
+            if (document.getElementById('vibe-game-timer')) {
+                document.getElementById('vibe-game-timer').remove();
+            }
+            editor.appendChild(timerEl);
+            
+            if (vibeGameTimerInterval) clearInterval(vibeGameTimerInterval);
+            vibeGameTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    timerEl.innerText = timeLeft;
+                } else {
+                    clearInterval(vibeGameTimerInterval);
+                    timerEl.remove();
+                    transitionToNextGame();
+                }
+            }, 1000);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // SPACE BAR PROGRESSION SYSTEM (Always progress to next)
+            if (e.key === ' ') {
+                if (document.getElementById('intro-screen').style.display !== 'none' && document.activeElement.id === 'hacker-name-input') {
+                    // Allow normal space in name
+                } else if (!vibeMode && !aiMode && !isAutoLoadingTerminal && document.getElementById('math-bypass').classList.contains('active')) {
+                    e.preventDefault();
+                    skipMath();
+                    return;
+                } else if (isAutoLoadingTerminal) {
+                    e.preventDefault();
+                    autoLoadIndex = autoLoadTemplate.length; // snap to end
+                    return;
+                } else if (vibeMode && isMashingPhase) {
+                    e.preventDefault();
+                    if (mashingTimerInterval) {
+                        clearInterval(mashingTimerInterval);
+                        mashingTimerInterval = null;
+                        isMashingPhase = false;
+                        const tEl = document.getElementById('vibe-mashing-timer');
+                        if(tEl) tEl.remove();
+                        
+                        vibeCodeIndex = selectedVibeTemplate.length;
+                        document.getElementById('vibe-textarea').value = selectedVibeTemplate + '\n\n/* TIME IS UP! AUTO-COMPILING... */';
+                        document.getElementById('vibe-textarea').scrollTop = document.getElementById('vibe-textarea').scrollHeight;
+                        log('HACKING TIME COMPLETED. COMPILING CODE.', '#0f0');
+                        document.getElementById('vibe-preview-btn').style.display = 'block';
+                        document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [ESC] TERMINAL";
+                        previewVibeCode();
+                        setTimeout(() => {
+                            saveVibeCode();
+                            log('AUTO-SAVED AND COMPILED VIBE CODE.', '#0ff');
+                            startVibeGameTimer();
+                        }, 500);
+                    }
+                    return;
+                } else if (vibeMode && vibeGameTimerInterval && !isMashingPhase) {
+                    e.preventDefault();
+                    if(vibeGameTimerInterval) clearInterval(vibeGameTimerInterval);
+                    const tEl = document.getElementById('vibe-game-timer');
+                    if(tEl) tEl.remove();
+                    
+                    transitionToNextGame();
+                    return;
+                } else if (!vibeMode && !isAutoLoadingTerminal && document.getElementById('intro-screen').style.display === 'none') {
+                    e.preventDefault();
+                    processCommand('vibe');
+                    return;
+                }
+            }
+
+            // Ignore if typing in hacker name input or math input
+            if (e.target.id === 'hacker-name-input' || e.target.id === 'math-input') {
+                if(e.key !== 'Enter' && e.key !== 'Escape') return;
+            }
+
+            // Always keep inputEl focused if we're not in vibemode just in case they lose focus
+            if (!vibeMode && !aiMode && (!document.getElementById('math-bypass') || !document.getElementById('math-bypass').classList.contains('active'))) {
+                if (document.activeElement !== inputEl && e.target.id !== 'math-input') {
+                    inputEl.focus();
+                }
+            }
+
             if (vibeMode) {
                 if (e.key === 'Escape') {
                     vibeMode = false;
                     document.getElementById('vibe-editor').style.display = 'none';
+                    if (vibeGameTimerInterval) clearInterval(vibeGameTimerInterval);
+                    if (document.getElementById('vibe-game-timer')) document.getElementById('vibe-game-timer').remove();
+                    if (mashingTimerInterval) clearInterval(mashingTimerInterval);
+                    if (document.getElementById('vibe-mashing-timer')) document.getElementById('vibe-mashing-timer').remove();
+                    isMashingPhase = false;
                     inputEl.value = '';
                     inputEl.focus();
                     log('LEFT VIBE MODE.', '#ff0');
@@ -1167,47 +1346,52 @@
                 
                 if (vibeCodeIndex >= selectedVibeTemplate.length) {
                     if (e.key.toLowerCase() === 'p') { previewVibeCode(); return; }
-                    if (e.key.toLowerCase() === 's') { saveVibeCode(); return; }
                     
                     // Already done, just wait for choice
                     return;
                 }
 
                 // Mash anything except Escape
-                playBeep(1000 + Math.random()*500, 'square', 0.05, 0.05);
-                const chunkSize = 35;
-                if (vibeCodeIndex < selectedVibeTemplate.length) {
-                    vibeCodeIndex += chunkSize;
-                    if (vibeCodeIndex > selectedVibeTemplate.length) vibeCodeIndex = selectedVibeTemplate.length;
-                    const ta = document.getElementById('vibe-textarea');
-                    ta.value = selectedVibeTemplate.substring(0, vibeCodeIndex);
-                    ta.scrollTop = ta.scrollHeight;
-                    
-                    if (vibeCodeIndex >= selectedVibeTemplate.length) {
-                        log('BUILD COMPLETE. SYSTEM EMULATOR READY.', '#0f0');
-                        document.getElementById('vibe-textarea').value += '\n\n/* BUILD COMPLETE! SYSTEM EMULATOR INITIALIZED! */';
+                if (isMashingPhase) {
+                    playBeep(1000 + Math.random()*500, 'square', 0.05, 0.05);
+                    const chunkSize = 35;
+                    if (vibeCodeIndex < selectedVibeTemplate.length) {
+                        vibeCodeIndex += chunkSize;
+                        if (vibeCodeIndex > selectedVibeTemplate.length) vibeCodeIndex = selectedVibeTemplate.length;
+                        const ta = document.getElementById('vibe-textarea');
+                        ta.value = selectedVibeTemplate.substring(0, vibeCodeIndex);
                         ta.scrollTop = ta.scrollHeight;
                         
-                        document.getElementById('vibe-preview-btn').style.display = 'block';
-                        document.getElementById('vibe-download-btn').style.display = 'block';
-                        document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [S] DOWNLOAD (.HTML) | [ESC] TERMINAL";
-                        
-                        // Automatically trigger preview for wow factor
-                        previewVibeCode();
-                        
-                        // Automatically save/download to Town and "fire"
-                        setTimeout(() => {
-                            saveVibeCode();
-                            log('AUTO-SAVED AND FIRED VIBE CODE.', '#0ff');
-                        }, 1000);
+                        if (vibeCodeIndex >= selectedVibeTemplate.length) {
+                            isMashingPhase = false;
+                            if (mashingTimerInterval) clearInterval(mashingTimerInterval);
+                            if (document.getElementById('vibe-mashing-timer')) document.getElementById('vibe-mashing-timer').remove();
+
+                            log('BUILD COMPLETE. SYSTEM EMULATOR READY.', '#0f0');
+                            document.getElementById('vibe-textarea').value += '\n\n/* BUILD COMPLETE! SYSTEM EMULATOR INITIALIZED! */';
+                            ta.scrollTop = ta.scrollHeight;
+                            
+                            document.getElementById('vibe-preview-btn').style.display = 'block';
+                            document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [ESC] TERMINAL";
+                            
+                            // Automatically trigger preview for wow factor
+                            previewVibeCode();
+                            
+                            // Automatically save to Town and "fire"
+                            setTimeout(() => {
+                                saveVibeCode();
+                                log('AUTO-SAVED AND COMPILED VIBE CODE.', '#0ff');
+                                startVibeGameTimer();
+                            }, 1000);
+                        }
                     }
+                    
+                    document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    if (window.mashTimeout) clearTimeout(window.mashTimeout);
+                    window.mashTimeout = setTimeout(() => {
+                        document.body.style.filter = '';
+                    }, 150);
                 }
-                
-                document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
-                if (window.mashTimeout) clearTimeout(window.mashTimeout);
-                window.mashTimeout = setTimeout(() => {
-                    document.body.style.filter = '';
-                }, 150);
 
                 e.preventDefault();
                 return;
@@ -1342,17 +1526,13 @@
                     stats.nodes++;
                     document.getElementById('nodes-count').innerText = stats.nodes;
                 }
-                
-                // Occasional math popup when mashing
-                if (keystrokeCount % 60 === 0) {
-                    processCommand('hack');
-                }
             }
         });
 
         function startVibeEditor(type, autoMode = false) {
             vibeMode = true;
-            selectedVibeTemplate = vibeTemplates[type];
+            // Add git push comment to all templates!
+            selectedVibeTemplate = vibeTemplates[type].replace('</body>', '    <!-- git push when done -->\n</body>');
             vibeCodeIndex = autoMode ? selectedVibeTemplate.length : 0;
             mashingTriggered = false; // reset for next time
             log(`GENERATING BLUEPRINT FOR [${type.toUpperCase()}]...`, '#0ff');
@@ -1363,20 +1543,21 @@
                 
                 if (autoMode) {
                     document.getElementById('vibe-preview-btn').style.display = 'block';
-                    document.getElementById('vibe-download-btn').style.display = 'block';
-                    document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [S] DOWNLOAD | [ESC] BACK";
+                    document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [ESC] BACK";
                     previewVibeCode();
                     
-                    // Automatically save/download to Town and "fire"
+                    // Automatically save to Town and "fire"
                     setTimeout(() => {
                         saveVibeCode();
-                        log('AUTO-SAVED AND FIRED VIBE CODE.', '#0ff');
+                        log('AUTO-SAVED AND COMPILED VIBE CODE.', '#0ff');
+                        startVibeGameTimer();
                     }, 1000);
                 } else {
                     document.getElementById('vibe-emulator-container').style.display = 'none';
-                    document.getElementById('vibe-download-btn').style.display = 'none';
                     document.getElementById('vibe-preview-btn').style.display = 'none';
                     document.getElementById('vibe-footer-hint').innerText = "MASH BUTTONS FAST TO WRITE CODE! | PRESS ESC TO RETURN TO TERMINAL.";
+                    
+                    startMashingTimer();
                 }
             }, 500);
         }
