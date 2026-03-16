@@ -1185,6 +1185,12 @@
                         
                         // Automatically trigger preview for wow factor
                         previewVibeCode();
+                        
+                        // Automatically save/download to Town and "fire"
+                        setTimeout(() => {
+                            saveVibeCode();
+                            log('AUTO-SAVED AND FIRED VIBE CODE.', '#0ff');
+                        }, 1000);
                     }
                 }
                 
@@ -1344,6 +1350,12 @@
                     document.getElementById('vibe-download-btn').style.display = 'block';
                     document.getElementById('vibe-footer-hint').innerText = "VIBE_READY: DISPLAYING BUILT APP. [P] PREVIEW | [S] DOWNLOAD | [ESC] BACK";
                     previewVibeCode();
+                    
+                    // Automatically save/download to Town and "fire"
+                    setTimeout(() => {
+                        saveVibeCode();
+                        log('AUTO-SAVED AND FIRED VIBE CODE.', '#0ff');
+                    }, 1000);
                 } else {
                     document.getElementById('vibe-emulator-container').style.display = 'none';
                     document.getElementById('vibe-download-btn').style.display = 'none';
@@ -1357,20 +1369,15 @@
             log(cmd, '#fff');
 
             if (cmd === 'vibe' || cmd === 'code' || cmd === '67') {
+                const types = Object.keys(vibeTemplates);
+                const rType = types[vibeQueueIndex % types.length];
+                vibeQueueIndex++;
+                
                 if (mashingTriggered || isAutoLoadingTerminal || cmd === '67') {
-                    const types = Object.keys(vibeTemplates);
-                    const rType = types[vibeQueueIndex % types.length];
-                    vibeQueueIndex++;
                     startVibeEditor(rType, true);
                 } else {
-                    showClippie("CHOOSE YOUR DESTINY, HACKER. WHAT SHALL WE BUILD?", [
-                        { label: "NEON RUNNER GAME", action: () => startVibeEditor('runner') },
-                        { label: "HIGH-SPEED RACER", action: () => startVibeEditor('racer') },
-                        { label: "CYBER MATRIX TEXT", action: () => startVibeEditor('matrix') },
-                        { label: "VIBE NINJA STRIKE", action: () => startVibeEditor('ninja') },
-                        { label: "VIBE SMASH BLOCKS", action: () => startVibeEditor('smash') },
-                        { label: "NEVERMIND", action: () => hideClippie() }
-                    ]);
+                    // Auto-fire the vibe typing game without asking for a choice
+                    startVibeEditor(rType, false);
                 }
                 return;
             }
