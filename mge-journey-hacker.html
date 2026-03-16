@@ -1119,7 +1119,9 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = `${rName.replace(/\s/g, '_')}.html`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
 
             playBeep(1200, 'square', 0.2, 0.2);
             log(`SUCCESSFULLY COMPILED AND DOWNLOADED [${rName}]! IT IS ADDED TO YOUR LIBRARY.`, '#0f0');
@@ -1713,64 +1715,34 @@
             document.getElementById('system-time').innerText = `CONNECTED: ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
         }, 1000);
 
-        // 60-Second Inactivity Reset
+        // 60-Second Inactivity Matrix Screensaver (Instead of Black Reboot)
         let inactivityTimer;
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(triggerCrazyReset, 60000);
+            const sv = document.getElementById('matrix-screensaver');
+            if (sv) {
+                sv.remove();
+                document.getElementById('terminal-input').focus();
+            }
+            inactivityTimer = setTimeout(triggerMatrixScreensaver, 60000);
         }
 
-        function triggerCrazyReset() {
-            // Crazy distortion and sfx
-            playBeep(200, 'sawtooth', 0.5, 0.5);
-            setTimeout(() => playBeep(100, 'sawtooth', 0.5, 0.5), 500);
-            setTimeout(() => playBeep(50, 'square', 1.0, 0.8), 1000);
-
-            let hue = 0;
-            const crazyInt = setInterval(() => {
-                hue += 45;
-                document.body.style.filter = `hue-rotate(${hue}deg) contrast(300%) brightness(1.2)`;
-                document.body.style.transform = `scale(${1 + Math.random()*0.1}) rotate(${(Math.random()-0.5)*5}deg)`;
-            }, 100);
-
-            setTimeout(() => {
-                clearInterval(crazyInt);
-                document.body.style.filter = '';
-                document.body.style.transform = '';
+        function triggerMatrixScreensaver() {
+            if (!document.getElementById('matrix-screensaver')) {
+                const sv = document.createElement('iframe');
+                sv.id = 'matrix-screensaver';
+                sv.style.position = 'fixed';
+                sv.style.top = '0';
+                sv.style.left = '0';
+                sv.style.width = '100%';
+                sv.style.height = '100%';
+                sv.style.zIndex = '9999';
+                sv.style.border = 'none';
+                sv.src = window.URL.createObjectURL(new Blob([vibeTemplates.matrix], {type: 'text/html'}));
+                document.body.appendChild(sv);
                 
-                // Clear the terminal and UI
-                consoleEl.innerHTML = '';
-                log('SYSTEM REBOOTED DUE TO INACTIVITY.', '#f00');
-                log('> WELCOME USER...', '#0f0');
-                log('> START TYPING TO INITIATE HACK...', '#0f0');
-                
-                stats = { nodes: 0, files: 0, math: 0 };
-                document.getElementById('nodes-count').innerText = '0';
-                document.getElementById('files-count').innerText = '0';
-                document.getElementById('math-count').innerText = '0';
-                
-                document.getElementById('file-explorer').innerHTML = `
-                    <div class="file-item dir">[DIR] Windows</div>
-                    <div class="file-item dir">[DIR] Users</div>
-                    <div class="file-item dir">[DIR] Program Files</div>
-                    <div class="file-item dir">[DIR] Program Files (x86)</div>
-                    <div class="file-item sys">bootmgr.ini</div>
-                    <div class="file-item sys">pagefile.sys</div>
-                    <div class="file-item sys">hiberfil.sys</div>
-                    <div class="file-item sys" style="color: #f90; font-weight: bold; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('terminal-input').value='family'; processCommand('family');">f_and_f_tokyo_drift.exe</div>
-                `;
-                document.getElementById('apps-list').innerHTML = '> RUNNING VIBE OS...<br>';
-                document.getElementById('vibe-town').innerHTML = '_ _ _\n';
-                
-                vibeMode = false;
-                document.getElementById('vibe-editor').style.display = 'none';
-                document.getElementById('math-bypass').classList.remove('active');
-                
-                inputEl.value = '';
-                inputEl.focus();
-                
-                resetInactivityTimer();
-            }, 3000);
+                log('SYSTEM ENTERED HIBERNATION MODE. MATRIX RAIN ACTIVE.', '#0f0');
+            }
         }
 
         document.addEventListener('keydown', resetInactivityTimer);
