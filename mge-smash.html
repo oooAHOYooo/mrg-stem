@@ -763,6 +763,9 @@
                 position: { x: -3, y: 2, z: 0 },
                 velocity: { x: 0, y: 0, z: 0 },
                 onGround: false,
+                jumps: 0,
+                jumpKeyWasDown: false,
+                hasFinalSmash: false,
                 facing: 1,
                 attackCooldown: 0,
                 specialCooldown: 0,
@@ -781,6 +784,9 @@
                 position: { x: 3, y: 2, z: 0 },
                 velocity: { x: 0, y: 0, z: 0 },
                 onGround: false,
+                jumps: 0,
+                jumpKeyWasDown: false,
+                hasFinalSmash: false,
                 facing: -1,
                 attackCooldown: 0,
                 specialCooldown: 0,
@@ -816,6 +822,11 @@
         const POWERUP_SPAWN_INTERVAL = 600; // Frames (10 seconds at 60fps)
         const POWERUP_DURATION = 600; // Frames (10 seconds)
         const COMBO_TIMEOUT = 120; // Frames (2 seconds)
+
+        const SMASH_BALL_HP = 4;
+        let smashBall = null;
+        let smashBallSpawnTimer = 0;
+        const SMASH_BALL_SPAWN_INTERVAL = 1500; // Frames
 
         // Powerup types
         const POWERUP_TYPES = {
@@ -1041,8 +1052,14 @@
                 smallPlatform.receiveShadow = true;
                 scene.add(smallPlatform);
 
+                let isMoving = (i === 1);
+
                 // Add to interactive platforms
                 bonusPlatforms.push({
+                    mesh: smallPlatform,
+                    isMoving: isMoving,
+                    moveDirection: 1,
+                    baseX: px,
                     y: py + (PLATFORM_TOP - 0), 
                     xMin: px - 3,
                     xMax: px + 3
@@ -1220,10 +1237,14 @@
             updatePlayerPowerups(playerKey);
 
             // Jumping
-            if (controls.jump && player.onGround) {
-                player.velocity.y = JUMP_FORCE;
-                player.onGround = false;
+            if (controls.jump && !player.jumpKeyWasDown) {
+                if (player.jumps < 2) {
+                    player.velocity.y = JUMP_FORCE;
+                    player.onGround = false;
+                    player.jumps++;
+                }
             }
+            player.jumpKeyWasDown = controls.jump;
 
             // Gravity
             // Enhanced Gravity - Faster drop for more intense gameplay
@@ -1271,6 +1292,9 @@
             }
 
             player.onGround = grounded;
+            if (grounded) {
+                player.jumps = 0;
+            }
 
             // Check for death (falling off)
             if (player.position.y < DEATH_Y ||
@@ -1408,6 +1432,14 @@
 
             if (defender.invulnerable > 0 || defender.isDead) return;
 
+            // Check smash ball collision in performAttack
+            if (smashBall) {
+                const ballDist = Math.sqrt(Math.pow(attacker.position.x - smashBall.position.x, 2) + Math.pow(attacker.position.y - smashBall.position.y, 2));
+                if (ballDist < ATTACK_RANGE * 1.5) {
+                    hitSmashBall(attackerKey);
+                }
+            }
+
             const distance = Math.abs(attacker.position.x - defender.position.x);
             const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
             if (distance < ATTACK_RANGE && verticalDistance < 2) {
@@ -1459,6 +1491,12 @@
 
             if (defender.invulnerable > 0 || defender.isDead) return;
 
+            let isFinalSmash = attacker.hasFinalSmash;
+            if (isFinalSmash) {
+                attacker.hasFinalSmash = false;
+                attacker.invulnerable = 60; // Safe during final smash
+            }
+
             const distance = Math.abs(attacker.position.x - defender.position.x);
             const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
             if (distance < ATTACK_RANGE * 1.5 && verticalDistance < 2.5) {
@@ -1470,14 +1508,21 @@
                 }
 
                 // Add percentage damage (with damage multiplier)
-                const damage = SPECIAL_DAMAGE * attacker.damageMultiplier;
+                const baseSpecialDmg = isFinalSmash ? 40 : SPECIAL_DAMAGE;
+                const damage = baseSpecialDmg * attacker.damageMultiplier;
                 defender.percentage += damage;
 
                 // Strong knockback that scales with percentage
-                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * 1.5;
+                const baseKnockback = isFinalSmash ? 3.0 : 1.5;
+                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * baseKnockback;
                 const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
-                defender.velocity.x += knockbackDir * knockbackStrength * 12;
-                defender.velocity.y += knockbackStrength * 6;
+                defender.velocity.x += knockbackDir * knockbackStrength * (isFinalSmash ? 20 : 12);
+                defender.velocity.y += knockbackStrength * (isFinalSmash ? 10 : 6);
+
+                if (isFinalSmash) {
+                    screenShake(0.8);
+                    createDeathEffect(defender.position, attacker.color); 
+                }
 
                 // Invulnerability frames
                 defender.invulnerable = INVULNERABLE_TIME;
@@ -1640,6 +1685,67 @@
                     }
                 };
                 animate();
+            }
+        }
+
+        function spawnSmashBall() {
+            if (smashBall) return;
+            const geometry = new THREE.SphereGeometry(1.2, 32, 32);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: 0xffffff,
+                emissiveIntensity: 0.9,
+                transparent: true,
+                opacity: 0.9,
+                wireframe: true
+            });
+            const ball = new THREE.Mesh(geometry, material);
+            
+            const coreMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffeb3b,
+                emissive: 0xff8800,
+                emissiveIntensity: 1
+            });
+            const core = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), coreMaterial);
+            ball.add(core);
+
+            ball.position.set(0, 8, 0);
+            ball.velocity = {x: (Math.random() > 0.5 ? 1 : -1) * 0.05, y: -0.05};
+            ball.hp = SMASH_BALL_HP;
+            scene.add(ball);
+            smashBall = ball;
+        }
+
+        function updateSmashBall() {
+            if (!smashBall) return;
+            smashBall.position.x += smashBall.velocity.x;
+            smashBall.position.y += smashBall.velocity.y;
+            
+            if (smashBall.position.x > 15 || smashBall.position.x < -15) smashBall.velocity.x *= -1;
+            if (smashBall.position.y > 10 || smashBall.position.y < 2) smashBall.velocity.y *= -1;
+            
+            smashBall.rotation.x += 0.02;
+            smashBall.rotation.y += 0.03;
+        }
+
+        function hitSmashBall(attackerKey) {
+            smashBall.hp -= 1;
+            createHitEffect(smashBall.position, 0xffffff);
+            smashBall.velocity.x += (Math.random() - 0.5) * 0.2;
+            smashBall.velocity.y += (Math.random() - 0.5) * 0.2;
+            
+            if (smashBall.hp <= 0) {
+                players[attackerKey].hasFinalSmash = true;
+                createDeathEffect(smashBall.position, 0xffeb3b);
+                scene.remove(smashBall);
+                smashBall = null;
+                screenShake(0.5);
+                
+                const comboDisplay = document.getElementById('combo-display');
+                comboDisplay.textContent = `FINAL SMASH READY!`;
+                comboDisplay.style.color = attackerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
+                comboDisplay.classList.add('show');
+                setTimeout(() => comboDisplay.classList.remove('show'), 2000);
             }
         }
 
@@ -2123,6 +2229,12 @@
             players.p2.velocity = { x: 0, y: 0, z: 0 };
             players.p1.onGround = false;
             players.p2.onGround = false;
+            players.p1.jumps = 0;
+            players.p2.jumps = 0;
+            players.p1.jumpKeyWasDown = false;
+            players.p2.jumpKeyWasDown = false;
+            players.p1.hasFinalSmash = false;
+            players.p2.hasFinalSmash = false;
             players.p1.attackCooldown = 0;
             players.p2.attackCooldown = 0;
             players.p1.specialCooldown = 0;
@@ -2171,6 +2283,12 @@
             });
             powerups = [];
             powerupSpawnTimer = 0;
+
+            if (smashBall) {
+                scene.remove(smashBall);
+                smashBall = null;
+            }
+            smashBallSpawnTimer = 0;
 
             // Reset code building
             currentCodeLine = 0;
@@ -2262,6 +2380,14 @@
                 if (powerupSpawnTimer >= POWERUP_SPAWN_INTERVAL && powerups.length < 2) {
                     spawnPowerup();
                     powerupSpawnTimer = 0;
+                }
+
+                // Smash Ball system
+                updateSmashBall();
+                smashBallSpawnTimer++;
+                if (smashBallSpawnTimer >= SMASH_BALL_SPAWN_INTERVAL) {
+                    spawnSmashBall();
+                    smashBallSpawnTimer = 0;
                 }
 
                 // Update combo display timer

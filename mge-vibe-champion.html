@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Champion - Terminal Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050510;
+            --text-color: #00ff41;
+            --glow: 0 0 10px #00ff41;
+            --error-color: #ff003c;
+            --scanline-color: rgba(0, 255, 65, 0.05);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Fira Code', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* CRT Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .header {
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--text-color);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.2);
+            z-index: 10;
+            background: #020205;
+        }
+
+        .header h1 {
+            margin: 0;
+            text-transform: uppercase;
+            text-shadow: var(--glow);
+            letter-spacing: 5px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin: 10px auto 0;
+            font-size: 1.2rem;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        /* Rhythm Phase CSS */
+        #rhythm-phase {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .track-container {
+            flex: 1;
+            border: 2px solid var(--text-color);
+            position: relative;
+            background: rgba(0, 255, 65, 0.02);
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hit-zone {
+            position: absolute;
+            bottom: 50px;
+            width: 80%;
+            height: 60px;
+            border: 2px dashed rgba(0, 255, 65, 0.5);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .hit-zone-key {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+
+        .arrow {
+            position: absolute;
+            font-size: 2.5rem;
+            text-shadow: var(--glow);
+            font-weight: bold;
+        }
+
+        .arrow.hit {
+            color: #fff;
+            text-shadow: 0 0 20px #fff;
+            transform: scale(1.5);
+            transition: all 0.2s;
+            opacity: 0;
+        }
+
+        .terminal-output {
+            flex: 1;
+            border: 2px solid var(--text-color);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output p {
+            margin: 5px 0;
+            line-height: 1.4;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .comment {
+            color: #888;
+            font-style: italic;
+        }
+
+        .success { color: var(--text-color); }
+        .error-text { color: var(--error-color); text-shadow: 0 0 10px var(--error-color); }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Boss Phase CSS */
+        #boss-phase {
+            display: none;
+            width: 100%;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .boss-panel {
+            flex: 1;
+            border: 2px solid var(--text-color);
+            padding: 20px;
+            background: rgba(0, 50, 20, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .boss-panel h2 {
+            text-align: center;
+            text-shadow: var(--glow);
+            margin-top: 0;
+        }
+
+        .code-display {
+            background: #000;
+            padding: 15px;
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            flex: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .code-input-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #boss-input {
+            width: 100%;
+            flex: 1;
+            background: #000;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            box-shadow: inset 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        #boss-input:focus {
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.5), 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            border: 1px solid var(--text-color);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        #boss-hp {
+            height: 100%;
+            width: 100%;
+            background: var(--error-color);
+            transition: width 0.3s;
+        }
+
+        /* Screens */
+        .overlay-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .btn:hover {
+            background: var(--text-color);
+            color: #000;
+            box-shadow: 0 0 30px var(--text-color);
+        }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>VIBE CHAMPION</h1>
+        <div class="score-board">
+            <span id="score-display">COMPILED: 0%</span>
+            <span id="combo-display">MULTIPLIER: x1</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Phase 1: Rhythm Game -->
+        <div id="rhythm-phase">
+            <div class="track-container" id="track">
+                <div class="hit-zone">
+                    <span class="hit-zone-key" id="zone-left">◀</span>
+                    <span class="hit-zone-key" id="zone-down">▼</span>
+                    <span class="hit-zone-key" id="zone-up">▲</span>
+                    <span class="hit-zone-key" id="zone-right">▶</span>
+                </div>
+            </div>
+            <div class="terminal-output" id="terminal">
+                <p class="comment">// INITIATING VIBE PROTOCOL...</p>
+                <p class="comment">// AWAITING ARROW INPUTS TO COMPILE SOURCE CODE.</p>
+            </div>
+        </div>
+
+        <!-- Phase 2: Boss Phase -->
+        <div id="boss-phase">
+            <div class="boss-panel">
+                <h2>MAINFRAME CORE OVERRIDE (BOSS)</h2>
+                <div class="progress-bar-container">
+                    <div id="boss-hp"></div>
+                </div>
+                <p class="comment" style="text-align:center; margin-bottom: 15px;">// CRITICAL: HAND-WRITE THE CODE BELOW TO OVERRIDE THE FIREWALL</p>
+                <div class="code-display" id="boss-code">function overrideMainframe() {
+    const core = new QuantumCore();
+    core.bypassSecurity({
+        protocol: 'VIBE_CHAMPION',
+        encryption: '256_BIT'
+    });
+    
+    if (core.isUnlocked) {
+        system.grantAccess();
+        console.log("We are in.");
+    }
+}</div>
+            </div>
+            <div class="boss-panel code-input-area">
+                <h2 style="color:var(--text-color)">YOUR TERMINAL</h2>
+                <textarea id="boss-input" spellcheck="false" placeholder="Type the code here exactly as shown..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay-screen">
+        <h1 style="font-size: 4rem; text-shadow: 0 0 20px #00ff41; margin-bottom: 10px;">VIBE CHAMPION</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 40px; text-align: center; max-width: 600px;">
+            Act 1: Hit the arrow keys (◀ ▼ ▲ ▶) as they reach the hit zone to compile the code.<br><br>
+            Act 2: Defeat the Mainframe Boss by manually typing the final override sequence.
+        </p>
+        <button class="btn" id="start-btn">INITIALIZE SYSTEM</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="overlay-screen hidden">
+        <h1 style="font-size: 4rem; color: #fff; text-shadow: 0 0 30px #00ff41; margin-bottom: 10px;">SYSTEM OVERRIDDEN</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 40px;">You are the Vibe Champion.</p>
+        <button class="btn" onclick="location.reload()">REBOOT</button>
+        <button class="btn" style="margin-top: 20px; font-size: 1rem;" onclick="window.location.href='mge.html'">RETURN TO MGE LAB</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="overlay-screen hidden" style="background: rgba(40,0,0,0.95);">
+        <h1 style="font-size: 4rem; color: var(--error-color); text-shadow: 0 0 30px var(--error-color); margin-bottom: 10px;">FATAL EXCEPTION</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 40px; color: var(--error-color);">Compilation Failed.</p>
+        <button class="btn" style="border-color: var(--error-color); color: var(--error-color); text-shadow: none;" onclick="location.reload()">RETRY SEED</button>
+    </div>
+
+    <script>
+        // --- Game State ---
+        let score = 0;
+        let combo = 0;
+        let codeProgress = 0;
+        const targetProgress = 30; // Number of correct hits needed to reach Boss
+        let gameActive = false;
+        let phase = 1; // 1 = Rhythm, 2 = Boss
+
+        // Elements
+        const track = document.getElementById('track');
+        const terminal = document.getElementById('terminal');
+        const scoreDisplay = document.getElementById('score-display');
+        const comboDisplay = document.getElementById('combo-display');
+        
+        let arrows = [];
+        let spawnInterval;
+        let gameLoopAnim;
+
+        // Constants
+        const ARROW_SPEED = 5; // pixels per frame
+        const HIT_Y_MIN = window.innerHeight - 200 - 50; // Roughly zone bounds
+        const HIT_Y_MAX = window.innerHeight - 200 + 50;
+        const LANES = ['ArrowLeft', 'ArrowDown', 'ArrowUp', 'ArrowRight'];
+        const LANE_SYMBOLS = {'ArrowLeft':'◀', 'ArrowDown':'▼', 'ArrowUp':'▲', 'ArrowRight':'▶'};
+
+        // Code snippets to type in terminal
+        const snippets = [
+            "allocatingMemory(1024);",
+            "const dataStream = new WebSocket('ws://mainframe');",
+            "let isSecure = checkEncryption();",
+            "decryptModule.initialize(cryptoKeys);",
+            "dataStream.onMessage((msg) => parse(msg));",
+            "function bypass() { return true; }",
+            "await system.override(auth_token);",
+            "for(let i=0; i<payload; i++) { inject(i); }",
+            "while(!connected) { retryConnection(); }",
+            "console.log('Access Granted.');",
+            "var firewallConfig = override(0x00FF);",
+            "matrix.transform(vectors);",
+            "array.splice(0, vulnerableNode);",
+            "hash = btoa(JSON.stringify(payload));"
+        ];
+
+        const comments = [
+            "// Compiling virtual DOM...",
+            "// Bypassing secondary firewall layer.",
+            "// Warning: CPU usage at 99%",
+            "// Extracting cryptographic keys...",
+            "// Uploading Vibe Matrix.",
+            "// Analyzing deep network packets.",
+            "// Optimization complete. Runtime: 0.04ms",
+            "// Successful bitwise shift.",
+            "// Deploying counter-measures."
+        ];
+
+        // START GAME
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            startGame();
+        });
+
+        function startGame() {
+            gameActive = true;
+            spawnInterval = setInterval(spawnArrow, 800);
+            gameLoopAnim = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnArrow() {
+            if (!gameActive || phase !== 1) return;
+            const laneIndex = Math.floor(Math.random() * LANES.length);
+            const key = LANES[laneIndex];
+            
+            const arrEl = document.createElement('div');
+            arrEl.className = 'arrow';
+            arrEl.textContent = LANE_SYMBOLS[key];
+            
+            // Positioning based on width
+            const laneWidth = track.clientWidth / 4;
+            arrEl.style.left = `${(laneWidth * laneIndex) + (laneWidth/2) - 15}px`;
+            arrEl.style.top = '-50px';
+            
+            track.appendChild(arrEl);
+            
+            arrows.push({
+                element: arrEl,
+                key: key,
+                y: -50,
+                hit: false
+            });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            if (phase === 1) {
+                // Update Arrows
+                for (let i = arrows.length - 1; i >= 0; i--) {
+                    let a = arrows[i];
+                    if (a.hit) continue;
+
+                    a.y += ARROW_SPEED;
+                    a.element.style.top = a.y + 'px';
+
+                    // Miss condition (past hit zone)
+                    // The hit zone is at bottom 50px, height 60px. Track height is track.clientHeight.
+                    const hitZoneCenter = track.clientHeight - 80;
+
+                    if (a.y > hitZoneCenter + 60) {
+                        // Miss!
+                        logTerminal(`ERROR: Missing syntax at line ${Math.floor(Math.random()*1000)}`, true);
+                        combo = 0;
+                        updateScore();
+                        a.element.remove();
+                        arrows.splice(i, 1);
+                        flashError();
+                    }
+                }
+            } else if (phase === 2) {
+                checkBossProgress();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input Handling
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+
+            if (phase === 1) {
+                if (LANES.includes(e.key)) {
+                    handleRhythmHit(e.key);
+                }
+            }
+        });
+
+        function handleRhythmHit(key) {
+            // Find lowest arrow in this lane
+            let closest = null;
+            let closestDist = Infinity;
+            let closestIdx = -1;
+
+            const hitZoneCenter = track.clientHeight - 80;
+
+            for (let i = 0; i < arrows.length; i++) {
+                let a = arrows[i];
+                if (a.key === key && !a.hit) {
+                    let dist = Math.abs(a.y - hitZoneCenter);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closest = a;
+                        closestIdx = i;
+                    }
+                }
+            }
+
+            if (closest && closestDist < 70) {
+                // HIT!
+                closest.hit = true;
+                closest.element.classList.add('hit');
+                setTimeout(() => closest.element.remove(), 200);
+                arrows.splice(closestIdx, 1);
+                
+                combo++;
+                codeProgress++;
+                let snippet = snippets[Math.floor(Math.random() * snippets.length)];
+                logTerminal(`<span style="color:#fff;">></span> ${snippet}`);
+                
+                if (Math.random() > 0.6) {
+                    logTerminal(comments[Math.floor(Math.random() * comments.length)], false, true);
+                }
+
+                highlightZone(key);
+                updateScore();
+
+                if (codeProgress >= targetProgress) {
+                    startBossPhase();
+                }
+            } else {
+                // Bad hit
+                combo = 0;
+                logTerminal(`EXCEPTION: Invalid input signature.`, true);
+                updateScore();
+                flashError();
+            }
+        }
+
+        function highlightZone(key) {
+            const idMap = {'ArrowLeft':'zone-left', 'ArrowDown':'zone-down', 'ArrowUp':'zone-up', 'ArrowRight':'zone-right'};
+            const el = document.getElementById(idMap[key]);
+            el.style.color = '#fff';
+            el.style.opacity = '1';
+            el.style.textShadow = '0 0 20px #fff';
+            setTimeout(() => {
+                el.style.color = '';
+                el.style.opacity = '0.5';
+                el.style.textShadow = '';
+            }, 100);
+        }
+
+        function flashError() {
+            document.body.style.background = 'rgba(255,0,0,0.1)';
+            setTimeout(() => document.body.style.background = '', 100);
+        }
+
+        function logTerminal(text, isError=false, isComment=false) {
+            const p = document.createElement('p');
+            p.innerHTML = text;
+            if (isError) p.className = 'error-text';
+            if (isComment) p.className = 'comment';
+            terminal.appendChild(p);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateScore() {
+            let percentage = Math.floor((codeProgress / targetProgress) * 100);
+            if (percentage > 100) percentage = 100;
+            scoreDisplay.textContent = `COMPILED: ${percentage}%`;
+            comboDisplay.textContent = `MULTIPLIER: x${combo}`;
+            
+            if (combo > 10) {
+                comboDisplay.style.color = '#fff';
+                comboDisplay.style.textShadow = '0 0 10px #fff';
+            } else {
+                comboDisplay.style.color = '';
+                comboDisplay.style.textShadow = '';
+            }
+        }
+
+        // --- Boss Phase ---
+        function startBossPhase() {
+            phase = 2;
+            clearInterval(spawnInterval);
+            arrows.forEach(a => a.element.remove());
+            
+            logTerminal("// PREPARING FINAL OVERRIDE SEQUENCE...", false, true);
+            logTerminal("WARNING: BOSS SYSTEM DETECTED.", true);
+            
+            setTimeout(() => {
+                document.getElementById('rhythm-phase').style.display = 'none';
+                document.getElementById('boss-phase').style.display = 'flex';
+                document.getElementById('boss-input').focus();
+            }, 2000);
+        }
+
+        function checkBossProgress() {
+            const targetCode = document.getElementById('boss-code').textContent.replace(/\r/g, "");
+            const currentInput = document.getElementById('boss-input').value.replace(/\r/g, "");
+
+            // Calculate matching prefix
+            let matchCount = 0;
+            for (let i = 0; i < currentInput.length; i++) {
+                if (currentInput[i] === targetCode[i]) {
+                    matchCount++;
+                } else {
+                    break;
+                }
+            }
+
+            // Update Progress Bar
+            const totalChars = targetCode.length;
+            const progressPct = (matchCount / totalChars) * 100;
+            
+            const hpBar = document.getElementById('boss-hp');
+            hpBar.style.width = (100 - progressPct) + '%';
+            
+            // Color changing based on health
+            if (100 - progressPct < 30) {
+                hpBar.style.background = '#ffeb3b';
+                hpBar.style.boxShadow = '0 0 10px #ffeb3b';
+            } else {
+                hpBar.style.background = 'var(--error-color)';
+                hpBar.style.boxShadow = 'none';
+            }
+
+            // Win condition
+            if (matchCount === totalChars && targetCode === currentInput) {
+                winGame();
+            }
+        }
+
+        function winGame() {
+            gameActive = false;
+            document.getElementById('boss-input').disabled = true;
+            document.getElementById('victory-screen').classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
