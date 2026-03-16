@@ -380,6 +380,42 @@
             animation: pulse 0.5s ease-in-out infinite;
         }
 
+        .code-container {
+            position: fixed;
+            right: 1rem;
+            top: 4.5rem;
+            bottom: 12rem;
+            width: 380px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 3px solid #ffeb3b;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            z-index: 20;
+            box-shadow: 0 5px 20px rgba(255, 235, 59, 0.3);
+            text-align: left;
+        }
+
+        .code-line {
+            margin: 2px 0;
+            text-shadow: 0 0 5px currentColor;
+            white-space: pre;
+            animation: lineIn 0.2s ease-out;
+            font-weight: bold;
+        }
+
+        @keyframes lineIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
         .powerup-indicator {
             position: fixed;
             bottom: 1rem;
@@ -589,7 +625,8 @@
             </div>
         </div>
 
-        <div class="timer-display" id="timer-display">1:00</div>
+        <div class="timer-display" id="timer-display">BUILD: 0%</div>
+        <div class="code-container" id="code-container"></div>
         <div class="match-score" id="match-score">Match 1 | P1: 0 - P2: 0</div>
 
         <div class="powerup-indicator" id="powerup-indicator" style="display: none;">
@@ -621,7 +658,72 @@
         let platform;
         let keys = {};
         let gameRunning = true;
-        let matchTimer = 60; // 1 minute in seconds
+        const SOURCE_CODE = [
+            "function initSmashEngine() {",
+            "  // System Initialization",
+            "  console.log('Booting physics...');",
+            "  const GRAVITY = -25;",
+            "  const JUMP_FORCE = 12;",
+            "  const MOVE_SPEED = 8;",
+            "  let entities = new Array();",
+            "",
+            "  class STEM_Fighter {",
+            "    constructor(name, color) {",
+            "      this.name = name;",
+            "      this.color = color;",
+            "      this.instability = 0;",
+            "      this.velocity = {x:0, y:0};",
+            "      this.isActive = true;",
+            "    }",
+            "    ",
+            "    absorbEnergy(amount) {",
+            "      this.instability += amount;",
+            "      this.calculateTrajectory();",
+            "    }",
+            "    ",
+            "    calculateTrajectory() {",
+            "      // Newton's Second Law approx",
+            "      let force = this.instability * 0.12;",
+            "      this.velocity.y += force * 5.0;",
+            "      this.velocity.x += force * 8.0;",
+            "    }",
+            "  }",
+            "",
+            "  // Allocate Memory for Fighters",
+            "  let p1 = new STEM_Fighter('P1', '#ff6b6b');",
+            "  let p2 = new STEM_Fighter('P2', '#4ecdc4');",
+            "  entities.push(p1);",
+            "  entities.push(p2);",
+            "",
+            "  function runGameLoop() {",
+            "    if (p1.instability > 999) return false;",
+            "    if (p2.instability > 999) return false;",
+            "    ",
+            "    for(let e of entities) {",
+            "      e.velocity.y += GRAVITY;",
+            "      e.x += e.velocity.x;",
+            "      e.y += e.velocity.y;",
+            "      checkDeathZones(e);",
+            "    }",
+            "    ",
+            "    detectCollisions(p1, p2);",
+            "    spawn STEM_Powerups();",
+            "    requestAnimationFrame(runGameLoop);",
+            "  }",
+            "",
+            "  // Executing Engine",
+            "  console.log('Build complete...');",
+            "  console.log('Match currently running.');",
+            "  runGameLoop();",
+            "  ",
+            "  return finalizeWinner();",
+            "}",
+            "// CONSOLE LOG: ROUND OVER"
+        ];
+        let currentCodeLine = 0;
+        let p1CodeLines = 0;
+        let p2CodeLines = 0;
+        let lastCodeUpdate = 0;
         let matchScore = { p1: 0, p2: 0 };
         let currentMatch = 1;
         let matchEnded = false;
@@ -1339,6 +1441,9 @@
                 }
                 lastHitTime[attackerKey] = currentTime;
 
+                // Add code contribution
+                appendCodeLine(attackerKey);
+
                 // Visual effects
                 createHitEffect(defender.position, defender.color);
                 screenShake(0.1);
@@ -1386,6 +1491,10 @@
                     comboCount[attackerKey] = 1;
                 }
                 lastHitTime[attackerKey] = currentTime;
+
+                // Add huge code contribution for special attack
+                appendCodeLine(attackerKey);
+                appendCodeLine(attackerKey);
 
                 // Visual effects
                 createSpecialEffect(attacker.position);
@@ -1830,49 +1939,62 @@
             }, 500);
         }
 
-        let lastTimerUpdate = 0;
-        function updateTimer() {
+        function appendCodeLine(playerKey) {
+            if (currentCodeLine >= SOURCE_CODE.length || matchEnded) return;
+
+            const lineText = SOURCE_CODE[currentCodeLine];
+            const lineSpan = document.createElement('div');
+            lineSpan.className = 'code-line';
+            lineSpan.textContent = lineText;
+
+            if (playerKey === 'p1') {
+                lineSpan.style.color = '#ff6b6b';
+                p1CodeLines++;
+            } else if (playerKey === 'p2') {
+                lineSpan.style.color = '#4ecdc4';
+                p2CodeLines++;
+            } else {
+                lineSpan.style.color = '#aaaaaa';
+            }
+
+            const codeContainer = document.getElementById('code-container');
+            codeContainer.appendChild(lineSpan);
+
+            // Keep container clean by removing old ones
+            if (codeContainer.children.length > 25) {
+                codeContainer.removeChild(codeContainer.firstChild);
+            }
+
+            currentCodeLine++;
+
+            const percent = Math.floor((currentCodeLine / SOURCE_CODE.length) * 100);
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.textContent = `BUILD: ${percent}%`;
+
+            if (currentCodeLine >= SOURCE_CODE.length && !matchEnded) {
+                endMatchByTime();
+            }
+        }
+
+        function updateGameCode() {
             if (!gameRunning) return;
-
             const now = Date.now();
-            if (now - lastTimerUpdate >= 1000) {
-                matchTimer--;
-                lastTimerUpdate = now;
+            if (now - lastCodeUpdate >= 2000) { // Every 2s auto-add
+                lastCodeUpdate = now;
+                appendCodeLine(null);
+            }
+        }
 
-                const minutes = Math.floor(matchTimer / 60);
-                const seconds = matchTimer % 60;
-                const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-                const timerDisplay = document.getElementById('timer-display');
-                timerDisplay.textContent = timeString;
-
-                // Change color based on time
-                timerDisplay.classList.remove('warning', 'danger');
-                if (matchTimer <= 30) {
-                    timerDisplay.classList.add('danger');
-                } else if (matchTimer <= 60) {
-                    timerDisplay.classList.add('warning');
-                }
-
-                // Time's up - check winner by percentage
-                if (matchTimer <= 0 && !matchEnded) {
-                    matchEnded = true;
-                    const p1Percent = players.p1.percentage;
-                    const p2Percent = players.p2.percentage;
-
-                    let winner = null;
-                    if (p1Percent < p2Percent) {
-                        winner = 'p1';
-                        matchScore.p1++;
-                        endMatch('Player 1', false);
-                    } else if (p2Percent < p1Percent) {
-                        winner = 'p2';
-                        matchScore.p2++;
-                        endMatch('Player 2', false);
-                    } else {
-                        endMatch('Tie', false);
-                    }
-                }
+        function endMatchByTime() {
+            matchEnded = true;
+            if (p1CodeLines > p2CodeLines) {
+                matchScore.p1++;
+                endMatch(`P1 Coded More! (${p1CodeLines} lines)`, false);
+            } else if (p2CodeLines > p1CodeLines) {
+                matchScore.p2++;
+                endMatch(`P2 Coded More! (${p2CodeLines} lines)`, false);
+            } else {
+                endMatch('Tie (Code Sync)', false);
             }
         }
 
@@ -2050,8 +2172,13 @@
             powerups = [];
             powerupSpawnTimer = 0;
 
-            // Reset timer
-            matchTimer = 60;
+            // Reset code building
+            currentCodeLine = 0;
+            p1CodeLines = 0;
+            p2CodeLines = 0;
+            lastCodeUpdate = Date.now();
+            document.getElementById('code-container').innerHTML = '';
+            document.getElementById('timer-display').textContent = 'BUILD: 0%';
             matchEnded = false;
 
             // Reset combo
@@ -2066,7 +2193,7 @@
             updateHealthBars();
             updatePowerupDisplay();
             updateMatchScore();
-            updateTimer();
+            updateGameCode();
             document.getElementById('game-over').classList.remove('show');
             gameRunning = true;
 
@@ -2126,8 +2253,8 @@
                 // Check for deaths continuously
                 checkGameOver();
 
-                // Update timer
-                updateTimer();
+                // Build code / timer
+                updateGameCode();
 
                 // Powerup system
                 checkPowerupCollisions();
