@@ -247,16 +247,32 @@
         // UI for colors
         const colorPicker = document.getElementById('colorPicker');
         const colorBtns = [];
+        
+        window.selectColor = function(index) {
+            if(index >= 0 && index < colors.length) {
+                currentColor = colors[index];
+                colorBtns.forEach(b => b.classList.remove('active'));
+                colorBtns[index].classList.add('active');
+            }
+        };
+
         colors.forEach((c, index) => {
             const btn = document.createElement('div');
             btn.className = 'color-btn';
+            
+            btn.style.display = 'flex';
+            btn.style.justifyContent = 'center';
+            btn.style.alignItems = 'center';
+            btn.style.color = 'white';
+            btn.style.fontWeight = 'bold';
+            btn.style.textShadow = '1px 1px 2px black';
+            btn.textContent = index + 1;
+            
             if(index === 0) btn.classList.add('active');
             btn.style.backgroundColor = '#' + c.toString(16).padStart(6, '0');
             btn.onclick = (e) => {
                 e.stopPropagation();
-                currentColor = c;
-                colorBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                window.selectColor(index);
             };
             colorBtns.push(btn);
             colorPicker.appendChild(btn);
@@ -560,6 +576,14 @@
                         flyStatus.style.display = 'none';
                     }
                     break;
+                case 'Digit1': window.selectColor(0); break;
+                case 'Digit2': window.selectColor(1); break;
+                case 'Digit3': window.selectColor(2); break;
+                case 'Digit4': window.selectColor(3); break;
+                case 'Digit5': window.selectColor(4); break;
+                case 'Digit6': window.selectColor(5); break;
+                case 'Digit7': window.selectColor(6); break;
+                case 'Digit8': window.selectColor(7); break;
             }
         };
 
