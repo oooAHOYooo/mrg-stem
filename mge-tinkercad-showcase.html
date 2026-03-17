@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tinkercad Virtual Showcase - Mr. Gonzalez Experiments</title>
+    <title>3D Printer Digital - Mr. Gonzalez Experiments</title>
     <!-- Using Three.js and necessary loaders -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
         * {
@@ -204,13 +205,40 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(78, 205, 196, 0.3);
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(78, 205, 196, 0.3);
             border-top-color: #4ecdc4;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .printing-bar-container {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1rem;
+            border: 2px solid rgba(78, 205, 196, 0.5);
+        }
+
+        .printing-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4ecdc4, #556270);
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.8);
+            transition: width 0.3s ease;
+        }
+
+        #loading-text {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #4ecdc4, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         @keyframes spin {
@@ -376,14 +404,14 @@
         <a href="index.html" class="back-button">← Back to Menu</a>
 
         <div id="drop-zone" class="drop-zone">
-            <span class="drop-icon">🧊</span>
-            <h1 class="drop-title">My 3D Gallery</h1>
-            <p class="drop-subtitle" style="font-size: 1.5rem; font-weight: bold; color: white;">Click the big button or drag your file here!</p>
-            <button onclick="document.getElementById('file-input').click()" style="background: #4ecdc4; border: none; padding: 1.5rem 3rem; border-radius: 20px; font-size: 1.5rem; font-weight: bold; color: #1a1a2e; cursor: pointer; margin-bottom: 1.5rem; box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4); pointer-events: auto;">👆 CLICK TO ADD 3D MODEL</button>
-            <input type="file" id="file-input" style="display: none;" accept=".obj,.gltf,.glb,.stl" multiple />
+            <span class="drop-icon">🖨️</span>
+            <h1 class="drop-title">3D Printer Digital</h1>
+            <p class="drop-subtitle" style="font-size: 1.5rem; font-weight: bold; color: white;">Click the big button or drag your file/ZIP here!</p>
+            <button onclick="document.getElementById('file-input').click()" style="background: #4ecdc4; border: none; padding: 1.5rem 3rem; border-radius: 20px; font-size: 1.5rem; font-weight: bold; color: #1a1a2e; cursor: pointer; margin-bottom: 1.5rem; box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4); pointer-events: auto;">👆 CLICK TO PRINT 3D MODEL</button>
+            <input type="file" id="file-input" style="display: none;" accept=".obj,.gltf,.glb,.stl,.zip" multiple />
             
             <div class="supported-formats">
-                <span class="format-badge" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">Works with Tinkercad files! (.STL, .OBJ)</span>
+                <span class="format-badge" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">Works with Tinkercad files! (.STL, .OBJ, .ZIP)</span>
             </div>
         </div>
 
@@ -428,7 +456,10 @@
 
         <div class="loading-overlay" id="loading-overlay">
             <div class="spinner"></div>
-            <h2 id="loading-text">Loading Model...</h2>
+            <h2 id="loading-text">3D Printing in Progress...</h2>
+            <div class="printing-bar-container">
+                <div class="printing-bar" id="printing-bar"></div>
+            </div>
         </div>
     </div>
 
@@ -457,8 +488,8 @@
         controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't allow going too far below the floor
         controls.minDistance = 5;
         controls.maxDistance = 100;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 1.0;
+        // Don't auto rotate for 3rd person game feel
+        controls.autoRotate = false;
 
         // --- LIGHTING ---
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -603,33 +634,69 @@
         }, false);
 
         // --- FILE PROCESSING ---
-        function handleFiles(files) {
+        function simulatePrintingAnimation(callback) {
+            const bar = document.getElementById('printing-bar');
+            bar.style.width = '0%';
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress > 100) progress = 100;
+                bar.style.width = progress + '%';
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(callback, 500);
+                }
+            }, 200);
+        }
+
+        async function handleFiles(files) {
             dropZone.classList.add('hidden');
             loadingOverlay.classList.add('visible');
             controlsHint.classList.add('visible');
             inventoryNode.classList.add('visible');
             
-            // Allow them to drag anywhere to add more once they have initialized it
-            
-            Array.from(files).forEach((file, index) => {
-                const extension = file.name.split('.').pop().toLowerCase();
-                const reader = new FileReader();
+            simulatePrintingAnimation(() => {
+                Array.from(files).forEach(async (file, index) => {
+                    const extension = file.name.split('.').pop().toLowerCase();
+                    
+                    if (extension === 'zip') {
+                        try {
+                            const zip = await JSZip.loadAsync(file);
+                            const validExts = ['obj', 'stl', 'glb', 'gltf'];
+                            zip.forEach(async (relativePath, zipEntry) => {
+                                const ext = zipEntry.name.split('.').pop().toLowerCase();
+                                if (!zipEntry.dir && validExts.includes(ext)) {
+                                    if (ext === 'obj' || ext === 'gltf') {
+                                        const url = URL.createObjectURL(await zipEntry.async("blob"));
+                                        loadModelFromUrl(url, ext, zipEntry.name);
+                                    } else {
+                                        const contents = await zipEntry.async("arraybuffer");
+                                        processModel(contents, ext, zipEntry.name);
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            console.error("Error unzipping", e);
+                        }
+                        return;
+                    }
 
-                reader.onload = function(e) {
-                    const contents = e.target.result;
-                    processModel(contents, extension, file.name);
-                };
+                    const reader = new FileReader();
 
-                // Read as ArrayBuffer for binary formats (GLB, STL, sometimes OBJ is text though)
-                if (extension === 'glb' || extension === 'stl') {
-                    reader.readAsArrayBuffer(file);
-                } else {
-                    // For OBJ and GLTF usually string or array buffer, GLTFLoader can take Data URI or parse
-                    // Actually, easiest is to read all as ArrayBuffer and pass it if we have to, 
-                    // or for GLTF/OBJ we can use URL.createObjectURL
-                    const url = URL.createObjectURL(file);
-                    loadModelFromUrl(url, extension, file.name);
-                }
+                    reader.onload = function(e) {
+                        const contents = e.target.result;
+                        processModel(contents, extension, file.name);
+                    };
+
+                    // Read as ArrayBuffer for binary formats (GLB, STL, sometimes OBJ is text though)
+                    if (extension === 'glb' || extension === 'stl') {
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        const url = URL.createObjectURL(file);
+                        loadModelFromUrl(url, extension, file.name);
+                    }
+                });
             });
         }
         
@@ -1024,8 +1091,16 @@
             const delta = clock.getDelta();
             const time = clock.getElapsedTime();
 
-            controls.update();
             updateMovement(delta);
+            
+            if (selectedModelId) {
+                const model = loadedModels.find(m => m.userData.id === selectedModelId);
+                if (model) {
+                    // Third-person camera tracking: Follow the selected model
+                    controls.target.copy(model.position);
+                }
+            }
+            controls.update();
             
             // Slowly rotate floating objects slightly
             loadedModels.forEach((model, index) => {

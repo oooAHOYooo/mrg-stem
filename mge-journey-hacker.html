@@ -874,6 +874,173 @@
         let autoLoadTemplate = '';
         let autoLoadIndex = 0;
         let stats = { nodes: 0, files: 0, math: 0 };
+        
+        // F&F globals
+        let isFnFActive = false;
+        let fnfScore = 0;
+        let fnfInterval;
+        let fnfArrows = [];
+        
+        function startFnFGame() {
+            if (isFnFActive) return;
+            isFnFActive = true;
+            fnfScore = 0;
+            fnfArrows.forEach(a => a.remove());
+            fnfArrows = [];
+            
+            document.getElementById('objective-text').innerText = "THE FAST AND THE FURIOUS: TOKYO DRIFT C:\\ DRIVE";
+            
+            const fnfContainer = document.createElement('div');
+            fnfContainer.id = 'fnf-container';
+            fnfContainer.style.position = 'fixed';
+            fnfContainer.style.top = '0';
+            fnfContainer.style.left = '0';
+            fnfContainer.style.width = '100%';
+            fnfContainer.style.height = '100%';
+            fnfContainer.style.zIndex = '4000';
+            fnfContainer.style.background = 'rgba(0,10,0,0.95)';
+            fnfContainer.style.display = 'flex';
+            fnfContainer.style.flexDirection = 'column';
+            fnfContainer.style.alignItems = 'center';
+            fnfContainer.style.fontFamily = "'Fira Code', monospace";
+            
+            fnfContainer.innerHTML = `
+                <h1 style="color:#0ff; margin-top:40px; text-shadow:0 0 20px #0ff; font-size:3rem; font-style:italic;">TOKYO DRIFT PROTOCOL</h1>
+                <div id="fnf-score-display" style="color:#ff0; font-size:2rem; margin:20px 0;">SCORE: 0 | NITRO: 0%</div>
+                <div id="fnf-board" style="width: 400px; height: 600px; border: 4px solid #f0f; position: relative; overflow: hidden; background: #111; box-shadow: 0 0 30px #f0f;">
+                    <div style="position:absolute; bottom:20px; width:100%; height:60px; border-top:2px solid #fff; border-bottom:2px solid #fff; display:flex; justify-content:space-around; align-items:center;">
+                        <div id="fnf-target-ArrowLeft" style="font-size:2.5rem; opacity:0.3; transition:0.1s;">⬅️</div>
+                        <div id="fnf-target-ArrowDown" style="font-size:2.5rem; opacity:0.3; transition:0.1s;">⬇️</div>
+                        <div id="fnf-target-ArrowUp" style="font-size:2.5rem; opacity:0.3; transition:0.1s;">⬆️</div>
+                        <div id="fnf-target-ArrowRight" style="font-size:2.5rem; opacity:0.3; transition:0.1s;">➡️</div>
+                    </div>
+                </div>
+                <div style="margin-top:20px; color:#fff; font-size:1.2rem;">PRESS ARROW KEYS WHEN THEY HIT THE ZONE! [ESC] TO QUIT</div>
+            `;
+            document.body.appendChild(fnfContainer);
+            
+            playBeep(200, 'sawtooth', 0.5, 0.5);
+            setTimeout(() => playBeep(300, 'sawtooth', 0.5, 0.6), 500);
+            setTimeout(() => playBeep(500, 'sawtooth', 1.0, 0.8), 1000);
+            
+            const board = document.getElementById('fnf-board');
+            let speed = 4;
+            let spawnRate = 60;
+            let frame = 0;
+            
+            fnfInterval = setInterval(() => {
+                frame++;
+                
+                // Spawn
+                if (frame % spawnRate === 0) {
+                    const keys = ['ArrowLeft', 'ArrowDown', 'ArrowUp', 'ArrowRight'];
+                    const emojis = ['⬅️', '⬇️', '⬆️', '➡️'];
+                    const col = Math.floor(Math.random() * 4);
+                    const a = document.createElement('div');
+                    a.innerText = emojis[col];
+                    a.style.position = 'absolute';
+                    a.style.top = '-50px';
+                    a.style.fontSize = '2.5rem';
+                    const lefts = [20, 110, 210, 310];
+                    a.style.left = lefts[col] + 'px';
+                    a.dataset.key = keys[col];
+                    a.dataset.pos = -50;
+                    board.appendChild(a);
+                    fnfArrows.push(a);
+                    
+                    if (speed < 15) speed += 0.05;
+                    if (spawnRate > 20) spawnRate -= 1;
+                }
+                
+                // Move
+                for (let i = fnfArrows.length - 1; i >= 0; i--) {
+                    const a = fnfArrows[i];
+                    let y = parseFloat(a.dataset.pos);
+                    y += speed;
+                    a.dataset.pos = y;
+                    a.style.top = y + 'px';
+                    
+                    if (y > 600) {
+                        a.remove();
+                        fnfArrows.splice(i, 1);
+                        board.style.boxShadow = 'inset 0 0 50px #f00';
+                        setTimeout(() => { if(board) board.style.boxShadow = '0 0 30px #f0f'; }, 100);
+                        playBeep(150, 'sawtooth', 0.1, 0.5);
+                        fnfScore = Math.max(0, fnfScore - 5);
+                        updateFnFScore();
+                    }
+                }
+            }, 30);
+        }
+        
+        function updateFnFScore() {
+            let nitro = Math.min(100, Math.floor(fnfScore / 5));
+            const disp = document.getElementById('fnf-score-display');
+            if(disp) disp.innerText = `SCORE: ${fnfScore} | NITRO: ${nitro}%`;
+            if (nitro >= 100 && disp) {
+                disp.style.color = '#0ff';
+                disp.innerText += ' (NITRO READY! FIRING!)';
+                setTimeout(() => {
+                    stopFnFGame();
+                    processCommand('nos');
+                }, 1000);
+            }
+        }
+
+        function handleFnFKey(key) {
+            if (!['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(key)) return;
+            
+            const targetEl = document.getElementById('fnf-target-' + key);
+            if (targetEl) {
+                targetEl.style.opacity = '1';
+                targetEl.style.transform = 'scale(1.2)';
+                targetEl.style.filter = 'drop-shadow(0 0 10px #0ff)';
+                setTimeout(() => {
+                    if(targetEl) {
+                        targetEl.style.opacity = '0.3';
+                        targetEl.style.transform = 'scale(1)';
+                        targetEl.style.filter = 'none';
+                    }
+                }, 150);
+            }
+            
+            let hit = false;
+            for (let i = 0; i < fnfArrows.length; i++) {
+                const a = fnfArrows[i];
+                if (a.dataset.key === key) {
+                    let y = parseFloat(a.dataset.pos);
+                    // Zone is bottom 20 to 80 area => center around 50px from bottom. Y is around 450 to 580.
+                    if (y > 450 && y < 580) {
+                        hit = true;
+                        a.remove();
+                        fnfArrows.splice(i, 1);
+                        fnfScore += 10;
+                        updateFnFScore();
+                        playBeep(800 + Math.random()*200, 'sine', 0.1, 0.5);
+                        break;
+                    }
+                }
+            }
+            
+            if (!hit) {
+                fnfScore = Math.max(0, fnfScore - 5);
+                updateFnFScore();
+                playBeep(150, 'sawtooth', 0.1, 0.5);
+                const board = document.getElementById('fnf-board');
+                if (board) {
+                    board.style.boxShadow = 'inset 0 0 50px #f00';
+                    setTimeout(() => { if(board) board.style.boxShadow = '0 0 30px #f0f'; }, 100);
+                }
+            }
+        }
+
+        function stopFnFGame() {
+            isFnFActive = false;
+            clearInterval(fnfInterval);
+            const container = document.getElementById('fnf-container');
+            if (container) container.remove();
+        }
+
         const folders = [
             { name: "C:\\Windows", info: "The Operating System Brain. Contains System32.", fact: "Windows stores all the rules for the PC here." },
             { name: "C:\\Users", info: "Your Personal Space. Desktop, Documents, etc.", fact: "Every person on the PC gets their own folder in Users!" },
@@ -1373,6 +1540,13 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            if (isFnFActive) {
+                if (e.key === 'Escape') { stopFnFGame(); return; }
+                handleFnFKey(e.key);
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+                return;
+            }
+
             // SPACE BAR PROGRESSION SYSTEM (Always progress to next)
             if (e.key === ' ') {
                 if (document.getElementById('intro-screen').style.display !== 'none' && document.activeElement.id === 'hacker-name-input') {
@@ -1384,29 +1558,6 @@
                 } else if (isAutoLoadingTerminal) {
                     e.preventDefault();
                     autoLoadIndex = autoLoadTemplate.length; // snap to end
-                    return;
-                } else if (vibeMode && isMashingPhase) {
-                    e.preventDefault();
-                    if (mashingTimerInterval) {
-                        clearInterval(mashingTimerInterval);
-                        mashingTimerInterval = null;
-                        isMashingPhase = false;
-                        const tEl = document.getElementById('vibe-mashing-timer');
-                        if(tEl) tEl.remove();
-                        
-                        vibeCodeIndex = selectedVibeTemplate.length;
-                        document.getElementById('vibe-textarea').value = selectedVibeTemplate + '\n\n/* TIME IS UP! AUTO-COMPILING... */';
-                        document.getElementById('vibe-textarea').scrollTop = document.getElementById('vibe-textarea').scrollHeight;
-                        log('HACKING TIME COMPLETED. COMPILING CODE.', '#0f0');
-                        document.getElementById('vibe-preview-btn').style.display = 'block';
-                        document.getElementById('vibe-footer-hint').innerText = "BUILD COMPLETE! [P] PREVIEW | [ESC] TERMINAL";
-                        previewVibeCode();
-                        setTimeout(() => {
-                            saveVibeCode();
-                            log('AUTO-SAVED AND COMPILED VIBE CODE.', '#0ff');
-                            startVibeGameTimer();
-                        }, 500);
-                    }
                     return;
                 } else if (vibeMode && vibeGameTimerInterval && !isMashingPhase) {
                     e.preventDefault();
@@ -1811,11 +1962,11 @@
                     camera.position.set(0, 0, 15);
                     document.body.style.filter = '';
                 }, 3000);
-            } else if(cmd === 'family') {
+            } else if(cmd === 'family' || cmd === 'drift') {
                 log('I DON\'T GOT FRIENDS. I GOT FAMILY. 🚗💨', '#fff');
                 playBeep(400, 'square', 0.1, 0.2);
                 setTimeout(() => playBeep(600, 'square', 0.4, 0.3), 200);
-                document.getElementById('objective-text').innerText = "THE FAST AND THE FURIOUS: TOKYO DRIFT C:\\ DRIVE";
+                startFnFGame();
             } else {
                 log(`UNKNOWN COMMAND: ${cmd}`, '#f00');
             }
