@@ -323,6 +323,30 @@
         bossHead.position.y = 50;
         bossHead.castShadow = true;
         bossGroup.add(bossHead);
+
+        // Face Text
+        const faceCanvas = document.createElement('canvas');
+        faceCanvas.width = 512;
+        faceCanvas.height = 512;
+        const fctx = faceCanvas.getContext('2d');
+        fctx.fillStyle = 'rgba(0,0,0,0)';
+        fctx.fillRect(0, 0, 512, 512);
+        fctx.fillStyle = '#ff0000';
+        fctx.font = 'bold 50px Inter';
+        fctx.textAlign = 'center';
+        fctx.fillText('MR GONZALEZ', 256, 100);
+        fctx.fillText('ROBOT', 256, 160);
+        fctx.fillText('MASTERMIND', 256, 220);
+        fctx.font = 'bold 60px Inter';
+        fctx.fillText('INSTRUCTIONS:', 256, 320);
+        fctx.font = 'bold 80px Inter';
+        fctx.fillText('DESTROY!', 256, 420);
+
+        const faceTexture = new THREE.CanvasTexture(faceCanvas);
+        const faceMat = new THREE.MeshBasicMaterial({map: faceTexture, transparent: true});
+        const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), faceMat);
+        facePlane.position.set(0, 50, 8.1); // slightly in front of head
+        bossGroup.add(facePlane);
         
         // Eyes
         const eyeMat = new THREE.MeshBasicMaterial({color: 0xef4444}); // glowing red
@@ -451,6 +475,7 @@
         function defeatBoss() {
             isBossDefeated = true;
             document.getElementById('boss-health-text').textContent = "MR GONZALEZ (DEFEATED)";
+            if(bombInterval) clearInterval(bombInterval);
             
             // Breakdown boss
             setInterval(() => {
@@ -459,6 +484,82 @@
                 if(bossGroup.position.y < -50) bossGroup.visible = false;
             }, 50);
         }
+
+        // --- BOMB MECHANIC ---
+        let bombInterval;
+        
+        const createExplosion = (pos) => {
+            const expGeo = new THREE.SphereGeometry(15, 16, 16);
+            const expMat = new THREE.MeshBasicMaterial({color: 0xff4400, transparent: true, opacity: 0.8});
+            const exp = new THREE.Mesh(expGeo, expMat);
+            exp.position.copy(pos);
+            scene.add(exp);
+            
+            let scale = 1;
+            let opacity = 0.8;
+            const expInt = setInterval(() => {
+                scale += 0.2;
+                opacity -= 0.05;
+                exp.scale.set(scale, scale, scale);
+                expMat.opacity = opacity;
+                if(opacity <= 0) {
+                    clearInterval(expInt);
+                    scene.remove(exp);
+                }
+            }, 30);
+            
+            // Check player damage
+            const pPos = controls.getObject().position;
+            if(pPos.distanceTo(pos) < 20) {
+                // Screen flash
+                document.getElementById('blocker').style.backgroundColor = 'rgba(255,0,0,0.4)';
+                document.getElementById('blocker').style.display = 'block';
+                setTimeout(() => { 
+                    document.getElementById('blocker').style.backgroundColor = 'rgba(0,0,0,0.5)';
+                    if(!inMenu && !inRiddle) document.getElementById('blocker').style.display = 'none'; 
+                }, 300);
+            }
+            
+            // Destroy nearby blocks
+            for(let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if(obj !== ground && obj.position.distanceTo(pos) < 18) {
+                    scene.remove(obj);
+                    objects.splice(i, 1);
+                }
+            }
+        };
+
+        const dropBomb = () => {
+            if (isBossDefeated || inMenu || inRiddle) return;
+
+            const bombGeo = new THREE.SphereGeometry(3, 16, 16);
+            const bombMat = new THREE.MeshBasicMaterial({color: 0xff0000});
+            const bomb = new THREE.Mesh(bombGeo, bombMat);
+            
+            const pPos = controls.getObject().position;
+            // Drop slightly ahead of player or directly above
+            bomb.position.set(pPos.x + (Math.random()*10 - 5), pPos.y + 60, pPos.z + (Math.random()*10 - 5));
+            scene.add(bomb);
+            
+            const fallInt = setInterval(() => {
+                if(isBossDefeated) {
+                    clearInterval(fallInt);
+                    scene.remove(bomb);
+                    return;
+                }
+                
+                if(bomb.position.y <= 5) {
+                    clearInterval(fallInt);
+                    scene.remove(bomb);
+                    createExplosion(bomb.position);
+                } else {
+                    bomb.position.y -= 2;
+                }
+            }, 20);
+        };
+        
+        bombInterval = setInterval(dropBomb, 10000); // Every 10 seconds
 
 
         // Raycaster for placing/breaking blocks and checking boss
