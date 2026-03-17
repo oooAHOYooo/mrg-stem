@@ -410,13 +410,13 @@
 
         <div class="controls-hint" id="controls-hint">
             <div class="hint-item">
-                <span class="hint-icon">🖱️</span> Left Click: Rotate
+                <span class="hint-icon">🖱️</span> Drag to Look
             </div>
             <div class="hint-item">
-                <span class="hint-icon">⚖️</span> Right Click: Pan
+                <span class="hint-icon">🔍</span> Scroll to Zoom
             </div>
             <div class="hint-item">
-                <span class="hint-icon">🔍</span> Scroll: Zoom
+                <span class="hint-icon">⌨️</span> W/A/S/D to Move
             </div>
         </div>
 
@@ -972,20 +972,63 @@
             }
         }
 
-        // --- ANIMATION LOOP ---
+        // --- ANIMATION LOOP & CONTROLS ---
         const clock = new THREE.Clock();
+        const keys = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (keys.hasOwnProperty(key)) keys[key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (keys.hasOwnProperty(key)) keys[key] = false;
+        });
+
+        function updateMovement(delta) {
+            if (!selectedModelId) return;
+            const model = loadedModels.find(m => m.userData.id === selectedModelId);
+            if (!model) return;
+
+            const speed = 10 * delta;
+            
+            // Get camera direction
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            dir.y = 0; // Keep movement purely horizontal
+            dir.normalize();
+
+            // Right vector
+            const right = new THREE.Vector3();
+            right.crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+
+            // Add movement base on keys relative to camera
+            if (keys.w || keys.arrowup) {
+                model.position.addScaledVector(dir, speed);
+            }
+            if (keys.s || keys.arrowdown) {
+                model.position.addScaledVector(dir, -speed);
+            }
+            if (keys.a || keys.arrowleft) {
+                model.position.addScaledVector(right, -speed);
+            }
+            if (keys.d || keys.arrowright) {
+                model.position.addScaledVector(right, speed);
+            }
+        }
 
         function animate() {
             requestAnimationFrame(animate);
             
+            const delta = clock.getDelta();
             const time = clock.getElapsedTime();
 
             controls.update();
+            updateMovement(delta);
             
             // Slowly rotate floating objects slightly
             loadedModels.forEach((model, index) => {
-                // model.rotation.y += 0.005; // Base rotation
-                
                 // Add gentle float
                 model.userData.originalObject.position.y += Math.sin(time * 2 + index) * 0.001;
             });

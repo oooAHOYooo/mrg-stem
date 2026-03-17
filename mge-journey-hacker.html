@@ -547,10 +547,10 @@
         <div class="screen-panel panel-right" style="display: flex; flex-direction: column; gap: 15px;">
             <div style="flex: 1.2; display: flex; flex-direction: column; border: 1px solid #0f0; padding: 5px; background: rgba(0, 30, 0, 0.8);">
                 <h2 style="margin-bottom: 5px;">MGE RUNNER (CLICK / SPACE)</h2>
-                <div id="runner-game" style="flex: 1; background: #111; position: relative; overflow: hidden; border: 1px solid #040; cursor: pointer; box-shadow: inset 0 0 10px #000;">
-                    <div id="runner-player" style="width: 20px; height: 20px; background: #0f0; position: absolute; bottom: 0; left: 20px; box-shadow: 0 0 10px #0f0; transition: background 0.2s;"></div>
-                    <div id="runner-obstacle" style="width: 15px; height: 20px; background: #f00; position: absolute; bottom: 0; left: 100%; box-shadow: 0 0 10px #f00;"></div>
-                    <div id="runner-score" style="position: absolute; top: 5px; right: 10px; color: #fff; font-size: 0.9rem; font-weight: bold; text-shadow: 0 0 5px #fff;">0</div>
+                <div id="runner-game" style="flex: 1; background: #111; position: relative; overflow: hidden; border: 1px solid #040; cursor: pointer; box-shadow: inset 0 0 20px #000;">
+                    <div id="runner-player" style="width: 30px; height: 30px; position: absolute; bottom: 0; left: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; filter: drop-shadow(0 0 10px #0f0);">🏃</div>
+                    <div id="runner-obstacle" style="width: 30px; height: 30px; position: absolute; bottom: 0; left: 100%; display: flex; align-items: center; justify-content: center; font-size: 24px; filter: drop-shadow(0 0 10px #f00);">🔥</div>
+                    <div id="runner-score" style="position: absolute; top: 5px; right: 10px; color: #fff; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 5px #fff;">0</div>
                 </div>
             </div>
             
@@ -705,6 +705,29 @@
         scene.add(dirLight);
 
         camera.position.set(0, 0, 15);
+
+        function spawnHackerCube() {
+            const size = Math.random() * 0.8 + 0.2;
+            const geo = new THREE.BoxGeometry(size, size, size);
+            const mat = new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color(`hsl(${Math.random() * 360}, 100%, 60%)`),
+                wireframe: Math.random() > 0.5 
+            });
+            const cube = new THREE.Mesh(geo, mat);
+            cube.position.set((Math.random() - 0.5) * 30, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 10 - 20);
+            cube.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            scene.add(cube);
+            
+            const animateCube = setInterval(() => {
+                cube.rotation.x += 0.05;
+                cube.rotation.y += 0.05;
+                cube.position.z += 0.8;
+                if (cube.position.z > 10) {
+                    scene.remove(cube);
+                    clearInterval(animateCube);
+                }
+            }, 30);
+        }
 
         let nosActive = false;
 
@@ -1035,6 +1058,77 @@
             b.style.background = 'hsl(' + Math.random()*360 + ', 100%, 50%)';
             container.appendChild(b);
             setTimeout(() => b.remove(), 500);
+        });
+    <\/script>
+</body>
+</html>`,
+            matrix: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Matrix</title>
+    <style>
+        body { background: #000; overflow: hidden; margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <script>
+        const c = document.getElementById("c");
+        const ctx = c.getContext("2d");
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*".split("");
+        const fontSize = 16;
+        const columns = c.width / fontSize;
+        const drops = [];
+        for (let x = 0; x < columns; x++) drops[x] = 1;
+        function draw() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.fillStyle = "#0F0";
+            ctx.font = fontSize + "px monospace";
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > c.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 33);
+    <\/script>
+</body>
+</html>`,
+            clicker: `<!DOCTYPE html>
+<html>
+<head>
+    <title>Hacker Clicker</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; text-align: center; margin-top: 50px; }
+        .btn { font-size: 3rem; background: #030; color: #0f0; border: 2px solid #0f0; padding: 20px; cursor: pointer; border-radius: 10px; transition: 0.1s; }
+        .btn:active { transform: scale(0.95); background: #0f0; color: #000; }
+    </style>
+</head>
+<body>
+    <h1>BITCOIN MINER</h1>
+    <h2 id="score">0 BTC</h2>
+    <button class="btn" id="clickBtn">MINE BTC 💰</button>
+    <script>
+        let score = 0;
+        document.getElementById('clickBtn').addEventListener('click', (e) => {
+            score++;
+            document.getElementById('score').innerText = score + ' BTC';
+            const pop = document.createElement('div');
+            pop.innerText = '+1';
+            pop.style.position = 'absolute';
+            pop.style.left = (e.clientX + Math.random()*20 - 10) + 'px';
+            pop.style.top = (e.clientY - 20) + 'px';
+            pop.style.color = '#fff';
+            pop.style.fontWeight = 'bold';
+            pop.style.transition = '1s';
+            document.body.appendChild(pop);
+            setTimeout(() => { pop.style.top = (e.clientY-100)+'px'; pop.style.opacity = '0'; }, 10);
+            setTimeout(() => { pop.remove(); }, 1000);
         });
     <\/script>
 </body>
@@ -1510,9 +1604,12 @@
 
                 // Audio SFX on type
                 playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
+                
+                // Spawn 3D element every 5 keystrokes
+                if (keystrokeCount % 5 === 0) spawnHackerCube();
 
                 // Change colors on mashing
-                document.body.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                document.body.style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(150%)`;
                 if (window.mashTimeout) clearTimeout(window.mashTimeout);
                 window.mashTimeout = setTimeout(() => {
                     document.body.style.filter = '';
@@ -1835,17 +1932,19 @@
         function jumpRunner() {
             if (isJumping) return;
             isJumping = true;
-            playBeep(600, 'square', 0.1, 0.1);
-            rPlayer.style.bottom = '40px';
-            rPlayer.style.background = '#0ff';
-            rPlayer.style.boxShadow = '0 0 15px #0ff';
+            playBeep(800, 'triangle', 0.1, 0.2);
+            rPlayer.style.transition = 'bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            rPlayer.style.bottom = '50px';
+            rPlayer.style.filter = 'drop-shadow(0 0 15px #0ff)';
+            rPlayer.innerText = '🤸';
             
             setTimeout(() => {
+                rPlayer.style.transition = 'bottom 0.2s ease-in';
                 rPlayer.style.bottom = '0px';
-                rPlayer.style.background = '#0f0';
-                rPlayer.style.boxShadow = '0 0 10px #0f0';
+                rPlayer.innerText = '🏃';
+                rPlayer.style.filter = 'drop-shadow(0 0 10px #0f0)';
                 setTimeout(() => { isJumping = false; }, 200);
-            }, 300);
+            }, 350);
         }
 
         runnerGame.addEventListener('mousedown', jumpRunner);
@@ -1877,9 +1976,16 @@
             ) {
                 // hit!
                 if (rScore > 0) {
-                    playBeep(200, 'sawtooth', 0.3, 0.2);
-                    rPlayer.style.background = '#f00';
-                    setTimeout(()=> rPlayer.style.background = '#0f0', 200);
+                    playBeep(200, 'sawtooth', 0.3, 0.3);
+                    rPlayer.innerText = '💀';
+                    rPlayer.style.filter = 'drop-shadow(0 0 20px #f00)';
+                    
+                    document.getElementById('runner-game').style.boxShadow = 'inset 0 0 50px #f00';
+                    setTimeout(() => {
+                        document.getElementById('runner-game').style.boxShadow = 'inset 0 0 20px #000';
+                        rPlayer.innerText = '🏃';
+                        rPlayer.style.filter = 'drop-shadow(0 0 10px #0f0)';
+                    }, 300);
                 }
                 rScore = 0;
                 rScoreEl.innerText = rScore;
