@@ -83,10 +83,30 @@
             text-shadow: 1px 1px 2px black; font-size: 18px;
         }
         
+        #player-health-container {
+            position: absolute; top: 80px; left: 20px; background: rgba(0,0,0,0.6);
+            padding: 10px; border-radius: 12px; border: 2px solid #ef4444;
+            color: white; font-weight: bold; z-index: 100;
+            backdrop-filter: blur(5px); display: flex; align-items: center; gap: 10px;
+        }
+        #player-health-bar-container {
+            width: 200px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden;
+        }
+        #player-health-bar {
+            width: 100%; height: 100%; background: #ef4444; transition: width 0.2s;
+        }
+
         #fly-status {
             position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); 
             color: #34d399; font-weight: 900; font-size: 24px; display: none; 
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 100;
+        }
+        
+        #homework-tracker {
+            position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6);
+            padding: 15px 20px; border-radius: 12px; border: 2px solid #fcd34d;
+            color: white; font-weight: bold; font-size: 20px; z-index: 100;
+            backdrop-filter: blur(5px);
         }
         
         #riddle-container {
@@ -157,6 +177,15 @@
         <div id="boss-health-text">MR GONZALEZ (ROBOT)</div>
     </div>
     
+    <div id="player-health-container">
+        <span>HP:</span>
+        <div id="player-health-bar-container">
+            <div id="player-health-bar"></div>
+        </div>
+    </div>
+    
+    <div id="homework-tracker">📚 Homework: 0 / 5</div>
+    
     <div id="fly-status">🦅 FLY MODE ACTIVE</div>
 
     <div id="riddle-container">
@@ -173,17 +202,17 @@
         <div class="control-item"><div class="control-key">SPACE</div> Jump</div>
         <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
         <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
-        <div class="control-item"><div class="control-key">L-CLICK</div> Break Block</div>
+        <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
         <div class="control-item"><div class="control-key">R-CLICK</div> Place Block</div>
         <div class="control-item"><div class="control-key">1-8</div> Select Color</div>
     </div>
 
     <div id="blocker">
         <div id="instructions">
-            <h1>Defeat Mr Gonzalez Robot</h1>
+            <h1>Survival Mode <br><span style="font-size:32px; color: #f472b6;">Build a House & Do your Homework!</span></h1>
             <p><strong>WASD</strong> to move around | <strong>SPACE</strong> to jump</p>
             <p><strong>F</strong> to toggle Fly Mode (Shift to go down)</p>
-            <p><strong>Left Click</strong> to break blocks | <strong>Right Click (or E)</strong> to place blocks</p>
+            <p><strong>Find Mini-Robots</strong> hiding in the map and click them to get your homework!</p>
             <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">Target the Giant Robot and click to fight!</p>
             <p style="margin-top: 30px; font-weight: 800; font-size: 24px; color: #4ecdc4; animation: pulse 2s infinite;">Click Anywhere to Start Play</p>
         </div>
@@ -427,6 +456,52 @@
         
         document.getElementById('boss-health-container').style.display = 'block';
 
+        // --- MINI ROBOTS (HOMEWORK) ---
+        let homeworksCompleted = 0;
+        const totalHomeworks = 5;
+        const miniRobots = [];
+
+        // Mini robot base model function
+        const createMiniRobot = () => {
+            const group = new THREE.Group();
+            
+            const b = new THREE.Mesh(new THREE.BoxGeometry(4, 6, 4), robotAccentMat);
+            b.position.y = 3;
+            b.castShadow = true;
+            group.add(b);
+            
+            const h = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), robotMetalMat);
+            h.position.y = 7.5;
+            h.castShadow = true;
+            group.add(h);
+
+            // glowing eye
+            const e = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshBasicMaterial({color: 0xfcd34d})); // glowing yellow eye
+            e.position.set(0, 7.5, 1.6);
+            group.add(e);
+
+            // Hitbox for raycaster
+            const hitbox = new THREE.Mesh(new THREE.BoxGeometry(6, 12, 6), new THREE.MeshBasicMaterial({visible: false}));
+            hitbox.position.y = 6;
+            group.add(hitbox);
+            group.userData.hitbox = hitbox;
+
+            return group;
+        };
+
+        for ( let i = 0; i < totalHomeworks; i ++ ) {
+            const bot = createMiniRobot();
+            bot.position.x = Math.floor( Math.random() * 80 - 40 ) * 5;
+            bot.position.y = 0;
+            bot.position.z = Math.floor( Math.random() * 80 - 40 ) * 5;
+            
+            // random rotation
+            bot.rotation.y = Math.random() * Math.PI * 2;
+            
+            scene.add( bot );
+            miniRobots.push( bot );
+        }
+
         // --- RIDDLES LOGIC ---
         const riddles = [
             { q: "Computers use me to remember data temporarily while working. Turn power off, and I forget everything. What am I?", opts: ["CPU", "Hard Drive", "RAM", "GPU"], a: 2 },
@@ -440,22 +515,31 @@
         
         let inRiddle = false;
         let currentRiddle = null;
+        let currentRiddleTarget = null; // 'boss' or mini-robot object
         
         const riddleContainer = document.getElementById('riddle-container');
         const riddleQuestion = document.getElementById('riddle-question');
         const riddleOptions = document.getElementById('riddle-options');
         const riddleInfo = document.getElementById('riddle-info');
         
-        function openRiddle() {
-            if(isBossDefeated || inRiddle) return;
+        function openRiddle(targetMode) {
+            if(inRiddle) return;
             
             controls.unlock();
             
             setTimeout(() => {
                 inRiddle = true;
                 inMenu = true;
+                currentRiddleTarget = targetMode; // pass in "boss" or the bot obj
+                
                 document.getElementById('blocker').style.display = 'block';
                 document.getElementById('instructions').style.display = 'none';
+                
+                if (currentRiddleTarget === 'boss') {
+                    document.getElementById('riddle-question').style.color = '#ef4444'; 
+                } else {
+                    document.getElementById('riddle-question').style.color = '#fcd34d'; // homework yellow
+                }
                 
                 riddleContainer.style.display = 'block';
                 riddleInfo.textContent = "";
@@ -463,14 +547,18 @@
                 // Pick random riddle
                 currentRiddle = riddles[Math.floor(Math.random() * riddles.length)];
                 
-                riddleQuestion.textContent = currentRiddle.q;
+                riddleQuestion.textContent = currentRiddleTarget === 'boss' ? "BOSS: " + currentRiddle.q : "HOMEWORK: " + currentRiddle.q;
                 riddleOptions.innerHTML = '';
                 
-                currentRiddle.opts.forEach((opt, index) => {
+                // shuffle options visually (keeping track of answer)
+                const optsCopy = currentRiddle.opts.map((opt, i) => ({opt, i}));
+                optsCopy.sort(() => Math.random() - 0.5);
+
+                optsCopy.forEach((item) => {
                     const btn = document.createElement('button');
                     btn.className = 'riddle-btn';
-                    btn.textContent = opt;
-                    btn.onclick = () => checkAnswer(index);
+                    btn.textContent = item.opt;
+                    btn.onclick = () => checkAnswer(item.i);
                     riddleOptions.appendChild(btn);
                 });
             }, 100);
@@ -480,16 +568,33 @@
             riddleContainer.style.display = 'none';
             inRiddle = false;
             inMenu = false;
+            currentRiddleTarget = null;
             document.getElementById('blocker').style.display = 'none';
             controls.lock();
         }
         
+        function updateHomeworkTracker() {
+            document.getElementById('homework-tracker').textContent = `📚 Homework: ${homeworksCompleted} / ${totalHomeworks}`;
+        }
+
         function checkAnswer(index) {
             if(index === currentRiddle.a) {
                 // Correct
-                riddleInfo.style.color = "#34d399";
-                riddleInfo.textContent = "CORRECT! You dealt 25 damage to the Robot!";
-                damageBoss(25);
+                if(currentRiddleTarget === 'boss') {
+                    riddleInfo.style.color = "#34d399";
+                    riddleInfo.textContent = "CORRECT! You dealt 25 damage to the Robot!";
+                    damageBoss(25);
+                } else {
+                    riddleInfo.style.color = "#fcd34d";
+                    riddleInfo.textContent = "HOMEWORK COMPLETED!";
+                    homeworksCompleted++;
+                    updateHomeworkTracker();
+                    // hide bot
+                    if(currentRiddleTarget && currentRiddleTarget.visible !== undefined) {
+                        currentRiddleTarget.visible = false;
+                        scene.remove(currentRiddleTarget);
+                    }
+                }
                 setTimeout(closeRiddle, 1500);
             } else {
                 // Incorrect
@@ -532,9 +637,73 @@
             }, 50);
         }
 
-        // --- BOMB MECHANIC ---
-        let bombInterval;
-        
+        // --- BOMB & PLANE MECHANIC ---
+        let planeInterval;
+        let playerHealth = 100;
+        const activePlanes = [];
+
+        const spawnPlane = () => {
+            if (isBossDefeated || inMenu || inRiddle) return;
+
+            const planeGroup = new THREE.Group();
+            
+            // Plane body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 20), new THREE.MeshLambertMaterial({color: 0x4b5563}));
+            planeGroup.add(body);
+            
+            // Wings
+            const wings = new THREE.Mesh(new THREE.BoxGeometry(25, 1, 6), new THREE.MeshLambertMaterial({color: 0x374151}));
+            wings.position.y = 1;
+            planeGroup.add(wings);
+
+            // Tail
+            const tail = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 4), new THREE.MeshLambertMaterial({color: 0x374151}));
+            tail.position.set(0, 1, -8);
+            planeGroup.add(tail);
+
+            // Tail fin
+            const tailFin = new THREE.Mesh(new THREE.BoxGeometry(1, 4, 4), new THREE.MeshLambertMaterial({color: 0x1f2937}));
+            tailFin.position.set(0, 3, -8);
+            planeGroup.add(tailFin);
+
+            // Calculate start and end position based on player location
+            const pPos = controls.getObject().position;
+            const angle = Math.random() * Math.PI * 2; // Random direction
+            
+            const distance = 300; // spawn distance
+            const startX = pPos.x + Math.cos(angle) * distance;
+            const startZ = pPos.z + Math.sin(angle) * distance;
+            const targetX = pPos.x - Math.cos(angle) * distance; // fly over and keep going
+            const targetZ = pPos.z - Math.sin(angle) * distance;
+
+            planeGroup.position.set(startX, pPos.y + 60 + (Math.random()*20), startZ);
+            planeGroup.lookAt(targetX, planeGroup.position.y, targetZ);
+            
+            scene.add(planeGroup);
+            
+            activePlanes.push({
+                mesh: planeGroup,
+                dropped: false,
+                direction: new THREE.Vector3(targetX - startX, 0, targetZ - startZ).normalize(),
+                speed: 1.5 + Math.random() * 1.5
+            });
+        };
+
+        const takeDamage = (amount) => {
+            playerHealth -= amount;
+            if(playerHealth < 0) playerHealth = 0;
+            document.getElementById('player-health-bar').style.width = playerHealth + '%';
+            
+            if(playerHealth <= 0) {
+                // Game Over
+                document.getElementById('instructions').innerHTML = '<h1 style="color:red; font-size:64px;">YOU DIED</h1><p style="font-size: 24px; font-weight: bold;">The robots destroyed you.</p><p style="margin-top: 30px;">Click to respawn</p>';
+                document.getElementById('blocker').style.display = 'block';
+                document.getElementById('instructions').style.display = 'flex';
+                controls.unlock();
+                document.getElementById('instructions').onclick = () => location.reload();
+            }
+        };
+
         const createExplosion = (pos) => {
             const expGeo = new THREE.SphereGeometry(15, 16, 16);
             const expMat = new THREE.MeshBasicMaterial({color: 0xff4400, transparent: true, opacity: 0.8});
@@ -557,14 +726,25 @@
             
             // Check player damage
             const pPos = controls.getObject().position;
-            if(pPos.distanceTo(pos) < 20) {
+            const distToPlayer = pPos.distanceTo(pos);
+            if(distToPlayer < 25) {
                 // Screen flash
-                document.getElementById('blocker').style.backgroundColor = 'rgba(255,0,0,0.4)';
+                document.getElementById('blocker').style.backgroundColor = 'rgba(255,0,0,0.6)';
                 document.getElementById('blocker').style.display = 'block';
+                
+                // deal dmg
+                takeDamage(25);
+
                 setTimeout(() => { 
                     document.getElementById('blocker').style.backgroundColor = 'rgba(0,0,0,0.5)';
-                    if(!inMenu && !inRiddle) document.getElementById('blocker').style.display = 'none'; 
+                    if(!inMenu && !inRiddle && playerHealth > 0) document.getElementById('blocker').style.display = 'none'; 
                 }, 300);
+
+                // knockback
+                const knockbackDir = new THREE.Vector3().subVectors(pPos, pos).normalize();
+                velocity.x += knockbackDir.x * 300;
+                velocity.z += knockbackDir.z * 300;
+                velocity.y += 100; // pop up
             }
             
             // Destroy nearby blocks
@@ -577,17 +757,15 @@
             }
         };
 
-        const dropBomb = () => {
-            if (isBossDefeated || inMenu || inRiddle) return;
-
-            const bombGeo = new THREE.SphereGeometry(3, 16, 16);
-            const bombMat = new THREE.MeshBasicMaterial({color: 0xff0000});
+        const dropBombFromPlane = (plane) => {
+            const bombGeo = new THREE.SphereGeometry(2, 16, 16);
+            const bombMat = new THREE.MeshBasicMaterial({color: 0x222222});
             const bomb = new THREE.Mesh(bombGeo, bombMat);
             
-            const pPos = controls.getObject().position;
-            // Drop slightly ahead of player or directly above
-            bomb.position.set(pPos.x + (Math.random()*10 - 5), pPos.y + 60, pPos.z + (Math.random()*10 - 5));
+            bomb.position.copy(plane.position);
             scene.add(bomb);
+            
+            const dropSpeed = plane.direction.clone().multiplyScalar(plane.speed); // inherit forward momentum
             
             const fallInt = setInterval(() => {
                 if(isBossDefeated) {
@@ -596,17 +774,18 @@
                     return;
                 }
                 
+                bomb.position.add(dropSpeed); // move forward
+                bomb.position.y -= 2.5; // drop down
+                
                 if(bomb.position.y <= 5) {
                     clearInterval(fallInt);
                     scene.remove(bomb);
                     createExplosion(bomb.position);
-                } else {
-                    bomb.position.y -= 2;
                 }
             }, 20);
         };
         
-        bombInterval = setInterval(dropBomb, 10000); // Every 10 seconds
+        planeInterval = setInterval(spawnPlane, 6000); // Spawn plane every 6s
 
 
         // Raycaster for placing/breaking blocks and checking boss
@@ -642,8 +821,20 @@
                 raycaster.setFromCamera( mouse, camera );
                 const bIntersects = raycaster.intersectObject( bossHitbox );
                 if(bIntersects.length > 0 && bIntersects[0].distance < 30) {
-                    openRiddle();
+                    openRiddle('boss');
                     return; // Prevent breaking block behind boss
+                }
+            }
+
+            // Check mini robots interaction
+            raycaster.setFromCamera( mouse, camera );
+            for(let i = 0; i < miniRobots.length; i++) {
+                const bot = miniRobots[i];
+                if(!bot.visible) continue;
+                const hitboxes = raycaster.intersectObject(bot.userData.hitbox);
+                if(hitboxes.length > 0 && hitboxes[0].distance < 30) {
+                    openRiddle(bot);
+                    return;
                 }
             }
             
@@ -814,6 +1005,47 @@
                 } else {
                     document.getElementById('crosshair').style.color = 'white';
                     document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1)';
+                }
+
+                // Mini robots walking logic
+                for(let i=0; i < miniRobots.length; i++) {
+                    const bot = miniRobots[i];
+                    if(bot.visible) {
+                        // move slightly forward
+                        bot.translateZ(3.0 * delta);
+                        // randomly turn
+                        if(Math.random() < 0.05) {
+                            bot.rotation.y += (Math.random() - 0.5) * 1.5;
+                        }
+                    }
+                }
+
+                // Animation updates inside the loop
+                const pPos = controls.getObject().position;
+
+                // Planes update
+                for (let i = activePlanes.length - 1; i >= 0; i--) {
+                    const planeData = activePlanes[i];
+                    const plane = planeData.mesh;
+
+                    // move plane
+                    plane.position.add(planeData.direction.clone().multiplyScalar(planeData.speed));
+
+                    // drop bomb logic
+                    if (!planeData.dropped) {
+                        const distToPlayer2D = Math.sqrt(Math.pow(plane.position.x - pPos.x, 2) + Math.pow(plane.position.z - pPos.z, 2));
+                        // if plane is right over the player
+                        if (distToPlayer2D < 15) {
+                            dropBombFromPlane(plane);
+                            planeData.dropped = true;
+                        }
+                    }
+
+                    // cleanup if out of bounds (flew too far away)
+                    if (plane.position.distanceTo(pPos) > 400) {
+                        scene.remove(plane);
+                        activePlanes.splice(i, 1);
+                    }
                 }
 
                 const delta = ( time - prevTime ) / 1000;
