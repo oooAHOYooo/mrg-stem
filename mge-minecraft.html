@@ -36,7 +36,7 @@
             background: linear-gradient(135deg, #ff6b6b, #f472b6);
             color: white; border-radius: 12px;
             text-decoration: none; font-weight: bold;
-            z-index: 100;
+            z-index: 2000;
             box-shadow: 0 4px 15px rgba(255,107,107,0.4);
             transition: transform 0.2s, box-shadow 0.2s;
         }
@@ -221,6 +221,7 @@
             <p><strong>F</strong> to toggle Fly Mode (Shift to go down)</p>
             <p><strong>Find Mini-Robots</strong> hiding in the map and click them to get your homework!</p>
             <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">Target the Giant Robot and click to fight!</p>
+            <p style="color: #a78bfa; font-weight: bold; margin-top: 5px;">Press ESC to pause and access the Exit button.</p>
             <p style="margin-top: 30px; font-weight: 800; font-size: 24px; color: #4ecdc4; animation: pulse 2s infinite;">Click Anywhere to Start Play</p>
         </div>
     </div>
@@ -1013,6 +1014,8 @@
                     document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1)';
                 }
 
+                const delta = ( time - prevTime ) / 1000;
+
                 // Mini robots walking logic
                 for(let i=0; i < miniRobots.length; i++) {
                     const bot = miniRobots[i];
@@ -1053,8 +1056,6 @@
                         activePlanes.splice(i, 1);
                     }
                 }
-
-                const delta = ( time - prevTime ) / 1000;
 
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;

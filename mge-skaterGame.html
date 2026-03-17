@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skate 4 Clone - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .ui-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid #ff6b6b;
+            pointer-events: auto;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: 200px;
+        }
+
+        .controls-panel h2 {
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .controls-info {
+            font-size: 0.75rem;
+            color: #475569;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            line-height: 1.4;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 3px solid #ff6b6b;
+            border-radius: 15px;
+            padding: 0.75rem 1.5rem;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            pointer-events: auto;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            color: white;
+        }
+
+        .title {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #ffe66d, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        #score-display {
+            position: fixed;
+            top: 5rem;
+            left: 1rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #trick-display {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffe66d;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        #bail-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 900;
+            color: #ff1744;
+            text-shadow: 0 0 20px rgba(255,0,0,0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 50;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <div class="ui-overlay">
+        <a href="mge.html" class="back-button">← Back to MGE</a>
+        <div class="title">🛹 SKATE 4 🛹</div>
+        
+        <div id="score-display">Score: 0</div>
+        <div id="trick-display">Kickflip! +100</div>
+        <div id="bail-display">BAIL!</div>
+
+        <div class="controls-panel ui-panel">
+            <h2>Controls</h2>
+            <div class="controls-info">
+                <strong>W/A/S/D</strong> - Move/Turn<br>
+                <strong>Space</strong> - Ollie<br>
+                <strong>E / Q</strong> - Kickflip / Heelflip<br>
+                <strong>R</strong> - 360 Flip (Tre Flip)<br>
+                <strong>T</strong> - Board Slide (Hold in air)<br>
+                <strong>Y</strong> - Blunt Slide (Hold in air)<br>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set up scene, camera, renderer
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb); // Sky blue
+        scene.fog = new THREE.Fog(0x87ceeb, 20, 100);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('game-container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(20, 40, 20);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 100;
+        dirLight.shadow.camera.left = -50;
+        dirLight.shadow.camera.right = 50;
+        dirLight.shadow.camera.top = 50;
+        dirLight.shadow.camera.bottom = -50;
+        scene.add(dirLight);
+
+        // Ground
+        const groundGeo = new THREE.PlaneGeometry(200, 200);
+        const groundMat = new THREE.MeshPhongMaterial({ color: 0x555555 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Grid helper for looks
+        const grid = new THREE.GridHelper(200, 40, 0x000000, 0x000000);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        // Ramps / Skatepark items
+        function createRamp(x, z, rotationY) {
+            const rampGeo = new THREE.CylinderGeometry(5, 5, 20, 32, 1, false, 0, Math.PI / 2);
+            const rampMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
+            const ramp = new THREE.Mesh(rampGeo, rampMat);
+            ramp.rotation.z = Math.PI / 2;
+            ramp.rotation.y = rotationY;
+            ramp.position.set(x, 0, z);
+            ramp.castShadow = true;
+            ramp.receiveShadow = true;
+            scene.add(ramp);
+        }
+
+        createRamp(0, -20, 0);
+        createRamp(0, 20, Math.PI);
+        createRamp(-20, 0, Math.PI/2);
+        createRamp(20, 0, -Math.PI/2);
+
+        // Awesome Half Pipe
+        function createHalfpipe(x, z, rotationY) {
+            const hpGroup = new THREE.Group();
+            
+            const hpMat = new THREE.MeshPhongMaterial({ color: 0xaa8844 }); // wooden flavor
+            
+            // curved parts
+            const transGeo = new THREE.CylinderGeometry(10, 10, 20, 32, 1, false, 0, Math.PI / 2);
+            
+            const trans1 = new THREE.Mesh(transGeo, hpMat);
+            trans1.rotation.z = Math.PI / 2;
+            trans1.rotation.x = Math.PI;
+            trans1.position.set(0, 10, 10);
+            trans1.castShadow = true;
+            trans1.receiveShadow = true;
+            hpGroup.add(trans1);
+
+            const trans2 = new THREE.Mesh(transGeo, hpMat);
+            trans2.rotation.z = Math.PI / 2;
+            trans2.rotation.x = Math.PI / 2 * 3;
+            trans2.position.set(0, 10, -10);
+            trans2.castShadow = true;
+            trans2.receiveShadow = true;
+            hpGroup.add(trans2);
+
+            // Decks
+            const deckGeo = new THREE.BoxGeometry(20, 10, 5);
+            const deck1 = new THREE.Mesh(deckGeo, hpMat);
+            deck1.position.set(0, 5, 12.5);
+            hpGroup.add(deck1);
+
+            const deck2 = new THREE.Mesh(deckGeo, hpMat);
+            deck2.position.set(0, 5, -12.5);
+            hpGroup.add(deck2);
+
+            hpGroup.position.set(x, 0, z);
+            hpGroup.rotation.y = rotationY;
+            scene.add(hpGroup);
+        }
+        
+        createHalfpipe(40, 0, 0);
+
+        const boxGeo = new THREE.BoxGeometry(10, 2, 4);
+        const boxMat = new THREE.MeshPhongMaterial({ color: 0xaa5555 });
+        const ledge = new THREE.Mesh(boxGeo, boxMat);
+        ledge.position.set(10, 1, 10);
+        ledge.castShadow = true;
+        ledge.receiveShadow = true;
+        scene.add(ledge);
+
+        // Skateboarder (represented by a simple board + humanoid)
+        const boardGroup = new THREE.Group();
+        
+        const deckGroup = new THREE.Group(); // allows board to spin independently
+        
+        const deckGeo = new THREE.BoxGeometry(1, 0.1, 3);
+        const deckMat = new THREE.MeshPhongMaterial({ color: 0xdd2222 });
+        const deck = new THREE.Mesh(deckGeo, deckMat);
+        deck.position.y = 0.2;
+        deck.castShadow = true;
+        deckGroup.add(deck);
+
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.8, 16);
+        const wheelMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        
+        const fWheel = new THREE.Mesh(wheelGeo, wheelMat);
+        fWheel.rotation.z = Math.PI / 2;
+        fWheel.position.set(0, 0.15, 1);
+        fWheel.castShadow = true;
+        deckGroup.add(fWheel);
+
+        const bWheel = new THREE.Mesh(wheelGeo, wheelMat);
+        bWheel.rotation.z = Math.PI / 2;
+        bWheel.position.set(0, 0.15, -1);
+        bWheel.castShadow = true;
+        deckGroup.add(bWheel);
+
+        boardGroup.add(deckGroup);
+
+        // Humanoid skater
+        const skaterGroup = new THREE.Group();
+
+        // Torso
+        const torsoGeo = new THREE.BoxGeometry(0.8, 1.2, 0.4);
+        const torsoMat = new THREE.MeshPhongMaterial({ color: 0x3b82f6 });
+        const torso = new THREE.Mesh(torsoGeo, torsoMat);
+        torso.position.y = 1.0;
+        torso.castShadow = true;
+        skaterGroup.add(torso);
+
+        // Head
+        const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        const headMat = new THREE.MeshPhongMaterial({ color: 0xfcd34d });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 1.85;
+        head.castShadow = true;
+        skaterGroup.add(head);
+
+        // Legs
+        const legGeo = new THREE.BoxGeometry(0.3, 0.9, 0.3);
+        const legMat = new THREE.MeshPhongMaterial({ color: 0x1f2937 });
+        const legL = new THREE.Mesh(legGeo, legMat);
+        legL.position.set(-0.25, 0.45, 0);
+        legL.castShadow = true;
+        skaterGroup.add(legL);
+        const legR = new THREE.Mesh(legGeo, legMat);
+        legR.position.set(0.25, 0.45, 0);
+        legR.castShadow = true;
+        skaterGroup.add(legR);
+
+        skaterGroup.position.set(0, 0.25, 0); // on top of board
+        boardGroup.add(skaterGroup);
+
+        boardGroup.position.set(0, 0, 0);
+        scene.add(boardGroup);
+
+        // Game state
+        const state = {
+            velocity: 0,
+            rotation: 0,
+            yVelocity: 0,
+            isJumping: false,
+            score: 0,
+            flipSpin: 0,
+            shuvitSpin: 0,
+            isBailing: false,
+            bailTimer: 0,
+            currentTrick: null,
+            comboPoints: 0
+        };
+
+        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false };
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (key === ' ') keys.space = true;
+            else if (keys.hasOwnProperty(key)) keys[key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (key === ' ') keys.space = false;
+            else if (keys.hasOwnProperty(key)) keys[key] = false;
+        });
+
+        function showTrick(name, pts) {
+            state.comboPoints += pts;
+            state.currentTrick = name;
+            const td = document.getElementById('trick-display');
+            td.innerText = `${name}! +${pts}`;
+            td.style.opacity = 1;
+        }
+
+        function finishLanding() {
+            // Check bail
+            if (state.flipSpin > 0 || state.shuvitSpin > 0) {
+                // BAIL!
+                state.isBailing = true;
+                state.bailTimer = 1.0;
+                document.getElementById('bail-display').style.opacity = 1;
+                
+                // Animate bail
+                skaterGroup.rotation.x = Math.PI / 2;
+                skaterGroup.position.y = -0.5;
+                state.velocity = 0;
+            } else {
+                // Landed successfully
+                state.score += state.comboPoints;
+                document.getElementById('score-display').innerText = `Score: ${state.score}`;
+                setTimeout(() => { document.getElementById('trick-display').style.opacity = 0; }, 1000);
+            }
+            state.comboPoints = 0;
+            state.currentTrick = null;
+        }
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            // Handle bailing wait
+            if (state.isBailing) {
+                state.bailTimer -= delta;
+                if (state.bailTimer <= 0) {
+                    state.isBailing = false;
+                    document.getElementById('bail-display').style.opacity = 0;
+                    document.getElementById('trick-display').style.opacity = 0;
+                    skaterGroup.rotation.x = 0;
+                    skaterGroup.position.y = 0.25;
+                    deckGroup.rotation.set(0,0,0);
+                    state.flipSpin = 0;
+                    state.shuvitSpin = 0;
+                }
+            } else {
+
+                // Movement logic
+                if (keys.w) state.velocity = Math.min(state.velocity + 20 * delta, 20);
+                else if (keys.s) state.velocity = Math.max(state.velocity - 20 * delta, -10);
+                else {
+                    // Friction
+                    if (state.velocity > 0) state.velocity = Math.max(state.velocity - 10 * delta, 0);
+                    if (state.velocity < 0) state.velocity = Math.min(state.velocity + 10 * delta, 0);
+                }
+
+                if (keys.a) state.rotation += 2 * delta;
+                if (keys.d) state.rotation -= 2 * delta;
+
+                boardGroup.rotation.y = state.rotation;
+                
+                // Move forward
+                boardGroup.position.x += Math.sin(state.rotation) * state.velocity * delta;
+                boardGroup.position.z += Math.cos(state.rotation) * state.velocity * delta;
+
+                // Simple collision detection with things like the ramp to ride up? 
+                // We'll trust manual space jumping for now.
+
+                // Jumping
+                if (keys.space && !state.isJumping) {
+                    state.yVelocity = 18; // higher ollie
+                    state.isJumping = true;
+                    showTrick('Ollie', 50);
+                }
+
+                if (state.isJumping) {
+                    // Tricks only when jumping
+                    if (keys.e && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                        state.flipSpin = Math.PI * 2;
+                        showTrick('Kickflip', 100);
+                    }
+                    if (keys.q && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                        state.flipSpin = -Math.PI * 2;
+                        showTrick('Heelflip', 100);
+                    }
+                    if (keys.r && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                        // Tre Flip
+                        state.flipSpin = Math.PI * 2;
+                        state.shuvitSpin = Math.PI * 2;
+                        showTrick('360 Flip', 300);
+                    }
+                    
+                    // Slides logic (just visuals and points if held)
+                    if (keys.t && state.currentTrick !== 'Board Slide') {
+                        deckGroup.rotation.y = Math.PI / 2;
+                        showTrick('Board Slide', 200);
+                    } else if (keys.y && state.currentTrick !== 'Blunt Slide') {
+                        deckGroup.rotation.x = -Math.PI / 4;
+                        showTrick('Blunt Slide', 250);
+                    }
+
+                    // Release slide keys
+                    if (!keys.t && state.currentTrick === 'Board Slide') {
+                        deckGroup.rotation.y = 0;
+                        state.currentTrick = null;
+                        document.getElementById('trick-display').style.opacity = 0;
+                    }
+                    if (!keys.y && state.currentTrick === 'Blunt Slide') {
+                        deckGroup.rotation.x = 0;
+                        state.currentTrick = null;
+                        document.getElementById('trick-display').style.opacity = 0;
+                    }
+
+                    // Apply gravity
+                    state.yVelocity -= 35 * delta;
+                    boardGroup.position.y += state.yVelocity * delta;
+
+                    // Animate flip spins
+                    if (state.flipSpin > 0) {
+                        const step = Math.min(Math.PI * 5 * delta, state.flipSpin); // slowed down flip
+                        deckGroup.rotation.z += step;
+                        state.flipSpin -= step;
+                    } else if (state.flipSpin < 0) {
+                        const step = Math.max(-Math.PI * 5 * delta, state.flipSpin);
+                        deckGroup.rotation.z += step;
+                        state.flipSpin -= step;
+                    }
+                    
+                    // Animate shuvit spins
+                    if (state.shuvitSpin > 0) {
+                        const step = Math.min(Math.PI * 5 * delta, state.shuvitSpin);
+                        deckGroup.rotation.y += step;
+                        state.shuvitSpin -= step;
+                    }
+
+                    if (boardGroup.position.y <= 0) {
+                        boardGroup.position.y = 0;
+                        state.isJumping = false;
+                        state.yVelocity = 0;
+                        deckGroup.rotation.set(0,0,0);
+                        
+                        finishLanding();
+                    }
+                }
+            }
+
+            // Camera follow
+            const idealOffset = new THREE.Vector3(0, 5, -10);
+            idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.rotation);
+            idealOffset.add(boardGroup.position);
+            
+            camera.position.lerp(idealOffset, 0.1);
+            camera.lookAt(boardGroup.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+    </script>
+</body>
+</html>
