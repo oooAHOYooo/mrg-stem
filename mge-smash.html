@@ -382,7 +382,7 @@
 
         .code-container {
             position: fixed;
-            right: 1rem;
+            left: 1rem;
             top: 4.5rem;
             bottom: 12rem;
             width: 380px;
@@ -521,6 +521,35 @@
             }
         }
 
+        .smash-ready-notification {
+            position: fixed;
+            top: 50%;
+            left: 5rem;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffeb3b;
+            text-shadow: 0 0 10px rgba(255, 235, 59, 0.8);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid #ffeb3b;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .smash-ready-notification.show {
+            opacity: 1;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            0% { transform: translate(-20px, -50%); opacity: 0; }
+            100% { transform: translate(0, -50%); opacity: 1; }
+        }
+
         .match-score {
             position: fixed;
             top: 0.5rem;
@@ -635,6 +664,7 @@
         </div>
 
         <div class="combo-display" id="combo-display"></div>
+        <div class="smash-ready-notification" id="smash-ready-node">FINAL SMASH READY!</div>
 
         <div class="game-over" id="game-over">
             <h2 id="winner-text">Player 1 Wins!</h2>
@@ -1690,13 +1720,13 @@
 
         function spawnSmashBall() {
             if (smashBall) return;
-            const geometry = new THREE.SphereGeometry(1.2, 32, 32);
+            const geometry = new THREE.SphereGeometry(0.5, 16, 16);
             const material = new THREE.MeshStandardMaterial({
                 color: 0xffffff,
                 emissive: 0xffffff,
-                emissiveIntensity: 0.9,
+                emissiveIntensity: 0.6,
                 transparent: true,
-                opacity: 0.9,
+                opacity: 0.7,
                 wireframe: true
             });
             const ball = new THREE.Mesh(geometry, material);
@@ -1704,12 +1734,13 @@
             const coreMaterial = new THREE.MeshStandardMaterial({
                 color: 0xffeb3b,
                 emissive: 0xff8800,
-                emissiveIntensity: 1
+                emissiveIntensity: 0.8
             });
-            const core = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), coreMaterial);
+            const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), coreMaterial);
             ball.add(core);
 
-            ball.position.set(0, 8, 0);
+            // Spawn mostly on the left to avoid overriding right side visuals
+            ball.position.set(-6, 8, 0);
             ball.velocity = {x: (Math.random() > 0.5 ? 1 : -1) * 0.05, y: -0.05};
             ball.hp = SMASH_BALL_HP;
             scene.add(ball);
@@ -1721,7 +1752,7 @@
             smashBall.position.x += smashBall.velocity.x;
             smashBall.position.y += smashBall.velocity.y;
             
-            if (smashBall.position.x > 15 || smashBall.position.x < -15) smashBall.velocity.x *= -1;
+            if (smashBall.position.x > 0 || smashBall.position.x < -14) smashBall.velocity.x *= -1; // Keep left
             if (smashBall.position.y > 10 || smashBall.position.y < 2) smashBall.velocity.y *= -1;
             
             smashBall.rotation.x += 0.02;
@@ -1739,13 +1770,12 @@
                 createDeathEffect(smashBall.position, 0xffeb3b);
                 scene.remove(smashBall);
                 smashBall = null;
-                screenShake(0.5);
+                screenShake(0.3);
                 
-                const comboDisplay = document.getElementById('combo-display');
-                comboDisplay.textContent = `FINAL SMASH READY!`;
-                comboDisplay.style.color = attackerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
-                comboDisplay.classList.add('show');
-                setTimeout(() => comboDisplay.classList.remove('show'), 2000);
+                const smashNode = document.getElementById('smash-ready-node');
+                smashNode.style.borderColor = attackerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
+                smashNode.classList.add('show');
+                setTimeout(() => smashNode.classList.remove('show'), 3000);
             }
         }
 

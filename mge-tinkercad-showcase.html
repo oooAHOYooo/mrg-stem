@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinkercad Virtual Showcase - Mr. Gonzalez Experiments</title>
+    <!-- Using Three.js and necessary loaders -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            color: white;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .drop-zone {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            max-width: 600px;
+            padding: 3rem 2rem;
+            background: rgba(20, 30, 48, 0.7);
+            backdrop-filter: blur(20px);
+            border: 3px dashed rgba(78, 205, 196, 0.5);
+            border-radius: 24px;
+            text-align: center;
+            pointer-events: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 rgba(78, 205, 196, 0);
+        }
+
+        .drop-zone.active {
+            border-color: #4ecdc4;
+            background: rgba(20, 30, 48, 0.9);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(78, 205, 196, 0.3);
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .drop-zone.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+
+        .drop-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(78, 205, 196, 0.5));
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .drop-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #4ecdc4, #556270);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .drop-subtitle {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+        }
+
+        .supported-formats {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .format-badge {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #4ecdc4;
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            display: flex;
+            gap: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .controls-hint.visible {
+            opacity: 1;
+        }
+
+        .hint-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #cbd5e0;
+        }
+
+        .hint-icon {
+            font-size: 1.2rem;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(78, 205, 196, 0.3);
+            border-top-color: #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #inventory {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            width: 300px;
+            background: rgba(20, 30, 48, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            max-height: calc(100vh - 3rem);
+            overflow-y: auto;
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.5s ease;
+        }
+
+        #inventory.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        #inventory h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            color: #4ecdc4;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .inventory-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(78, 205, 196, 0.5);
+        }
+        
+        .inventory-item.selected {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .item-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+        
+        .delete-btn {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .theme-switcher {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            pointer-events: auto;
+        }
+
+        .theme-btn {
+            background: rgba(20, 30, 48, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+            transform: translateY(-2px);
+        }
+
+        /* Material / Color picker */
+        .color-picker-container {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        .color-picker-container.active {
+            display: block;
+        }
+        
+        .color-options {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-dot:hover {
+            transform: scale(1.2);
+        }
+        
+        .color-dot.active {
+            border-color: white;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <a href="index.html" class="back-button">← Back to Menu</a>
+
+        <div id="drop-zone" class="drop-zone">
+            <span class="drop-icon">🧊</span>
+            <h1 class="drop-title">My 3D Gallery</h1>
+            <p class="drop-subtitle" style="font-size: 1.5rem; font-weight: bold; color: white;">Click the big button or drag your file here!</p>
+            <button onclick="document.getElementById('file-input').click()" style="background: #4ecdc4; border: none; padding: 1.5rem 3rem; border-radius: 20px; font-size: 1.5rem; font-weight: bold; color: #1a1a2e; cursor: pointer; margin-bottom: 1.5rem; box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4); pointer-events: auto;">👆 CLICK TO ADD 3D MODEL</button>
+            <input type="file" id="file-input" style="display: none;" accept=".obj,.gltf,.glb,.stl" multiple />
+            
+            <div class="supported-formats">
+                <span class="format-badge" style="font-size: 1.1rem; padding: 0.75rem 1.5rem;">Works with Tinkercad files! (.STL, .OBJ)</span>
+            </div>
+        </div>
+
+        <div id="inventory">
+            <h3>Showcase Items (<span id="item-count">0</span>)</h3>
+            <div id="inventory-list">
+                <!-- Items added dynamically -->
+            </div>
+            
+            <div id="color-picker-container" class="color-picker-container">
+                <p style="font-size: 0.8rem; color: #a0aec0; margin-bottom: 0.5rem;">Material Color</p>
+                <div class="color-options" id="color-options">
+                    <!-- Colors added dynamically -->
+                </div>
+                
+                <p style="font-size: 0.8rem; color: #a0aec0; margin-top: 1rem; margin-bottom: 0.5rem;">Material Type</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="theme-btn" id="mat-standard" style="border-radius: 8px; width: auto; padding: 0 10px; font-size: 0.8rem;">Matte</button>
+                    <button class="theme-btn" id="mat-metal" style="border-radius: 8px; width: auto; padding: 0 10px; font-size: 0.8rem;">Metal</button>
+                    <button class="theme-btn" id="mat-glass" style="border-radius: 8px; width: auto; padding: 0 10px; font-size: 0.8rem;">Glass</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-hint" id="controls-hint">
+            <div class="hint-item">
+                <span class="hint-icon">🖱️</span> Left Click: Rotate
+            </div>
+            <div class="hint-item">
+                <span class="hint-icon">⚖️</span> Right Click: Pan
+            </div>
+            <div class="hint-item">
+                <span class="hint-icon">🔍</span> Scroll: Zoom
+            </div>
+        </div>
+
+        <div class="theme-switcher">
+            <div class="theme-btn active" data-theme="dark" title="Dark Gallery">🌙</div>
+            <div class="theme-btn" data-theme="light" title="Light Studio">☀️</div>
+            <div class="theme-btn" data-theme="neon" title="Neon Grid">⚡</div>
+        </div>
+
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <h2 id="loading-text">Loading Model...</h2>
+        </div>
+    </div>
+
+    <script>
+        // --- SCENE SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        // Base fog for depth
+        scene.fog = new THREE.FogExp2(0x090a0f, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0, 15, 30);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; // Don't allow going too far below the floor
+        controls.minDistance = 5;
+        controls.maxDistance = 100;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.0;
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 100;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        scene.add(dirLight);
+        
+        const spotLight = new THREE.SpotLight(0x4ecdc4, 2);
+        spotLight.position.set(0, 30, 0);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.5;
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+        
+        const spotLight2 = new THREE.SpotLight(0xff6b6b, 1.5);
+        spotLight2.position.set(-15, 10, -15);
+        spotLight2.angle = Math.PI / 4;
+        spotLight2.penumbra = 0.5;
+        scene.add(spotLight2);
+
+        // --- ENVIRONMENT ---
+        // Grid helper
+        const gridHelper = new THREE.GridHelper(100, 100, 0x4ecdc4, 0xffffff);
+        gridHelper.material.opacity = 0.1;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // Floor
+        const floorGeometry = new THREE.PlaneGeometry(200, 200);
+        const floorMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x111111,
+            roughness: 0.1,
+            metalness: 0.5
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+        
+        // Pedestals group
+        const pedestalsGroup = new THREE.Group();
+        scene.add(pedestalsGroup);
+
+        // --- STATE & UTILS ---
+        const loadedModels = [];
+        let modelCount = 0;
+        let selectedModelId = null;
+        
+        const materials = {
+            standard: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0.1 }),
+            metal: new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.9 }),
+            glass: new THREE.MeshPhysicalMaterial({ 
+                color: 0xffffff, 
+                metalness: 0, 
+                roughness: 0, 
+                transmission: 0.9, 
+                thickness: 0.5,
+                ior: 1.5
+            })
+        };
+        
+        const colorPalette = [
+            0xffffff, 0xff6b6b, 0x4ecdc4, 0xfeca57, 
+            0x5f27cd, 0x01a3a4, 0xff9f43, 0x8395a7,
+            0x2e86de, 0x10ac84, 0xee5253, 0x222f3e
+        ];
+
+        // Layout variables
+        const layoutRadius = 12;
+        
+        // --- DRAG & DROP LOGIC ---
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const inventoryList = document.getElementById('inventory-list');
+        const inventoryNode = document.getElementById('inventory');
+        const controlsHint = document.getElementById('controls-hint');
+        
+        // Click to browse
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
+        });
+
+        // Drag events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, preventDefaults, false);
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            window.addEventListener(eventName, () => {
+                if(modelCount === 0 || dropZone.classList.contains('hidden')) {
+                     // We don't want the drop zone showing up if they've already imported stuff, 
+                     // but we do want to capture the drop anywhere on the window.
+                } else {
+                    dropZone.classList.add('active');
+                }
+            }, false);
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('active');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('active');
+            }, false);
+            window.addEventListener(eventName, () => {
+                dropZone.classList.remove('active');
+            }, false);
+        });
+
+        window.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            
+            if (files && files.length > 0) {
+                handleFiles(files);
+            }
+        }, false);
+
+        // --- FILE PROCESSING ---
+        function handleFiles(files) {
+            dropZone.classList.add('hidden');
+            loadingOverlay.classList.add('visible');
+            controlsHint.classList.add('visible');
+            inventoryNode.classList.add('visible');
+            
+            // Allow them to drag anywhere to add more once they have initialized it
+            
+            Array.from(files).forEach((file, index) => {
+                const extension = file.name.split('.').pop().toLowerCase();
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const contents = e.target.result;
+                    processModel(contents, extension, file.name);
+                };
+
+                // Read as ArrayBuffer for binary formats (GLB, STL, sometimes OBJ is text though)
+                if (extension === 'glb' || extension === 'stl') {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    // For OBJ and GLTF usually string or array buffer, GLTFLoader can take Data URI or parse
+                    // Actually, easiest is to read all as ArrayBuffer and pass it if we have to, 
+                    // or for GLTF/OBJ we can use URL.createObjectURL
+                    const url = URL.createObjectURL(file);
+                    loadModelFromUrl(url, extension, file.name);
+                }
+            });
+        }
+        
+        function loadModelFromUrl(url, extension, fileName) {
+            if (extension === 'obj') {
+                const loader = new THREE.OBJLoader();
+                loader.load(url, (object) => {
+                    finalizeModel(object, fileName);
+                    URL.revokeObjectURL(url);
+                });
+            } else if (extension === 'gltf' || extension === 'glb') {
+                const loader = new THREE.GLTFLoader();
+                loader.load(url, (gltf) => {
+                    finalizeModel(gltf.scene, fileName);
+                    URL.revokeObjectURL(url);
+                });
+            }
+        }
+
+        function processModel(contents, extension, fileName) {
+            if (extension === 'stl') {
+                const loader = new THREE.STLLoader();
+                try {
+                    const geometry = loader.parse(contents);
+                    geometry.center(); // Center the geometry
+                    geometry.computeVertexNormals();
+                    
+                    // Assign random beautiful color from palette
+                    const rColor = colorPalette[modelCount % colorPalette.length];
+                    const material = new THREE.MeshStandardMaterial({ 
+                        color: rColor, 
+                        roughness: 0.3,
+                        metalness: 0.2
+                    });
+                    
+                    const mesh = new THREE.Mesh(geometry, material);
+                    finalizeModel(mesh, fileName);
+                } catch(e) {
+                    console.error("Error parsing STL", e);
+                    loadingOverlay.classList.remove('visible');
+                }
+            } else if (extension === 'glb') {
+                const loader = new THREE.GLTFLoader();
+                loader.parse(contents, '', (gltf) => {
+                    finalizeModel(gltf.scene, fileName);
+                });
+            }
+        }
+
+        function finalizeModel(object, fileName) {
+            // Traverse to setup shadows & normalize size
+            let box = new THREE.Box3().setFromObject(object);
+            let size = box.getSize(new THREE.Vector3());
+            
+            // Get max dimension
+            const maxDim = Math.max(size.x, size.y, size.z);
+            
+            // Target size is around 4 units
+            const targetSize = 4.0;
+            const scale = targetSize / maxDim;
+            object.scale.set(scale, scale, scale);
+            
+            // Recalculate box after scale to center it properly
+            box.setFromObject(object);
+            const center = box.getCenter(new THREE.Vector3());
+            const bottomY = box.min.y;
+            
+            // Center the object internally inside a wrapper group
+            const wrapper = new THREE.Group();
+            
+            object.position.x = -center.x;
+            object.position.z = -center.z;
+            object.position.y = -bottomY + 1; // +1 to sit on pedestal
+            
+            // Assign shadows
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    // Ensure materials have correct properties
+                    if(child.material) {
+                        // Just copy it to make it unique so we can edit colors later without affecting others
+                        child.material = child.material.clone();
+                    }
+                }
+            });
+
+            wrapper.add(object);
+            
+            const modelId = `model_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            wrapper.userData = { id: modelId, name: fileName, originalObject: object };
+            
+            // Create a pedestal for the model
+            createPedestal(wrapper);
+            
+            scene.add(wrapper);
+            loadedModels.push(wrapper);
+            modelCount++;
+            
+            arrangeModels();
+            updateInventory();
+            selectModel(modelId);
+            
+            loadingOverlay.classList.remove('visible');
+        }
+
+        function createPedestal(wrapper) {
+            // Pedestal base
+            const geom = new THREE.CylinderGeometry(3, 3.5, 1, 32);
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: 0x222222, 
+                roughness: 0.8,
+                metalness: 0.5
+            });
+            const pedestal = new THREE.Mesh(geom, mat);
+            pedestal.position.y = 0.5;
+            pedestal.receiveShadow = true;
+            pedestal.castShadow = true;
+            
+            // Emissive ring
+            const ringGeom = new THREE.TorusGeometry(3.1, 0.05, 16, 100);
+            const ringMat = new THREE.MeshStandardMaterial({ 
+                color: 0x4ecdc4,
+                emissive: 0x4ecdc4,
+                emissiveIntensity: 2
+            });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            ring.position.y = 1;
+            ring.rotation.x = Math.PI / 2;
+            
+            wrapper.add(pedestal);
+            wrapper.add(ring);
+            
+            wrapper.userData.ring = ring;
+        }
+
+        function arrangeModels() {
+            if (modelCount === 0) return;
+            
+            if (modelCount === 1) {
+                // Center it
+                loadedModels[0].position.set(0, 0, 0);
+            } else {
+                // Arrange in a circle
+                const activeRadius = Math.max(layoutRadius, modelCount * 2.5);
+                const angleStep = (Math.PI * 2) / modelCount;
+                
+                loadedModels.forEach((model, index) => {
+                    const angle = index * angleStep;
+                    const targetX = Math.cos(angle) * activeRadius;
+                    const targetZ = Math.sin(angle) * activeRadius;
+                    
+                    // Simple animation to position
+                    // In a full app we'd use GSAP, here we'll just snap and look at center
+                    model.position.set(targetX, 0, targetZ);
+                    
+                    // Look towards center but only on Y axis
+                    model.lookAt(0, model.position.y, 0);
+                });
+                
+                // Adjust camera if too many items
+                if(modelCount > 4) {
+                    camera.position.z = activeRadius + 20;
+                    camera.position.y = 15 + (modelCount * 0.5);
+                }
+            }
+        }
+
+        // --- UI & INVENTORY ---
+        function updateInventory() {
+            document.getElementById('item-count').textContent = modelCount;
+            inventoryList.innerHTML = '';
+            
+            loadedModels.forEach(model => {
+                const data = model.userData;
+                const el = document.createElement('div');
+                el.className = `inventory-item ${data.id === selectedModelId ? 'selected' : ''}`;
+                el.onclick = () => selectModel(data.id);
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'item-name';
+                nameSpan.textContent = data.name;
+                
+                const delBtn = document.createElement('div');
+                delBtn.innerHTML = '✕';
+                delBtn.className = 'delete-btn';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteModel(data.id);
+                };
+                
+                el.appendChild(nameSpan);
+                el.appendChild(delBtn);
+                inventoryList.appendChild(el);
+            });
+        }
+        
+        function selectModel(id) {
+            selectedModelId = id;
+            updateInventory(); // updates UI highlight
+            
+            // Highlight ring in 3D scene and focus camera
+            loadedModels.forEach(model => {
+                if(model.userData.id === id) {
+                    model.userData.ring.material.color.setHex(0xff6b6b);
+                    model.userData.ring.material.emissive.setHex(0xff6b6b);
+                    
+                    // Show color picker
+                    document.getElementById('color-picker-container').classList.add('active');
+                    
+                    // Optional: orbit camera slowly towards it
+                    // Simple snap:
+                    // controls.target.copy(model.position);
+                } else {
+                    model.userData.ring.material.color.setHex(0x4ecdc4);
+                    model.userData.ring.material.emissive.setHex(0x4ecdc4);
+                }
+            });
+        }
+        
+        function deleteModel(id) {
+            const index = loadedModels.findIndex(m => m.userData.id === id);
+            if(index > -1) {
+                const model = loadedModels[index];
+                scene.remove(model);
+                loadedModels.splice(index, 1);
+                modelCount--;
+                
+                if(selectedModelId === id) {
+                    selectedModelId = null;
+                    document.getElementById('color-picker-container').classList.remove('active');
+                }
+                
+                arrangeModels();
+                updateInventory();
+                
+                if(modelCount === 0) {
+                    dropZone.classList.remove('hidden');
+                    inventoryNode.classList.remove('visible');
+                    controlsHint.classList.remove('visible');
+                    // Reset camera
+                    camera.position.set(0, 15, 30);
+                    controls.target.set(0, 0, 0);
+                } else if (!selectedModelId && modelCount > 0) {
+                    selectModel(loadedModels[0].userData.id);
+                }
+            }
+        }
+
+        // Generate Color Picker
+        const colorOptionsContainer = document.getElementById('color-options');
+        colorPalette.forEach((color, idx) => {
+            const dot = document.createElement('div');
+            dot.className = 'color-dot';
+            dot.style.backgroundColor = '#' + color.toString(16).padStart(6, '0');
+            dot.onclick = () => applyColorToSelected(color, dot);
+            colorOptionsContainer.appendChild(dot);
+        });
+        
+        function applyColorToSelected(colorHex, dotEl) {
+            // Update UI
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            if(dotEl) dotEl.classList.add('active');
+            
+            if(!selectedModelId) return;
+            const model = loadedModels.find(m => m.userData.id === selectedModelId);
+            if(model) {
+                model.userData.originalObject.traverse(child => {
+                    if(child.isMesh && child.material) {
+                        child.material.color.setHex(colorHex);
+                    }
+                });
+            }
+        }
+        
+        // Material Pickers
+        document.getElementById('mat-standard').onclick = () => applyMaterialToSelected('standard');
+        document.getElementById('mat-metal').onclick = () => applyMaterialToSelected('metal');
+        document.getElementById('mat-glass').onclick = () => applyMaterialToSelected('glass');
+        
+        function applyMaterialToSelected(type) {
+            if(!selectedModelId) return;
+            const model = loadedModels.find(m => m.userData.id === selectedModelId);
+            if(model) {
+                const matTemplate = materials[type];
+                model.userData.originalObject.traverse(child => {
+                    if(child.isMesh && child.material) {
+                        const currentColor = child.material.color.clone();
+                        // Assign new material while keeping color
+                        child.material = matTemplate.clone();
+                        child.material.color.copy(currentColor);
+                    }
+                });
+            }
+        }
+
+        // --- THEME SWITCHER ---
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update UI
+                document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const theme = btn.getAttribute('data-theme');
+                applyTheme(theme);
+            });
+        });
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                scene.background = null;
+                scene.fog.color.setHex(0x090a0f);
+                scene.fog.density = 0.015;
+                document.body.style.background = 'radial-gradient(circle at center, #1b2735 0%, #090a0f 100%)';
+                ambientLight.intensity = 0.4;
+                dirLight.intensity = 1;
+                floor.material.color.setHex(0x111111);
+                gridHelper.material.opacity = 0.1;
+                gridHelper.material.color.setHex(0x4ecdc4);
+            } else if (theme === 'light') {
+                scene.background = new THREE.Color(0xf0f4f8);
+                scene.fog.color.setHex(0xf0f4f8);
+                scene.fog.density = 0.005;
+                document.body.style.background = '#f0f4f8';
+                ambientLight.intensity = 0.8;
+                dirLight.intensity = 0.8;
+                floor.material.color.setHex(0xdddddd);
+                gridHelper.material.opacity = 0.2;
+                gridHelper.material.color.setHex(0x000000);
+            } else if (theme === 'neon') {
+                scene.background = new THREE.Color(0x000000);
+                scene.fog.color.setHex(0x000000);
+                scene.fog.density = 0.02;
+                document.body.style.background = '#000000';
+                ambientLight.intensity = 0.2;
+                dirLight.intensity = 0.5;
+                floor.material.color.setHex(0x000000);
+                gridHelper.material.opacity = 0.4;
+                gridHelper.material.color.setHex(0xff00ff); // Magenta grid
+            }
+        }
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = clock.getElapsedTime();
+
+            controls.update();
+            
+            // Slowly rotate floating objects slightly
+            loadedModels.forEach((model, index) => {
+                // model.rotation.y += 0.005; // Base rotation
+                
+                // Add gentle float
+                model.userData.originalObject.position.y += Math.sin(time * 2 + index) * 0.001;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // --- RESIZE HANDLER ---
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Hide hint after 10 seconds
+        setTimeout(() => {
+            if(controlsHint.classList.contains('visible')) {
+                controlsHint.style.opacity = '0';
+                setTimeout(() => controlsHint.classList.remove('visible'), 500);
+            }
+        }, 10000);
+
+    </script>
+</body>
+
+</html>

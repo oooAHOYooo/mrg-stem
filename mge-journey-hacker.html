@@ -1172,6 +1172,10 @@
             document.getElementById('vibe-editor').style.display = 'none';
             vibeMode = false;
             document.getElementById('console-output').innerHTML = '';
+            
+            log('RESTARTING GAME LOOP PROTOCOL... (REINICIANDO PROTOCOLO DE BUCLE DE JUEGO...)', '#0ff');
+            log('AUTOMATICALLY LOADING NEXT TEMPLATE. (CARGANDO AUTOMÁTICAMENTE LA SIGUIENTE PLANTILLA.)', '#0ff');
+            
             inputEl.value = '';
             mashingTriggered = false;
             isAutoLoadingTerminal = false;
@@ -1233,16 +1237,19 @@
         }
 
         function startVibeGameTimer() {
-            let timeLeft = 10;
+            let timeLeft = 60;
+            log('GAME LOADED. SYSTEM WILL RESTART IN 1 MINUTE! (JUEGO CARGADO. ¡EL SISTEMA SE REINICIARÁ EN 1 MINUTO!)', '#0f0');
+            log('ENJOY THE GAME WHILE THE BIG COUNTDOWN RUNS. (DISFRUTA EL JUEGO MIENTRAS CORRE LA GRAN CUENTA REGRESIVA.)', '#ff0');
             const timerEl = document.createElement('div');
             timerEl.id = 'vibe-game-timer';
             timerEl.style.position = 'absolute';
-            timerEl.style.top = '10px';
-            timerEl.style.right = '20px';
-            timerEl.style.fontSize = '4rem';
+            timerEl.style.top = '20px';
+            timerEl.style.right = '40px';
+            timerEl.style.fontSize = '8rem';
             timerEl.style.color = '#f0f';
             timerEl.style.fontWeight = 'bold';
-            timerEl.style.textShadow = '0 0 20px #f0f';
+            timerEl.style.textShadow = '0 0 40px #f0f';
+            timerEl.style.pointerEvents = 'none';
             timerEl.style.zIndex = '3000';
             timerEl.innerText = timeLeft;
             
@@ -1257,6 +1264,12 @@
                 timeLeft--;
                 if (timeLeft > 0) {
                     timerEl.innerText = timeLeft;
+                    if (timeLeft === 30) {
+                        log('30 SECONDS UNTIL RESTART. (30 SEGUNDOS HASTA EL REINICIO.)', '#ff0');
+                    }
+                    if (timeLeft === 10) {
+                        log('10 SECONDS! PREPARE FOR RESTART. (¡10 SEGUNDOS! PREPÁRESE PARA EL REINICIO.)', '#f00');
+                    }
                 } else {
                     clearInterval(vibeGameTimerInterval);
                     timerEl.remove();
