@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MGE - Minecraft Clone</title>
+    <title>MGE - Mr Gonzalez Craft</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
         #blocker {
             position: absolute;
             width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
         }
         #instructions {
             width: 100%; height: 100%;
@@ -17,8 +18,8 @@
             color: white; text-align: center;
             cursor: pointer;
         }
-        #instructions h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);}
-        #instructions p { font-size: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        #instructions h1 { font-size: 56px; font-weight: 800; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); color: #4ecdc4;}
+        #instructions p { font-size: 20px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); margin: 5px 0;}
         #crosshair {
             position: absolute;
             top: 50%; left: 50%;
@@ -66,6 +67,43 @@
             border-color: white;
             transform: scale(1.15);
         }
+        
+        #boss-health-container {
+            display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
+            width: 500px; background: rgba(0,0,0,0.6); border: 3px solid #ff6b6b; height: 36px; 
+            border-radius: 18px; overflow: hidden; z-index: 100; box-shadow: 0 0 15px #ff6b6b;
+        }
+        #boss-health-bar {
+            width: 100%; height: 100%; background: linear-gradient(90deg, #dc2626, #ef4444); 
+            transition: width 0.3s ease;
+        }
+        #boss-health-text {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            text-align: center; line-height: 36px; color: white; font-weight: 800; 
+            text-shadow: 1px 1px 2px black; font-size: 18px;
+        }
+        
+        #fly-status {
+            position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); 
+            color: #34d399; font-weight: 900; font-size: 24px; display: none; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 100;
+        }
+        
+        #riddle-container {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: rgba(15, 23, 42, 0.95); padding: 40px; border-radius: 20px; 
+            border: 2px solid #a78bfa; color: white; text-align: center; z-index: 2000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 80%; max-width: 600px;
+        }
+        #riddle-question { font-size: 24px; margin-bottom: 30px; line-height: 1.4; color: #e0e7ff;}
+        #riddle-options { display: flex; flex-direction: column; gap: 15px; }
+        .riddle-btn {
+            background: rgba(255,255,255,0.1); border: 2px solid #a78bfa; color: white;
+            padding: 15px; border-radius: 10px; font-size: 18px; cursor: pointer;
+            transition: all 0.2s; font-weight: 600;
+        }
+        .riddle-btn:hover { background: #a78bfa; color: white; transform: scale(1.02); }
+        .riddle-info { color: #f472b6; margin-top: 20px; font-weight: bold; }
     </style>
     <!-- Import map for Three.js -->
     <script type="importmap">
@@ -79,13 +117,28 @@
 </head>
 <body>
     <a href="mge.html" class="back-btn">⬅️ Back to Dashboard</a>
+    
+    <div id="boss-health-container">
+        <div id="boss-health-bar"></div>
+        <div id="boss-health-text">MR GONZALEZ (ROBOT)</div>
+    </div>
+    
+    <div id="fly-status">🦅 FLY MODE ACTIVE</div>
+
+    <div id="riddle-container">
+        <h2 id="riddle-question">Question</h2>
+        <div id="riddle-options"></div>
+        <div class="riddle-info" id="riddle-info"></div>
+    </div>
+
     <div id="blocker">
         <div id="instructions">
-            <h1>MGE Minecraft Clone</h1>
-            <p><strong>WASD</strong> to move around</p>
-            <p><strong>SPACE</strong> to jump</p>
+            <h1>Mr Gonzalez Craft</h1>
+            <p><strong>WASD</strong> to move around | <strong>SPACE</strong> to jump</p>
+            <p><strong>F</strong> to toggle Fly Mode (Shift to go down)</p>
             <p><strong>Left Click</strong> to break blocks | <strong>Right Click (or E)</strong> to place blocks</p>
-            <p style="margin-top: 20px; font-weight: bold; color: #4ecdc4;">Click Anywhere to Start Play</p>
+            <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">Target the Giant Robot and click to fight!</p>
+            <p style="margin-top: 30px; font-weight: 800; font-size: 24px; color: #4ecdc4; animation: pulse 2s infinite;">Click Anywhere to Start Play</p>
         </div>
     </div>
     <div id="crosshair">十</div>
@@ -104,7 +157,7 @@
         // Setup scene
         const scene = new THREE.Scene();
         scene.background = new THREE.Color( 0x87CEEB ); // Sky blue
-        scene.fog = new THREE.FogExp2( 0x87CEEB, 0.005 );
+        scene.fog = new THREE.FogExp2( 0x87CEEB, 0.003 );
 
         // Setup camera
         const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -123,19 +176,28 @@
         
         const blocker = document.getElementById( 'blocker' );
         const instructions = document.getElementById( 'instructions' );
+        const flyStatus = document.getElementById( 'fly-status' );
+        
+        let inMenu = true;
 
         instructions.addEventListener( 'click', function () {
-            controls.lock();
+            if(!document.getElementById('riddle-container').style.display || document.getElementById('riddle-container').style.display === 'none') {
+                controls.lock();
+            }
         } );
 
         controls.addEventListener( 'lock', function () {
             instructions.style.display = 'none';
             blocker.style.display = 'none';
+            inMenu = false;
         } );
 
         controls.addEventListener( 'unlock', function () {
-            blocker.style.display = 'block';
-            instructions.style.display = '';
+            if(!inRiddle) {
+                blocker.style.display = 'block';
+                instructions.style.display = 'flex';
+                inMenu = true;
+            }
         } );
 
         scene.add( controls.getObject() );
@@ -160,7 +222,6 @@
 
         // Objects (voxels)
         const objects = [];
-        const textureLoader = new THREE.TextureLoader();
         
         // Basic Box Geometry
         const boxGeometry = new THREE.BoxGeometry( 5, 5, 5 );
@@ -202,9 +263,7 @@
         });
 
         const getMaterial = (colorValue) => {
-            return new THREE.MeshLambertMaterial({ 
-                color: colorValue
-            });
+            return new THREE.MeshLambertMaterial({ color: colorValue });
         };
 
         // Add some random blocks
@@ -212,7 +271,6 @@
             const mat = getMaterial(colors[Math.floor(Math.random() * colors.length)]);
             const box = new THREE.Mesh( boxGeometry, mat );
             
-            // Edges logic
             const edges = new THREE.EdgesGeometry( boxGeometry );
             const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
             box.add( line );
@@ -225,8 +283,169 @@
             scene.add( box );
             objects.push( box );
         }
+        
+        // --- MR GONZALEZ ROBOT BOSS ---
+        let bossHealth = 100;
+        let isBossDefeated = false;
+        
+        const bossGroup = new THREE.Group();
+        bossGroup.position.set(0, 0, -60);
+        scene.add(bossGroup);
+        
+        const robotMat = new THREE.MeshLambertMaterial({color: 0xe2e8f0, wireframe: false});
+        const robotMetalMat = new THREE.MeshLambertMaterial({color: 0x94a3b8});
+        const robotAccentMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); // blue
+        
+        // Body
+        const bossBody = new THREE.Mesh(new THREE.BoxGeometry(20, 30, 15), robotMat);
+        bossBody.position.y = 25;
+        bossBody.castShadow = true;
+        bossGroup.add(bossBody);
+        
+        // Head
+        const bossHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), robotMetalMat);
+        bossHead.position.y = 50;
+        bossHead.castShadow = true;
+        bossGroup.add(bossHead);
+        
+        // Eyes
+        const eyeMat = new THREE.MeshBasicMaterial({color: 0xef4444}); // glowing red
+        const leftEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
+        leftEye.position.set(-4, 52, 8);
+        bossGroup.add(leftEye);
+        const rightEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
+        rightEye.position.set(4, 52, 8);
+        bossGroup.add(rightEye);
+        
+        // Arms
+        const leftArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
+        leftArm.position.set(-15, 25, 0);
+        bossGroup.add(leftArm);
+        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
+        rightArm.position.set(15, 25, 0);
+        bossGroup.add(rightArm);
+        
+        // Legs
+        const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
+        leftLeg.position.set(-6, 7.5, 0);
+        bossGroup.add(leftLeg);
+        const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
+        rightLeg.position.set(6, 7.5, 0);
+        bossGroup.add(rightLeg);
+        
+        // Hitbox for the boss (invisible)
+        const bossHitbox = new THREE.Mesh(new THREE.BoxGeometry(40, 60, 40), new THREE.MeshBasicMaterial({visible: false}));
+        bossHitbox.position.y = 30;
+        bossGroup.add(bossHitbox);
+        
+        document.getElementById('boss-health-container').style.display = 'block';
 
-        // Raycaster for placing/breaking blocks
+        // --- RIDDLES LOGIC ---
+        const riddles = [
+            { q: "Computers use me to remember data temporarily while working. Turn power off, and I forget everything. What am I?", opts: ["CPU", "Hard Drive", "RAM", "GPU"], a: 2 },
+            { q: "I have no physical form, yet I control everything the computer does. I am the set of instructions. What am I?", opts: ["Hardware", "Software", "Monitor", "Keyboard"], a: 1 },
+            { q: "What does HTML stand for?", opts: ["HyperText Markup Language", "Hyperlinks and Text Markup Language", "Home Tool Markup Language", "Hyper Tool Multi Language"], a: 0 },
+            { q: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?", opts: ["An echo", "A ghost", "A cloud", "The ocean"], a: 0 },
+            { q: "In programming, I am a set of rules for solving a problem in a finite number of steps.", opts: ["Variable", "Bug", "Algorithm", "Condition"], a: 2 },
+            { q: "If you want to style an HTML element to be red, what technology should you use?", opts: ["JavaScript", "Python", "CSS", "MySQL"], a: 2 },
+            { q: "I am a single step of a 3D coordinate system (x, y, z). What am I?", opts: ["Pixel", "Voxel", "Vector", "Ray"], a: 1 }
+        ];
+        
+        let inRiddle = false;
+        let currentRiddle = null;
+        
+        const riddleContainer = document.getElementById('riddle-container');
+        const riddleQuestion = document.getElementById('riddle-question');
+        const riddleOptions = document.getElementById('riddle-options');
+        const riddleInfo = document.getElementById('riddle-info');
+        
+        function openRiddle() {
+            if(isBossDefeated || inRiddle) return;
+            
+            controls.unlock();
+            
+            setTimeout(() => {
+                inRiddle = true;
+                inMenu = true;
+                document.getElementById('blocker').style.display = 'block';
+                document.getElementById('instructions').style.display = 'none';
+                
+                riddleContainer.style.display = 'block';
+                riddleInfo.textContent = "";
+                
+                // Pick random riddle
+                currentRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+                
+                riddleQuestion.textContent = currentRiddle.q;
+                riddleOptions.innerHTML = '';
+                
+                currentRiddle.opts.forEach((opt, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'riddle-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => checkAnswer(index);
+                    riddleOptions.appendChild(btn);
+                });
+            }, 100);
+        }
+        
+        function closeRiddle() {
+            riddleContainer.style.display = 'none';
+            inRiddle = false;
+            inMenu = false;
+            document.getElementById('blocker').style.display = 'none';
+            controls.lock();
+        }
+        
+        function checkAnswer(index) {
+            if(index === currentRiddle.a) {
+                // Correct
+                riddleInfo.style.color = "#34d399";
+                riddleInfo.textContent = "CORRECT! You dealt 25 damage to the Robot!";
+                damageBoss(25);
+                setTimeout(closeRiddle, 1500);
+            } else {
+                // Incorrect
+                riddleInfo.style.color = "#ef4444";
+                riddleInfo.textContent = "INCORRECT! System Error. Try again in a moment.";
+                setTimeout(closeRiddle, 2000);
+            }
+        }
+        
+        function damageBoss(amount) {
+            bossHealth -= amount;
+            if(bossHealth < 0) bossHealth = 0;
+            document.getElementById('boss-health-bar').style.width = bossHealth + '%';
+            
+            // Flash boss red
+            bossBody.material.color.setHex(0xff0000);
+            bossHead.material.color.setHex(0xff0000);
+            setTimeout(() => {
+                if(!isBossDefeated) {
+                    bossBody.material.color.setHex(0xe2e8f0);
+                    bossHead.material.color.setHex(0x94a3b8);
+                }
+            }, 300);
+            
+            if(bossHealth <= 0) {
+                defeatBoss();
+            }
+        }
+        
+        function defeatBoss() {
+            isBossDefeated = true;
+            document.getElementById('boss-health-text').textContent = "MR GONZALEZ (DEFEATED)";
+            
+            // Breakdown boss
+            setInterval(() => {
+                bossGroup.position.y -= 1;
+                bossGroup.rotation.z += 0.05;
+                if(bossGroup.position.y < -50) bossGroup.visible = false;
+            }, 50);
+        }
+
+
+        // Raycaster for placing/breaking blocks and checking boss
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2(0, 0); // Always center
 
@@ -237,10 +456,7 @@
             if ( intersects.length > 0 ) {
                 const intersect = intersects[ 0 ];
                 
-                // create box
                 const voxel = new THREE.Mesh( boxGeometry, getMaterial(currentColor) );
-                
-                // add edges
                 const edges = new THREE.EdgesGeometry( boxGeometry );
                 const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
                 voxel.add( line );
@@ -256,6 +472,18 @@
 
         const breakBlock = () => {
             if (!controls.isLocked) return;
+            
+            // First check boss interaction
+            if(!isBossDefeated) {
+                raycaster.setFromCamera( mouse, camera );
+                const bIntersects = raycaster.intersectObject( bossHitbox );
+                if(bIntersects.length > 0 && bIntersects[0].distance < 30) {
+                    openRiddle();
+                    return; // Prevent breaking block behind boss
+                }
+            }
+            
+            // Then check blocks
             raycaster.setFromCamera( mouse, camera );
             const intersects = raycaster.intersectObjects( objects, false );
             if ( intersects.length > 0 ) {
@@ -281,13 +509,18 @@
         let moveBackward = false;
         let moveLeft = false;
         let moveRight = false;
+        let moveUp = false;
+        let moveDown = false;
+        
         let canJump = false;
+        let isFlyMode = false;
 
         let prevTime = performance.now();
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
         const onKeyDown = function ( event ) {
+            if(inMenu || inRiddle) return;
             switch ( event.code ) {
                 case 'ArrowUp':
                 case 'KeyW':
@@ -306,8 +539,26 @@
                     moveRight = true;
                     break;
                 case 'Space':
-                    if ( canJump === true ) velocity.y += 120; // Jump force
-                    canJump = false;
+                    if(isFlyMode) {
+                        moveUp = true;
+                    } else if ( canJump === true ) {
+                        velocity.y += 120; // Jump force
+                        canJump = false;
+                    }
+                    break;
+                case 'ShiftLeft':
+                case 'ShiftRight':
+                    moveDown = true;
+                    break;
+                case 'KeyF':
+                    isFlyMode = !isFlyMode;
+                    if(isFlyMode) {
+                        flyStatus.style.display = 'block';
+                        velocity.y = 0; // stop falling instantly when entering fly mode
+                        canJump = false;
+                    } else {
+                        flyStatus.style.display = 'none';
+                    }
                     break;
             }
         };
@@ -330,6 +581,13 @@
                 case 'KeyD':
                     moveRight = false;
                     break;
+                case 'Space':
+                    moveUp = false;
+                    break;
+                case 'ShiftLeft':
+                case 'ShiftRight':
+                    moveDown = false;
+                    break;
             }
         };
 
@@ -347,11 +605,28 @@
 
             const time = performance.now();
 
+            // Hover boss logic
+            if(!isBossDefeated) {
+                // simple idle hover animation for boss arms
+                leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
+                rightArm.rotation.x = -Math.sin(time * 0.003) * 0.2;
+                bossHead.rotation.y = Math.sin(time * 0.001) * 0.2;
+            }
+
             if ( controls.isLocked === true ) {
                 // Update raycaster for block preview
                 raycaster.setFromCamera( mouse, camera );
                 const intersects = raycaster.intersectObjects( objects, false );
-                if ( intersects.length > 0 ) {
+                
+                let isLookingAtBoss = false;
+                if(!isBossDefeated) {
+                    const bIntersects = raycaster.intersectObject( bossHitbox );
+                    if(bIntersects.length > 0 && bIntersects[0].distance < 30) {
+                        isLookingAtBoss = true;
+                    }
+                }
+                
+                if ( !isLookingAtBoss && intersects.length > 0 ) {
                     const intersect = intersects[ 0 ];
                     rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
                     rollOverMesh.position.divideScalar( 5 ).floor().multiplyScalar( 5 ).addScalar( 2.5 );
@@ -361,18 +636,24 @@
                     rollOverMesh.visible = false;
                 }
 
+                if(isLookingAtBoss) {
+                    document.getElementById('crosshair').style.color = 'red';
+                    document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1.5)';
+                } else {
+                    document.getElementById('crosshair').style.color = 'white';
+                    document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1)';
+                }
+
                 const delta = ( time - prevTime ) / 1000;
 
                 velocity.x -= velocity.x * 10.0 * delta;
                 velocity.z -= velocity.z * 10.0 * delta;
 
-                velocity.y -= 9.8 * 60.0 * delta; // 60.0 = gravity multiplier
-
                 direction.z = Number( moveForward ) - Number( moveBackward );
                 direction.x = Number( moveRight ) - Number( moveLeft );
                 direction.normalize(); // this ensures consistent movements in all directions
 
-                const speed = 250.0;
+                const speed = isFlyMode ? 400.0 : 250.0;
 
                 if ( moveForward || moveBackward ) velocity.z -= direction.z * speed * delta;
                 if ( moveLeft || moveRight ) velocity.x -= direction.x * speed * delta;
@@ -380,13 +661,24 @@
                 controls.moveRight( - velocity.x * delta );
                 controls.moveForward( - velocity.z * delta );
 
-                controls.getObject().position.y += ( velocity.y * delta );
+                if(isFlyMode) {
+                    // Fly logic
+                    velocity.y -= velocity.y * 10.0 * delta; // damp
+                    const upSpeed = 250.0;
+                    if(moveUp) velocity.y += upSpeed * delta;
+                    if(moveDown) velocity.y -= upSpeed * delta;
+                    controls.getObject().position.y += ( velocity.y * delta );
+                } else {
+                    // Gravity logic
+                    velocity.y -= 9.8 * 60.0 * delta; // 60.0 = gravity multiplier
+                    controls.getObject().position.y += ( velocity.y * delta );
 
-                // Collision with floor (y < 10 since eye height is 10)
-                if ( controls.getObject().position.y < 10 ) {
-                    velocity.y = 0;
-                    controls.getObject().position.y = 10;
-                    canJump = true;
+                    // Collision with floor (y < 10 since eye height is 10)
+                    if ( controls.getObject().position.y < 10 ) {
+                        velocity.y = 0;
+                        controls.getObject().position.y = 10;
+                        canJump = true;
+                    }
                 }
             }
 
