@@ -158,6 +158,12 @@
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
         }
+
+        #bg-image {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: url("https://mrg-stem.netlify.app/static/imgs/mrg-stem-hd.png") center/cover no-repeat;
+            opacity: 0.15; z-index: -1; pointer-events: none;
+        }
     </style>
     <!-- Import map for Three.js -->
     <script type="importmap">
@@ -169,7 +175,8 @@
         }
     </script>
 </head>
-<body>
+<body style="background-color: #87CEEB;">
+    <div id="bg-image"></div>
     <a href="mge.html" class="back-btn">⬅️ Back to Dashboard</a>
     
     <div id="boss-health-container">
@@ -232,7 +239,6 @@
 
         // Setup scene
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color( 0x87CEEB ); // Sky blue
         scene.fog = new THREE.FogExp2( 0x87CEEB, 0.003 );
 
         // Setup camera
@@ -240,7 +246,7 @@
         camera.position.y = 10;
 
         // Setup renderer
-        const renderer = new THREE.WebGLRenderer( { antialias: true, powerPreference: "high-performance" } );
+        const renderer = new THREE.WebGLRenderer( { antialias: true, powerPreference: "high-performance", alpha: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         renderer.shadowMap.enabled = true;
