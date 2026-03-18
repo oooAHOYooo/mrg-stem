@@ -376,7 +376,7 @@
                 <span>Talk to the Robot! 🤖</span>
             </div>
             <div class="code-area">
-                <textarea id="prompt-input" placeholder="Type a magic command here! Try 'make a fighting arena', 'add a geometry dash level', or 'make it bounce' 🪄"></textarea>
+                <textarea id="prompt-input" placeholder="Type a magic command or a number from 1 to 8! 🪄"></textarea>
                 <div class="run-controls">
                     <span class="hint">Press Shift+Enter or click the button</span>
                     <button class="btn btn-primary" id="btn-submit">Build It! ⚡</button>
@@ -458,10 +458,16 @@
             addMessage(`
                 <strong>Beep Boop! Hello there, young Creator! 🎮✨</strong><br><br>
                 I am your super-smart AI robot friend. I can help you build awesome games quickly in the window on the right!<br><br>
-                Try typing some fun magic commands to make a fighting game or a Geometry Dash style level:<br>
-                <blockquote>create a fighting arena</blockquote>
-                <blockquote>add a geometry dash obstacle</blockquote>
-                <blockquote>make the player bounce</blockquote>
+                Type a number from <strong>1 to 8</strong> to build your game step-by-step, or type your own magic commands!<br><br>
+                <strong>My Toy Box Menu:</strong><br>
+                1️⃣ Create a World 🌍<br>
+                2️⃣ Add a Player 🟦<br>
+                3️⃣ Add an Enemy/Obstacle 🟥<br>
+                4️⃣ Add a Goal 🌟<br>
+                5️⃣ Make it Jump 🦘<br>
+                6️⃣ Make it Spin 🌪️<br>
+                7️⃣ Make Fighting Arena 🥊<br>
+                8️⃣ Make Geometry Dash 🟩
             `);
         }, 500);
 
@@ -527,7 +533,24 @@
         // === PSEUDO-LLM PARSER ===
         // This simulates an LLM parsing text commands to execute Three.js code
         function parseCommand(cmd) {
-            const lowerCmd = cmd.toLowerCase();
+            let lowerCmd = cmd.toLowerCase().trim();
+            
+            // Map options 1-8 to commands
+            const optionMap = {
+                '1': 'create a floor',
+                '2': 'add a blue cube',
+                '3': 'add a red cube',
+                '4': 'add a yellow sphere',
+                '5': 'make it bounce',
+                '6': 'make it spin',
+                '7': 'make a fighting arena',
+                '8': 'geometry dash'
+            };
+            
+            if (optionMap[lowerCmd]) {
+                lowerCmd = optionMap[lowerCmd];
+            }
+
             let response = "";
             let somethingHappened = false;
 
