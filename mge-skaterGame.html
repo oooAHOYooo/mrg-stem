@@ -120,6 +120,17 @@
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
+
+        #timer-display {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffe66d;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
         
         #trick-display {
             position: fixed;
@@ -158,6 +169,7 @@
         <div class="title">🛹 SKATERGAME 🛹</div>
         
         <div id="score-display">Score: 0</div>
+        <div id="timer-display">Time: 60</div>
         <div id="trick-display">Kickflip! +100</div>
         <div id="bail-display">BAIL!</div>
 
@@ -170,6 +182,7 @@
                 <strong>R</strong> - 360 Flip (Tre Flip)<br>
                 <strong>T</strong> - Board Slide (Hold in air)<br>
                 <strong>Y</strong> - Blunt Slide (Hold in air)<br>
+                <strong>C / V</strong> - Set Mark / Go to Mark<br>
             </div>
         </div>
     </div>
@@ -204,12 +217,14 @@
         scene.add(dirLight);
 
         // Ground
+        const collidables = [];
         const groundGeo = new THREE.PlaneGeometry(200, 200);
         const groundMat = new THREE.MeshPhongMaterial({ color: 0x555555 });
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         scene.add(ground);
+        collidables.push(ground);
 
         // Grid helper for looks
         const grid = new THREE.GridHelper(200, 40, 0x000000, 0x000000);
@@ -228,6 +243,7 @@
             ramp.castShadow = true;
             ramp.receiveShadow = true;
             scene.add(ramp);
+            collidables.push(ramp);
         }
 
         createRamp(0, -20, 0);
@@ -273,6 +289,7 @@
             hpGroup.position.set(x, 0, z);
             hpGroup.rotation.y = rotationY;
             scene.add(hpGroup);
+            collidables.push(hpGroup);
         }
         
         createHalfpipe(40, 0, 0);
@@ -284,6 +301,7 @@
         ledge.castShadow = true;
         ledge.receiveShadow = true;
         scene.add(ledge);
+        collidables.push(ledge);
 
         // Skateboarder (represented by a simple board + humanoid)
         const boardGroup = new THREE.Group();
@@ -364,15 +382,30 @@
             isBailing: false,
             bailTimer: 0,
             currentTrick: null,
-            comboPoints: 0
+            comboPoints: 0,
+            timeLeft: 60,
+            markPosition: new THREE.Vector3(0, 0, 0),
+            markRotation: 0
         };
 
-        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false };
+        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false };
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (key === ' ') keys.space = true;
             else if (keys.hasOwnProperty(key)) keys[key] = true;
+
+            if (key === 'c') {
+                state.markPosition.copy(boardGroup.position);
+                state.markRotation = state.rotation;
+                const td = document.getElementById('trick-display');
+                td.innerText = "Mark Set!";
+                td.style.opacity = 1;
+                setTimeout(() => { td.style.opacity = 0; }, 1000);
+            }
+            if (key === 'v') {
+                teleportToMark();
+            }
         });
 
         window.addEventListener('keyup', (e) => {
@@ -380,6 +413,25 @@
             if (key === ' ') keys.space = false;
             else if (keys.hasOwnProperty(key)) keys[key] = false;
         });
+
+        function teleportToMark() {
+            boardGroup.position.copy(state.markPosition);
+            state.rotation = state.markRotation;
+            boardGroup.rotation.y = state.rotation;
+            state.velocity = 0;
+            state.yVelocity = 0;
+            state.isJumping = false;
+            state.isBailing = false;
+            state.flipSpin = 0;
+            state.shuvitSpin = 0;
+            deckGroup.rotation.set(0,0,0);
+            skaterGroup.rotation.x = 0;
+            skaterGroup.position.y = 0.25;
+            document.getElementById('bail-display').style.opacity = 0;
+            document.getElementById('trick-display').style.opacity = 0;
+            state.currentTrick = null;
+            state.comboPoints = 0;
+        }
 
         function showTrick(name, pts) {
             state.comboPoints += pts;
@@ -396,6 +448,11 @@
                 state.isBailing = true;
                 state.bailTimer = 1.0;
                 document.getElementById('bail-display').style.opacity = 1;
+
+                // Instantly teleport on bad landing after short delay or immediately
+                setTimeout(() => {
+                    teleportToMark();
+                }, 500);
                 
                 // Animate bail
                 skaterGroup.rotation.x = Math.PI / 2;
@@ -416,6 +473,18 @@
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
+
+            // Handle timer
+            if (state.timeLeft > 0) {
+                state.timeLeft -= delta;
+                if (state.timeLeft <= 0) {
+                    state.timeLeft = 60;
+                    state.score = 0;
+                    document.getElementById('score-display').innerText = `Score: ${state.score}`;
+                    teleportToMark(); // Reset position
+                }
+                document.getElementById('timer-display').innerText = `Time: ${Math.ceil(state.timeLeft)}`;
+            }
 
             // Handle bailing wait
             if (state.isBailing) {
@@ -450,12 +519,29 @@
                 boardGroup.position.x += Math.sin(state.rotation) * state.velocity * delta;
                 boardGroup.position.z += Math.cos(state.rotation) * state.velocity * delta;
 
-                // Simple collision detection with things like the ramp to ride up? 
-                // We'll trust manual space jumping for now.
+                // Raycast downwards to find surface height
+                const raycaster = new THREE.Raycaster(new THREE.Vector3(boardGroup.position.x, boardGroup.position.y + 10, boardGroup.position.z), new THREE.Vector3(0, -1, 0));
+                const intersects = raycaster.intersectObjects(collidables, true);
+                let targetY = 0;
+                if (intersects.length > 0) {
+                    targetY = intersects[0].point.y;
+                }
+
+                if (!state.isJumping) {
+                    if (boardGroup.position.y > targetY + 0.2) {
+                        // Went off an edge, so start falling
+                        state.isJumping = true;
+                        state.yVelocity = 0;
+                    } else {
+                        // Stick to surface
+                        boardGroup.position.y = targetY;
+                    }
+                }
 
                 // Jumping
                 if (keys.space && !state.isJumping) {
-                    state.yVelocity = 18; // higher ollie
+                    // Slight boost to normal horizontal velocity could happen, but we'll do yVelocity
+                    state.yVelocity = 20; // higher ollie for ramps
                     state.isJumping = true;
                     showTrick('Ollie', 50);
                 }
@@ -520,8 +606,8 @@
                         state.shuvitSpin -= step;
                     }
 
-                    if (boardGroup.position.y <= 0) {
-                        boardGroup.position.y = 0;
+                    if (boardGroup.position.y <= targetY && state.yVelocity <= 0) {
+                        boardGroup.position.y = targetY;
                         state.isJumping = false;
                         state.yVelocity = 0;
                         deckGroup.rotation.set(0,0,0);

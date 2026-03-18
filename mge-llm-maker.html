@@ -467,7 +467,8 @@
                 5️⃣ Make it Jump 🦘<br>
                 6️⃣ Make it Spin 🌪️<br>
                 7️⃣ Make Fighting Arena 🥊<br>
-                8️⃣ Make Geometry Dash 🟩
+                8️⃣ Make Geometry Dash 🟩<br><br>
+                <em>Pro Tip: You can type "add 1p controls" or "add 2player controls" to move your characters!</em>
             `);
         }, 500);
 
@@ -503,6 +504,13 @@
 
         // Animated Objects tracking
         let animObjects = [];
+        let player1 = null;
+        let player2 = null;
+        let controlMode = 0; // 0: none, 1: 1P, 2: 2P
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
         // Animation Loop
         function animate() {
@@ -519,6 +527,22 @@
                     obj.rotation.y += 0.02;
                 }
             });
+
+            // Player Controls
+            if (controlMode >= 1 && player1) {
+                const speed = 0.1;
+                if (keys['w']) player1.position.z -= speed;
+                if (keys['s']) player1.position.z += speed;
+                if (keys['a']) player1.position.x -= speed;
+                if (keys['d']) player1.position.x += speed;
+            }
+            if (controlMode === 2 && player2) {
+                const speed = 0.1;
+                if (keys['arrowup']) player2.position.z -= speed;
+                if (keys['arrowdown']) player2.position.z += speed;
+                if (keys['arrowleft']) player2.position.x -= speed;
+                if (keys['arrowright']) player2.position.x += speed;
+            }
 
             renderer.render(scene, camera);
         }
@@ -537,14 +561,14 @@
             
             // Map options 1-8 to commands
             const optionMap = {
-                '1': 'create a floor',
-                '2': 'add a blue cube',
-                '3': 'add a red cube',
-                '4': 'add a yellow sphere',
-                '5': 'make it bounce',
+                '1': 'create a world',
+                '2': 'add a player',
+                '3': 'add an enemy',
+                '4': 'add a goal',
+                '5': 'make it jump',
                 '6': 'make it spin',
                 '7': 'make a fighting arena',
-                '8': 'geometry dash'
+                '8': 'make geometry dash'
             };
             
             if (optionMap[lowerCmd]) {
@@ -570,8 +594,40 @@
                 }
             }
 
-            // Object Creation
-            if (lowerCmd.includes('cube') || lowerCmd.includes('box')) {
+            // Object Creation - Specific Tutorial Setup
+            if (lowerCmd.includes('player') && !lowerCmd.includes('control') && !lowerCmd.includes('2')) {
+                const geometry = new THREE.BoxGeometry(2, 2, 2);
+                const cube = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+                cube.position.set(-2, 1, 0);
+                cube.castShadow = true;
+                cube.userData = { baseY: 1 };
+                scene.add(cube);
+                player1 = cube;
+                animObjects.push(cube);
+                response += "Poof! Added a Player (Blue). 🟦 ";
+                somethingHappened = true;
+            } else if (lowerCmd.includes('enemy') || (lowerCmd.includes('obstacle') && !lowerCmd.includes('dash'))) {
+                const geometry = new THREE.BoxGeometry(2, 2, 2);
+                const cube = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                cube.position.set(2, 1, 0);
+                cube.castShadow = true;
+                cube.userData = { baseY: 1 };
+                scene.add(cube);
+                player2 = cube;
+                animObjects.push(cube);
+                response += "Poof! Added an Enemy/Obstacle (Red). 🟥 ";
+                somethingHappened = true;
+            } else if (lowerCmd.includes('goal')) {
+                const geometry = new THREE.SphereGeometry(1.5, 32, 32);
+                const sphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xeab308, emissive: 0xeab308, emissiveIntensity: 0.5 }));
+                sphere.position.set(0, 1.5, -5);
+                sphere.castShadow = true;
+                sphere.userData = { baseY: 1.5 };
+                scene.add(sphere);
+                animObjects.push(sphere);
+                response += "Wow! Added a glowing Goal! 🌟 ";
+                somethingHappened = true;
+            } else if (lowerCmd.includes('cube') || lowerCmd.includes('box')) {
                 const geometry = new THREE.BoxGeometry(2, 2, 2);
                 const material = new THREE.MeshStandardMaterial({ color: chosenColor, roughness: 0.2, metalness: 0.1 });
                 const cube = new THREE.Mesh(geometry, material);
@@ -600,7 +656,7 @@
                 somethingHappened = true;
             }
 
-            if (lowerCmd.includes('floor') || lowerCmd.includes('ground')) {
+            if (lowerCmd.includes('floor') || lowerCmd.includes('ground') || lowerCmd.includes('world')) {
                 const geometry = new THREE.PlaneGeometry(30, 30);
                 const material = new THREE.MeshStandardMaterial({ 
                     color: chosenColor === 0xffffff ? 0x1f2937 : chosenColor, 
@@ -610,7 +666,19 @@
                 plane.rotation.x = -Math.PI / 2;
                 plane.receiveShadow = true;
                 scene.add(plane);
-                response += "Bam! Added a solid floor to stand on. 🧱 ";
+                response += "Bam! Added a solid blocky world floor! 🧱 ";
+                somethingHappened = true;
+            }
+
+            // Controls Setup
+            if (lowerCmd.includes('1p') || (lowerCmd.includes('1') && lowerCmd.includes('control')) || (lowerCmd.includes('player control') && !lowerCmd.includes('2'))) {
+                controlMode = 1;
+                response += "Activated 1-Player controls! Use W, A, S, D to move! 🎮 ";
+                somethingHappened = true;
+            }
+            if (lowerCmd.includes('2p') || (lowerCmd.includes('2') && lowerCmd.includes('control'))) {
+                controlMode = 2;
+                response += "Activated 2-Player controls! P1 uses W/A/S/D. P2 uses Arrow Keys! 🎮 ";
                 somethingHappened = true;
             }
 
@@ -651,36 +719,43 @@
                 fighter1.position.set(-5, 2, 0);
                 fighter1.castShadow = true;
                 scene.add(fighter1);
+                player1 = fighter1;
 
                 const fighter2 = new THREE.Mesh(boxGeo, new THREE.MeshStandardMaterial({color: 0xeab308}));
                 fighter2.position.set(5, 2, 0);
                 fighter2.castShadow = true;
                 scene.add(fighter2);
+                player2 = fighter2;
 
-                response += "Boom! Set up a basic fighting arena with two players! 🥊 ";
+                controlMode = 2;
+
+                response += "Boom! Set up a basic fighting arena with 2-Player controls ON! 🥊 ";
                 somethingHappened = true;
             }
 
-            if (lowerCmd.includes('geometry dash') || lowerCmd.includes('obstacle') || lowerCmd.includes('dash')) {
+            if (lowerCmd.includes('geometry dash') || lowerCmd.includes('dash')) {
                 const geometry = new THREE.BoxGeometry(2, 2, 2);
                 const cube = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xfb923c }));
                 cube.position.set(4, 1, 0);
                 cube.castShadow = true;
                 scene.add(cube);
                 
-                const player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
-                player.position.set(-6, 0.5, 0);
-                player.castShadow = true;
-                player.userData = { baseY: 0.5 };
-                scene.add(player);
-                animObjects.push(player);
+                const gPlayer = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
+                gPlayer.position.set(-6, 0.5, 0);
+                gPlayer.castShadow = true;
+                gPlayer.userData = { baseY: 0.5 };
+                scene.add(gPlayer);
+                animObjects.push(gPlayer);
+                player1 = gPlayer;
 
                 const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
                 floor.rotation.x = -Math.PI / 2;
                 floor.receiveShadow = true;
                 scene.add(floor);
 
-                response += "Zap! Created a Geometry Dash style level! Use 'make it bounce' to jump! 🟩 ";
+                controlMode = 1;
+
+                response += "Zap! Created a Geometry Dash style level! 1P controls ON! Use 'make it bounce' to jump! 🟩 ";
                 somethingHappened = true;
             }
             
