@@ -550,6 +550,35 @@
             100% { transform: translate(0, -50%); opacity: 1; }
         }
 
+        .env-notification {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: 3px solid white;
+            z-index: 45;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .env-notification.show {
+            opacity: 1;
+            animation: envSlideDown 0.5s ease;
+        }
+
+        @keyframes envSlideDown {
+            0% { transform: translate(-50%, -100%); opacity: 0; }
+            100% { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
         .match-score {
             position: fixed;
             top: 0.5rem;
@@ -665,6 +694,7 @@
 
         <div class="combo-display" id="combo-display"></div>
         <div class="smash-ready-notification" id="smash-ready-node">FINAL SMASH READY!</div>
+        <div class="env-notification" id="env-notification">ENVIRONMENT SHIFT:</div>
 
         <div class="game-over" id="game-over">
             <h2 id="winner-text">Player 1 Wins!</h2>
@@ -758,6 +788,23 @@
         let currentMatch = 1;
         let matchEnded = false;
         let powerups = [];
+        
+        // Environment variables
+        let pLight1, pLight2;
+        let mainParticleMaterial;
+        let currentEnvIndex = 0;
+        let targetEnv = null;
+        let envTransitionProgress = 1;
+
+        const ENVIRONMENTS = [
+            { name: "Deep Space", bg: 0x0a0a1a, light1: 0xff6b6b, light2: 0x4ecdc4, pColor: 0x9c27b0 },
+            { name: "Lava Core", bg: 0x2e0a0a, light1: 0xff4500, light2: 0xffd700, pColor: 0xff8800 },
+            { name: "Toxic Zone", bg: 0x051a05, light1: 0x00ff00, light2: 0x008800, pColor: 0x00ff00 },
+            { name: "Neon City", bg: 0x1a0a2e, light1: 0xff00ff, light2: 0x00ffff, pColor: 0xff00ff },
+            { name: "Glacier Peak", bg: 0x0a1a2e, light1: 0x88ccff, light2: 0xffffff, pColor: 0xffffff },
+            { name: "Quantum Realm", bg: 0x000000, light1: 0xffffff, light2: 0xaaaaaa, pColor: 0xcccccc }
+        ];
+
         let powerupSpawnTimer = 0;
         let lastHitTime = { p1: 0, p2: 0 };
         let comboCount = { p1: 0, p2: 0 };
@@ -908,13 +955,13 @@
             scene.add(directionalLight);
 
             // Colored lights for atmosphere
-            const light1 = new THREE.PointLight(0xff6b6b, 1, 30);
-            light1.position.set(-5, 5, 0);
-            scene.add(light1);
+            pLight1 = new THREE.PointLight(0xff6b6b, 1, 30);
+            pLight1.position.set(-5, 5, 0);
+            scene.add(pLight1);
 
-            const light2 = new THREE.PointLight(0x4ecdc4, 1, 30);
-            light2.position.set(5, 5, 0);
-            scene.add(light2);
+            pLight2 = new THREE.PointLight(0x4ecdc4, 1, 30);
+            pLight2.position.set(5, 5, 0);
+            scene.add(pLight2);
 
             // Platform
             const platformGeometry = new THREE.BoxGeometry(20, 1, 10);
@@ -1106,13 +1153,13 @@
                 positions[i + 2] = (Math.random() - 0.5) * 50;
             }
             particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const particleMaterial = new THREE.PointsMaterial({
+            mainParticleMaterial = new THREE.PointsMaterial({
                 color: 0x9c27b0,
                 size: 0.1,
                 transparent: true,
                 opacity: 0.6
             });
-            const particleSystem = new THREE.Points(particles, particleMaterial);
+            const particleSystem = new THREE.Points(particles, mainParticleMaterial);
             scene.add(particleSystem);
 
             // 3D Background Objects (Non-interactive)
@@ -1335,6 +1382,7 @@
                     // Create death explosion effect
                     createDeathEffect(player.position, player.color);
                     screenShake(0.3);
+                    triggerBackgroundEvent();
                     checkGameOver();
                 }
             }
@@ -2112,6 +2160,72 @@
             }
         }
 
+        function triggerBackgroundEvent() {
+            currentEnvIndex = (currentEnvIndex + 1) % ENVIRONMENTS.length;
+            const env = ENVIRONMENTS[currentEnvIndex];
+
+            targetEnv = env;
+            envTransitionProgress = 0;
+
+            // Make background elements go crazy for a bit
+            backgroundObjects.forEach(obj => {
+                // Massive rotation burst
+                obj.userData.spinBurst = 0.5 + Math.random() * 0.5;
+                // Move them to a new random position quickly
+                obj.userData.targetPosition = new THREE.Vector3(
+                    (Math.random() - 0.5) * 60,
+                    Math.random() * 30 - 5,
+                    (Math.random() - 0.5) * 40 - 20
+                );
+                // Change their material color to match the environment
+                if (obj.material) {
+                    obj.material.color.setHex(env.pColor);
+                    obj.material.emissive.setHex(env.pColor);
+                }
+            });
+
+            // Flash the whole screen or create a massive explosion in background
+            const flash = new THREE.Mesh(
+                new THREE.PlaneGeometry(200, 200),
+                new THREE.MeshBasicMaterial({ color: env.bg, transparent: true, opacity: 0.8 })
+            );
+            flash.position.z = -30;
+            scene.add(flash);
+            
+            let fade = 0;
+            const fadeAnim = () => {
+                fade += 0.05;
+                flash.material.opacity = 0.8 - fade;
+                if (flash.material.opacity > 0) {
+                    requestAnimationFrame(fadeAnim);
+                } else {
+                    scene.remove(flash);
+                }
+            };
+            fadeAnim();
+            
+            showEnvironmentNotification(env.name);
+        }
+
+        function showEnvironmentNotification(name) {
+            let notif = document.getElementById('env-notification');
+            notif.innerHTML = `ENVIRONMENT SHIFT: ${name}`;
+            notif.style.borderColor = '#' + ENVIRONMENTS[currentEnvIndex].light1.toString(16).padStart(6, '0');
+            notif.style.color = '#' + ENVIRONMENTS[currentEnvIndex].light2.toString(16).padStart(6, '0');
+            
+            // Remove 'show' if it's there to re-trigger animation
+            notif.classList.remove('show');
+            // Force reflow
+            void notif.offsetWidth;
+            notif.classList.add('show');
+            
+            setTimeout(() => {
+                if(notif.classList.contains('show')) {
+                    notif.classList.remove('show');
+                }
+            }, 3000);
+        }
+
         function updateGameCode() {
             if (!gameRunning) return;
             const now = Date.now();
@@ -2123,6 +2237,7 @@
 
         function endMatchByTime() {
             matchEnded = true;
+            triggerBackgroundEvent();
             if (p1CodeLines > p2CodeLines) {
                 matchScore.p1++;
                 endMatch(`P1 Coded More! (${p1CodeLines} lines)`, false);
@@ -2358,12 +2473,41 @@
         function animate() {
             requestAnimationFrame(animate);
 
+            if (targetEnv && envTransitionProgress < 1) {
+                envTransitionProgress += 0.02;
+                if (envTransitionProgress > 1) envTransitionProgress = 1;
+                
+                // Lerp scene background and fog
+                scene.background.lerp(new THREE.Color(targetEnv.bg), 0.1);
+                scene.fog.color.lerp(new THREE.Color(targetEnv.bg), 0.1);
+                
+                pLight1.color.lerp(new THREE.Color(targetEnv.light1), 0.1);
+                pLight2.color.lerp(new THREE.Color(targetEnv.light2), 0.1);
+                mainParticleMaterial.color.lerp(new THREE.Color(targetEnv.pColor), 0.1);
+            }
+
             // Update background objects
             backgroundObjects.forEach(obj => {
-                obj.rotation.x += obj.userData.rotationSpeed.x;
-                obj.rotation.y += obj.userData.rotationSpeed.y;
-                obj.rotation.z += obj.userData.rotationSpeed.z;
-                obj.position.y += Math.sin(Date.now() * obj.userData.floatSpeed + obj.userData.floatOffset) * 0.01;
+                if (obj.userData.spinBurst > 0) {
+                    obj.rotation.x += obj.userData.spinBurst;
+                    obj.rotation.y += obj.userData.spinBurst;
+                    obj.rotation.z += obj.userData.spinBurst;
+                    obj.userData.spinBurst *= 0.95; // Decay
+                    if (obj.userData.spinBurst < 0.01) obj.userData.spinBurst = 0;
+                } else {
+                    obj.rotation.x += obj.userData.rotationSpeed.x;
+                    obj.rotation.y += obj.userData.rotationSpeed.y;
+                    obj.rotation.z += obj.userData.rotationSpeed.z;
+                }
+                
+                if (obj.userData.targetPosition) {
+                    obj.position.lerp(obj.userData.targetPosition, 0.05);
+                    if (obj.position.distanceTo(obj.userData.targetPosition) < 0.5) {
+                        obj.userData.targetPosition = null;
+                    }
+                } else {
+                    obj.position.y += Math.sin(Date.now() * obj.userData.floatSpeed + obj.userData.floatOffset) * 0.01;
+                }
             });
 
             // Update floating facts

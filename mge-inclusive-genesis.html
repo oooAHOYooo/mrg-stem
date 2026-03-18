@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclusive Genesis - Sensory Friendly 3D Maker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --bg-panel: #1e1e1e;
+            --border-color: #333333;
+            --accent-primary: #ffb703; /* High contrast yellow */
+            --accent-secondary: #8ecae6; /* Soft blue */
+            --accent-warning: #fb8500; /* Distinct orange */
+            --text-main: #ffffff;
+            --text-dim: #cccccc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            /* Comic Neue is extremely readable and friendly for diverse learning needs */
+            font-family: 'Comic Neue', 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 18px; /* Larger base font size */
+        }
+
+        /* Top Nav */
+        .top-nav {
+            height: 70px;
+            background: #000000;
+            border-bottom: 3px solid var(--accent-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 10;
+        }
+
+        .nav-brand {
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1.2rem;
+        }
+
+        .btn {
+            background: #333333;
+            color: #ffffff;
+            border: 2px solid transparent;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-family: 'Comic Neue', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover, .btn:focus {
+            background: #444444;
+            border-color: #ffffff;
+            transform: scale(1.05);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: #000;
+            border: 2px solid #000;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background: #ffc233;
+            border-color: #ffffff;
+            color: #000;
+        }
+
+        /* 2x2 Grid Layout */
+        .workspace {
+            display: grid;
+            grid-template-columns: 40% 60%;
+            grid-template-rows: 55% 45%;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            flex: 1;
+            height: calc(100vh - 70px);
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border-radius: 16px;
+            border: 3px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .panel-header {
+            padding: 1rem 1.2rem;
+            background: #000000;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Top Left: Tutorial/Agent Dialog (Row 1, Col 1) */
+        .agent-view {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .chat-container {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1.2rem;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%; /* Make avatar more round and friendly */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--accent-primary);
+            flex-shrink: 0;
+            color: #000;
+            border: 2px solid #000;
+        }
+
+        .msg-content {
+            background: #2a2a2a;
+            padding: 1.2rem;
+            border-radius: 0 16px 16px 16px;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            flex: 1;
+            border: 2px solid #444;
+        }
+
+        /* Bottom Left: Coding / Prompt (Row 2, Col 1) */
+        .editor-view {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .code-area {
+            flex: 1;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-quick {
+            background: #3a3a3a;
+            border: 2px solid #555;
+            color: #fff;
+            padding: 0.6rem;
+            border-radius: 8px;
+            font-family: 'Comic Neue', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .btn-quick:hover, .btn-quick:focus {
+            background: var(--accent-secondary);
+            color: #000;
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+
+        textarea {
+            flex: 1;
+            background: #222;
+            border: 3px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--accent-primary);
+            font-family: 'Comic Neue', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 1.2rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-primary);
+            background: #111;
+        }
+
+        textarea::placeholder {
+            color: rgba(255,255,255,0.4);
+            font-weight: 400;
+        }
+
+        .run-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hint {
+            font-size: 1rem;
+            color: var(--text-dim);
+        }
+
+        /* Right Side: Preview Window (Row 1-2, Col 2) */
+        .preview-view {
+            grid-column: 2;
+            grid-row: 1 / 3;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Typing indicator */
+        .typing {
+            display: none;
+            gap: 0.5rem;
+            padding: 1rem;
+            align-items: center;
+        }
+
+        .typing.active {
+            display: flex;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        /* Modals */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--accent-primary);
+            color: #000;
+            padding: 1rem 2rem;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+            border: 3px solid #000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <span style="font-size: 2rem;">🌟</span> Inclusive Genesis
+        </div>
+        <div class="nav-actions">
+            <a href="mge.html" class="btn" style="text-decoration: none;">🏠 Hub</a>
+            <button class="btn btn-primary" id="btn-save">💾 Save Game</button>
+            <button class="btn" id="btn-load">📂 Load Game</button>
+        </div>
+    </nav>
+
+    <div class="workspace">
+        <!-- Top Left: Tutorial/Agent -->
+        <div class="panel agent-view">
+            <div class="panel-header">
+                <span>💬 Helper Robot</span>
+                <span style="background: #22c55e; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.9rem; color: #000;">Online</span>
+            </div>
+            <div class="chat-container" id="chat">
+                <!-- Messages will appear here -->
+            </div>
+            <div class="typing" id="typing-indicator">
+                <div class="avatar" style="width: 32px; height: 32px; font-size: 1rem;">🤖</div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <span style="font-size: 1.1rem; margin-left: 0.8rem; color: var(--accent-secondary); font-weight: bold;">Building... 🔨</span>
+            </div>
+        </div>
+
+        <!-- Bottom Left: Coding / Prompt -->
+        <div class="panel editor-view">
+            <div class="panel-header">
+                <span>⌨️ Magic Words Input</span>
+                <span>Click a button or type! ✨</span>
+            </div>
+            <div class="code-area">
+                <!-- Quick Visual Buttons for Accessibility -->
+                <div class="quick-buttons">
+                    <button class="btn-quick" onclick="insertPrompt('1')">1️⃣ World 🌍</button>
+                    <button class="btn-quick" onclick="insertPrompt('2')">2️⃣ Cube 🟦</button>
+                    <button class="btn-quick" onclick="insertPrompt('3')">3️⃣ Sphere 🔴</button>
+                    <button class="btn-quick" onclick="insertPrompt('4')">4️⃣ Donut 🍩</button>
+                    <button class="btn-quick" onclick="insertPrompt('5')">5️⃣ Pyramid 🔺</button>
+                    <button class="btn-quick" onclick="insertPrompt('6')">6️⃣ Star ⭐</button>
+                    <button class="btn-quick" onclick="insertPrompt('7')">7️⃣ Jump 🦘</button>
+                    <button class="btn-quick" onclick="insertPrompt('8')">8️⃣ Spin 🌪️</button>
+                    <button class="btn-quick" onclick="insertPrompt('9')">9️⃣ Clear 🧹</button>
+                </div>
+                
+                <textarea id="prompt-input" placeholder="Type a magic command or click a button above! 🪄" aria-label="Type your magic command here"></textarea>
+                <div class="run-controls">
+                    <span class="hint" style="color: #fff">Press <kbd>Enter</kbd> to build</span>
+                    <button class="btn btn-primary" id="btn-submit" style="font-size: 1.2rem; padding: 0.8rem 1.5rem;">Build It! ⚡</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Output Preview (Takes whole right side for better visibility) -->
+        <div class="panel preview-view">
+            <div class="panel-header" style="background:#1a1a1a;">
+                <span>🎮 Big Preview Window</span>
+                <span style="display: flex; gap: 0.8rem;">
+                    🔴 🟡 🟢
+                </span>
+            </div>
+            <div id="canvas-container"></div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">Saved successfully!</div>
+
+    <!-- Required Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // === STATE & HISTORY ===
+        let promptHistory = [];
+        const TOAST = document.getElementById('toast');
+
+        function showToast(msg, isError = false) {
+            TOAST.textContent = msg;
+            TOAST.style.background = isError ? "var(--accent-warning)" : "var(--accent-primary)";
+            TOAST.style.color = "#000";
+            TOAST.classList.add('show');
+            setTimeout(() => TOAST.classList.remove('show'), 4000);
+        }
+
+        // Quick button insert function
+        function insertPrompt(val) {
+            const input = document.getElementById('prompt-input');
+            input.value = val;
+            submitPrompt();
+        }
+
+        // === AGENT CHAT LOGIC ===
+        const chatContainer = document.getElementById('chat');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        function addMessage(text, isUser = false) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message';
+            
+            if (isUser) {
+                msgDiv.innerHTML = `
+                    <div class="avatar" style="background: var(--accent-secondary);">👤</div>
+                    <div class="msg-content" style="background: rgba(142, 202, 230, 0.15); border: 2px solid var(--accent-secondary);">
+                        <strong>You asked:</strong><br><br>
+                        <span style="font-size: 1.3rem;">${text}</span>
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="avatar">🤖</div>
+                    <div class="msg-content">
+                        ${text}
+                    </div>
+                `;
+            }
+            
+            chatContainer.insertBefore(msgDiv, typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Opening Message
+        setTimeout(() => {
+            addMessage(`
+                <strong>Hello friend! 🌟 I am your Helper Robot!</strong><br><br>
+                Let's make a beautiful 3D world together. It is very easy!<br><br>
+                You can click the buttons below, or type a number from <strong>1 to 9</strong>:<br><br>
+                1️⃣ Create a World 🌍<br>
+                2️⃣ Add a Player Cube 🟦<br>
+                3️⃣ Add a Player Sphere 🔴<br>
+                4️⃣ Add a Donut shape 🍩<br>
+                5️⃣ Add a Pyramid 🔺<br>
+                6️⃣ Add a Magic Star ⭐<br>
+                7️⃣ Make it Jump! 🦘<br>
+                8️⃣ Make it Spin! 🌪️<br>
+                9️⃣ Clear the Board 🧹<br><br>
+                <em>Hint: You can also say "make a red pyramid" or "blue donut"!</em>
+            `);
+        }, 800);
+
+
+        // === THREE.JS PREVIEW LOGIC ===
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#1a1a2e'); // Deep pleasing blue-dark
+        
+        const camera = new THREE.PerspectiveCamera(65, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 6, 12);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // Bright, pleasing lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(10, 20, 15);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.left = -10;
+        dirLight.shadow.camera.right = 10;
+        dirLight.shadow.camera.top = 10;
+        dirLight.shadow.camera.bottom = -10;
+        scene.add(dirLight);
+
+        // Friendly Grid Helper (large and high contrast)
+        const gridHelper = new THREE.GridHelper(30, 15, 0x8ecae6, 0x333333);
+        gridHelper.material.opacity = 0.5;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // Animated Objects tracking
+        let animObjects = [];
+        let currentPlayer = null;
+        let controlMode = 0; 
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = performance.now() * 0.0015; // Slightly slower, relaxing animations
+            animObjects.forEach(obj => {
+                if(obj.userData.bounce) {
+                    obj.position.y = obj.userData.baseY + Math.abs(Math.sin(time * 3)) * 3;
+                }
+                if(obj.userData.spin) {
+                    obj.rotation.y += 0.02;
+                    obj.rotation.x += 0.01;
+                }
+            });
+
+            // Very simple arrow key controls for the currently active player
+            if (controlMode >= 1 && currentPlayer) {
+                const speed = 0.15;
+                if (keys['w'] || keys['arrowup']) currentPlayer.position.z -= speed;
+                if (keys['s'] || keys['arrowdown']) currentPlayer.position.z += speed;
+                if (keys['a'] || keys['arrowleft']) currentPlayer.position.x -= speed;
+                if (keys['d'] || keys['arrowright']) currentPlayer.position.x += speed;
+                
+                // Keep player within bounds roughly
+                currentPlayer.position.x = Math.max(-10, Math.min(10, currentPlayer.position.x));
+                currentPlayer.position.z = Math.max(-10, Math.min(10, currentPlayer.position.z));
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // Function to create a star shape natively in three.js
+        function createStarGeometry() {
+            const shape = new THREE.Shape();
+            const outerRadius = 1.5;
+            const innerRadius = 0.7;
+            const spikes = 5;
+            const rot = Math.PI / 2 * 3;
+            const step = Math.PI / spikes;
+
+            let x, y;
+            shape.moveTo(0, -outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = Math.cos(rot + step * i * 2) * outerRadius;
+                y = Math.sin(rot + step * i * 2) * outerRadius;
+                shape.lineTo(x, y);
+                x = Math.cos(rot + step * (i * 2 + 1)) * innerRadius;
+                y = Math.sin(rot + step * (i * 2 + 1)) * innerRadius;
+                shape.lineTo(x, y);
+            }
+            shape.closePath();
+
+            const extrudeSettings = { depth: 0.5, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.1, bevelThickness: 0.1 };
+            return new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        }
+
+        // === PSEUDO-LLM PARSER ===
+        function parseCommand(cmd) {
+            let lowerCmd = cmd.toLowerCase().trim();
+            
+            const optionMap = {
+                '1': 'create a world',
+                '2': 'add a player cube',
+                '3': 'add a sphere',
+                '4': 'add a donut',
+                '5': 'add a pyramid',
+                '6': 'add a star',
+                '7': 'make it jump',
+                '8': 'make it spin',
+                '9': 'clear'
+            };
+            
+            if (optionMap[lowerCmd]) {
+                lowerCmd = optionMap[lowerCmd];
+            }
+
+            let response = "";
+            let somethingHappened = false;
+
+            // Highly distinct, primary/accessible colors
+            const colors = {
+                'red': 0xff3b30, 'green': 0x34c759, 'blue': 0x007aff, 
+                'purple': 0xaf52de, 'yellow': 0xffcc00, 'pink': 0xff2d55,
+                'white': 0xffffff, 'orange': 0xff9500, 'black': 0x333333,
+                'cyan': 0x32ade6
+            };
+            
+            // Random distinct color if not specified
+            const colorKeys = Object.keys(colors);
+            let chosenColor = colors[colorKeys[Math.floor(Math.random() * (colorKeys.length - 2))]]; 
+            let colorName = "bright";
+
+            for (let c in colors) {
+                if (lowerCmd.includes(c)) {
+                    chosenColor = colors[c];
+                    colorName = c;
+                    break;
+                }
+            }
+
+            // High visibility material
+            const getMaterial = (c) => new THREE.MeshStandardMaterial({ 
+                color: c, 
+                roughness: 0.3, 
+                metalness: 0.1,
+            });
+
+            // 1. World / Floor
+            if (lowerCmd.includes('floor') || lowerCmd.includes('ground') || lowerCmd.includes('world')) {
+                const geometry = new THREE.PlaneGeometry(40, 40);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: 0x228b22, // Nice grass green
+                    roughness: 1.0 
+                });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = -Math.PI / 2;
+                plane.receiveShadow = true;
+                scene.add(plane);
+                response += "🌍 Bam! Added a lovely green world floor! <br>";
+                somethingHappened = true;
+            }
+
+            // 2. Player Cube
+            if (lowerCmd.includes('cube') || lowerCmd.includes('player cube')) {
+                const geometry = new THREE.BoxGeometry(2.5, 2.5, 2.5);
+                const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
+                obj.position.set(0, 1.25, 0);
+                obj.castShadow = true;
+                obj.userData = { baseY: 1.25 };
+                scene.add(obj);
+                currentPlayer = obj;
+                controlMode = 1;
+                animObjects.push(obj);
+                response += `🟦 Poof! A ${colorName} Player Cube appeared! Use arrow keys to move. <br>`;
+                somethingHappened = true;
+            }
+
+            // 3. Player Sphere
+            if (lowerCmd.includes('sphere') || lowerCmd.includes('ball')) {
+                const geometry = new THREE.SphereGeometry(1.5, 32, 32);
+                const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
+                obj.position.set((Math.random()-0.5)*5, 1.5, (Math.random()-0.5)*5);
+                obj.castShadow = true;
+                obj.userData = { baseY: 1.5 };
+                scene.add(obj);
+                currentPlayer = obj;
+                controlMode = 1;
+                animObjects.push(obj);
+                response += `🔴 Whoosh! A smooth ${colorName} Sphere! Use arrow keys to move. <br>`;
+                somethingHappened = true;
+            }
+
+            // 4. Donut
+            if (lowerCmd.includes('donut') || lowerCmd.includes('torus')) {
+                const geometry = new THREE.TorusGeometry(1.5, 0.6, 16, 100);
+                const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
+                obj.position.set((Math.random()-0.5)*6, 2, (Math.random()-0.5)*6);
+                obj.castShadow = true;
+                obj.userData = { baseY: 2, spin: true }; // Auto spin for fun
+                scene.add(obj);
+                animObjects.push(obj);
+                response += `🍩 Yum! A ${colorName} Donut shape was added! <br>`;
+                somethingHappened = true;
+            }
+
+            // 5. Pyramid / Cone
+            if (lowerCmd.includes('pyramid') || lowerCmd.includes('cone')) {
+                const geometry = new THREE.ConeGeometry(2, 3, 4); // 4 sides = pyramid
+                const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
+                obj.position.set((Math.random()-0.5)*6, 1.5, (Math.random()-0.5)*6);
+                obj.castShadow = true;
+                obj.userData = { baseY: 1.5 };
+                scene.add(obj);
+                animObjects.push(obj);
+                response += `🔺 Tada! A tall ${colorName} Pyramid stands there! <br>`;
+                somethingHappened = true;
+            }
+
+            // 6. Star
+            if (lowerCmd.includes('star')) {
+                const geometry = createStarGeometry();
+                const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
+                obj.position.set((Math.random()-0.5)*6, 3, (Math.random()-0.5)*6);
+                obj.castShadow = true;
+                obj.userData = { baseY: 3, bounce: true, spin: true }; // Magical star bounces and spins
+                scene.add(obj);
+                animObjects.push(obj);
+                response += `⭐ Twinkle! A magical ${colorName} Star is floating! <br>`;
+                somethingHappened = true;
+            }
+
+            // 7. Jump/Bounce Modifier
+            if (lowerCmd.includes('bounce') || lowerCmd.includes('jump')) {
+                if(animObjects.length > 0) {
+                    animObjects[animObjects.length - 1].userData.bounce = true;
+                    response += "🦘 Boing! Your last object is now happily jumping! <br>";
+                    somethingHappened = true;
+                } else {
+                    response = "Oops! I need an object first. Try adding a cube! 🧊<br>";
+                    somethingHappened = true;
+                }
+            }
+
+            // 8. Spin Modifier
+            if (lowerCmd.includes('spin') || lowerCmd.includes('rotate')) {
+                if(animObjects.length > 0) {
+                    animObjects[animObjects.length - 1].userData.spin = true;
+                    response += "🌪️ Wheee! Your last object is spinning! <br>";
+                    somethingHappened = true;
+                } else {
+                    response = "Oops! I need an object first. Try adding a pyramid! 🔺<br>";
+                    somethingHappened = true;
+                }
+            }
+
+            // 9. Clear
+            if (lowerCmd.includes('clear') || lowerCmd.includes('reset') || lowerCmd.includes('delete')) {
+                const toRemove = [];
+                scene.traverse((child) => {
+                    if (child.isMesh && child !== gridHelper) {
+                        toRemove.push(child);
+                    }
+                });
+                toRemove.forEach(child => scene.remove(child));
+                animObjects = [];
+                currentPlayer = null;
+                controlMode = 0;
+                response = "🧹 Sweep sweep! The board is all clean for a new game!<br>";
+                somethingHappened = true;
+            }
+
+            if (!somethingHappened) {
+                response = "Hmm, I didn't understand. 🤖<br>Try clicking one of the big buttons numbers 1 to 9!";
+            }
+
+            return response;
+        }
+
+        // === USER INPUT HANDLING ===
+        const inputArea = document.getElementById('prompt-input');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        function submitPrompt() {
+            const text = inputArea.value.trim();
+            if(!text) return;
+
+            addMessage(text, true);
+            promptHistory.push(text);
+            inputArea.value = '';
+
+            typingIndicator.classList.add('active');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Fake delay for AI effect
+            setTimeout(() => {
+                const response = parseCommand(text);
+                typingIndicator.classList.remove('active');
+                
+                addMessage(`<strong>Robot:</strong><br><br><span style="font-size: 1.2rem;">${response}</span>`);
+                saveToLocal();
+            }, 800); 
+        }
+
+        btnSubmit.addEventListener('click', submitPrompt);
+        inputArea.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitPrompt();
+            }
+        });
+
+        // === SAVING LOGIC ===
+        function saveToLocal() {
+            if(promptHistory.length > 0) {
+                localStorage.setItem('inclusiveGenesisHistory', JSON.stringify(promptHistory));
+            }
+        }
+
+        document.getElementById('btn-save').addEventListener('click', () => {
+            saveToLocal();
+            showToast("Game Saved! 💾");
+        });
+
+        document.getElementById('btn-load').addEventListener('click', () => {
+            const saved = localStorage.getItem('inclusiveGenesisHistory');
+            if(saved) {
+                const history = JSON.parse(saved);
+                if(history.length > 0) {
+                    addMessage(`<strong>Robot:</strong><br>Found a saved game! Let's rebuild it! 🚀`);
+                    
+                    let delay = 1000;
+                    history.forEach((cmd, idx) => {
+                        setTimeout(() => {
+                            parseCommand(cmd);
+                            promptHistory.push(cmd);
+                            if(idx === history.length - 1) {
+                                addMessage(`<strong>Robot:</strong><br>All done! Built ${history.length} things!`);
+                            }
+                        }, delay);
+                        delay += 400; // slightly slower execution to see it happen
+                    });
+                    showToast("Game Loaded! 📂");
+                } else {
+                    showToast("No saved game found.", true);
+                }
+            } else {
+                showToast("No saved game found.", true);
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -16,7 +16,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(to bottom, #ff4e50 0%, #f9d423 100%);
         }
 
         #game-container {
@@ -178,8 +178,9 @@
             <div class="controls-info">
                 <strong>W/A/S/D</strong> - Move/Turn<br>
                 <strong>Space</strong> - Ollie<br>
-                <strong>E / Q</strong> - Kickflip / Heelflip<br>
-                <strong>R</strong> - 360 Flip (Tre Flip)<br>
+                <strong>E / Q / Left / Right</strong> - Kickflip / Heelflip<br>
+                <strong>R / Down Arrow</strong> - 360 Flip (Tre Flip)<br>
+                <strong>Up Arrow</strong> - Pop Shuvit<br>
                 <strong>T</strong> - Board Slide (Hold in air)<br>
                 <strong>Y</strong> - Blunt Slide (Hold in air)<br>
                 <strong>C / V</strong> - Set Mark / Go to Mark<br>
@@ -190,21 +191,20 @@
     <script>
         // Set up scene, camera, renderer
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb); // Sky blue
-        scene.fog = new THREE.Fog(0x87ceeb, 20, 100);
+        scene.fog = new THREE.FogExp2(0xf9d423, 0.015);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         document.getElementById('game-container').appendChild(renderer.domElement);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffe4ca, 0.4);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(20, 40, 20);
+        const dirLight = new THREE.DirectionalLight(0xff9955, 1.2);
+        dirLight.position.set(100, 20, -50);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 2048;
         dirLight.shadow.mapSize.height = 2048;
@@ -233,23 +233,54 @@
         scene.add(grid);
 
         // Ramps / Skatepark items
-        function createRamp(x, z, rotationY) {
-            const rampGeo = new THREE.CylinderGeometry(5, 5, 20, 32, 1, false, 0, Math.PI / 2);
-            const rampMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
-            const ramp = new THREE.Mesh(rampGeo, rampMat);
-            ramp.rotation.z = Math.PI / 2;
-            ramp.rotation.y = rotationY;
-            ramp.position.set(x, 0, z);
-            ramp.castShadow = true;
-            ramp.receiveShadow = true;
-            scene.add(ramp);
-            collidables.push(ramp);
+        function createWedge(x, z, rotationY) {
+            const shape = new THREE.Shape();
+            shape.moveTo(-10, 0);
+            shape.lineTo(10, 0);
+            shape.lineTo(10, 10);
+            shape.lineTo(-10, 0);
+
+            const extrudeSettings = { depth: 20, bevelEnabled: false };
+            const wedgeGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+            wedgeGeo.translate(0, 0, -10); // Center the depth
+
+            const wedgeMat = new THREE.MeshPhongMaterial({ color: 0x55aa66 });
+            const wedge = new THREE.Mesh(wedgeGeo, wedgeMat);
+            wedge.rotation.y = rotationY;
+            wedge.position.set(x, 0, z);
+            wedge.castShadow = true;
+            wedge.receiveShadow = true;
+            scene.add(wedge);
+            collidables.push(wedge);
         }
 
-        createRamp(0, -20, 0);
-        createRamp(0, 20, Math.PI);
-        createRamp(-20, 0, Math.PI/2);
-        createRamp(20, 0, -Math.PI/2);
+        function createBowl(x, z) {
+            const points = [];
+            points.push(new THREE.Vector2(0, 0));
+            points.push(new THREE.Vector2(15, 0));
+            for ( let i = 0; i <= 10; i ++ ) {
+                const a = (i / 10) * Math.PI / 2;
+                points.push(new THREE.Vector2( 15 + 10 * Math.sin(a), 10 - 10 * Math.cos(a) ));
+            }
+            points.push(new THREE.Vector2(25, 10));
+            points.push(new THREE.Vector2(32, 0));
+
+            const bowlGeo = new THREE.LatheGeometry(points, 32);
+            const bowlMat = new THREE.MeshPhongMaterial({ color: 0x88bbcc });
+            const bowl = new THREE.Mesh(bowlGeo, bowlMat);
+            bowl.position.set(x, 0, z);
+            bowl.castShadow = true;
+            bowl.receiveShadow = true;
+            scene.add(bowl);
+            collidables.push(bowl);
+        }
+
+        createWedge(0, -30, Math.PI / 2);
+        createWedge(0, 30, -Math.PI / 2);
+        createWedge(30, 0, 0);
+        
+        createBowl(-40, -40);
+        createBowl(40, -40);
 
         // Awesome Half Pipe
         function createHalfpipe(x, z, rotationY) {
@@ -292,7 +323,8 @@
             collidables.push(hpGroup);
         }
         
-        createHalfpipe(40, 0, 0);
+        createHalfpipe(40, 20, 0);
+        createHalfpipe(-40, 20, Math.PI / 2);
 
         const boxGeo = new THREE.BoxGeometry(10, 2, 4);
         const boxMat = new THREE.MeshPhongMaterial({ color: 0xaa5555 });
@@ -388,7 +420,7 @@
             markRotation: 0
         };
 
-        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false };
+        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
@@ -548,19 +580,24 @@
 
                 if (state.isJumping) {
                     // Tricks only when jumping
-                    if (keys.e && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                    if ((keys.e || keys.arrowright) && state.flipSpin === 0 && state.shuvitSpin === 0) {
                         state.flipSpin = Math.PI * 2;
                         showTrick('Kickflip', 100);
                     }
-                    if (keys.q && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                    if ((keys.q || keys.arrowleft) && state.flipSpin === 0 && state.shuvitSpin === 0) {
                         state.flipSpin = -Math.PI * 2;
                         showTrick('Heelflip', 100);
                     }
-                    if (keys.r && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                    if ((keys.r || keys.arrowdown) && state.flipSpin === 0 && state.shuvitSpin === 0) {
                         // Tre Flip
                         state.flipSpin = Math.PI * 2;
                         state.shuvitSpin = Math.PI * 2;
                         showTrick('360 Flip', 300);
+                    }
+                    if (keys.arrowup && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                        // Pop Shuvit
+                        state.shuvitSpin = Math.PI * 2;
+                        showTrick('Pop Shuvit', 150);
                     }
                     
                     // Slides logic (just visuals and points if held)
