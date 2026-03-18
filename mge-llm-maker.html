@@ -394,6 +394,8 @@
                     <option value="make a rocket"></option>
                     <option value="add 1p controls"></option>
                     <option value="add 2player controls"></option>
+                    <option value="add smart camera"></option>
+                    <option value="how to play"></option>
                     <option value="clear"></option>
                 </datalist>
                 <div class="run-controls">
@@ -523,9 +525,11 @@
 
         // Animated Objects tracking
         let animObjects = [];
+        let goals = [];
         let player1 = null;
         let player2 = null;
         let controlMode = 0; // 0: none, 1: 1P, 2: 2P
+        let smartCamera = false;
         const keys = {};
 
         window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
@@ -554,6 +558,25 @@
                 if (keys['s']) player1.position.z += speed;
                 if (keys['a']) player1.position.x -= speed;
                 if (keys['d']) player1.position.x += speed;
+
+                // Smart Camera
+                if (smartCamera) {
+                    camera.position.x += (player1.position.x - camera.position.x) * 0.1;
+                    camera.position.y += (player1.position.y + 5 - camera.position.y) * 0.1;
+                    camera.position.z += (player1.position.z + 10 - camera.position.z) * 0.1;
+                    camera.lookAt(player1.position);
+                }
+
+                // Goal Collision
+                if (goals.length > 0) {
+                    goals.forEach(goal => {
+                        if (!goal.userData.won && player1.position.distanceTo(goal.position) < 2.5) {
+                            goal.userData.won = true;
+                            showToast("🎉 YOU WIN! YOU REACHED THE GOAL! 🎉");
+                            goal.scale.set(1.5, 1.5, 1.5);
+                        }
+                    });
+                }
             }
             if (controlMode === 2 && player2) {
                 const speed = 0.1;
@@ -597,9 +620,14 @@
             let response = "";
             let somethingHappened = false;
 
-            // Direct make inquiry
+            // Direct make inquiry or rules
             if (lowerCmd === 'make' || lowerCmd === 'build' || lowerCmd === 'create' || lowerCmd === 'game') {
                 response += "What kind of game do you want to make? 🎮<br>Try typing one of these magic commands:<br><blockquote>make a fighting arena 🥊</blockquote><blockquote>make a geometry dash level 🟩</blockquote><blockquote>make a car game 🏎️</blockquote>";
+                return response;
+            }
+
+            if (lowerCmd.includes('how') && lowerCmd.includes('work') || lowerCmd.includes('rule') || lowerCmd.includes('how to play')) {
+                response += "<strong>Here is how games work!</strong> 📖<br><br>1️⃣ Use <strong>W/A/S/D</strong> or <strong>Arrow Keys</strong> to move your players.<br>2️⃣ Say <strong>'add a goal'</strong> to spawn a star, and touch it to WIN! 🌟<br>3️⃣ Say <strong>'add a smart camera'</strong> and the camera will chase you! 🎥<br>";
                 return response;
             }
 
@@ -647,10 +675,11 @@
                 const sphere = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xeab308, emissive: 0xeab308, emissiveIntensity: 0.5 }));
                 sphere.position.set(0, 1.5, -5);
                 sphere.castShadow = true;
-                sphere.userData = { baseY: 1.5 };
+                sphere.userData = { baseY: 1.5, won: false };
                 scene.add(sphere);
                 animObjects.push(sphere);
-                response += "Wow! Added a glowing Goal! 🌟 ";
+                goals.push(sphere);
+                response += "Wow! Added a glowing Goal! 🌟 Touch it to win! ";
                 somethingHappened = true;
             } else if (lowerCmd.includes('cube') || lowerCmd.includes('box')) {
                 const geometry = new THREE.BoxGeometry(2, 2, 2);
@@ -843,6 +872,12 @@
                 somethingHappened = true;
             }
 
+            if (lowerCmd.includes('smart camera') || lowerCmd.includes('follow camera') || lowerCmd.includes('camera')) {
+                smartCamera = true;
+                response += "Activated Smart Camera! It will follow Player 1 automatically! 🎥 ";
+                somethingHappened = true;
+            }
+
             // Modifiers
             if (lowerCmd.includes('bounce') || lowerCmd.includes('jump')) {
                 if(animObjects.length > 0) {
@@ -940,14 +975,20 @@
                 scene.add(car);
                 player1 = car;
 
-                const obstacle = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
-                obstacle.position.set(3, 1, -30);
-                obstacle.castShadow = true;
-                scene.add(obstacle);
+                // Goal instead of obstacle
+                const goalGeo = new THREE.BoxGeometry(4, 4, 4);
+                const goalMat = new THREE.MeshStandardMaterial({ color: 0xeab308, emissive: 0xeab308, emissiveIntensity: 0.5 });
+                const finish = new THREE.Mesh(goalGeo, goalMat);
+                finish.position.set(0, 2, -45);
+                finish.castShadow = true;
+                finish.userData = { won: false };
+                scene.add(finish);
+                goals.push(finish);
 
                 controlMode = 1;
+                smartCamera = true;
 
-                response += "Vroom! Created a Car Racing game! 1P controls ON! Use W/A/S/D to drive! 🏎️💨 ";
+                response += "Vroom! Created a Car Racing game! 1P controls ON! Use W/A/S/D to drive to the yellow goal! 🏎️💨 The Smart Camera is following you! 🎥 ";
                 somethingHappened = true;
             }
 
