@@ -195,6 +195,12 @@
     
     <div id="fly-status">🦅 FLY MODE ACTIVE</div>
 
+    <div id="build-challenge-ui" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #34d399; padding: 20px; border-radius: 10px; color: white; text-align: center; z-index: 100;">
+        <h2 style="margin: 0 0 10px 0; color: #34d399; text-shadow: 1px 1px 2px black;">BUILD CHALLENGE!</h2>
+        <p style="margin: 0; font-size: 18px; text-shadow: 1px 1px 2px black;">Duplicate the glowing blueprint!</p>
+        <div id="build-timer" style="font-size: 32px; font-weight: bold; color: #ef4444; margin-top: 10px; text-shadow: 1px 1px 2px black;">30s</div>
+    </div>
+
     <div id="riddle-container">
         <h2 id="riddle-question">Question</h2>
         <div id="riddle-options"></div>
@@ -529,6 +535,141 @@
         const riddleOptions = document.getElementById('riddle-options');
         const riddleInfo = document.getElementById('riddle-info');
         
+        let activeBuildChallenge = null;
+        let buildTimerInterval = null;
+        let buildTimeRemaining = 0;
+
+        function startBuildChallenge() {
+            if (activeBuildChallenge) return; // Already active
+
+            // clear area around (0, y, -40)
+            for(let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if(obj !== ground && obj.position.x >= -20 && obj.position.x <= 20 && obj.position.z >= -55 && obj.position.z <= -25) {
+                    scene.remove(obj);
+                    objects.splice(i, 1);
+                }
+            }
+
+            // A small archway
+            const archwayCoords = [
+                {x: -1, y: 0, z: 0},
+                {x: -1, y: 1, z: 0},
+                {x: -1, y: 2, z: 0},
+                {x: 0, y: 2, z: 0},
+                {x: 1, y: 2, z: 0},
+                {x: 1, y: 1, z: 0},
+                {x: 1, y: 0, z: 0}
+            ];
+
+            const blueprintMeshes = [];
+            const targetPositions = [];
+
+            const bpMat = new THREE.MeshBasicMaterial({color: 0x34d399, transparent: true, opacity: 0.4, wireframe: true});
+
+            archwayCoords.forEach(c => {
+                const bpMesh = new THREE.Mesh(boxGeometry, bpMat);
+                // n * 5 + 2.5
+                const px = Math.floor(c.x) * 5 + 2.5;
+                const py = Math.floor(c.y) * 5 + 2.5; 
+                const pz = -40 + Math.floor(c.z) * 5 + 2.5; // near boss
+
+                bpMesh.position.set(px, py, pz);
+                scene.add(bpMesh);
+                blueprintMeshes.push(bpMesh);
+                
+                targetPositions.push({x: px, y: py, z: pz, matched: false});
+            });
+
+            activeBuildChallenge = {
+                meshes: blueprintMeshes,
+                targets: targetPositions
+            };
+
+            document.getElementById('build-challenge-ui').style.display = 'block';
+            buildTimeRemaining = 30; // 30 seconds
+            document.getElementById('build-timer').textContent = buildTimeRemaining + "s";
+
+            buildTimerInterval = setInterval(() => {
+                buildTimeRemaining--;
+                document.getElementById('build-timer').textContent = buildTimeRemaining + "s";
+                
+                if (buildTimeRemaining <= 0) {
+                    failBuildChallenge();
+                }
+            }, 1000);
+        }
+
+        function checkBuildChallenge() {
+            if(!activeBuildChallenge) return;
+
+            let allMatched = true;
+
+            activeBuildChallenge.targets.forEach(target => {
+                let matched = false;
+                for(let i = 0; i < objects.length; i++) {
+                    const obj = objects[i];
+                    if(obj !== ground && Math.abs(obj.position.x - target.x) < 0.1 && Math.abs(obj.position.y - target.y) < 0.1 && Math.abs(obj.position.z - target.z) < 0.1) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if(!matched) allMatched = false;
+            });
+
+            if(allMatched) {
+                completeBuildChallenge();
+            }
+        }
+
+        function completeBuildChallenge() {
+            clearInterval(buildTimerInterval);
+            document.getElementById('build-challenge-ui').style.display = 'none';
+
+            activeBuildChallenge.meshes.forEach(m => scene.remove(m));
+            activeBuildChallenge = null;
+
+            damageBoss(50);
+            
+            const msg = document.createElement('div');
+            msg.style.position = 'absolute';
+            msg.style.top = '30%';
+            msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)';
+            msg.style.color = '#34d399';
+            msg.style.fontSize = '48px';
+            msg.style.fontWeight = 'bold';
+            msg.style.textShadow = '2px 2px 4px black';
+            msg.textContent = "ARCHITECTURE COMPLETE! 50 DAMAGE!";
+            msg.style.zIndex = '2000';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 4000);
+        }
+
+        function failBuildChallenge() {
+            clearInterval(buildTimerInterval);
+            document.getElementById('build-challenge-ui').style.display = 'none';
+
+            activeBuildChallenge.meshes.forEach(m => scene.remove(m));
+            activeBuildChallenge = null;
+
+            takeDamage(30);
+
+            const msg = document.createElement('div');
+            msg.style.position = 'absolute';
+            msg.style.top = '30%';
+            msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)';
+            msg.style.color = '#ef4444';
+            msg.style.fontSize = '48px';
+            msg.style.fontWeight = 'bold';
+            msg.style.textShadow = '2px 2px 4px black';
+            msg.textContent = "TIME UP! YOU TOOK 30 DAMAGE!";
+            msg.style.zIndex = '2000';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 4000);
+        }
+
         function openRiddle(targetMode) {
             if(inRiddle) return;
             
@@ -551,23 +692,61 @@
                 riddleContainer.style.display = 'block';
                 riddleInfo.textContent = "";
                 
-                // Pick random riddle
-                currentRiddle = riddles[Math.floor(Math.random() * riddles.length)];
-                
-                riddleQuestion.textContent = currentRiddleTarget === 'boss' ? "BOSS: " + currentRiddle.q : "HOMEWORK: " + currentRiddle.q;
-                riddleOptions.innerHTML = '';
-                
-                // shuffle options visually (keeping track of answer)
-                const optsCopy = currentRiddle.opts.map((opt, i) => ({opt, i}));
-                optsCopy.sort(() => Math.random() - 0.5);
+                if (currentRiddleTarget === 'boss') {
+                    if (activeBuildChallenge) {
+                        // Don't open riddle if build challenge is already active
+                        closeRiddle();
+                        return;
+                    }
+                    riddleQuestion.textContent = "BOSS: Choose your attack method!";
+                    riddleOptions.innerHTML = '';
+                    
+                    const btnRiddle = document.createElement('button');
+                    btnRiddle.className = 'riddle-btn';
+                    btnRiddle.textContent = "Answer a Riddle (25 Damage)";
+                    btnRiddle.onclick = () => {
+                        currentRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+                        riddleQuestion.textContent = "BOSS: " + currentRiddle.q;
+                        riddleOptions.innerHTML = '';
+                        const optsCopy = currentRiddle.opts.map((opt, i) => ({opt, i}));
+                        optsCopy.sort(() => Math.random() - 0.5);
+                        optsCopy.forEach((item) => {
+                            const btn = document.createElement('button');
+                            btn.className = 'riddle-btn';
+                            btn.textContent = item.opt;
+                            btn.onclick = () => checkAnswer(item.i);
+                            riddleOptions.appendChild(btn);
+                        });
+                    };
+                    riddleOptions.appendChild(btnRiddle);
 
-                optsCopy.forEach((item) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'riddle-btn';
-                    btn.textContent = item.opt;
-                    btn.onclick = () => checkAnswer(item.i);
-                    riddleOptions.appendChild(btn);
-                });
+                    const btnBuild = document.createElement('button');
+                    btnBuild.className = 'riddle-btn';
+                    btnBuild.textContent = "Build Architecture Challenge (50 Damage)";
+                    btnBuild.style.borderColor = '#34d399';
+                    btnBuild.onclick = () => {
+                        closeRiddle();
+                        startBuildChallenge();
+                    };
+                    riddleOptions.appendChild(btnBuild);
+                } else {
+                    // Pick random riddle
+                    currentRiddle = riddles[Math.floor(Math.random() * riddles.length)];
+                    riddleQuestion.textContent = "HOMEWORK: " + currentRiddle.q;
+                    riddleOptions.innerHTML = '';
+                    
+                    // shuffle options visually (keeping track of answer)
+                    const optsCopy = currentRiddle.opts.map((opt, i) => ({opt, i}));
+                    optsCopy.sort(() => Math.random() - 0.5);
+
+                    optsCopy.forEach((item) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'riddle-btn';
+                        btn.textContent = item.opt;
+                        btn.onclick = () => checkAnswer(item.i);
+                        riddleOptions.appendChild(btn);
+                    });
+                }
             }, 100);
         }
         
@@ -817,6 +996,7 @@
                 voxel.receiveShadow = true;
                 scene.add( voxel );
                 objects.push( voxel );
+                if (typeof checkBuildChallenge === 'function') checkBuildChallenge();
             }
         };
 
@@ -853,6 +1033,7 @@
                 if ( intersect.object !== ground ) {
                     scene.remove( intersect.object );
                     objects.splice( objects.indexOf( intersect.object ), 1 );
+                    if (typeof checkBuildChallenge === 'function') checkBuildChallenge();
                 }
             }
         };
