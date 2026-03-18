@@ -321,9 +321,22 @@
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
+        
+        .mrg-watermark {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 150px;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
     </style>
 </head>
 <body>
+    <img src="https://mrg-stem.netlify.app/static/imgs/mrg-stem-hd.png" alt="MRG STEM Watermark" class="mrg-watermark">
 
     <nav class="top-nav">
         <div class="nav-brand">
@@ -352,7 +365,7 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
-                <span style="font-size: 0.8rem; margin-left: 0.5rem; color: var(--accent-primary);">Generating code...</span>
+                <span style="font-size: 0.8rem; margin-left: 0.5rem; color: var(--accent-primary);">Thinking of magic... ✨</span>
             </div>
         </div>
 
@@ -360,13 +373,13 @@
         <div class="panel editor-view">
             <div class="panel-header">
                 <span>⌨️ Prompt Input</span>
-                <span>Bash/Natural Language</span>
+                <span>Talk to the Robot! 🤖</span>
             </div>
             <div class="code-area">
-                <textarea id="prompt-input" placeholder="Type a prompt to build your game... E.g., 'create a player cube', 'add a green floor', 'make the player jump'"></textarea>
+                <textarea id="prompt-input" placeholder="Type a magic command here! Try 'make a fighting arena', 'add a geometry dash level', or 'make it bounce' 🪄"></textarea>
                 <div class="run-controls">
-                    <span class="hint">Press Shift+Enter to submit</span>
-                    <button class="btn btn-primary" id="btn-submit">Execute Prompt ⚡</button>
+                    <span class="hint">Press Shift+Enter or click the button</span>
+                    <button class="btn btn-primary" id="btn-submit">Build It! ⚡</button>
                 </div>
             </div>
         </div>
@@ -387,9 +400,9 @@
         <!-- Bottom Right: Clear/System Stats -->
         <div class="panel assets-view">
             <div class="empty-state">
-                <h3>System Architecture Room</h3>
-                <p>Reserved for Game Blocks & Inspector</p>
-                <p style="font-size: 2rem; margin-top: 1rem;">🏗️</p>
+                <h3>🧸 My Toy Box</h3>
+                <p>Your game blocks will appear here!</p>
+                <p style="font-size: 2rem; margin-top: 1rem;">🧩</p>
             </div>
         </div>
     </div>
@@ -443,12 +456,12 @@
         // Opening Message
         setTimeout(() => {
             addMessage(`
-                <strong>System initialized. Hello Creator!</strong><br><br>
-                I am your personal AI game development agent. I can build 3D elements for you in the preview window on the right.<br><br>
-                Try typing commands like:<br>
-                <blockquote>add a purple cube</blockquote>
-                <blockquote>create a floor</blockquote>
-                <blockquote>make it bounce</blockquote>
+                <strong>Beep Boop! Hello there, young Creator! 🎮✨</strong><br><br>
+                I am your super-smart AI robot friend. I can help you build awesome games quickly in the window on the right!<br><br>
+                Try typing some fun magic commands to make a fighting game or a Geometry Dash style level:<br>
+                <blockquote>create a fighting arena</blockquote>
+                <blockquote>add a geometry dash obstacle</blockquote>
+                <blockquote>make the player bounce</blockquote>
             `);
         }, 500);
 
@@ -515,7 +528,7 @@
         // This simulates an LLM parsing text commands to execute Three.js code
         function parseCommand(cmd) {
             const lowerCmd = cmd.toLowerCase();
-            let response = "I've updated the scene based on your request! ";
+            let response = "";
             let somethingHappened = false;
 
             // Common colors mapping
@@ -545,7 +558,7 @@
                 cube.userData = { baseY: 1 };
                 scene.add(cube);
                 animObjects.push(cube);
-                response += "Added a " + getObjColorName(chosenColor) + " cube. ";
+                response += "Poof! Added a " + getObjColorName(chosenColor) + " cube. 🧊 ";
                 somethingHappened = true;
             }
 
@@ -560,7 +573,7 @@
                 sphere.userData = { baseY: 1.5 };
                 scene.add(sphere);
                 animObjects.push(sphere);
-                response += "Spawned a " + getObjColorName(chosenColor) + " sphere. ";
+                response += "Whoosh! A " + getObjColorName(chosenColor) + " sphere has arrived! ⚽ ";
                 somethingHappened = true;
             }
 
@@ -574,7 +587,7 @@
                 plane.rotation.x = -Math.PI / 2;
                 plane.receiveShadow = true;
                 scene.add(plane);
-                response += "Added a solid floor. ";
+                response += "Bam! Added a solid floor to stand on. 🧱 ";
                 somethingHappened = true;
             }
 
@@ -582,10 +595,10 @@
             if (lowerCmd.includes('bounce') || lowerCmd.includes('jump')) {
                 if(animObjects.length > 0) {
                     animObjects[animObjects.length - 1].userData.bounce = true;
-                    response += "The last created object is now bouncing! ";
+                    response += "Boing! The last object is bouncing super high! 🦘 ";
                     somethingHappened = true;
                 } else {
-                    response = "I need an object to make bounce. Try adding a cube first! ";
+                    response = "Oops! I need an object to make it bounce. Try adding a cube first! 🧊 ";
                     somethingHappened = true;
                 }
             }
@@ -593,12 +606,59 @@
             if (lowerCmd.includes('spin') || lowerCmd.includes('rotate')) {
                 if(animObjects.length > 0) {
                     animObjects[animObjects.length - 1].userData.spin = true;
-                    response += "The last created object is now spinning! ";
+                    response += "Wheee! The object is spinning like a top! 🌪️ ";
                     somethingHappened = true;
                 } else {
-                    response = "I need an object to spin. Try adding a cube first! ";
+                    response = "Oops! I need an object to spin. Try adding a cube first! 🧊 ";
                     somethingHappened = true;
                 }
+            }
+
+            // Games
+            if (lowerCmd.includes('arena') || lowerCmd.includes('fight')) {
+                const geometry = new THREE.PlaneGeometry(25, 25);
+                const material = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.8 });
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = -Math.PI / 2;
+                plane.receiveShadow = true;
+                scene.add(plane);
+                
+                const boxGeo = new THREE.BoxGeometry(2,4,2);
+                const fighter1 = new THREE.Mesh(boxGeo, new THREE.MeshStandardMaterial({color: 0x3b82f6}));
+                fighter1.position.set(-5, 2, 0);
+                fighter1.castShadow = true;
+                scene.add(fighter1);
+
+                const fighter2 = new THREE.Mesh(boxGeo, new THREE.MeshStandardMaterial({color: 0xeab308}));
+                fighter2.position.set(5, 2, 0);
+                fighter2.castShadow = true;
+                scene.add(fighter2);
+
+                response += "Boom! Set up a basic fighting arena with two players! 🥊 ";
+                somethingHappened = true;
+            }
+
+            if (lowerCmd.includes('geometry dash') || lowerCmd.includes('obstacle') || lowerCmd.includes('dash')) {
+                const geometry = new THREE.BoxGeometry(2, 2, 2);
+                const cube = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xfb923c }));
+                cube.position.set(4, 1, 0);
+                cube.castShadow = true;
+                scene.add(cube);
+                
+                const player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
+                player.position.set(-6, 0.5, 0);
+                player.castShadow = true;
+                player.userData = { baseY: 0.5 };
+                scene.add(player);
+                animObjects.push(player);
+
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
+                floor.rotation.x = -Math.PI / 2;
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                response += "Zap! Created a Geometry Dash style level! Use 'make it bounce' to jump! 🟩 ";
+                somethingHappened = true;
             }
             
             if (lowerCmd.includes('clear') || lowerCmd.includes('reset')) {
@@ -611,12 +671,12 @@
                 });
                 toRemove.forEach(child => scene.remove(child));
                 animObjects = [];
-                response = "Cleared the scene! Ready for fresh ideas.";
+                response = "Sweep sweep! Cleaned up the scene. Let's build something new! 🧹";
                 somethingHappened = true;
             }
 
             if (!somethingHappened) {
-                response = "I couldn't quite understand that command. Try 'add a red cube' or 'make it bounce'!";
+                response = "Hmm, my robot brain didn't catch that. Try 'make a fighting arena' or 'add a geometry dash level'! 🤖";
             }
 
             return response;
@@ -654,8 +714,8 @@
                 typingIndicator.classList.remove('active');
                 
                 let codeBlock = "";
-                if(response.includes("cube") || response.includes("sphere") || response.includes("floor") || response.includes("bouncing")) {
-                    codeBlock = `<br><code>[Executing Engine Script: Object Modification]</code>`;
+                if(response.includes("cube") || response.includes("sphere") || response.includes("floor") || response.includes("bouncing") || response.includes("Whoosh") || response.includes("Bam") || response.includes("Boing") || response.includes("Poof") || response.includes("Wheee") || response.includes("Boom") || response.includes("Zap")) {
+                    codeBlock = `<br><code style="color: var(--accent-secondary);">✨ [Running Magic Code] ✨</code>`;
                 }
                 
                 addMessage(`<strong>Agent:</strong><br>${response} ${codeBlock}`);
