@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Racer: Fast & Famous</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Racing+Sans+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0c10;
+            --neon-blue: #45f3ff;
+            --neon-pink: #ff2a7a;
+            --neon-green: #39ff14;
+            --text-gray: #66fcf1;
+            --muted-gray: #455a64;
+            --error-red: #ff073a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Racing Sans One', cursive;
+            font-size: 3.5rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+            margin-top: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .track-container {
+            width: 90%;
+            max-width: 1200px;
+            background: linear-gradient(180deg, #1a1a24 0%, #0d0d12 100%);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(69, 243, 255, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .track-lane {
+            position: relative;
+            height: 80px;
+            border-bottom: 2px dashed #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .track-lane:last-child {
+            border-bottom: none;
+        }
+
+        .car {
+            font-size: 3rem;
+            position: absolute;
+            left: 0;
+            transition: left 0.1s linear;
+            z-index: 10;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+
+        .car-player {
+            filter: drop-shadow(0 0 15px var(--neon-blue));
+        }
+
+        .exhaust {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .car.moving .exhaust {
+            opacity: 1;
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        @keyframes flicker {
+            from { opacity: 0.5; transform: translateY(-50%) scale(0.8); }
+            to { opacity: 1; transform: translateY(-50%) scale(1.2); }
+        }
+
+        .finish-line {
+            position: absolute;
+            right: 50px;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            background: repeating-linear-gradient(
+                45deg,
+                #fff,
+                #fff 10px,
+                #000 10px,
+                #000 20px
+            );
+            border-left: 2px solid var(--neon-pink);
+            box-shadow: -5px 0 15px rgba(255, 42, 122, 0.5);
+            z-index: 5;
+        }
+
+        .typing-container {
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--neon-pink);
+            border-radius: 15px;
+            padding: 30px;
+            font-size: 1.8rem;
+            line-height: 1.6;
+            box-shadow: inset 0 0 20px rgba(255, 42, 122, 0.1), 0 0 20px rgba(255, 42, 122, 0.2);
+            position: relative;
+        }
+
+        .text-display {
+            user-select: none;
+            word-wrap: break-word;
+        }
+
+        .char {
+            color: var(--muted-gray);
+            transition: color 0.1s;
+        }
+
+        .char.correct {
+            color: var(--neon-green);
+            text-shadow: 0 0 5px var(--neon-green);
+        }
+
+        .char.incorrect {
+            color: var(--error-red);
+            text-shadow: 0 0 5px var(--error-red);
+            background: rgba(255, 7, 58, 0.2);
+            border-radius: 3px;
+        }
+
+        .char.current {
+            color: #fff;
+            text-shadow: 0 0 8px #fff;
+            border-bottom: 3px solid var(--neon-blue);
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            from { border-color: transparent; }
+            to { border-color: var(--neon-blue); }
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 1000px;
+            margin-bottom: 10px;
+            font-family: 'Racing Sans One', cursive;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+        }
+
+        .wpm-display { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+        .acc-display { color: #f1c40f; text-shadow: 0 0 10px #f1c40f; }
+        .doc-title { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px 40px;
+            font-size: 2rem;
+            font-family: 'Racing Sans One', cursive;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(69, 243, 255, 0.3);
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-blue);
+            transform: scale(1.05);
+        }
+
+        .results-modal {
+            text-align: center;
+        }
+
+        .results-modal h2 {
+            font-family: 'Racing Sans One', cursive;
+            font-size: 4rem;
+            color: var(--neon-green);
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .stat-row {
+            font-size: 2rem;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .nitro-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #222;
+            margin-top: 15px;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 0 5px #000 inset;
+        }
+
+        .nitro-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff073a, #ff2a7a, #45f3ff);
+            transition: width 0.2s;
+            box-shadow: 0 0 10px rgba(69,243,255,0.8);
+        }
+
+        .nitro-active {
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Typing Racer</h1>
+    <div class="subtitle">Fast & Famous Documents</div>
+
+    <div class="hud">
+        <div class="wpm-display">WPM: <span id="wpm">0</span></div>
+        <div class="doc-title" id="doc-title">Document</div>
+        <div class="acc-display">ACC: <span id="acc">100</span>%</div>
+    </div>
+
+    <!-- Gameplay Area -->
+    <div class="track-container" id="track-container">
+        <div class="finish-line"></div>
+        
+        <!-- Bots -->
+        <div class="track-lane">
+            <div class="car" id="bot1" style="left: 0;">🚓</div>
+        </div>
+        
+        <!-- Player -->
+        <div class="track-lane" style="background: rgba(69, 243, 255, 0.05);">
+            <div class="car car-player" id="player" style="left: 0;">
+                <span class="exhaust">🔥</span>🏎️
+            </div>
+        </div>
+        
+        <!-- Bot -->
+        <div class="track-lane">
+            <div class="car" id="bot2" style="left: 0;">🚕</div>
+        </div>
+    </div>
+
+    <div class="typing-container">
+        <div class="text-display" id="text-display"></div>
+        <div class="nitro-bar-container">
+            <div class="nitro-bar" id="nitro-bar"></div>
+        </div>
+    </div>
+
+    <!-- Start Screen Overlay -->
+    <div class="overlay" id="start-screen">
+        <h1 style="font-size: 5rem; margin-bottom: 0;">TYPING RACER</h1>
+        <p style="font-size: 1.5rem; color: var(--neon-blue); margin-bottom: 30px;">Type famous historical documents to accelerate!</p>
+        
+        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; border: 1px solid var(--neon-pink); max-width: 600px; text-align: center; font-size: 1.2rem; line-height: 1.5; margin-bottom: 30px;">
+            <p style="color: var(--neon-green)">Correct keys = Accelerate 🏎💨</p>
+            <p style="color: var(--error-red)">Wrong keys = Engine Stall 💥</p>
+            <p style="color: #45f3ff">Combo = Nitro Boost 🚀</p>
+            <p style="margin-top: 10px; color: #aaa;">Volume UP for optimal experience!</p>
+        </div>
+
+        <button class="btn" id="start-btn">RACE NOW</button>
+        <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
+    </div>
+
+    <!-- Results Screen Overlay -->
+    <div class="overlay hidden" id="results-screen">
+        <div class="results-modal">
+            <h2 id="result-title">YOU WIN!</h2>
+            <div class="stat-row" style="color: var(--neon-blue)">Rank: <span id="final-rank">1st Place</span></div>
+            <div class="stat-row" style="color: var(--neon-green)">Speed: <span id="final-wpm">0</span> WPM</div>
+            <div class="stat-row" style="color: #f1c40f">Accuracy: <span id="final-acc">0</span>%</div>
+            
+            <button class="btn" id="restart-btn" style="margin-top: 40px;">PLAY AGAIN</button>
+            <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px; display: block; margin-left: auto; margin-right: auto;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOCUMENTS DATA ---
+        const documents = [
+            {
+                title: "Declaration of Independence",
+                text: "When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature and of Nature's God entitle them."
+            },
+            {
+                title: "Gettysburg Address",
+                text: "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure."
+            },
+            {
+                title: "I Have a Dream",
+                text: "I have a dream that one day this nation will rise up and live out the true meaning of its creed: We hold these truths to be self-evident, that all men are created equal. I have a dream that my four little children will one day live in a nation where they will not be judged by the color of their skin."
+            },
+            {
+                title: "US Constitution: Preamble",
+                text: "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution."
+            }
+        ];
+
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTypeSound(isSpace) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = isSpace ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(isSpace ? 400 : 800 + Math.random() * 200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playErrorSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function playRevSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(50, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.2);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playNitroSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // White noise burst
+            const bufferSize = audioCtx.sampleRate * 0.5; // 0.5 seconds
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            noise.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            noise.start();
+            
+            // Jet whoosh
+            const osc = audioCtx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+            
+            const oscGain = audioCtx.createGain();
+            oscGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.connect(oscGain);
+            oscGain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playVictorySound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [440, 554.37, 659.25, 880]; // A major arpeggio
+            
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + index * 0.1);
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + index * 0.1 + 0.05);
+                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + index * 0.1 + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(audioCtx.currentTime + index * 0.1);
+                osc.stop(audioCtx.currentTime + index * 0.1 + 0.3);
+            });
+        }
+
+        // --- GAME LOGIC ---
+        let currentText = "";
+        let charElements = [];
+        let currentIndex = 0;
+        let errors = 0;
+        let totalTyped = 0;
+        let startTime = 0;
+        let isStarted = false;
+        let isFinished = false;
+        let combo = 0;
+        let lastCharTime = 0;
+        
+        // Progress mechanics
+        const finishPx = window.innerWidth > 1000 ? 900 : window.innerWidth * 0.8; 
+        
+        let playerProg = 0; // 0 to 1
+        let bot1Prog = 0;
+        let bot2Prog = 0;
+        
+        const bot1Speed = 0.0008; // Base progress per frame (varies)
+        const bot2Speed = 0.0007;
+
+        let gameLoopRAF;
+
+        // Elements
+        const textDisplay = document.getElementById('text-display');
+        const startScreen = document.getElementById('start-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const wpmDisplay = document.getElementById('wpm');
+        const accDisplay = document.getElementById('acc');
+        const titleDisplay = document.getElementById('doc-title');
+        const playerCar = document.getElementById('player');
+        const bot1Car = document.getElementById('bot1');
+        const bot2Car = document.getElementById('bot2');
+        const nitroBar = document.getElementById('nitro-bar');
+
+        function initGame() {
+            const doc = documents[Math.floor(Math.random() * documents.length)];
+            currentText = doc.text.trim();
+            titleDisplay.textContent = doc.title;
+            
+            textDisplay.innerHTML = '';
+            charElements = [];
+            currentIndex = 0;
+            errors = 0;
+            totalTyped = 0;
+            combo = 0;
+            isStarted = false;
+            isFinished = false;
+            playerProg = 0;
+            bot1Prog = 0;
+            bot2Prog = 0;
+            
+            updateCarPositions();
+            nitroBar.style.width = '0%';
+            
+            // Create character spans
+            for (let i = 0; i < currentText.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = currentText[i];
+                span.className = 'char';
+                if (i === 0) span.classList.add('current');
+                textDisplay.appendChild(span);
+                charElements.push(span);
+            }
+
+            wpmDisplay.textContent = '0';
+            accDisplay.textContent = '100';
+            document.body.classList.remove('nitro-active');
+            
+            if (gameLoopRAF) cancelAnimationFrame(gameLoopRAF);
+            
+            // Initial Rev
+            playRevSound();
+        }
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            initGame();
+            startTime = Date.now();
+            isStarted = true;
+            lastCharTime = Date.now();
+            
+            gameLoopRAF = requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            audioCtx.resume();
+            startGame();
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            startGame();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (!isStarted || isFinished) return;
+            
+            // Ignore modifiers
+            if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta' || e.key === 'CapsLock' || e.key === 'Tab') {
+                return;
+            }
+
+            // Prevent scroll on spacebar
+            if (e.key === ' ') e.preventDefault();
+
+            const expectedChar = currentText[currentIndex];
+            
+            // Handle Backspace (optional, but typing racers usually don't allow backspace, you just type correctly to advance)
+            if (e.key === 'Backspace') {
+                // Not allowed in this hardcore mode!
+                return;
+            }
+
+            totalTyped++;
+
+            if (e.key === expectedChar) {
+                // Correct!
+                playTypeSound(e.key === ' ');
+                charElements[currentIndex].classList.remove('current', 'incorrect');
+                charElements[currentIndex].classList.add('correct');
+                
+                currentIndex++;
+                combo++;
+                
+                playerCar.classList.add('moving');
+                clearTimeout(playerCar.moveTimeout);
+                playerCar.moveTimeout = setTimeout(() => playerCar.classList.remove('moving'), 100);
+
+                if (combo % 15 === 0) {
+                    playNitroSound();
+                    document.body.classList.add('nitro-active');
+                    setTimeout(() => document.body.classList.remove('nitro-active'), 500);
+                }
+
+                // Update progress based on characters completed
+                playerProg = currentIndex / currentText.length;
+
+                if (currentIndex < currentText.length) {
+                    charElements[currentIndex].classList.add('current');
+                } else {
+                    finishGame();
+                }
+
+            } else {
+                // Incorrect
+                playErrorSound();
+                errors++;
+                combo = 0;
+                charElements[currentIndex].classList.add('incorrect');
+                
+                // Shake screen slightly
+                document.body.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
+                setTimeout(() => document.body.style.transform = 'none', 50);
+            }
+
+            updateStats();
+        });
+
+        function updateStats() {
+            // WPM calculation
+            const timeElapsed = (Date.now() - startTime) / 60000; // in minutes
+            if (timeElapsed > 0) {
+                // Standard: 5 chars = 1 word
+                const wordsTyped = (currentIndex) / 5;
+                const wpm = Math.round(wordsTyped / timeElapsed);
+                wpmDisplay.textContent = wpm;
+            }
+
+            // Accuracy
+            if (totalTyped > 0) {
+                const acc = Math.round(((totalTyped - errors) / totalTyped) * 100);
+                accDisplay.textContent = Math.max(0, acc);
+            }
+            
+            // Nitro bar visual (Combo based)
+            let comboMax = 15;
+            let currentCombo = combo % comboMax;
+            if (combo > 0 && currentCombo === 0) currentCombo = comboMax;
+            const nitroPct = (currentCombo / comboMax) * 100;
+            nitroBar.style.width = `${nitroPct}%`;
+            
+            if (nitroPct === 100) {
+                nitroBar.style.boxShadow = '0 0 20px #45f3ff, 0 0 40px #45f3ff';
+            } else {
+                nitroBar.style.boxShadow = '0 0 10px rgba(69,243,255,0.8)';
+            }
+        }
+
+        function gameLoop() {
+            if (!isStarted || isFinished) return;
+
+            // Move Bots
+            // Add some jitter to bots speed to make it feel natural
+            let b1j = bot1Speed * (0.8 + Math.random() * 0.4);
+            let b2j = bot2Speed * (0.5 + Math.random() * 0.8);
+
+            bot1Prog += b1j;
+            bot2Prog += b2j;
+
+            updateCarPositions();
+
+            // Check if bots finished
+            if (bot1Prog >= 1 || bot2Prog >= 1) {
+                if (playerProg < 1) {
+                    finishGame(); // A bot finished before player
+                }
+            }
+
+            gameLoopRAF = requestAnimationFrame(gameLoop);
+        }
+
+        function updateCarPositions() {
+            const trackWidth = document.getElementById('track-container').clientWidth - 100; // Leave space for finish line width
+            
+            playerCar.style.left = `${Math.min(1, playerProg) * trackWidth}px`;
+            bot1Car.style.left = `${Math.min(1, bot1Prog) * trackWidth}px`;
+            bot2Car.style.left = `${Math.min(1, bot2Prog) * trackWidth}px`;
+        }
+
+        function finishGame() {
+            isFinished = true;
+            playerCar.classList.remove('moving');
+            
+            // Determine rank
+            let rank = 1;
+            if (bot1Prog >= 1) rank++;
+            if (bot2Prog >= 1) rank++;
+
+            let rankText = "1st Place 🏆";
+            let color = "var(--neon-green)";
+            
+            if (rank === 2) { rankText = "2nd Place 🥈"; color = "#f1c40f"; }
+            if (rank === 3) { rankText = "3rd Place 🥉"; color = "#e67e22"; }
+            if (playerProg < 1) { rankText = "DNF (Too Slow) 💥"; color = "var(--error-red)"; playErrorSound(); }
+            else { playVictorySound(); }
+
+            document.getElementById('result-title').textContent = playerProg >= 1 ? "RACE FINISHED!" : "RACE OVER";
+            const finalRank = document.getElementById('final-rank');
+            finalRank.textContent = rankText;
+            finalRank.style.color = color;
+            document.getElementById('final-wpm').textContent = wpmDisplay.textContent;
+            document.getElementById('final-acc').textContent = accDisplay.textContent;
+
+            setTimeout(() => {
+                resultsScreen.classList.remove('hidden');
+            }, 1000); // Wait a second before showing results
+        }
+
+    </script>
+</body>
+</html>
