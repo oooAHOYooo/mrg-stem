@@ -481,14 +481,14 @@
                 I am your super-smart AI robot friend. I can help you build awesome games quickly in the window on the right!<br><br>
                 Type a number from <strong>1 to 8</strong> to build your game step-by-step, or type your own magic commands!<br><br>
                 <strong>My Toy Box Menu:</strong><br>
-                1️⃣ Create a World 🌍<br>
-                2️⃣ Add a Player 🟦<br>
-                3️⃣ Add an Enemy/Obstacle 🟥<br>
-                4️⃣ Add a Goal 🌟<br>
-                5️⃣ Make it Jump 🦘<br>
-                6️⃣ Make it Spin 🌪️<br>
-                7️⃣ Make Fighting Arena 🥊<br>
-                8️⃣ Make Geometry Dash 🟩<br><br>
+                1️⃣ Create a World 🌍 <em>(Builds the ground to walk on!)</em><br>
+                2️⃣ Add a Player 🟦 <em>(Creates your blue hero to control!)</em><br>
+                3️⃣ Add an Enemy/Obstacle 🟥 <em>(Adds a red block to avoid!)</em><br>
+                4️⃣ Add a Goal 🌟 <em>(Creates the glowing star to touch and win!)</em><br>
+                5️⃣ Make it Jump 🦘 <em>(Makes the last object bounce!)</em><br>
+                6️⃣ Make it Spin 🌪️ <em>(Makes the last object spin wildly!)</em><br>
+                7️⃣ Make Fighting Arena 🥊 <em>(Instant 2-Player battle game!)</em><br>
+                8️⃣ Make Geometry Dash 🟩 <em>(Instant 1-Player jumping challenge!)</em><br><br>
                 <em>Pro Tip: You can type "add 1p controls" or "add 2player controls" to move your characters!</em>
             `);
         }, 500);
@@ -1002,12 +1002,32 @@
                 });
                 toRemove.forEach(child => scene.remove(child));
                 animObjects = [];
-                response = "Sweep sweep! Cleaned up the scene. Let's build something new! 🧹";
+                goals = [];
+                player1 = null;
+                player2 = null;
+                controlMode = 0;
+                smartCamera = false;
+                camera.position.set(0, 5, 10);
+                camera.lookAt(0, 0, 0);
+                response = "Sweep sweep! Cleaned up everything and reset the camera. Let's build something new! 🧹";
                 somethingHappened = true;
             }
 
             if (!somethingHappened) {
                 response = "Hmm, my robot brain didn't catch that. Try 'make a fighting arena' or 'add a geometry dash level'! 🤖";
+            } else {
+                // Append a dynamic random hint to encourage continued building
+                const hints = [
+                    "Try typing 'make it jump' to add some bounce!",
+                    "Try 'add a player' next so you can move around!",
+                    "Want a challenge? Type 'add an enemy'!",
+                    "Don't like it? Just type 'clear' to start over!",
+                    "Try 'make a tree' or 'build a house' to decorate your game!",
+                    "You can say 'add smart camera' to make the view follow you!",
+                    "Make sure to 'add a goal' so you can win the game!"
+                ];
+                const randomHint = hints[Math.floor(Math.random() * hints.length)];
+                response += `<br><br><span style="font-size: 0.85em; color: rgba(167, 139, 250, 0.8);"><em>💡 Hint: ${randomHint}</em></span>`;
             }
 
             return response;
