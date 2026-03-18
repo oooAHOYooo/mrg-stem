@@ -215,6 +215,7 @@
         <div class="control-item"><div class="control-key">SPACE</div> Jump</div>
         <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
         <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
+        <div class="control-item"><div class="control-key">Q</div> Change Block Size</div>
         <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
         <div class="control-item"><div class="control-key">R-CLICK</div> Place Block</div>
         <div class="control-item"><div class="control-key">1-8</div> Select Color</div>
@@ -315,6 +316,33 @@
         // Basic Box Geometry
         const boxGeometry = new THREE.BoxGeometry( 5, 5, 5 );
 
+        const blockTypes = [
+            { name: "Normal (5x5)", geo: new THREE.BoxGeometry(5, 5, 5), scale: 5, yOff: 2.5 },
+            { name: "Small (2.5x2.5)", geo: new THREE.BoxGeometry(2.5, 2.5, 2.5), scale: 2.5, yOff: 1.25 },
+            { name: "Large (10x10)", geo: new THREE.BoxGeometry(10, 10, 10), scale: 10, yOff: 5 }
+        ];
+        let currentBlockType = blockTypes[0];
+
+        const sizeStatus = document.createElement('div');
+        sizeStatus.style.position = 'absolute';
+        sizeStatus.style.bottom = '130px';
+        sizeStatus.style.left = '50%';
+        sizeStatus.style.transform = 'translateX(-50%)';
+        sizeStatus.style.color = 'white';
+        sizeStatus.style.fontWeight = 'bold';
+        sizeStatus.style.textShadow = '1px 1px 2px black';
+        sizeStatus.style.fontSize = '18px';
+        sizeStatus.style.zIndex = '100';
+        sizeStatus.textContent = "Block Size: Normal (5x5)";
+        document.body.appendChild(sizeStatus);
+
+        window.toggleBlockSize = function() {
+            let idx = blockTypes.indexOf(currentBlockType);
+            idx = (idx + 1) % blockTypes.length;
+            currentBlockType = blockTypes[idx];
+            sizeStatus.textContent = "Block Size: " + currentBlockType.name;
+        };
+
         // Terrain generation
         const gridHelper = new THREE.GridHelper( 1000, 200, 0x000000, 0x000000 );
         gridHelper.material.opacity = 0.2;
@@ -387,6 +415,56 @@
             box.receiveShadow = true;
             scene.add( box );
             objects.push( box );
+        }
+
+        // --- TREES ---
+        const woodMat = new THREE.MeshLambertMaterial({color: 0x4a2e15}); // Brown wood
+        const leafMat = new THREE.MeshLambertMaterial({color: 0x228b22}); // Green leaves
+
+        const createTree = (x, z) => {
+            // Trunk
+            for(let y=0; y<4; y++) {
+                const trunk = new THREE.Mesh(boxGeometry, woodMat);
+                const edges = new THREE.EdgesGeometry( boxGeometry );
+                const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
+                trunk.add( line );
+                trunk.position.set(x, y*5 + 2.5, z);
+                trunk.castShadow = true; trunk.receiveShadow = true;
+                scene.add(trunk);
+                objects.push(trunk);
+            }
+            // Leaves
+            for(let lx=-1; lx<=1; lx++) {
+                for(let lz=-1; lz<=1; lz++) {
+                    for(let ly=3; ly<=4; ly++) {
+                        if (lx===0 && lz===0 && ly===3) continue; // skip core trunk
+                        const leaf = new THREE.Mesh(boxGeometry, leafMat);
+                        const edges = new THREE.EdgesGeometry( boxGeometry );
+                        const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
+                        leaf.add( line );
+                        leaf.position.set(x + lx*5, ly*5 + 2.5, z + lz*5);
+                        leaf.castShadow = true; leaf.receiveShadow = true;
+                        scene.add(leaf);
+                        objects.push(leaf);
+                    }
+                }
+            }
+            // Top leaf
+            const topLeaf = new THREE.Mesh(boxGeometry, leafMat);
+            const tedges = new THREE.EdgesGeometry( boxGeometry );
+            const tline = new THREE.LineSegments( tedges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
+            topLeaf.add( tline );
+            topLeaf.position.set(x, 5*5 + 2.5, z);
+            topLeaf.castShadow = true; topLeaf.receiveShadow = true;
+            scene.add(topLeaf);
+            objects.push(topLeaf);
+        };
+
+        for(let i=0; i<15; i++) {
+            const tx = Math.floor(Math.random() * 80 - 40) * 5;
+            const tz = Math.floor(Math.random() * 80 - 40) * 5;
+            if (tz < -20 && tx > -40 && tx < 40) continue; // avoid boss area
+            createTree(tx, tz);
         }
         
         // --- MR GONZALEZ ROBOT BOSS ---
@@ -985,13 +1063,13 @@
             if ( intersects.length > 0 ) {
                 const intersect = intersects[ 0 ];
                 
-                const voxel = new THREE.Mesh( boxGeometry, getMaterial(currentColor) );
-                const edges = new THREE.EdgesGeometry( boxGeometry );
+                const voxel = new THREE.Mesh( currentBlockType.geo, getMaterial(currentColor) );
+                const edges = new THREE.EdgesGeometry( currentBlockType.geo );
                 const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } ) );
                 voxel.add( line );
                 
                 voxel.position.copy( intersect.point ).add( intersect.face.normal );
-                voxel.position.divideScalar( 5 ).floor().multiplyScalar( 5 ).addScalar( 2.5 );
+                voxel.position.divideScalar( currentBlockType.scale ).floor().multiplyScalar( currentBlockType.scale ).addScalar( currentBlockType.yOff );
                 voxel.castShadow = true;
                 voxel.receiveShadow = true;
                 scene.add( voxel );
@@ -1094,6 +1172,9 @@
                 case 'ShiftRight':
                     moveDown = true;
                     break;
+                case 'KeyQ': 
+                    window.toggleBlockSize(); 
+                    break;
                 case 'KeyF':
                     isFlyMode = !isFlyMode;
                     if(isFlyMode) {
@@ -1147,7 +1228,7 @@
         document.addEventListener( 'keyup', onKeyUp );
 
         // Crosshair line builder frame
-        const rollOverGeo = new THREE.BoxGeometry( 5.1, 5.1, 5.1 );
+        const rollOverGeo = new THREE.BoxGeometry( 1.02, 1.02, 1.02 );
         const rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity: 0.5, transparent: true, wireframe: true } );
         const rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
         scene.add( rollOverMesh );
@@ -1180,8 +1261,9 @@
                 
                 if ( !isLookingAtBoss && intersects.length > 0 ) {
                     const intersect = intersects[ 0 ];
+                    rollOverMesh.scale.set(currentBlockType.scale, currentBlockType.scale, currentBlockType.scale);
                     rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
-                    rollOverMesh.position.divideScalar( 5 ).floor().multiplyScalar( 5 ).addScalar( 2.5 );
+                    rollOverMesh.position.divideScalar( currentBlockType.scale ).floor().multiplyScalar( currentBlockType.scale ).addScalar( currentBlockType.yOff );
                     rollOverMesh.visible = true;
                     rollOverMaterial.color.setHex(currentColor);
                 } else {
@@ -1261,6 +1343,13 @@
                     if(moveUp) velocity.y += upSpeed * delta;
                     if(moveDown) velocity.y -= upSpeed * delta;
                     controls.getObject().position.y += ( velocity.y * delta );
+
+                    // Fly height limit
+                    const flyLimit = 200;
+                    if (controls.getObject().position.y > flyLimit) {
+                        controls.getObject().position.y = flyLimit;
+                        velocity.y = 0;
+                    }
                 } else {
                     // Gravity logic
                     velocity.y -= 9.8 * 60.0 * delta; // 60.0 = gravity multiplier
