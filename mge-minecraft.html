@@ -227,7 +227,7 @@
             <p><strong>WASD</strong> to move around | <strong>SPACE</strong> to jump</p>
             <p><strong>F</strong> to toggle Fly Mode (Shift to go down)</p>
             <p><strong>Find Mini-Robots</strong> hiding in the map and click them to get your homework!</p>
-            <p style="color: #ff6b6b; font-weight: bold; margin-top: 15px;">Target the Giant Robot and click to fight!</p>
+            <p style="color: #ff4444; font-weight: 900; margin-top: 15px; font-size: 26px; text-shadow: 0 0 15px rgba(255,0,0,0.8); border: 2px dashed #ff4444; padding: 10px; border-radius: 10px;">💥 CLICK THE GIANT ROBOT TO DEFEAT IT! 💥</p>
             <p style="color: #a78bfa; font-weight: bold; margin-top: 5px;">Press ESC to pause and access the Exit button.</p>
             <p style="margin-top: 30px; font-weight: 800; font-size: 24px; color: #4ecdc4; animation: pulse 2s infinite;">Click Anywhere to Start Play</p>
         </div>
@@ -620,10 +620,13 @@
         function startBuildChallenge() {
             if (activeBuildChallenge) return; // Already active
 
-            // clear area around (0, y, -40)
+            const bx = bossGroup.position.x;
+            const bz = bossGroup.position.z;
+
+            // clear area around boss where we spawn
             for(let i = objects.length - 1; i >= 0; i--) {
                 const obj = objects[i];
-                if(obj !== ground && obj.position.x >= -20 && obj.position.x <= 20 && obj.position.z >= -55 && obj.position.z <= -25) {
+                if(obj !== ground && obj.position.x >= bx - 30 && obj.position.x <= bx + 30 && obj.position.z >= bz - 30 && obj.position.z <= bz + 30) {
                     scene.remove(obj);
                     objects.splice(i, 1);
                 }
@@ -645,12 +648,20 @@
 
             const bpMat = new THREE.MeshBasicMaterial({color: 0x34d399, transparent: true, opacity: 0.4, wireframe: true});
 
+            // We want it slightly in front of the boss
+            const dirX = Math.sin(bossGroup.rotation.y);
+            const dirZ = Math.cos(bossGroup.rotation.y);
+            const spawnX = bx + dirX * 20;
+            const spawnZ = bz + dirZ * 20;
+
+            const snapBx = Math.floor(spawnX/5)*5;
+            const snapBz = Math.floor(spawnZ/5)*5;
+
             archwayCoords.forEach(c => {
                 const bpMesh = new THREE.Mesh(boxGeometry, bpMat);
-                // n * 5 + 2.5
-                const px = Math.floor(c.x) * 5 + 2.5;
+                const px = snapBx + Math.floor(c.x) * 5 + 2.5;
                 const py = Math.floor(c.y) * 5 + 2.5; 
-                const pz = -40 + Math.floor(c.z) * 5 + 2.5; // near boss
+                const pz = snapBz + Math.floor(c.z) * 5 + 2.5; 
 
                 bpMesh.position.set(px, py, pz);
                 scene.add(bpMesh);
@@ -1244,6 +1255,28 @@
                 leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
                 rightArm.rotation.x = -Math.sin(time * 0.003) * 0.2;
                 bossHead.rotation.y = Math.sin(time * 0.001) * 0.2;
+                
+                // Bobbing up and down
+                bossGroup.position.y = Math.sin(time * 0.002) * 5;
+
+                // Move and rotate relative to player
+                if (controls.isLocked) {
+                    const delta = 0.016; // approx 60fps
+                    const pPos = controls.getObject().position;
+                    
+                    const targetAngle = Math.atan2(pPos.x - bossGroup.position.x, pPos.z - bossGroup.position.z);
+                    let diff = targetAngle - bossGroup.rotation.y;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    bossGroup.rotation.y += diff * 0.03;
+
+                    const distToPlayer = bossGroup.position.distanceTo(pPos);
+                    if (distToPlayer > 80) {
+                        bossGroup.translateZ(15 * delta); 
+                    } else if (distToPlayer < 40) {
+                        bossGroup.translateZ(-15 * delta); // back away
+                    }
+                }
             }
 
             if ( controls.isLocked === true ) {
@@ -1271,11 +1304,20 @@
                 }
 
                 if(isLookingAtBoss) {
-                    document.getElementById('crosshair').style.color = 'red';
+                    document.getElementById('crosshair').style.color = '#ff4444';
+                    document.getElementById('crosshair').style.textShadow = '0 0 10px #ff0000, 2px 2px 4px black';
                     document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1.5)';
+                    document.getElementById('crosshair').textContent = "💥 CLICK ROBOT TO DEFEAT IT 💥";
+                    document.getElementById('crosshair').style.width = "auto";
+                    document.getElementById('crosshair').style.whiteSpace = "nowrap";
+                    document.getElementById('crosshair').style.fontWeight = "900";
                 } else {
                     document.getElementById('crosshair').style.color = 'white';
+                    document.getElementById('crosshair').style.textShadow = '1px 1px 2px black';
                     document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1)';
+                    document.getElementById('crosshair').textContent = "十";
+                    document.getElementById('crosshair').style.width = "20px";
+                    document.getElementById('crosshair').style.fontWeight = "normal";
                 }
 
                 const delta = ( time - prevTime ) / 1000;

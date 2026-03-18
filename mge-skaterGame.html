@@ -275,12 +275,13 @@
             collidables.push(bowl);
         }
 
-        createWedge(0, -30, Math.PI / 2);
-        createWedge(0, 30, -Math.PI / 2);
-        createWedge(30, 0, 0);
-        
-        createBowl(-40, -40);
-        createBowl(40, -40);
+        // Gap feature in center
+        createWedge(0, -12, -Math.PI / 2); // Takeoff facing +Z
+        createWedge(0, 12, Math.PI / 2);   // Landing facing +Z
+
+        // Additional ramps around edges
+        createWedge(-40, 0, 0); // Ride +X
+        createWedge(40, -20, Math.PI); // Ride -X
 
         // Awesome Half Pipe
         function createHalfpipe(x, z, rotationY) {
@@ -323,8 +324,7 @@
             collidables.push(hpGroup);
         }
         
-        createHalfpipe(40, 20, 0);
-        createHalfpipe(-40, 20, Math.PI / 2);
+        createHalfpipe(0, 40, Math.PI / 2);
 
         const boxGeo = new THREE.BoxGeometry(10, 2, 4);
         const boxMat = new THREE.MeshPhongMaterial({ color: 0xaa5555 });
@@ -380,9 +380,31 @@
         const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
         const headMat = new THREE.MeshPhongMaterial({ color: 0xfcd34d });
         const head = new THREE.Mesh(headGeo, headMat);
-        head.position.y = 1.85;
+        const headGroup = new THREE.Group();
+        headGroup.position.set(0, 1.6, 0); // Neck pivot
+        head.position.set(0, 0.25, 0);
         head.castShadow = true;
-        skaterGroup.add(head);
+        headGroup.add(head);
+        skaterGroup.add(headGroup);
+
+        // Arms
+        const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25);
+        const armL = new THREE.Mesh(armGeo, headMat);
+        const armR = new THREE.Mesh(armGeo, headMat);
+
+        const armLGroup = new THREE.Group();
+        armLGroup.position.set(-0.55, 1.4, 0); // Left shoulder pivot
+        armL.position.set(0, -0.35, 0);
+        armL.castShadow = true;
+        armLGroup.add(armL);
+        skaterGroup.add(armLGroup);
+
+        const armRGroup = new THREE.Group();
+        armRGroup.position.set(0.55, 1.4, 0); // Right shoulder pivot
+        armR.position.set(0, -0.35, 0);
+        armR.castShadow = true;
+        armRGroup.add(armR);
+        skaterGroup.add(armRGroup);
 
         // Legs
         const legGeo = new THREE.BoxGeometry(0.3, 0.9, 0.3);
@@ -459,6 +481,12 @@
             deckGroup.rotation.set(0,0,0);
             skaterGroup.rotation.x = 0;
             skaterGroup.position.y = 0.25;
+            armLGroup.rotation.z = 0;
+            armLGroup.rotation.x = 0;
+            armRGroup.rotation.z = 0;
+            armRGroup.rotation.x = 0;
+            headGroup.rotation.y = 0;
+            headGroup.rotation.x = 0;
             document.getElementById('bail-display').style.opacity = 0;
             document.getElementById('trick-display').style.opacity = 0;
             state.currentTrick = null;
@@ -651,6 +679,44 @@
                         
                         finishLanding();
                     }
+                }
+            }
+
+            // --- ANIMATE CHARACTER HEAD AND ARMS ---
+            if (state.isBailing) {
+                // Flail arms when bailing
+                armLGroup.rotation.z = Math.sin(Date.now() * 0.01) * 2;
+                armLGroup.rotation.x = Math.cos(Date.now() * 0.01) * 2;
+                armRGroup.rotation.z = Math.sin(Date.now() * 0.01 + 1) * 2;
+                armRGroup.rotation.x = Math.cos(Date.now() * 0.01 + 1) * 2;
+                headGroup.rotation.x = Math.sin(Date.now() * 0.02);
+            } else if (state.isJumping) {
+                // Raise arms up in air
+                armLGroup.rotation.z = Math.PI / 1.5;
+                armRGroup.rotation.z = -Math.PI / 1.5;
+                // Look down slightly when doing tricks
+                if (state.flipSpin !== 0 || state.shuvitSpin !== 0) {
+                    headGroup.rotation.x = Math.PI / 6;
+                } else {
+                    headGroup.rotation.x = 0;
+                }
+            } else {
+                // Balanced stance on the board
+                armLGroup.rotation.z = Math.PI / 8; // Slight lift
+                armRGroup.rotation.z = -Math.PI / 8;
+                armLGroup.rotation.x = 0;
+                armRGroup.rotation.x = 0;
+                headGroup.rotation.x = 0;
+
+                // Look where turning
+                if (keys.a) headGroup.rotation.y = Math.PI / 4;
+                else if (keys.d) headGroup.rotation.y = -Math.PI / 4;
+                else headGroup.rotation.y = 0;
+                
+                // If sliding, wild arm pose!
+                if (state.currentTrick === 'Board Slide' || state.currentTrick === 'Blunt Slide') {
+                    armLGroup.rotation.z = Math.PI / 2;
+                    armRGroup.rotation.z = -Math.PI / 2;
                 }
             }
 

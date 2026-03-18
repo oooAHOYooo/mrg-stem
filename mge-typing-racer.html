@@ -38,7 +38,7 @@
             font-size: 3.5rem;
             color: var(--neon-pink);
             text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
-            margin-top: 20px;
+            margin-top: 10px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -47,7 +47,7 @@
             font-size: 1.2rem;
             color: var(--neon-blue);
             text-shadow: 0 0 5px var(--neon-blue);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
 
@@ -58,15 +58,15 @@
             border: 2px solid var(--neon-blue);
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(69, 243, 255, 0.2);
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 10px 20px;
+            margin-bottom: 15px;
             position: relative;
             overflow: hidden;
         }
 
         .track-lane {
             position: relative;
-            height: 80px;
+            height: 60px;
             border-bottom: 2px dashed #333;
             display: flex;
             align-items: center;
@@ -77,7 +77,7 @@
         }
 
         .car {
-            font-size: 3rem;
+            font-size: 2.5rem;
             position: absolute;
             left: 0;
             transition: left 0.1s linear;
@@ -91,10 +91,10 @@
 
         .exhaust {
             position: absolute;
-            left: -20px;
+            left: -15px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             opacity: 0;
             transition: opacity 0.1s;
         }
@@ -133,9 +133,9 @@
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--neon-pink);
             border-radius: 15px;
-            padding: 30px;
-            font-size: 1.8rem;
-            line-height: 1.6;
+            padding: 20px;
+            font-size: 1.5rem;
+            line-height: 1.5;
             box-shadow: inset 0 0 20px rgba(255, 42, 122, 0.1), 0 0 20px rgba(255, 42, 122, 0.2);
             position: relative;
         }
@@ -179,9 +179,9 @@
             justify-content: space-between;
             width: 90%;
             max-width: 1000px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-family: 'Racing Sans One', cursive;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             color: var(--neon-blue);
         }
 
@@ -209,22 +209,33 @@
             background: transparent;
             border: 2px solid var(--neon-blue);
             color: var(--neon-blue);
-            padding: 15px 40px;
-            font-size: 2rem;
+            padding: 10px 30px;
+            font-size: 1.5rem;
             font-family: 'Racing Sans One', cursive;
             cursor: pointer;
             border-radius: 5px;
             transition: all 0.3s;
             text-transform: uppercase;
             box-shadow: 0 0 15px rgba(69, 243, 255, 0.3);
-            margin-top: 20px;
+            margin: 10px;
         }
 
-        .btn:hover {
+        .btn:hover, .btn.active {
             background: var(--neon-blue);
             color: #000;
             box-shadow: 0 0 30px var(--neon-blue);
             transform: scale(1.05);
+        }
+
+        .btn-adv:hover, .btn-adv.active {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 30px var(--neon-pink);
+        }
+
+        .btn-adv.active {
+            background: var(--neon-pink);
+            color: #000;
         }
 
         .results-modal {
@@ -240,7 +251,7 @@
         }
 
         .stat-row {
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin: 10px 0;
             color: #fff;
         }
@@ -249,7 +260,7 @@
             width: 100%;
             height: 10px;
             background: #222;
-            margin-top: 15px;
+            margin-top: 10px;
             border-radius: 5px;
             overflow: hidden;
             box-shadow: 0 0 5px #000 inset;
@@ -279,6 +290,46 @@
             80% { transform: translate(-1px, -1px) rotate(1deg); }
             90% { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        /* Keyboard Styles */
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .key {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--muted-gray);
+            border-radius: 4px;
+            color: var(--muted-gray);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            min-width: 35px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .key.space {
+            width: 300px;
+        }
+        .key.shift {
+            width: 80px;
+        }
+        .key.highlight {
+            background: var(--neon-pink);
+            color: #fff;
+            border-color: #fff;
+            box-shadow: 0 0 15px var(--neon-pink);
+            transform: scale(1.1);
+            z-index: 2;
         }
 
     </style>
@@ -323,19 +374,83 @@
         </div>
     </div>
 
+    <!-- Visual Keyboard -->
+    <div class="keyboard" id="keyboard">
+        <div class="keyboard-row">
+            <div class="key" data-key="1">1</div>
+            <div class="key" data-key="2">2</div>
+            <div class="key" data-key="3">3</div>
+            <div class="key" data-key="4">4</div>
+            <div class="key" data-key="5">5</div>
+            <div class="key" data-key="6">6</div>
+            <div class="key" data-key="7">7</div>
+            <div class="key" data-key="8">8</div>
+            <div class="key" data-key="9">9</div>
+            <div class="key" data-key="0">0</div>
+            <div class="key" data-key="-">-</div>
+        </div>
+        <div class="keyboard-row">
+            <div class="key" data-key="q">Q</div>
+            <div class="key" data-key="w">W</div>
+            <div class="key" data-key="e">E</div>
+            <div class="key" data-key="r">R</div>
+            <div class="key" data-key="t">T</div>
+            <div class="key" data-key="y">Y</div>
+            <div class="key" data-key="u">U</div>
+            <div class="key" data-key="i">I</div>
+            <div class="key" data-key="o">O</div>
+            <div class="key" data-key="p">P</div>
+        </div>
+        <div class="keyboard-row">
+            <div class="key" data-key="a">A</div>
+            <div class="key" data-key="s">S</div>
+            <div class="key" data-key="d">D</div>
+            <div class="key" data-key="f">F</div>
+            <div class="key" data-key="g">G</div>
+            <div class="key" data-key="h">H</div>
+            <div class="key" data-key="j">J</div>
+            <div class="key" data-key="k">K</div>
+            <div class="key" data-key="l">L</div>
+            <div class="key" data-key=":">:</div>
+            <div class="key" data-key="'">'</div>
+        </div>
+        <div class="keyboard-row">
+            <div class="key shift" data-key="shift">SHIFT</div>
+            <div class="key" data-key="z">Z</div>
+            <div class="key" data-key="x">X</div>
+            <div class="key" data-key="c">C</div>
+            <div class="key" data-key="v">V</div>
+            <div class="key" data-key="b">B</div>
+            <div class="key" data-key="n">N</div>
+            <div class="key" data-key="m">M</div>
+            <div class="key" data-key=",">,</div>
+            <div class="key" data-key=".">.</div>
+            <div class="key" data-key="/">/</div>
+            <div class="key shift" data-key="shift">SHIFT</div>
+        </div>
+        <div class="keyboard-row">
+            <div class="key space" data-key=" ">SPACE</div>
+        </div>
+    </div>
+
     <!-- Start Screen Overlay -->
     <div class="overlay" id="start-screen">
-        <h1 style="font-size: 5rem; margin-bottom: 0;">TYPING RACER</h1>
-        <p style="font-size: 1.5rem; color: var(--neon-blue); margin-bottom: 30px;">Type famous historical documents to accelerate!</p>
+        <h1 style="font-size: 4.5rem; margin-bottom: 0;">TYPING RACER</h1>
+        <p style="font-size: 1.3rem; color: var(--neon-blue); margin-bottom: 20px;">Type famous historical documents to accelerate!</p>
         
-        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px; border: 1px solid var(--neon-pink); max-width: 600px; text-align: center; font-size: 1.2rem; line-height: 1.5; margin-bottom: 30px;">
+        <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; border: 1px solid var(--neon-pink); max-width: 600px; text-align: center; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;">
             <p style="color: var(--neon-green)">Correct keys = Accelerate 🏎💨</p>
             <p style="color: var(--error-red)">Wrong keys = Engine Stall 💥</p>
             <p style="color: #45f3ff">Combo = Nitro Boost 🚀</p>
-            <p style="margin-top: 10px; color: #aaa;">Volume UP for optimal experience!</p>
+            <p style="margin-top: 5px; color: #aaa;">Follow the highlighted keyboard guide!</p>
         </div>
 
-        <button class="btn" id="start-btn">RACE NOW</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn active" id="btn-easy">EASY (No Case, Slow Bots)</button>
+            <button class="btn btn-adv" id="btn-adv">ADVANCED (Case Sensitive)</button>
+        </div>
+
+        <button class="btn" id="start-btn" style="padding: 15px 50px; border-color: #fff; color: #fff; background: rgba(255, 255, 255, 0.1);">START RACE</button>
         <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
     </div>
 
@@ -347,7 +462,7 @@
             <div class="stat-row" style="color: var(--neon-green)">Speed: <span id="final-wpm">0</span> WPM</div>
             <div class="stat-row" style="color: #f1c40f">Accuracy: <span id="final-acc">0</span>%</div>
             
-            <button class="btn" id="restart-btn" style="margin-top: 40px;">PLAY AGAIN</button>
+            <button class="btn" id="restart-btn" style="margin-top: 30px;">PLAY AGAIN</button>
             <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px; display: block; margin-left: auto; margin-right: auto;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
         </div>
     </div>
@@ -437,8 +552,7 @@
         function playNitroSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // White noise burst
-            const bufferSize = audioCtx.sampleRate * 0.5; // 0.5 seconds
+            const bufferSize = audioCtx.sampleRate * 0.5;
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
@@ -464,7 +578,6 @@
             
             noise.start();
             
-            // Jet whoosh
             const osc = audioCtx.createOscillator();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(800, audioCtx.currentTime);
@@ -482,7 +595,7 @@
 
         function playVictorySound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const notes = [440, 554.37, 659.25, 880]; // A major arpeggio
+            const notes = [440, 554.37, 659.25, 880];
             
             notes.forEach((freq, index) => {
                 const osc = audioCtx.createOscillator();
@@ -513,17 +626,17 @@
         let isStarted = false;
         let isFinished = false;
         let combo = 0;
-        let lastCharTime = 0;
+        
+        // Mode settings
+        let isAdvancedMode = false;
         
         // Progress mechanics
-        const finishPx = window.innerWidth > 1000 ? 900 : window.innerWidth * 0.8; 
-        
-        let playerProg = 0; // 0 to 1
+        let playerProg = 0; 
         let bot1Prog = 0;
         let bot2Prog = 0;
         
-        const bot1Speed = 0.0008; // Base progress per frame (varies)
-        const bot2Speed = 0.0007;
+        let bot1Speed = 0.0003; 
+        let bot2Speed = 0.00025;
 
         let gameLoopRAF;
 
@@ -538,6 +651,63 @@
         const bot1Car = document.getElementById('bot1');
         const bot2Car = document.getElementById('bot2');
         const nitroBar = document.getElementById('nitro-bar');
+
+        const btnEasy = document.getElementById('btn-easy');
+        const btnAdv = document.getElementById('btn-adv');
+
+        btnEasy.addEventListener('click', () => {
+            isAdvancedMode = false;
+            btnEasy.classList.add('active');
+            btnAdv.classList.remove('active');
+            bot1Speed = 0.0003;
+            bot2Speed = 0.00025;
+        });
+
+        btnAdv.addEventListener('click', () => {
+            isAdvancedMode = true;
+            btnAdv.classList.add('active');
+            btnEasy.classList.remove('active');
+            bot1Speed = 0.0008;
+            bot2Speed = 0.00075;
+        });
+
+        function highlightNextKey() {
+            document.querySelectorAll('.key').forEach(k => k.classList.remove('highlight'));
+            
+            if (currentIndex >= currentText.length) return;
+            
+            const upNext = currentText[currentIndex];
+            let needsShift = false;
+            let baseKey = upNext.toLowerCase();
+            
+            const shiftMap = {
+                '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8', '(':'9', ')':'0',
+                '_':'-', '+':'=', '{':'[', '}':']', '|':'\\', ':':';', '"':'\'', '<':',', '>':'.', '?':'/'
+            };
+
+            if (upNext !== upNext.toLowerCase() && upNext !== upNext.toUpperCase()) {
+                needsShift = true; // it's a letter and uppercase
+            } else if (upNext !== upNext.toLowerCase() && upNext.match(/[A-Z]/)) {
+                needsShift = true;
+            }
+
+            if (shiftMap[upNext]) {
+                needsShift = true;
+                baseKey = shiftMap[upNext];
+            }
+            
+            // Only require shift if in advanced mode
+            if (isAdvancedMode && needsShift) {
+                document.querySelectorAll('.key[data-key="shift"]').forEach(k => k.classList.add('highlight'));
+            }
+
+            // Find the key to press
+            document.querySelectorAll('.key').forEach(k => {
+                if (k.dataset.key === baseKey) {
+                    k.classList.add('highlight');
+                }
+            });
+        }
 
         function initGame() {
             const doc = documents[Math.floor(Math.random() * documents.length)];
@@ -559,7 +729,6 @@
             updateCarPositions();
             nitroBar.style.width = '0%';
             
-            // Create character spans
             for (let i = 0; i < currentText.length; i++) {
                 const span = document.createElement('span');
                 span.textContent = currentText[i];
@@ -573,9 +742,10 @@
             accDisplay.textContent = '100';
             document.body.classList.remove('nitro-active');
             
+            highlightNextKey();
+
             if (gameLoopRAF) cancelAnimationFrame(gameLoopRAF);
             
-            // Initial Rev
             playRevSound();
         }
 
@@ -585,7 +755,6 @@
             initGame();
             startTime = Date.now();
             isStarted = true;
-            lastCharTime = Date.now();
             
             gameLoopRAF = requestAnimationFrame(gameLoop);
         }
@@ -602,26 +771,26 @@
         window.addEventListener('keydown', (e) => {
             if (!isStarted || isFinished) return;
             
-            // Ignore modifiers
             if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta' || e.key === 'CapsLock' || e.key === 'Tab') {
                 return;
             }
 
-            // Prevent scroll on spacebar
             if (e.key === ' ') e.preventDefault();
 
             const expectedChar = currentText[currentIndex];
             
-            // Handle Backspace (optional, but typing racers usually don't allow backspace, you just type correctly to advance)
-            if (e.key === 'Backspace') {
-                // Not allowed in this hardcore mode!
-                return;
-            }
+            if (e.key === 'Backspace') return;
 
             totalTyped++;
 
-            if (e.key === expectedChar) {
-                // Correct!
+            let isMatch = false;
+            if (isAdvancedMode) {
+                isMatch = (e.key === expectedChar);
+            } else {
+                isMatch = (e.key.toLowerCase() === expectedChar.toLowerCase()) || (expectedChar === ' ' && e.key === ' ');
+            }
+
+            if (isMatch) {
                 playTypeSound(e.key === ' ');
                 charElements[currentIndex].classList.remove('current', 'incorrect');
                 charElements[currentIndex].classList.add('correct');
@@ -639,23 +808,22 @@
                     setTimeout(() => document.body.classList.remove('nitro-active'), 500);
                 }
 
-                // Update progress based on characters completed
                 playerProg = currentIndex / currentText.length;
 
                 if (currentIndex < currentText.length) {
                     charElements[currentIndex].classList.add('current');
+                    highlightNextKey();
                 } else {
+                    document.querySelectorAll('.key').forEach(k => k.classList.remove('highlight'));
                     finishGame();
                 }
 
             } else {
-                // Incorrect
                 playErrorSound();
                 errors++;
                 combo = 0;
                 charElements[currentIndex].classList.add('incorrect');
                 
-                // Shake screen slightly
                 document.body.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
                 setTimeout(() => document.body.style.transform = 'none', 50);
             }
@@ -664,22 +832,18 @@
         });
 
         function updateStats() {
-            // WPM calculation
-            const timeElapsed = (Date.now() - startTime) / 60000; // in minutes
+            const timeElapsed = (Date.now() - startTime) / 60000;
             if (timeElapsed > 0) {
-                // Standard: 5 chars = 1 word
                 const wordsTyped = (currentIndex) / 5;
                 const wpm = Math.round(wordsTyped / timeElapsed);
                 wpmDisplay.textContent = wpm;
             }
 
-            // Accuracy
             if (totalTyped > 0) {
                 const acc = Math.round(((totalTyped - errors) / totalTyped) * 100);
                 accDisplay.textContent = Math.max(0, acc);
             }
             
-            // Nitro bar visual (Combo based)
             let comboMax = 15;
             let currentCombo = combo % comboMax;
             if (combo > 0 && currentCombo === 0) currentCombo = comboMax;
@@ -696,8 +860,6 @@
         function gameLoop() {
             if (!isStarted || isFinished) return;
 
-            // Move Bots
-            // Add some jitter to bots speed to make it feel natural
             let b1j = bot1Speed * (0.8 + Math.random() * 0.4);
             let b2j = bot2Speed * (0.5 + Math.random() * 0.8);
 
@@ -706,10 +868,9 @@
 
             updateCarPositions();
 
-            // Check if bots finished
             if (bot1Prog >= 1 || bot2Prog >= 1) {
                 if (playerProg < 1) {
-                    finishGame(); // A bot finished before player
+                    finishGame();
                 }
             }
 
@@ -717,7 +878,7 @@
         }
 
         function updateCarPositions() {
-            const trackWidth = document.getElementById('track-container').clientWidth - 100; // Leave space for finish line width
+            const trackWidth = document.getElementById('track-container').clientWidth - 100; 
             
             playerCar.style.left = `${Math.min(1, playerProg) * trackWidth}px`;
             bot1Car.style.left = `${Math.min(1, bot1Prog) * trackWidth}px`;
@@ -728,7 +889,6 @@
             isFinished = true;
             playerCar.classList.remove('moving');
             
-            // Determine rank
             let rank = 1;
             if (bot1Prog >= 1) rank++;
             if (bot2Prog >= 1) rank++;
@@ -750,7 +910,7 @@
 
             setTimeout(() => {
                 resultsScreen.classList.remove('hidden');
-            }, 1000); // Wait a second before showing results
+            }, 1000); 
         }
 
     </script>

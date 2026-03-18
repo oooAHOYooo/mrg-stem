@@ -198,7 +198,7 @@
             gap: 0.5rem;
         }
 
-        textarea {
+        textarea, input[type="text"] {
             flex: 1;
             background: rgba(0,0,0,0.3);
             border: 1px solid var(--border-color);
@@ -212,12 +212,12 @@
             transition: border-color 0.2s;
         }
 
-        textarea:focus {
+        textarea:focus, input[type="text"]:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
         }
 
-        textarea::placeholder {
+        textarea::placeholder, input[type="text"]::placeholder {
             color: rgba(255,255,255,0.2);
         }
 
@@ -376,7 +376,26 @@
                 <span>Talk to the Robot! 🤖</span>
             </div>
             <div class="code-area">
-                <textarea id="prompt-input" placeholder="Type a magic command or a number from 1 to 8! 🪄"></textarea>
+                <input type="text" id="prompt-input" list="magic-commands" autocomplete="off" placeholder="Type a magic command or a number from 1 to 8! 🪄">
+                <datalist id="magic-commands">
+                    <option value="create a world"></option>
+                    <option value="add a player"></option>
+                    <option value="add an enemy"></option>
+                    <option value="add a goal"></option>
+                    <option value="make it jump"></option>
+                    <option value="make it spin"></option>
+                    <option value="make a fighting arena"></option>
+                    <option value="make a geometry dash level"></option>
+                    <option value="make a car game"></option>
+                    <option value="make a house"></option>
+                    <option value="make a zebra"></option>
+                    <option value="make a tree"></option>
+                    <option value="make a robot"></option>
+                    <option value="make a rocket"></option>
+                    <option value="add 1p controls"></option>
+                    <option value="add 2player controls"></option>
+                    <option value="clear"></option>
+                </datalist>
                 <div class="run-controls">
                     <span class="hint">Press Shift+Enter or click the button</span>
                     <button class="btn btn-primary" id="btn-submit">Build It! ⚡</button>
@@ -578,6 +597,12 @@
             let response = "";
             let somethingHappened = false;
 
+            // Direct make inquiry
+            if (lowerCmd === 'make' || lowerCmd === 'build' || lowerCmd === 'create' || lowerCmd === 'game') {
+                response += "What kind of game do you want to make? 🎮<br>Try typing one of these magic commands:<br><blockquote>make a fighting arena 🥊</blockquote><blockquote>make a geometry dash level 🟩</blockquote><blockquote>make a car game 🏎️</blockquote>";
+                return response;
+            }
+
             // Common colors mapping
             const colors = {
                 'red': 0xef4444, 'green': 0x22c55e, 'blue': 0x3b82f6, 
@@ -638,6 +663,142 @@
                 scene.add(cube);
                 animObjects.push(cube);
                 response += "Poof! Added a " + getObjColorName(chosenColor) + " cube. 🧊 ";
+                somethingHappened = true;
+            }
+
+            // Custom Objects
+            if (lowerCmd.includes('house') || lowerCmd.includes('home')) {
+                const baseGeo = new THREE.BoxGeometry(3, 3, 3);
+                const baseMat = new THREE.MeshStandardMaterial({ color: chosenColor === 0xffffff ? 0xef4444 : chosenColor });
+                const base = new THREE.Mesh(baseGeo, baseMat);
+                base.position.set(-2, 1.5, -3);
+                base.castShadow = true;
+                base.receiveShadow = true;
+                scene.add(base);
+
+                const roofGeo = new THREE.ConeGeometry(2.5, 2, 4);
+                const roofMat = new THREE.MeshStandardMaterial({ color: 0x374151 });
+                const roof = new THREE.Mesh(roofGeo, roofMat);
+                roof.position.set(-2, 4, -3);
+                roof.rotation.y = Math.PI / 4;
+                roof.castShadow = true;
+                scene.add(roof);
+
+                response += "Plop! Built a cozy blocky house! 🏠 ";
+                somethingHappened = true;
+            }
+
+            if (lowerCmd.includes('zebra') || lowerCmd.includes('animal')) {
+                const zebraGrp = new THREE.Group();
+                zebraGrp.position.set(3, 2.25, -2); // Adjusted Y for legs
+
+                const bodyGeo = new THREE.BoxGeometry(1.5, 1.5, 3);
+                const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                zebraGrp.add(body);
+
+                const stripeMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+                for(let i=0; i<3; i++) {
+                    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 0.4), stripeMat);
+                    stripe.position.z = -1 + i;
+                    zebraGrp.add(stripe);
+                }
+
+                const head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1.5), bodyMat);
+                head.position.set(0, 1.5, 1.5);
+                zebraGrp.add(head);
+
+                for(let i=0; i<4; i++) {
+                    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.5, 0.4), stripeMat);
+                    leg.position.set((i%2===0 ? -0.5 : 0.5), -1.5, (i<2 ? 1 : -1));
+                    zebraGrp.add(leg);
+                }
+
+                scene.add(zebraGrp);
+                zebraGrp.userData = { baseY: 2.25 };
+                animObjects.push(zebraGrp);
+
+                response += "Neigh! Built a blocky Zebra out of cubes! 🦓 ";
+                somethingHappened = true;
+            }
+
+            if (lowerCmd.includes('tree')) {
+                const treeGrp = new THREE.Group();
+                treeGrp.position.set(-3, 0, -2);
+                
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+                trunk.position.y = 1;
+                trunk.castShadow = true;
+                treeGrp.add(trunk);
+
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 3, 8), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
+                leaves.position.y = 3.5;
+                leaves.castShadow = true;
+                treeGrp.add(leaves);
+
+                scene.add(treeGrp);
+                treeGrp.userData = { baseY: 0 };
+                animObjects.push(treeGrp);
+
+                response += "Rustle! Planted a happy little Tree! 🌳 ";
+                somethingHappened = true;
+            }
+
+            if (lowerCmd.includes('robot') || lowerCmd.includes('bot')) {
+                const botGrp = new THREE.Group();
+                botGrp.position.set(0, 2, -2);
+
+                const body = new THREE.Mesh(new THREE.BoxGeometry(2, 2.5, 1.5), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
+                body.castShadow = true;
+                botGrp.add(body);
+
+                const head = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
+                head.position.y = 2;
+                head.castShadow = true;
+                botGrp.add(head);
+
+                const eye1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+                eye1.position.set(-0.3, 2.2, 0.8);
+                botGrp.add(eye1);
+
+                const eye2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+                eye2.position.set(0.3, 2.2, 0.8);
+                botGrp.add(eye2);
+
+                scene.add(botGrp);
+                botGrp.userData = { baseY: 2 };
+                animObjects.push(botGrp);
+
+                response += "Beep boop! Assembled a Robot! 🤖 ";
+                somethingHappened = true;
+            }
+
+            if (lowerCmd.includes('rocket') || lowerCmd.includes('ship')) {
+                const rocketGrp = new THREE.Group();
+                rocketGrp.position.set(2, 2, -4);
+
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 4, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                body.castShadow = true;
+                rocketGrp.add(body);
+
+                const nose = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 16), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                nose.position.y = 3;
+                nose.castShadow = true;
+                rocketGrp.add(nose);
+
+                const fin1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 1), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                fin1.position.set(1, -1.5, 0);
+                rocketGrp.add(fin1);
+
+                const fin2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1, 1), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                fin2.position.set(-1, -1.5, 0);
+                rocketGrp.add(fin2);
+
+                scene.add(rocketGrp);
+                rocketGrp.userData = { baseY: 2 };
+                animObjects.push(rocketGrp);
+
+                response += "Blast off! Built a Space Rocket! 🚀 ";
                 somethingHappened = true;
             }
 
@@ -759,6 +920,37 @@
                 somethingHappened = true;
             }
             
+            if (lowerCmd.includes('car') || lowerCmd.includes('race') || lowerCmd.includes('racing')) {
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 200), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.set(0, 0, -50);
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                for(let i=0; i<10; i++) {
+                    const line = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 5), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                    line.rotation.x = -Math.PI / 2;
+                    line.position.set(0, 0.01, -10 - (i*15));
+                    scene.add(line);
+                }
+
+                const car = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                car.position.set(0, 0.5, 5);
+                car.castShadow = true;
+                scene.add(car);
+                player1 = car;
+
+                const obstacle = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshStandardMaterial({ color: 0xeab308 }));
+                obstacle.position.set(3, 1, -30);
+                obstacle.castShadow = true;
+                scene.add(obstacle);
+
+                controlMode = 1;
+
+                response += "Vroom! Created a Car Racing game! 1P controls ON! Use W/A/S/D to drive! 🏎️💨 ";
+                somethingHappened = true;
+            }
+
             if (lowerCmd.includes('clear') || lowerCmd.includes('reset')) {
                 // Remove everything except lights and grid
                 const toRemove = [];
@@ -812,7 +1004,7 @@
                 typingIndicator.classList.remove('active');
                 
                 let codeBlock = "";
-                if(response.includes("cube") || response.includes("sphere") || response.includes("floor") || response.includes("bouncing") || response.includes("Whoosh") || response.includes("Bam") || response.includes("Boing") || response.includes("Poof") || response.includes("Wheee") || response.includes("Boom") || response.includes("Zap")) {
+                if(response.includes("cube") || response.includes("sphere") || response.includes("floor") || response.includes("bouncing") || response.includes("Whoosh") || response.includes("Bam") || response.includes("Boing") || response.includes("Poof") || response.includes("Wheee") || response.includes("Boom") || response.includes("Zap") || response.includes("Vroom") || response.includes("Plop") || response.includes("Neigh") || response.includes("Rustle") || response.includes("Beep boop") || response.includes("Blast off")) {
                     codeBlock = `<br><code style="color: var(--accent-secondary);">✨ [Running Magic Code] ✨</code>`;
                 }
                 
