@@ -1061,6 +1061,7 @@
         let prevTime = performance.now();
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
+        const downRaycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ) );
 
         const onKeyDown = function ( event ) {
             if(inMenu || inRiddle) return;
@@ -1263,12 +1264,20 @@
                 } else {
                     // Gravity logic
                     velocity.y -= 9.8 * 60.0 * delta; // 60.0 = gravity multiplier
+
+                    let platformY = 10; // Floor level
+                    downRaycaster.ray.origin.copy( controls.getObject().position );
+                    const downHits = downRaycaster.intersectObjects( objects, false );
+                    if (downHits.length > 0) {
+                        platformY = downHits[0].point.y + 10; // offset for eye level
+                    }
+
                     controls.getObject().position.y += ( velocity.y * delta );
 
-                    // Collision with floor (y < 10 since eye height is 10)
-                    if ( controls.getObject().position.y < 10 ) {
+                    // Collision with platform
+                    if ( controls.getObject().position.y <= platformY && velocity.y <= 0 ) {
                         velocity.y = 0;
-                        controls.getObject().position.y = 10;
+                        controls.getObject().position.y = platformY;
                         canJump = true;
                     }
                 }
