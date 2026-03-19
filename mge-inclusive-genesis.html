@@ -218,10 +218,10 @@
         }
 
         .btn-quick:hover, .btn-quick:focus {
-            background: var(--accent-secondary);
-            color: #000;
             border-color: #fff;
             transform: scale(1.05);
+            filter: brightness(1.2);
+            z-index: 10;
         }
 
         textarea {
@@ -360,27 +360,21 @@
         <!-- Bottom Left: Coding / Prompt -->
         <div class="panel editor-view">
             <div class="panel-header">
-                <span>⌨️ Magic Words Input</span>
-                <span>Click a button or type! ✨</span>
+                <span>🎨 Magic Colors Input</span>
+                <span>Click a color to build! ✨</span>
             </div>
-            <div class="code-area">
+            <div class="code-area" style="justify-content: center;">
                 <!-- Quick Visual Buttons for Accessibility -->
-                <div class="quick-buttons">
-                    <button class="btn-quick" onclick="insertPrompt('1')">1️⃣ World 🌍</button>
-                    <button class="btn-quick" onclick="insertPrompt('2')">2️⃣ Cube 🟦</button>
-                    <button class="btn-quick" onclick="insertPrompt('3')">3️⃣ Sphere 🔴</button>
-                    <button class="btn-quick" onclick="insertPrompt('4')">4️⃣ Donut 🍩</button>
-                    <button class="btn-quick" onclick="insertPrompt('5')">5️⃣ Pyramid 🔺</button>
-                    <button class="btn-quick" onclick="insertPrompt('6')">6️⃣ Star ⭐</button>
-                    <button class="btn-quick" onclick="insertPrompt('7')">7️⃣ Jump 🦘</button>
-                    <button class="btn-quick" onclick="insertPrompt('8')">8️⃣ Spin 🌪️</button>
-                    <button class="btn-quick" onclick="insertPrompt('9')">9️⃣ Clear 🧹</button>
-                </div>
-                
-                <textarea id="prompt-input" placeholder="Type a magic command or click a button above! 🪄" aria-label="Type your magic command here"></textarea>
-                <div class="run-controls">
-                    <span class="hint" style="color: #fff">Press <kbd>Enter</kbd> to build</span>
-                    <button class="btn btn-primary" id="btn-submit" style="font-size: 1.2rem; padding: 0.8rem 1.5rem;">Build It! ⚡</button>
+                <div class="quick-buttons" style="grid-template-columns: repeat(3, 1fr); gap: 1.2rem; height: 100%;">
+                    <button class="btn-quick" style="background: #34c759; color: black; font-size: 1.2rem;" onclick="submitColor('green')">Green (World) 🌍</button>
+                    <button class="btn-quick" style="background: #007aff; color: white; font-size: 1.2rem;" onclick="submitColor('blue')">Blue (Cube) 🟦</button>
+                    <button class="btn-quick" style="background: #ff3b30; color: white; font-size: 1.2rem;" onclick="submitColor('red')">Red (Sphere) 🔴</button>
+                    <button class="btn-quick" style="background: #ff9500; color: black; font-size: 1.2rem;" onclick="submitColor('orange')">Orange (Donut) 🍩</button>
+                    <button class="btn-quick" style="background: #ffcc00; color: black; font-size: 1.2rem;" onclick="submitColor('yellow')">Yellow (Pyramid) 🔺</button>
+                    <button class="btn-quick" style="background: #af52de; color: white; font-size: 1.2rem;" onclick="submitColor('purple')">Purple (Star) ⭐</button>
+                    <button class="btn-quick" style="background: #ff2d55; color: white; font-size: 1.2rem;" onclick="submitColor('pink')">Pink (Jump) 🦘</button>
+                    <button class="btn-quick" style="background: #32ade6; color: black; font-size: 1.2rem;" onclick="submitColor('cyan')">Cyan (Spin) 🌪️</button>
+                    <button class="btn-quick" style="background: #333333; color: white; font-size: 1.2rem;" onclick="submitColor('black')">Black (Clear) 🧹</button>
                 </div>
             </div>
         </div>
@@ -416,10 +410,21 @@
         }
 
         // Quick button insert function
-        function insertPrompt(val) {
-            const input = document.getElementById('prompt-input');
-            input.value = val;
-            submitPrompt();
+        function submitColor(color) {
+            addMessage(color, true);
+            promptHistory.push(color);
+
+            typingIndicator.classList.add('active');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Fake delay for AI effect
+            setTimeout(() => {
+                const response = parseCommand(color);
+                typingIndicator.classList.remove('active');
+                
+                addMessage(`<strong>Robot:</strong><br><br><span style="font-size: 1.2rem;">${response}</span>`);
+                saveToLocal();
+            }, 800); 
         }
 
         // === AGENT CHAT LOGIC ===
@@ -456,17 +461,16 @@
             addMessage(`
                 <strong>Hello friend! 🌟 I am your Helper Robot!</strong><br><br>
                 Let's make a beautiful 3D world together. It is very easy!<br><br>
-                You can click the buttons below, or type a number from <strong>1 to 9</strong>:<br><br>
-                1️⃣ Create a World 🌍<br>
-                2️⃣ Add a Player Cube 🟦<br>
-                3️⃣ Add a Player Sphere 🔴<br>
-                4️⃣ Add a Donut shape 🍩<br>
-                5️⃣ Add a Pyramid 🔺<br>
-                6️⃣ Add a Magic Star ⭐<br>
-                7️⃣ Make it Jump! 🦘<br>
-                8️⃣ Make it Spin! 🌪️<br>
-                9️⃣ Clear the Board 🧹<br><br>
-                <em>Hint: You can also say "make a red pyramid" or "blue donut"!</em>
+                Just click the magic colors below to build:<br><br>
+                🟢 Green: Create a World 🌍<br>
+                🔵 Blue: Add a Player Cube 🟦<br>
+                🔴 Red: Add a Player Sphere 🔴<br>
+                🟠 Orange: Add a Donut shape 🍩<br>
+                🟡 Yellow: Add a Pyramid 🔺<br>
+                🟣 Purple: Add a Magic Star ⭐<br>
+                💗 Pink: Make it Jump! 🦘<br>
+                🩵 Cyan: Make it Spin! 🌪️<br>
+                ⚫ Black: Clear the Board 🧹<br>
             `);
         }, 800);
 
@@ -582,15 +586,15 @@
             let lowerCmd = cmd.toLowerCase().trim();
             
             const optionMap = {
-                '1': 'create a world',
-                '2': 'add a player cube',
-                '3': 'add a sphere',
-                '4': 'add a donut',
-                '5': 'add a pyramid',
-                '6': 'add a star',
-                '7': 'make it jump',
-                '8': 'make it spin',
-                '9': 'clear'
+                'green': 'green create a world',
+                'blue': 'blue add a player cube',
+                'red': 'red add a sphere',
+                'orange': 'orange add a donut',
+                'yellow': 'yellow add a pyramid',
+                'purple': 'purple add a star',
+                'pink': 'pink make it jump',
+                'cyan': 'cyan make it spin',
+                'black': 'black clear'
             };
             
             if (optionMap[lowerCmd]) {
@@ -760,37 +764,8 @@
         }
 
         // === USER INPUT HANDLING ===
-        const inputArea = document.getElementById('prompt-input');
-        const btnSubmit = document.getElementById('btn-submit');
-
-        function submitPrompt() {
-            const text = inputArea.value.trim();
-            if(!text) return;
-
-            addMessage(text, true);
-            promptHistory.push(text);
-            inputArea.value = '';
-
-            typingIndicator.classList.add('active');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            // Fake delay for AI effect
-            setTimeout(() => {
-                const response = parseCommand(text);
-                typingIndicator.classList.remove('active');
-                
-                addMessage(`<strong>Robot:</strong><br><br><span style="font-size: 1.2rem;">${response}</span>`);
-                saveToLocal();
-            }, 800); 
-        }
-
-        btnSubmit.addEventListener('click', submitPrompt);
-        inputArea.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                submitPrompt();
-            }
-        });
+        // Removed old manual typing user input handling.
+        // Interactions are completely color button-click driven now.
 
         // === SAVING LOGIC ===
         function saveToLocal() {
