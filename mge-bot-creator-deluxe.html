@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bot Creator Deluxe!</title>
+    <!-- Anime/Action style fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Teko:wght@500;700&family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    
+    <style>
+        :root {
+            --neon-pink: #ff007f;
+            --neon-blue: #00f0ff;
+            --neon-yellow: #ffe600;
+            --neon-green: #39ff14;
+            --dark-bg: #111;
+            font-family: 'Teko', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--dark-bg);
+            color: white;
+            touch-action: manipulation;
+        }
+
+        #game-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Anime UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .stat-box {
+            background: rgba(17, 17, 17, 0.8);
+            border: 4px solid var(--neon-blue);
+            transform: skewX(-15deg);
+            padding: 10px 30px;
+            display: flex;
+            align-items: center;
+            box-shadow: 4px 4px 0px var(--neon-pink);
+            pointer-events: auto;
+        }
+
+        .stat-box-inner {
+            transform: skewX(15deg);
+            font-size: 28px;
+            letter-spacing: 2px;
+            display: flex;
+            gap: 15px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        .material-icon { color: var(--neon-yellow); }
+        .point-icon { color: var(--neon-blue); }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            pointer-events: none;
+            box-sizing: border-box;
+            padding: 80px 20px 20px 20px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Base Screen Bottom Bar */
+        #base-controls {
+            margin-top: auto;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: none;
+            flex-wrap: wrap;
+            padding-bottom: 20px;
+        }
+
+        .anime-btn {
+            background: var(--neon-pink);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Bangers', cursive;
+            font-size: 32px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            pointer-events: auto;
+            transform: skewX(-15deg);
+            box-shadow: -5px 5px 0px var(--neon-blue);
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .anime-btn span {
+            display: inline-block;
+            transform: skewX(15deg);
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .anime-btn:active {
+            transform: skewX(-15deg) translate(-2px, 2px);
+            box-shadow: -2px 2px 0px var(--neon-blue);
+        }
+
+        .anime-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: rgba(255,255,255,0.3);
+            transform: skewX(-20deg);
+            transition: left 0.3s;
+        }
+        .anime-btn:hover::before {
+            left: 150%;
+        }
+
+        .anime-btn-blue {
+            background: var(--neon-blue);
+            box-shadow: -5px 5px 0px var(--neon-pink);
+        }
+
+        .anime-btn-yellow {
+            background: var(--neon-yellow);
+            color: #111;
+            box-shadow: -5px 5px 0px var(--neon-pink);
+        }
+        .anime-btn-yellow span { text-shadow: none; }
+
+        .cost-text {
+            display: block;
+            font-size: 20px;
+            font-family: 'Teko', sans-serif;
+            margin-top: 5px;
+            color: #ffe600;
+            text-shadow: 1px 1px 0 #000;
+        }
+        .anime-btn-yellow .cost-text { color: #111; text-shadow: none;}
+
+        /* Title / Message */
+        .anime-title {
+            font-family: 'Bangers', cursive;
+            font-size: 80px;
+            text-align: center;
+            color: var(--neon-yellow);
+            text-shadow: 4px 4px 0px var(--neon-pink), -2px -2px 0px var(--neon-blue);
+            margin: 0;
+            pointer-events: auto;
+            animation: pulse 2s infinite;
+        }
+        .jp-sub {
+            font-family: 'Noto Sans JP', sans-serif;
+            display: block;
+            font-size: 30px;
+            color: white;
+            text-shadow: 2px 2px 0px #000;
+            letter-spacing: 5px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Battle UI */
+        #battle-ui {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .health-bar-container {
+            position: absolute;
+            width: 40%;
+            height: 40px;
+            background: #222;
+            border: 4px solid white;
+            transform: skewX(-20deg);
+            pointer-events: auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        .health-bar-container-player {
+            top: 20px; left: 20px;
+            border-color: var(--neon-blue);
+        }
+
+        .health-bar-container-enemy {
+            top: 20px; right: 20px;
+            border-color: var(--neon-pink);
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--neon-green);
+            transition: width 0.2s;
+        }
+        .health-bar-container-enemy .health-bar-fill{ background: var(--neon-pink); }
+
+        .health-text {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            transform: skewX(20deg);
+            font-size: 32px;
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+        }
+        .health-bar-container-enemy .health-text {
+            right: 10px; left: auto;
+            text-align: right;
+        }
+
+        .attack-btn {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) skewX(-15deg);
+            font-size: 60px;
+            padding: 20px 80px;
+            background: linear-gradient(45deg, var(--neon-yellow), #ff7b00);
+            box-shadow: -8px 8px 0px var(--neon-pink);
+            animation: attackPulse 0.5s infinite alternate;
+        }
+        
+        @keyframes attackPulse {
+            0% { transform: translateX(-50%) skewX(-15deg) scale(1); box-shadow: -8px 8px 0px var(--neon-pink); }
+            100% { transform: translateX(-50%) skewX(-15deg) scale(1.1); box-shadow: -15px 15px 0px var(--neon-pink); }
+        }
+
+        .damage-number {
+            position: absolute;
+            font-family: 'Bangers', cursive;
+            font-size: 60px;
+            color: red;
+            text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 4px 4px 0 #000;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 1;
+        }
+
+        #battle-msg {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-family: 'Bangers', cursive;
+            font-size: 100px;
+            color: var(--neon-yellow);
+            text-shadow: 5px 5px 0 var(--neon-pink), -2px -2px 0 #000;
+            pointer-events: auto;
+            display: none;
+        }
+
+        /* Modal Overlay */
+        #modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-box {
+            background: linear-gradient(135deg, var(--dark-bg), #222);
+            border: 5px solid var(--neon-blue);
+            transform: skewX(-5deg);
+            padding: 40px;
+            text-align: center;
+            box-shadow: 10px 10px 0px var(--neon-pink);
+        }
+
+        .modal-box-inner {
+            transform: skewX(5deg);
+        }
+        
+        .reward-amount {
+            font-family: 'Bangers';
+            font-size: 50px;
+            color: var(--neon-yellow);
+            text-shadow: 2px 2px 0 #000;
+            margin: 20px 0;
+        }
+
+        /* Speed lines background */
+        .speed-lines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 49%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 51%
+            );
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        /* Flash overlay */
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            .anime-btn { padding: 10px 20px; font-size: 20px; }
+            .cost-text { font-size: 14px; }
+            .health-bar-container { height: 25px; }
+            .health-text { font-size: 20px; }
+            .attack-btn { font-size: 40px; padding: 15px 40px; }
+            .anime-title { font-size: 50px; }
+            .stat-box-inner { font-size: 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="speed-lines" id="speed-lines"></div>
+    <div id="game-container"></div>
+    <div id="flash-overlay"></div>
+
+    <div id="ui-layer">
+        <div id="hud">
+            <div class="stat-box">
+                <div class="stat-box-inner">
+                    <span class="material-icon">⚙️</span>
+                    <span id="player-materials">100</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-inner">
+                    <span class="point-icon">⚡</span>
+                    <span id="player-points">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Base Screen -->
+        <div id="screen-base" class="screen active">
+            <h1 class="anime-title">BOT CREATOR DELUXE<br><span class="jp-sub">ボットマスター</span></h1>
+            
+            <div id="base-controls">
+                <button class="anime-btn btn-build" onclick="buildBot('CAR')">
+                    <span>BUILD CAR BOT<span class="cost-text">Cost: 50 ⚙️</span></span>
+                </button>
+                <button class="anime-btn btn-build" onclick="buildBot('HUMANOID')">
+                    <span>BUILD BRAWLER BOT<span class="cost-text">Cost: 100 ⚙️</span></span>
+                </button>
+                <button class="anime-btn btn-build" onclick="buildBot('HAWK')">
+                    <span>BUILD HAWK BOT<span class="cost-text">Cost: 150 ⚙️</span></span>
+                </button>
+                <button class="anime-btn anime-btn-blue" onclick="startBattle()">
+                    <span>BATTLE ENEMY ⚔️</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Battle Screen -->
+        <div id="screen-battle" class="screen">
+            <div id="battle-ui">
+                <div class="health-bar-container health-bar-container-player">
+                    <div class="health-bar-fill" id="hp-player"></div>
+                    <div class="health-text" id="hp-text-player">MY BOT: 100/100</div>
+                </div>
+                <div class="health-bar-container health-bar-container-enemy">
+                    <div class="health-bar-fill" id="hp-enemy"></div>
+                    <div class="health-text" id="hp-text-enemy">ENEMY: 100/100</div>
+                </div>
+
+                <div id="battle-msg">FIGHT! 戦い!</div>
+
+                <button class="anime-btn attack-btn" onclick="playerAttack()">
+                    <span>TAP TO ATTACK!!</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay">
+        <div class="modal-box" id="modal-reward">
+            <div class="modal-box-inner">
+                <h2 class="anime-title" id="modal-title" style="font-size: 60px;">VICTORY! 勝訴!</h2>
+                <div class="reward-amount" id="modal-reward-text">+50 ⚙️ | +100 ⚡</div>
+                <button class="anime-btn anime-btn-yellow" onclick="returnToBase()">
+                    <span>RETURN TO BASE</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // System Variables
+    let scene, camera, renderer, clock;
+    let pointLight;
+    
+    // Game State
+    let materials = 200;
+    let points = 0;
+    let gameState = 'BASE'; // BASE, BATTLE
+    
+    let army = []; // Array of bot groups
+    let activeBot = null;
+    let battleEnemyBot = null;
+
+    let playerPos = new THREE.Vector3(-3, 0, 0);
+    let enemyPos = new THREE.Vector3(3, 0, 0);
+
+    const BOT_SPECS = {
+        'CAR': { hp: 100, attack: 15, cost: 50, color: 0x00ffff },
+        'HUMANOID': { hp: 150, attack: 25, cost: 100, color: 0xff0044 },
+        'HAWK': { hp: 80, attack: 40, cost: 150, color: 0xffe600 }
+    };
+
+    let battleStats = {
+        pMaxHp: 100, pHp: 100, pAttack: 10,
+        eMaxHp: 100, eHp: 100, eAttack: 5,
+        isActive: false
+    };
+
+    // DOM Elements
+    const matEl = document.getElementById('player-materials');
+    const ptsEl = document.getElementById('player-points');
+    const screenBase = document.getElementById('screen-base');
+    const screenBattle = document.getElementById('screen-battle');
+    const hpFillPlayer = document.getElementById('hp-player');
+    const hpTextPlayer = document.getElementById('hp-text-player');
+    const hpFillEnemy = document.getElementById('hp-enemy');
+    const hpTextEnemy = document.getElementById('hp-text-enemy');
+    const battleMsg = document.getElementById('battle-msg');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const speedLines = document.getElementById('speed-lines');
+
+    init();
+    animate(0);
+
+    function init() {
+        // Setup Three.js
+        const container = document.getElementById('game-container');
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111);
+
+        // Grid helper for cool anime tech floor
+        const grid = new THREE.GridHelper(100, 50, 0x00f0ff, 0x222222);
+        grid.position.y = -1;
+        scene.add(grid);
+
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(5, 10, 5);
+        scene.add(pointLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(-10, 10, 5);
+        scene.add(dirLight);
+
+        clock = new THREE.Clock();
+
+        // Handle resize
+        window.addEventListener('resize', onWindowResize, false);
+
+        // Build a starter bot
+        materials += 50; // temporary boost for first bot
+        buildBot('CAR', true);
+        
+        setBaseCamera();
+        updateHUD();
+    }
+
+    // --- Bot Generation Logic ---
+    function makeAnimeMesh(geometry, colorStr) {
+        const group = new THREE.Group();
+        
+        // Solid color cel-style
+        const mat = new THREE.MeshToonMaterial({ 
+            color: colorStr, 
+            gradientMap: null // Default toon looks fine
+        });
+        const mesh = new THREE.Mesh(geometry, mat);
+        
+        // Anime Outline Effect (Backface culling)
+        const outlineMat = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide });
+        const outline = new THREE.Mesh(geometry, outlineMat);
+        outline.scale.setScalar(1.08); // Inflate for outline
+        
+        group.add(mesh);
+        group.add(outline);
+        return group;
+    }
+
+    function createBot(type, isEnemy = false) {
+        const botGroup = new THREE.Group();
+        const color = isEnemy ? 0xcc00ff : BOT_SPECS[type].color; // Enemies are purple
+        
+        if (type === 'CAR') {
+            // Main body
+            const bodyGeo = new THREE.BoxGeometry(2, 1, 3);
+            const body = makeAnimeMesh(bodyGeo, color);
+            body.position.y = 0.5;
+            botGroup.add(body);
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.5, 16);
+            wheelGeo.rotateZ(Math.PI / 2);
+            for(let i=0; i<4; i++) {
+                const wheel = makeAnimeMesh(wheelGeo, 0x333333);
+                wheel.position.set(i<2?-1.2:1.2, 0, i%2==0?-1:1);
+                botGroup.add(wheel);
+            }
+        } 
+        else if (type === 'HUMANOID') {
+            // Torso
+            const torsoGeo = new THREE.BoxGeometry(1.5, 2, 1);
+            const torso = makeAnimeMesh(torsoGeo, color);
+            torso.position.y = 2;
+            botGroup.add(torso);
+            // Head
+            const headGeo = new THREE.BoxGeometry(1, 1, 1);
+            const head = makeAnimeMesh(headGeo, 0xffffff);
+            head.position.y = 3.5;
+            botGroup.add(head);
+            // Arms
+            const armGeo = new THREE.BoxGeometry(0.5, 2, 0.5);
+            const armL = makeAnimeMesh(armGeo, color);
+            armL.position.set(-1.1, 2, 0);
+            const armR = makeAnimeMesh(armGeo, color);
+            armR.position.set(1.1, 2, 0);
+            botGroup.add(armL, armR);
+            // Legs
+            const legGeo = new THREE.BoxGeometry(0.6, 1.5, 0.6);
+            const legL = makeAnimeMesh(legGeo, 0x333333);
+            legL.position.set(-0.4, 0.5, 0);
+            const legR = makeAnimeMesh(legGeo, 0x333333);
+            legR.position.set(0.4, 0.5, 0);
+            botGroup.add(legL, legR);
+        }
+        else if (type === 'HAWK') {
+            // Body
+            const bodyGeo = new THREE.ConeGeometry(0.8, 3, 4);
+            bodyGeo.rotateX(Math.PI / 2);
+            const body = makeAnimeMesh(bodyGeo, color);
+            body.position.y = 2;
+            botGroup.add(body);
+            // Wings
+            const wingGeo = new THREE.BoxGeometry(4, 0.2, 1);
+            const wing = makeAnimeMesh(wingGeo, color);
+            wing.position.set(0, 2.2, 0);
+            botGroup.add(wing);
+            // Beak
+            const beakGeo = new THREE.ConeGeometry(0.3, 1, 4);
+            beakGeo.rotateX(-Math.PI / 2);
+            const beak = makeAnimeMesh(beakGeo, 0xffaa00);
+            beak.position.set(0, 2, 1.5);
+            botGroup.add(beak);
+        }
+
+        // Add a pulsing selection ring under it if not enemy
+        if (!isEnemy) {
+            const ringGeo = new THREE.RingGeometry(1.5, 1.8, 32);
+            ringGeo.rotateX(-Math.PI/2);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.y = -0.9;
+            ring.userData.isRing = true;
+            botGroup.add(ring);
+        } else { // Enemy ring
+            const ringGeo = new THREE.RingGeometry(1.5, 1.8, 32);
+            ringGeo.rotateX(-Math.PI/2);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xff0044, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.y = -0.9;
+            botGroup.add(ring);
+        }
+
+        // Bobbing animation data
+        botGroup.userData = { type: type, startY: botGroup.position.y, bobOffset: Math.random() * Math.PI * 2 };
+        
+        return botGroup;
+    }
+
+    // --- State Logic ---
+    function updateHUD() {
+        matEl.innerText = materials;
+        ptsEl.innerText = points;
+    }
+
+    window.buildBot = function(type, isFree = false) {
+        const cost = BOT_SPECS[type].cost;
+        if (!isFree) {
+            if (materials < cost) {
+                flashColor('red');
+                return; // Cant afford
+            }
+            materials -= cost;
+            updateHUD();
+        }
+
+        const bot = createBot(type);
+        army.push(bot);
+        scene.add(bot);
+        
+        organizeArmy();
+        
+        // Pick the latest added as active automatically
+        activeBot = bot;
+        
+        // Spawn animation
+        bot.scale.set(0,0,0);
+        new TWEEN.Tween(bot.scale)
+            .to({x:1, y:1, z:1}, 500)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .start();
+            
+        flashColor('var(--neon-blue)');
+    };
+
+    function organizeArmy() {
+        // Arrange army in a grid
+        const cols = 5;
+        army.forEach((bot, index) => {
+            if(bot !== activeBot || gameState === 'BASE') {
+                const x = (index % cols) * 5 - ((cols-1)*2.5);
+                const z = -Math.floor(index / cols) * 5 - 5;
+                
+                new TWEEN.Tween(bot.position)
+                    .to({x: x, z: z}, 500)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                    
+                bot.rotation.y = 0;
+            }
+        });
+
+        // Hide rings of non-active, show on active
+        army.forEach(bot => {
+            bot.children.forEach(c => {
+                if (c.userData.isRing) c.visible = (bot === activeBot);
+            });
+        });
+    }
+
+    function setBaseCamera() {
+        new TWEEN.Tween(camera.position)
+            .to({x: 0, y: 15, z: 15}, 1000)
+            .easing(TWEEN.Easing.Cubic.InOut)
+            .start();
+            
+        // Look at center
+        const target = {x: 0, y: 0, z: -5};
+        const currentTarget = new THREE.Vector3(0,0,-5);
+        new TWEEN.Tween(currentTarget)
+            .to(target, 1000)
+            .onUpdate(() => {
+                camera.lookAt(currentTarget);
+            })
+            .start();
+            
+        speedLines.style.opacity = '0';
+    }
+
+    window.startBattle = function() {
+        if (army.length === 0) return;
+        
+        gameState = 'BATTLE';
+        screenBase.classList.remove('active');
+        screenBattle.classList.add('active');
+        
+        speedLines.style.opacity = '1';
+
+        // Choose random bot to fight
+        const types = ['CAR', 'HUMANOID', 'HAWK'];
+        const eType = types[Math.floor(Math.random() * types.length)];
+        battleEnemyBot = createBot(eType, true);
+        scene.add(battleEnemyBot);
+
+        // Position Active Bot and Enemy
+        activeBot.position.copy(playerPos);
+        activeBot.rotation.y = Math.PI / 2; // Face right
+        
+        battleEnemyBot.position.copy(enemyPos);
+        battleEnemyBot.rotation.y = -Math.PI / 2; // Face left
+
+        // Move others far away
+        army.forEach(bot => {
+            if (bot !== activeBot) {
+                bot.position.y = -100; 
+            }
+        });
+
+        // Battle Stats Setup
+        const pSpec = BOT_SPECS[activeBot.userData.type];
+        const eSpec = BOT_SPECS[eType];
+
+        // Enemy gets stronger based on points
+        const eMulti = 1 + (points / 200);
+
+        battleStats = {
+            pMaxHp: pSpec.hp,
+            pHp: pSpec.hp,
+            pAttack: pSpec.attack,
+            
+            eMaxHp: Math.floor(eSpec.hp * eMulti),
+            eHp: Math.floor(eSpec.hp * eMulti),
+            eAttack: Math.floor(eSpec.attack * eMulti),
+            
+            isActive: true
+        };
+
+        updateHealthUI();
+        
+        showBattleMessage("BATTLE START!!", 1000);
+
+        // Camera to battle view
+        new TWEEN.Tween(camera.position)
+            .to({x: 0, y: 5, z: 12}, 1000)
+            .easing(TWEEN.Easing.Cubic.InOut)
+            .start();
+            
+        const target = new THREE.Vector3(0,2,0);
+        camera.lookAt(target);
+
+        // Start Enemy Attack Loop
+        enemyAttackLoop();
+    }
+
+    function updateHealthUI() {
+        const pPct = Math.max(0, battleStats.pHp) / battleStats.pMaxHp * 100;
+        const ePct = Math.max(0, battleStats.eHp) / battleStats.eMaxHp * 100;
+
+        hpFillPlayer.style.width = pPct + '%';
+        hpFillEnemy.style.width = ePct + '%';
+
+        hpTextPlayer.innerText = `MY BOT: ${Math.max(0, battleStats.pHp)}/${battleStats.pMaxHp}`;
+        hpTextEnemy.innerText = `ENEMY: ${Math.max(0, battleStats.eHp)}/${battleStats.eMaxHp}`;
+
+        if (pPct < 30) hpFillPlayer.style.background = 'red';
+        else hpFillPlayer.style.background = 'var(--neon-green)';
+
+        if (ePct < 30) hpFillEnemy.style.background = 'red';
+        else hpFillEnemy.style.background = 'var(--neon-pink)';
+    }
+
+    function createDamageText(x, y, text) {
+        const el = document.createElement('div');
+        el.className = 'damage-number';
+        el.innerText = text;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        document.body.appendChild(el);
+
+        let dy = 0;
+        let op = 1;
+        const interval = setInterval(() => {
+            dy -= 2;
+            op -= 0.02;
+            el.style.transform = `translateY(${dy}px)`;
+            el.style.opacity = op;
+            if (op <= 0) {
+                clearInterval(interval);
+                el.remove();
+            }
+        }, 16);
+    }
+
+    function getScreenPos(vector3) {
+        const v = vector3.clone();
+        v.project(camera);
+        const x = (v.x *  .5 + .5) * window.innerWidth;
+        const y = (v.y * -.5 + .5) * window.innerHeight;
+        return {x, y};
+    }
+
+    window.playerAttack = function() {
+        if (!battleStats.isActive) return;
+
+        // Animate Player Bot Dash
+        const dashTime = 150;
+        new TWEEN.Tween(activeBot.position)
+            .to({x: enemyPos.x - 2}, dashTime)
+            .yoyo(true).repeat(1)
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .start();
+
+        // Screen Shake
+        const startCamX = camera.position.x;
+        new TWEEN.Tween(camera.position)
+            .to({x: startCamX + (Math.random()-0.5)*0.5}, 50)
+            .yoyo(true).repeat(3)
+            .onComplete(() => { camera.position.x = 0; })
+            .start();
+
+        // Damage enemy
+        // Critical hit chance 20%
+        const isCrit = Math.random() < 0.2;
+        const dmg = Math.floor(battleStats.pAttack * (isCrit ? 2 : (0.8 + Math.random()*0.4)));
+        battleStats.eHp -= dmg;
+        
+        const sp = getScreenPos(battleEnemyBot.position);
+        createDamageText(sp.x + (Math.random()*50-25), sp.y - 100, isCrit ? `${dmg} CRIT!` : dmg);
+
+        updateHealthUI();
+        flashColor('white', 0.1);
+
+        if (battleStats.eHp <= 0) {
+            endBattle(true);
+        }
+    }
+
+    function enemyAttackLoop() {
+        if (!battleStats.isActive) return;
+
+        setTimeout(() => {
+            if (!battleStats.isActive) return;
+
+            // Attack
+            const dashTime = 200;
+            new TWEEN.Tween(battleEnemyBot.position)
+                .to({x: playerPos.x + 2}, dashTime)
+                .yoyo(true).repeat(1)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+
+            // Damage player
+            const dmg = Math.floor(battleStats.eAttack * (0.8 + Math.random()*0.4));
+            battleStats.pHp -= dmg;
+
+            const sp = getScreenPos(activeBot.position);
+            createDamageText(sp.x + (Math.random()*50-25), sp.y - 100, dmg);
+
+            updateHealthUI();
+            flashColor('red', 0.2);
+
+            if (battleStats.pHp <= 0) {
+                endBattle(false);
+            } else {
+                enemyAttackLoop(); // queue next attack
+            }
+        }, 1500 + Math.random() * 1000); // 1.5 to 2.5 seconds
+    }
+
+    function endBattle(playerWon) {
+        battleStats.isActive = false;
+        
+        if (playerWon) {
+            showBattleMessage("VICTORY!!", null);
+            
+            // Explode enemy setup
+            new TWEEN.Tween(battleEnemyBot.scale)
+                .to({x: 1.5, y: 1.5, z: 1.5}, 200)
+                .onComplete(() => {
+                    scene.remove(battleEnemyBot);
+                    battleEnemyBot = null;
+                })
+                .start();
+
+            setTimeout(() => {
+                const earnedMat = 30 + Math.floor(Math.random() * 40);
+                const earnedPts = 100 + Math.floor(Math.random() * 50);
+                
+                materials += earnedMat;
+                points += earnedPts;
+                updateHUD();
+                
+                document.getElementById('modal-title').innerText = "VICTORY! 勝訴!";
+                document.getElementById('modal-title').style.color = "var(--neon-yellow)";
+                document.getElementById('modal-reward-text').innerText = `+${earnedMat} ⚙️ | +${earnedPts} ⚡`;
+                modalOverlay.style.display = 'flex';
+                
+            }, 1000);
+
+        } else {
+            showBattleMessage("DEFEAT...", null);
+            
+            // Player explodes/falls
+            new TWEEN.Tween(activeBot.rotation)
+                .to({x: -Math.PI/2}, 500)
+                .start();
+
+            setTimeout(() => {
+                scene.remove(activeBot);
+                // remove from army
+                army = army.filter(b => b !== activeBot);
+                if (army.length > 0) {
+                    activeBot = army[army.length-1]; // Pick another
+                } else {
+                    activeBot = null;
+                }
+
+                document.getElementById('modal-title').innerText = "DEFEAT! 敗北!";
+                document.getElementById('modal-title').style.color = "red";
+                // Consolation prize
+                const earnedMat = 10;
+                materials += earnedMat;
+                updateHUD();
+                document.getElementById('modal-reward-text').innerText = `+${earnedMat} ⚙️ (Consolation)`;
+                modalOverlay.style.display = 'flex';
+
+            }, 1500);
+        }
+    }
+
+    window.returnToBase = function() {
+        modalOverlay.style.display = 'none';
+        screenBattle.classList.remove('active');
+        screenBase.classList.add('active');
+        battleMsg.style.display = 'none';
+        gameState = 'BASE';
+
+        if (battleEnemyBot) {
+            scene.remove(battleEnemyBot);
+            battleEnemyBot = null;
+        }
+
+        organizeArmy();
+        setBaseCamera();
+    }
+
+    function showBattleMessage(text, duration) {
+        battleMsg.innerText = text;
+        battleMsg.style.display = 'block';
+        battleMsg.style.transform = 'scale(0.1)';
+        
+        new TWEEN.Tween({s: 0.1})
+            .to({s: 1.5}, 300)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .onUpdate((obj) => {
+                battleMsg.style.transform = `scale(${obj.s})`;
+            })
+            .start();
+
+        if (duration) {
+            setTimeout(() => { battleMsg.style.display = 'none'; }, duration);
+        }
+    }
+
+    function flashColor(color, opacity=0.5) {
+        const flash = document.getElementById('flash-overlay');
+        flash.style.background = color;
+        flash.style.opacity = opacity;
+        setTimeout(() => { flash.style.opacity = 0; }, 100);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate(time) {
+        requestAnimationFrame(animate);
+        TWEEN.update(time);
+        
+        const t = clock.getElapsedTime();
+
+        // Bobbing animations for bots
+        army.forEach(bot => {
+            if (bot.userData.startY !== undefined) {
+                bot.position.y = bot.userData.startY + Math.sin(t * 3 + bot.userData.bobOffset) * 0.2;
+            }
+        });
+        if (battleEnemyBot) {
+            battleEnemyBot.position.y = battleEnemyBot.userData.startY + Math.sin(t * 3 + battleEnemyBot.userData.bobOffset) * 0.2;
+        }
+
+        renderer.render(scene, camera);
+    }
+</script>
+</body>
+</html>
