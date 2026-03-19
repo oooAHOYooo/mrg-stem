@@ -310,6 +310,13 @@
         dirLight.shadow.mapSize.height = 2048;
         scene.add( dirLight );
 
+        // Moon
+        const moonGeo = new THREE.SphereGeometry(30, 32, 32);
+        const moonMat = new THREE.MeshBasicMaterial({color: 0xffffee});
+        const moon = new THREE.Mesh(moonGeo, moonMat);
+        moon.position.set(-100, 200, -200);
+        scene.add(moon);
+
         // Objects (voxels)
         const objects = [];
         
@@ -899,17 +906,70 @@
             }
         }
         
+        let isDragon = false;
+        
         function defeatBoss() {
-            isBossDefeated = true;
-            document.getElementById('boss-health-text').textContent = "MR GONZALEZ (DEFEATED)";
-            if(bombInterval) clearInterval(bombInterval);
-            
-            // Breakdown boss
-            setInterval(() => {
-                bossGroup.position.y -= 1;
-                bossGroup.rotation.z += 0.05;
-                if(bossGroup.position.y < -50) bossGroup.visible = false;
-            }, 50);
+            if (!isDragon) {
+                isDragon = true;
+                bossHealth = 100;
+                document.getElementById('boss-health-text').textContent = "DRAGON";
+                document.getElementById('boss-health-bar').style.width = '100%';
+                document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                
+                bossBody.visible = false;
+                bossHead.visible = false;
+                leftArm.visible = false;
+                rightArm.visible = false;
+                leftLeg.visible = false;
+                rightLeg.visible = false;
+                facePlane.visible = false;
+                leftEye.visible = false;
+                rightEye.visible = false;
+
+                const dragonGroup = new THREE.Group();
+                bossGroup.add(dragonGroup);
+                
+                const drMat = new THREE.MeshLambertMaterial({color: 0x10b981});
+                const dBody = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 40), drMat);
+                dBody.castShadow = true;
+                dBody.position.y = 25;
+                dragonGroup.add(dBody);
+                
+                const dHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 20), drMat);
+                dHead.castShadow = true;
+                dHead.position.set(0, 35, 30);
+                dragonGroup.add(dHead);
+                
+                const dWingL = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 20), drMat);
+                dWingL.castShadow = true;
+                dWingL.position.set(-25, 35, 0);
+                dragonGroup.add(dWingL);
+                
+                const dWingR = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 20), drMat);
+                dWingR.castShadow = true;
+                dWingR.position.set(25, 35, 0);
+                dragonGroup.add(dWingR);
+
+                riddles.length = 0;
+                riddles.push(
+                    { q: "What is used to declare a variable that can be changed?", opts: ["let", "const", "var", "int"], a: 0 },
+                    { q: "How do you write 'Hello World' in an alert box?", opts: ["msgBox('Hello World');", "alert('Hello World');", "msg('Hello World');", "print('Hello World');"], a: 1 },
+                    { q: "Which event occurs when the user clicks on an HTML element?", opts: ["onchange", "onclick", "onmouseclick", "onmouseover"], a: 1 },
+                    { q: "How do you add a comment in JavaScript?", opts: ["<!-- comment -->", "// comment", "' comment", "* comment *"], a: 1 },
+                    { q: "Which operator is used to assign a value to a variable?", opts: ["*", "-", "=", "x"], a: 2 }
+                );
+            } else {
+                isBossDefeated = true;
+                document.getElementById('boss-health-text').textContent = "DRAGON (DEFEATED)";
+                if (typeof bombInterval !== 'undefined' && bombInterval) clearInterval(bombInterval);
+                
+                // Breakdown boss
+                setInterval(() => {
+                    bossGroup.position.y -= 1;
+                    bossGroup.rotation.z += 0.05;
+                    if(bossGroup.position.y < -50) bossGroup.visible = false;
+                }, 50);
+            }
         }
 
         // --- BOMB & PLANE MECHANIC ---
@@ -1307,7 +1367,7 @@
                     document.getElementById('crosshair').style.color = '#ff4444';
                     document.getElementById('crosshair').style.textShadow = '0 0 10px #ff0000, 2px 2px 4px black';
                     document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    document.getElementById('crosshair').textContent = "💥 CLICK ROBOT TO DEFEAT IT 💥";
+                    document.getElementById('crosshair').textContent = typeof isDragon !== 'undefined' && isDragon ? "💥 CLICK DRAGON TO DEFEAT IT 💥" : "💥 CLICK ROBOT TO DEFEAT IT 💥";
                     document.getElementById('crosshair').style.width = "auto";
                     document.getElementById('crosshair').style.whiteSpace = "nowrap";
                     document.getElementById('crosshair').style.fontWeight = "900";
@@ -1387,10 +1447,21 @@
                     controls.getObject().position.y += ( velocity.y * delta );
 
                     // Fly height limit
-                    const flyLimit = 200;
+                    const flyLimit = 100;
                     if (controls.getObject().position.y > flyLimit) {
-                        controls.getObject().position.y = flyLimit;
+                        // Zap them down
+                        controls.getObject().position.y = 10;
                         velocity.y = 0;
+                        isFlyMode = false;
+                        flyStatus.style.display = 'none';
+                        canJump = true;
+                        
+                        document.getElementById('blocker').style.backgroundColor = 'rgba(255,255,0,0.6)';
+                        document.getElementById('blocker').style.display = 'block';
+                        setTimeout(() => { 
+                            document.getElementById('blocker').style.backgroundColor = 'rgba(0,0,0,0.5)';
+                            if(!inMenu && !inRiddle && playerHealth > 0) document.getElementById('blocker').style.display = 'none'; 
+                        }, 200);
                     }
                 } else {
                     // Gravity logic
