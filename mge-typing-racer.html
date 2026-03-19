@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animal Typing Race</title>
+    <title>Animal Typing Race - Arcade Edition</title>
     <!-- Three.js for 3D race -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Press+Start+2P&family=Nunito:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f8ff;
-            --text-color: #333;
-            --correct: #4CAF50;
-            --incorrect: #F44336;
-            --current: #2196F3;
+            --bg-top: #0f0c29;
+            --bg-mid: #302b63;
+            --bg-bot: #24243e;
             
-            /* Finger colors */
-            --c-lp: #FF6B6B; /* Left Pinky */
-            --c-lr: #FF9F43; /* Left Ring */
-            --c-lm: #FDD835; /* Left Middle */
-            --c-li: #4CAF50; /* Left Index */
-            --c-ri: #00BCD4; /* Right Index */
-            --c-rm: #3F51B5; /* Right Middle */
-            --c-rr: #9C27B0; /* Right Ring */
-            --c-rp: #E91E63; /* Right Pinky */
-            --c-thumb: #9E9E9E; /* Thumb */
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-yellow: #fcee0a;
+            
+            /* Finger colors - Re-styled for Neon Arcade */
+            --c-lp: #ff0055; /* Left Pinky */
+            --c-lr: #ffaa00; /* Left Ring */
+            --c-lm: #ffee00; /* Left Middle */
+            --c-li: #00ffaa; /* Left Index */
+            --c-ri: #00aaff; /* Right Index */
+            --c-rm: #aa00ff; /* Right Middle */
+            --c-rr: #ff00aa; /* Right Ring */
+            --c-rp: #ff0000; /* Right Pinky */
+            --c-thumb: #ffffff; /* Thumb */
         }
 
         * {
@@ -35,159 +38,177 @@
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: linear-gradient(to bottom, var(--bg-top), var(--bg-mid), var(--bg-bot));
+            color: #fff;
             font-family: 'Nunito', sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            width: 100vw;
         }
 
         header {
             text-align: center;
-            padding: 10px;
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 8vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
             z-index: 10;
         }
 
         h1 {
-            font-family: 'Fredoka One', cursive;
-            color: #4CAF50;
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-            letter-spacing: 1px;
+            font-family: 'Press Start 2P', cursive;
+            color: var(--neon-blue);
+            text-shadow: 2px 2px 0px var(--neon-pink), 0 0 10px var(--neon-blue);
+            font-size: 1.5rem;
+            margin-bottom: 2px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         .subtitle {
-            font-size: 1.1rem;
-            color: #666;
-            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--neon-yellow);
+            font-family: 'Press Start 2P', cursive;
+            text-shadow: 0 0 5px var(--neon-yellow);
         }
 
         #game-container {
             display: flex;
             flex-direction: column;
-            flex: 1;
+            height: 92vh;
+            width: 100%;
         }
 
         #canvas-container {
-            flex: 0.8;
+            height: 35vh;
             width: 100%;
-            background: #87CEEB; /* Sky blue */
             position: relative;
+            border-bottom: 2px solid var(--neon-blue);
         }
 
         .hud {
             position: absolute;
-            top: 10px;
-            left: 20px;
-            right: 20px;
+            top: 5px;
+            left: 10px;
+            right: 10px;
             display: flex;
             justify-content: space-between;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-family: 'Fredoka One', cursive;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 15px;
+            border: 2px solid var(--neon-green);
+            border-radius: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            box-shadow: 0 0 10px var(--neon-green);
+            color: #fff;
         }
 
-        .hud-item { color: #333; }
-        .hud-item span { color: #2196F3; }
+        .hud-item span { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
 
         /* Typing Area */
         #typing-section {
-            flex: 0.5;
-            background: #fff;
-            padding: 15px 30px;
-            border-top: 4px solid #4CAF50;
+            height: 20vh;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            justify-content: center;
+            border-bottom: 2px solid var(--neon-pink);
+            box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.2);
             z-index: 10;
         }
 
         .text-display {
-            font-size: 1.8rem;
-            line-height: 1.6;
-            max-width: 1000px;
+            font-size: 1.5rem;
+            line-height: 1.4;
+            max-width: 900px;
+            width: 100%;
             text-align: center;
-            margin-bottom: 20px;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Menlo', 'Courier New', Courier, monospace;
             font-weight: bold;
-            background: #f9f9f9;
-            padding: 20px;
+            background: rgba(15, 12, 41, 0.9);
+            padding: 15px;
             border-radius: 10px;
-            border: 2px dashed #ccc;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            overflow-y: auto;
+            max-height: 100%;
+            scrollbar-width: none;
         }
 
         .char {
-            color: #999;
+            color: #555;
             transition: color 0.1s;
         }
 
-        .char.correct { color: var(--correct); }
-        .char.incorrect { color: var(--incorrect); text-decoration: underline; background: #ffebee; }
+        .char.correct { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+        .char.incorrect { color: var(--neon-pink); background: rgba(255,0,255,0.3); border-radius: 3px; }
         .char.current {
-            color: #000;
-            background: #e3f2fd;
-            border-bottom: 3px solid var(--current);
-            animation: pulse 1s infinite alternate;
+            color: #fff;
+            text-shadow: 0 0 8px #fff;
+            border-bottom: 2px solid var(--neon-yellow);
+            animation: pulse-border 0.5s infinite alternate;
         }
 
-        @keyframes pulse {
-            from { background: #bbdefb; }
-            to { background: #e3f2fd; }
+        @keyframes pulse-border {
+            from { border-color: transparent; }
+            to { border-color: var(--neon-yellow); box-shadow: 0 2px 10px var(--neon-yellow); }
         }
 
         /* Keyboard UI */
         #keyboard-section {
-            flex: 1;
-            background: #eceff1;
-            padding: 20px;
+            height: 37vh;
+            background: rgba(15, 12, 41, 0.6);
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-top: 1px solid #cfd8dc;
+            justify-content: center;
+            padding: 5px;
         }
 
         .finger-guide-msg {
-            font-family: 'Fredoka One', cursive;
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            padding: 5px 20px;
-            border-radius: 20px;
-            color: #fff;
-            background: #333;
-            transition: background 0.2s;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            padding: 8px 15px;
+            border-radius: 10px;
+            color: #000;
+            background: #fff;
+            box-shadow: 0 0 15px #fff;
+            transition: all 0.2s;
+            text-transform: uppercase;
         }
 
         .keyboard {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            background: #fff;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            gap: 4px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            box-shadow: inset 0 0 10px #000;
         }
 
         .keyboard-row {
             display: flex;
             justify-content: center;
-            gap: 8px;
+            gap: 4px;
         }
 
         .key {
-            width: 50px;
-            height: 50px;
-            background: #f5f5f5;
-            border: 2px solid #e0e0e0;
-            border-bottom-width: 6px;
-            border-radius: 8px;
+            width: 35px;
+            height: 35px;
+            background: #111;
+            border: 1px solid #333;
+            border-bottom-width: 4px;
+            border-radius: 5px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -197,6 +218,13 @@
             color: #555;
             transition: all 0.1s;
             position: relative;
+            font-size: 0.9rem;
+        }
+
+        @media (min-width: 800px) {
+            .key { width: 45px; height: 45px; font-size: 1rem; }
+            .key.shift { width: 100px; }
+            .key.space { width: 300px; }
         }
 
         /* Finger color classes for keys */
@@ -210,126 +238,138 @@
         .key.c-rp { border-bottom-color: var(--c-rp); color: var(--c-rp); }
         .key.c-thumb { border-bottom-color: var(--c-thumb); color: var(--c-thumb); }
 
-        .key.shift { width: 115px; }
-        .key.space { width: 350px; }
-        .key.backspace { width: 80px; }
+        .key.shift { width: 80px; }
+        .key.space { width: 250px; }
 
         .key.highlight {
-            transform: translateY(4px);
+            transform: translateY(2px);
             border-bottom-width: 2px;
-            box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
             background: #fff;
+            color: #000;
+            text-shadow: none;
         }
         
-        /* Specific highlight classes override text color */
-        .key.highlight.c-lp { background: var(--c-lp); color: white; }
-        .key.highlight.c-lr { background: var(--c-lr); color: white; }
-        .key.highlight.c-lm { background: var(--c-lm); color: white; }
-        .key.highlight.c-li { background: var(--c-li); color: white; }
-        .key.highlight.c-ri { background: var(--c-ri); color: white; }
-        .key.highlight.c-rm { background: var(--c-rm); color: white; }
-        .key.highlight.c-rr { background: var(--c-rr); color: white; }
-        .key.highlight.c-rp { background: var(--c-rp); color: white; }
-        .key.highlight.c-thumb { background: var(--c-thumb); color: white; }
+        .key.highlight.c-lp { background: var(--c-lp); box-shadow: 0 0 15px var(--c-lp); }
+        .key.highlight.c-lr { background: var(--c-lr); box-shadow: 0 0 15px var(--c-lr); }
+        .key.highlight.c-lm { background: var(--c-lm); box-shadow: 0 0 15px var(--c-lm); }
+        .key.highlight.c-li { background: var(--c-li); box-shadow: 0 0 15px var(--c-li); }
+        .key.highlight.c-ri { background: var(--c-ri); box-shadow: 0 0 15px var(--c-ri); }
+        .key.highlight.c-rm { background: var(--c-rm); box-shadow: 0 0 15px var(--c-rm); }
+        .key.highlight.c-rr { background: var(--c-rr); box-shadow: 0 0 15px var(--c-rr); }
+        .key.highlight.c-rp { background: var(--c-rp); box-shadow: 0 0 15px var(--c-rp); }
+        .key.highlight.c-thumb { background: var(--c-thumb); box-shadow: 0 0 15px var(--c-thumb); color: #000; }
 
         .key sub {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             position: absolute;
-            top: 5px;
-            left: 5px;
-            color: #999;
+            top: 2px;
+            left: 4px;
+            color: #888;
         }
+        .key.highlight sub { color: #000; }
 
         /* Screens */
         .overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(15, 12, 41, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
         }
 
         .hidden { display: none !important; }
 
         .menu-card {
-            background: #fff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
             text-align: center;
             max-width: 700px;
-            border: 4px solid var(--correct);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4), inset 0 0 20px rgba(0, 243, 255, 0.2);
         }
 
         .menu-card h2 {
-            font-family: 'Fredoka One', cursive;
-            font-size: 3rem;
-            color: var(--correct);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2rem;
+            color: var(--neon-pink);
             margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-pink);
+            line-height: 1.4;
         }
 
         .menu-card p {
-            font-size: 1.2rem;
-            color: #555;
+            font-size: 1.1rem;
+            color: #ccc;
             margin-bottom: 20px;
             line-height: 1.6;
+            font-family: 'Nunito', sans-serif;
         }
 
         .animal-avatars {
             display: flex;
             justify-content: center;
             gap: 20px;
-            font-size: 4rem;
-            margin-bottom: 30px;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px var(--neon-yellow));
         }
 
         .btn {
-            background: var(--correct);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            font-family: 'Fredoka One', cursive;
-            border-radius: 50px;
+            background: transparent;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-family: 'Press Start 2P', cursive;
+            border-radius: 5px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
             margin: 10px;
+            text-transform: uppercase;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 25px var(--neon-green);
+            transform: scale(1.05);
         }
 
         .btn-outline {
             background: transparent;
-            color: #555;
-            border: 2px solid #ccc;
-            box-shadow: none;
+            color: var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+            font-size: 0.8rem;
         }
-        .btn-outline:hover { background: #f5f5f5; color: #333; box-shadow: none; }
+        .btn-outline:hover { 
+            background: var(--neon-blue); 
+            color: #000; 
+            box-shadow: 0 0 20px var(--neon-blue); 
+        }
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🐾 Typing Animal Race</h1>
-        <div class="subtitle">Learn To Touch-Type with Famous Documents!</div>
+        <h1>動物 Typing Race</h1>
+        <div class="subtitle">ARCADE BATTLE EDITION // LEARN TO TOUCH-TYPE</div>
     </header>
 
     <div id="game-container">
         <!-- 3D Race Scene -->
         <div id="canvas-container">
             <div class="hud">
-                <div class="hud-item">Document: <span id="doc-title">Loading...</span></div>
-                <div class="hud-item">Rank: <span id="rank-display">1st</span></div>
-                <div class="hud-item">Accuracy: <span id="acc-display">100%</span></div>
+                <div class="hud-item">DOC: <span id="doc-title">LOADING...</span></div>
+                <div class="hud-item">RANK: <span id="rank-display">1ST</span></div>
+                <div class="hud-item">ACC: <span id="acc-display">100%</span></div>
             </div>
         </div>
 
@@ -413,30 +453,29 @@
     <!-- Start Overlay -->
     <div class="overlay" id="start-screen">
         <div class="menu-card">
-            <h2>Typing Animal Race</h2>
+            <h2>DOUBUTSU BATTLE<br>RACE!</h2>
             <div class="animal-avatars">
-                🐶 🐢 🐌
+                🐶 ⚡ 🐢
             </div>
             <p>
-                Learn how to type properly while racing cute animals!<br>
-                Look at the <strong>colors</strong> on the keyboard to know which <strong>finger</strong> to use.<br>
-                This mode is <strong>Super Easy</strong> and <strong>Case-Insensitive</strong> to help you learn stress-free.
+                Learn how to type properly in a retro anime arcade battle scene!<br><br>
+                Look at the <strong>glowing colors</strong> on the keyboard to map your <strong>fingers</strong>. Super easy & case-insensitive!
             </p>
-            <button class="btn" id="start-btn">START RACE!</button>
+            <button class="btn" id="start-btn">INSERT COIN</button>
             <br>
-            <button class="btn btn-outline" onclick="window.location.href='mge.html'">Back to MGE Dashboard</button>
+            <button class="btn btn-outline" onclick="window.location.href='mge.html'">EXIT TO SYSTEM</button>
         </div>
     </div>
 
     <!-- Win Overlay -->
     <div class="overlay hidden" id="win-screen">
-        <div class="menu-card" style="border-color: #2196F3;">
-            <h2 style="color: #2196F3;" id="win-title">GREAT JOB! 🐾</h2>
-            <p id="win-stats" style="font-size: 1.5rem; color: #333; font-weight: bold;"></p>
-            <p style="color: #555;">Keep practicing those finger placements!</p>
-            <button class="btn" style="background: #2196F3;" id="restart-btn">Race Again!</button>
+        <div class="menu-card" style="border-color: var(--neon-yellow);">
+            <h2 style="color: var(--neon-yellow);" id="win-title">YOU WIN! 🐾</h2>
+            <p id="win-stats" style="font-size: 1.2rem; color: #fff; text-shadow: 0 0 5px #fff;"></p>
+            <p style="color: var(--neon-blue);">Fingers linked to mainframe successfully.</p>
+            <button class="btn" style="border-color: var(--neon-yellow); color: var(--neon-yellow);" id="restart-btn">PLAY AGAIN</button>
             <br>
-            <button class="btn btn-outline" onclick="window.location.href='mge.html'">Back to Dashboard</button>
+            <button class="btn btn-outline" onclick="window.location.href='mge.html'">EXIT</button>
         </div>
     </div>
 
@@ -444,16 +483,16 @@
         // --- DOCUMENTS DATA ---
         const documents = [
             {
-                title: "Declaration of Independence",
-                text: "When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature and of Nature's God entitle them."
+                title: "Dec. of Independence",
+                text: "When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another..."
             },
             {
                 title: "Gettysburg Address",
-                text: "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure."
+                text: "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty..."
             },
             {
-                title: "US Constitution: Preamble",
-                text: "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution."
+                title: "US Constitution",
+                text: "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility..."
             }
         ];
 
@@ -463,13 +502,13 @@
         let errors = 0;
         let isStarted = false;
         
-        let playerProgress = 0; // 0 to 1
+        let playerProgress = 0; 
         let bot1Progress = 0;
         let bot2Progress = 0;
         
-        // SUPER EASY BOT SPEEDS
-        const BOT1_SPEED = 0.0001; // Snail
-        const BOT2_SPEED = 0.0002; // Turtle
+        // BOT SPEEDS (Super slow so user can focus on typing properly)
+        const BOT1_SPEED = 0.00015; // Turtle
+        const BOT2_SPEED = 0.0001;  // Snail
 
         // Elements
         const textDisplay = document.getElementById('text-display');
@@ -481,12 +520,12 @@
         // Finger Mapping for Messages
         const fingerNames = {
             'c-lp': 'Left Pinky',
-            'c-lr': 'Left Ring Finger',
-            'c-lm': 'Left Middle Finger',
-            'c-li': 'Left Index Finger',
-            'c-ri': 'Right Index Finger',
-            'c-rm': 'Right Middle Finger',
-            'c-rr': 'Right Ring Finger',
+            'c-lr': 'Left Ring',
+            'c-lm': 'Left Middle',
+            'c-li': 'Left Index',
+            'c-ri': 'Right Index',
+            'c-rm': 'Right Middle',
+            'c-rr': 'Right Ring',
             'c-rp': 'Right Pinky',
             'c-thumb': 'Thumb'
         };
@@ -503,129 +542,153 @@
             'c-thumb': 'var(--c-thumb)'
         };
 
-        // Initialize 3D Scene
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playRetroSynth() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400 + Math.random()*200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playErrorBuzz() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        // --- THREE.JS SYNTHWAVE SCENE ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // Sky
+        scene.fog = new THREE.FogExp2(0x0f0c29, 0.02);
         
         const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 15, 25);
+        camera.position.set(0, 10, 20);
         camera.lookAt(0, 0, -10);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.shadowMap.enabled = true;
         container.appendChild(renderer.domElement);
 
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(10, 20, 10);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
+        // Synthwave Grid
+        const gridHelper = new THREE.GridHelper(200, 50, 0xff00ff, 0x00f3ff);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
 
-        // Ground & Track
-        const groundGeo = new THREE.PlaneGeometry(200, 200);
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        // Neon Sun
+        const sunGeo = new THREE.CircleGeometry(40, 32);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, transparent: true, opacity: 0.8 });
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        sun.position.set(0, 5, -100);
+        scene.add(sun);
 
-        // Finish line
-        const finishGeo = new THREE.BoxGeometry(40, 0.1, 2);
-        const finishMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-        const finishLine = new THREE.Mesh(finishGeo, finishMat);
-        finishLine.position.set(0, 0.05, -80);
-        scene.add(finishLine);
-
-        // Animals Models
-        function createDog() {
+        // Holographic Anime Animals
+        function createHoloDog() {
             const group = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1, 3), new THREE.MeshStandardMaterial({color: 0x8B4513}));
+            const mat = new THREE.MeshBasicMaterial({color: 0x000000, wireframe: true});
+            const matGlow = new THREE.MeshBasicMaterial({color: 0x00f3ff, transparent: true, opacity: 0.8});
+            
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1, 3), matGlow);
             body.position.y = 0.5;
-            body.castShadow = true;
             group.add(body);
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshStandardMaterial({color: 0x8B4513}));
+            
+            const bodyWire = new THREE.Mesh(new THREE.BoxGeometry(1.55, 1.05, 3.05), mat);
+            bodyWire.position.y = 0.5;
+            group.add(bodyWire);
+            
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), matGlow);
             head.position.set(0, 1.5, -1.5);
-            head.castShadow = true;
             group.add(head);
-            const snout = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.8), new THREE.MeshStandardMaterial({color: 0x3e2723}));
-            snout.position.set(0, 1.2, -2);
-            group.add(snout);
-            const earL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.4), new THREE.MeshStandardMaterial({color: 0x5D4037}));
-            earL.position.set(-0.7, 1.8, -1.2);
-            group.add(earL);
-            const earR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.4), new THREE.MeshStandardMaterial({color: 0x5D4037}));
-            earR.position.set(0.7, 1.8, -1.2);
-            group.add(earR);
+
             return group;
         }
 
-        function createTurtle() {
+        function createHoloTurtle() {
             const group = new THREE.Group();
-            const shell = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({color: 0x2E7D32}));
+            const mat = new THREE.MeshBasicMaterial({color: 0x39ff14, wireframe: true});
+            const shell = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8, 0, Math.PI*2, 0, Math.PI/2), mat);
             shell.position.y = 0.2;
-            shell.castShadow = true;
             group.add(shell);
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), new THREE.MeshStandardMaterial({color: 0x81C784}));
-            head.position.set(0, 0.5, -1.5);
-            group.add(head);
             return group;
         }
 
-        function createSnail() {
+        function createHoloSnail() {
             const group = new THREE.Group();
-            const shell = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.4, 16, 16), new THREE.MeshStandardMaterial({color: 0xF57F17}));
+            const mat = new THREE.MeshBasicMaterial({color: 0xff00ff, wireframe: true});
+            const shell = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.4, 8, 8), mat);
             shell.position.set(0, 0.8, 0);
-            shell.castShadow = true;
             group.add(shell);
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 2.5), new THREE.MeshStandardMaterial({color: 0xFFEB3B}));
-            body.position.set(0, 0.2, -0.5);
-            group.add(body);
             return group;
         }
 
-        const playerDog = createDog();
-        const botTurtle = createTurtle();
-        const botSnail = createSnail();
+        const playerDog = createHoloDog();
+        const botTurtle = createHoloTurtle();
+        const botSnail = createHoloSnail();
 
-        // Position on lanes
         playerDog.position.set(0, 0, 10);
-        botTurtle.position.set(-5, 0, 10); // Left lane
-        botSnail.position.set(5, 0, 10);   // Right lane
+        botTurtle.position.set(-5, 0, 10);
+        botSnail.position.set(5, 0, 10);
 
         scene.add(playerDog);
         scene.add(botTurtle);
         scene.add(botSnail);
 
-        // Path bounds
         const startZ = 10;
         const endZ = -80;
         const totalDist = Math.abs(startZ - endZ);
 
-        // Render loop
+        // Stars / Speed Lines
+        const starsGeo = new THREE.BufferGeometry();
+        const starsCount = 200;
+        const posArray = new Float32Array(starsCount * 3);
+        for(let i=0; i<starsCount*3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const starsMat = new THREE.PointsMaterial({size: 0.2, color: 0xffffff});
+        const starsMesh = new THREE.Points(starsGeo, starsMat);
+        scene.add(starsMesh);
+
         function animate() {
             requestAnimationFrame(animate);
+            gridHelper.position.z = (Date.now() * 0.05) % 4; // Moving grid effect
+            starsMesh.position.z += 0.5;
+            if(starsMesh.position.z > 50) starsMesh.position.z = 0;
+
             if (isStarted) {
-                // Update bots
                 bot1Progress += BOT1_SPEED;
                 bot2Progress += BOT2_SPEED;
 
-                botSnail.position.z = startZ - (bot1Progress * totalDist);
-                botTurtle.position.z = startZ - (bot2Progress * totalDist);
+                botSnail.position.z = startZ - (bot2Progress * totalDist);
+                botTurtle.position.z = startZ - (bot1Progress * totalDist);
                 playerDog.position.z = startZ - (playerProgress * totalDist);
 
-                // Bobbing animation for dog running
                 if (playerDog.position.z < startZ && playerProgress < 1) {
-                    playerDog.position.y = Math.abs(Math.sin(Date.now() * 0.01)) * 0.5;
+                    playerDog.position.y = Math.abs(Math.sin(Date.now() * 0.02)) * 0.8;
                 } else {
                     playerDog.position.y = 0;
                 }
 
-                // Camera follow
-                camera.position.z = playerDog.position.z + 25;
+                camera.position.z = playerDog.position.z + 15;
+                camera.position.x = Math.sin(Date.now() * 0.001) * 2; // subtle camera sway
+                camera.lookAt(0, 0, playerDog.position.z - 20);
                 
                 updateHUD();
                 checkWin();
@@ -641,7 +704,6 @@
         });
 
         // --- GAMEPLAY LOGIC ---
-
         function initLevel() {
             const doc = documents[Math.floor(Math.random() * documents.length)];
             currentText = doc.text.trim();
@@ -658,7 +720,7 @@
             playerDog.position.set(0, 0, startZ);
             botTurtle.position.set(-5, 0, startZ);
             botSnail.position.set(5, 0, startZ);
-            camera.position.z = startZ + 25;
+            camera.position.z = startZ + 15;
 
             for (let i = 0; i < currentText.length; i++) {
                 const span = document.createElement('span');
@@ -678,68 +740,63 @@
             
             if (currentIndex >= currentText.length) {
                 fingerGuideMsg.textContent = "FINISHED! 🏁";
-                fingerGuideMsg.style.background = "#4CAF50";
+                fingerGuideMsg.style.color = "#000";
+                fingerGuideMsg.style.background = "#fff";
+                fingerGuideMsg.style.boxShadow = "0 0 15px #fff";
                 return;
             }
 
             const upNext = currentText[currentIndex];
             const lowerNext = upNext.toLowerCase();
             
-            // Map character to physical key
             let targetKeyStr = lowerNext;
-            let targetShiftCode = null;
-
-            // Check if it's a shifted symbol natively
             const shiftedMap = {
                 '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8', '(':'9', ')':'0',
                 '_':'-', '+':'=', '{':'[', '}':']', '|':'\\', ':':';', '"':'\'', '<':',', '>':'.', '?':'/'
             };
 
-            if (shiftedMap[upNext]) {
-                targetKeyStr = shiftedMap[upNext];
-            }
+            if (shiftedMap[upNext]) targetKeyStr = shiftedMap[upNext];
 
-            // Find key Element
-            let keyEl;
-            if (targetKeyStr === ' ') {
-                keyEl = document.querySelector('.key[data-key=" "]');
-            } else {
-                keyEl = document.querySelector(`.key[data-key="${targetKeyStr}"]`);
-            }
+            let keyEl = targetKeyStr === ' ' 
+                ? document.querySelector('.key[data-key=" "]') 
+                : document.querySelector(`.key[data-key="${targetKeyStr}"]`);
 
             if (keyEl) {
                 keyEl.classList.add('highlight');
-                
-                // Determine finger class
                 const fingerClass = Array.from(keyEl.classList).find(c => c.startsWith('c-'));
                 if (fingerClass && fingerNames[fingerClass]) {
-                    fingerGuideMsg.textContent = `Use Your ${fingerNames[fingerClass].toUpperCase()}`;
+                    fingerGuideMsg.textContent = `USE: ${fingerNames[fingerClass]}`;
                     fingerGuideMsg.style.background = fingerColors[fingerClass];
+                    fingerGuideMsg.style.boxShadow = `0 0 15px ${fingerColors[fingerClass]}`;
+                    fingerGuideMsg.style.color = fingerClass === 'c-thumb' ? '#000' : '#fff';
                 }
             } else {
-                fingerGuideMsg.textContent = `Type: ${upNext}`;
-                fingerGuideMsg.style.background = "#333";
+                fingerGuideMsg.textContent = `TYPE: ${upNext}`;
+                fingerGuideMsg.style.background = "#fff";
+                fingerGuideMsg.style.color = "#000";
+            }
+            
+            // Auto-scroll text area robustly
+            const currentEl = charElements[currentIndex];
+            if(currentEl) {
+                textDisplay.scrollTop = currentEl.offsetTop - textDisplay.offsetTop - (textDisplay.clientHeight / 2);
             }
         }
 
         window.addEventListener('keydown', (e) => {
             if (!isStarted) return;
-            
-            // Ignore modifiers
             if (['Shift','Control','Alt','Meta','CapsLock','Tab'].includes(e.key)) return;
             if (e.key === ' ') e.preventDefault();
-            if (e.key === 'Backspace') return; // Easy mode ignores backspace
+            if (e.key === 'Backspace') return; 
 
             const expectedChar = currentText[currentIndex];
             
-            // SUPER EASY MODE: Case IN-SENSITIVE
-            // Compare lowercased, and also maps specific tricky things if needed.
+            // Case-Insensitive evaluation
             if (e.key.toLowerCase() === expectedChar.toLowerCase()) {
-                // Correct!
+                playRetroSynth();
                 charElements[currentIndex].classList.remove('current', 'incorrect');
                 charElements[currentIndex].classList.add('correct');
                 currentIndex++;
-                
                 playerProgress = currentIndex / currentText.length;
 
                 if (currentIndex < currentText.length) {
@@ -747,39 +804,37 @@
                     highlightKeyboard();
                 }
             } else {
-                // Incorrect
+                playErrorBuzz();
                 errors++;
                 charElements[currentIndex].classList.add('incorrect');
+                // arcade shake
+                document.body.style.marginLeft = (Math.random()*10 - 5) + 'px';
+                setTimeout(() => document.body.style.marginLeft = '0px', 50);
             }
 
             updateHUD();
         });
 
         function updateHUD() {
-            // Accuracy
             if (currentIndex > 0 || errors > 0) {
                 const totalKeys = currentIndex + errors;
                 const acc = Math.round((currentIndex / totalKeys) * 100);
                 accDisplay.textContent = `${acc}%`;
             }
 
-            // Rank
             let r = 1;
             if (bot1Progress > playerProgress) r++;
             if (bot2Progress > playerProgress) r++;
-            let rText = r === 1 ? '1st 🥇' : (r === 2 ? '2nd 🥈' : '3rd 🥉');
-            rankDisplay.textContent = rText;
+            rankDisplay.textContent = r === 1 ? '1ST' : (r === 2 ? '2ND' : '3RD');
         }
 
         function checkWin() {
             if (playerProgress >= 1 || bot1Progress >= 1 || bot2Progress >= 1) {
                 isStarted = false;
-                
                 const won = playerProgress >= 1;
-                document.getElementById('win-title').textContent = won ? "YOU WON! 🥇🐶" : "RACE FINISHED! 🏁";
-                document.getElementById('win-title').style.color = won ? "#4CAF50" : "#ff9800";
-                
-                document.getElementById('win-stats').textContent = `Final Accuracy: ${accDisplay.textContent} | Rank: ${rankDisplay.textContent}`;
+                document.getElementById('win-title').textContent = won ? "YOU WIN! 🥇" : "GAME OVER 🏁";
+                document.getElementById('win-title').style.color = won ? "var(--neon-green)" : "var(--neon-pink)";
+                document.getElementById('win-stats').textContent = `ACCURACY: ${accDisplay.textContent} // RANK: ${rankDisplay.textContent}`;
                 
                 setTimeout(() => {
                     document.getElementById('win-screen').classList.remove('hidden');
@@ -787,9 +842,9 @@
             }
         }
 
-        // --- BUTTONS ---
         document.getElementById('start-btn').addEventListener('click', () => {
             document.getElementById('start-screen').classList.add('hidden');
+            audioCtx.resume();
             initLevel();
             isStarted = true;
         });

@@ -359,6 +359,16 @@
             opacity: 0;
         }
 
+        .color-btn {
+            width: 50px; height: 50px; 
+            border: 3px solid white; 
+            cursor: pointer; 
+            transform: skewX(-10deg);
+            transition: transform 0.2s;
+        }
+        .color-btn:hover { transform: skewX(-10deg) scale(1.1); }
+        .color-btn.selected { border-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
+
         @media (max-width: 768px) {
             .anime-btn { padding: 10px 20px; font-size: 20px; }
             .cost-text { font-size: 14px; }
@@ -367,6 +377,7 @@
             .attack-btn { font-size: 40px; padding: 15px 40px; }
             .anime-title { font-size: 50px; }
             .stat-box-inner { font-size: 20px; }
+            .color-btn { width: 40px; height: 40px; }
         }
 
     </style>
@@ -398,14 +409,14 @@
             <h1 class="anime-title">BOT CREATOR DELUXE<br><span class="jp-sub">ボットマスター</span></h1>
             
             <div id="base-controls">
-                <button class="anime-btn btn-build" onclick="buildBot('CAR')">
-                    <span>BUILD CAR BOT<span class="cost-text">Cost: 50 ⚙️</span></span>
+                <button class="anime-btn btn-build" onclick="openWizard('CAR')">
+                    <span>BUILD CAR BOT<span class="cost-text">FREE</span></span>
                 </button>
-                <button class="anime-btn btn-build" onclick="buildBot('HUMANOID')">
-                    <span>BUILD BRAWLER BOT<span class="cost-text">Cost: 100 ⚙️</span></span>
+                <button class="anime-btn btn-build" onclick="openWizard('HUMANOID')">
+                    <span>BUILD BRAWLER BOT<span class="cost-text">FREE</span></span>
                 </button>
-                <button class="anime-btn btn-build" onclick="buildBot('HAWK')">
-                    <span>BUILD HAWK BOT<span class="cost-text">Cost: 150 ⚙️</span></span>
+                <button class="anime-btn btn-build" onclick="openWizard('HAWK')">
+                    <span>BUILD HAWK BOT<span class="cost-text">FREE</span></span>
                 </button>
                 <button class="anime-btn anime-btn-blue" onclick="startBattle()">
                     <span>BATTLE ENEMY ⚔️</span>
@@ -442,6 +453,27 @@
                 <div class="reward-amount" id="modal-reward-text">+50 ⚙️ | +100 ⚡</div>
                 <button class="anime-btn anime-btn-yellow" onclick="returnToBase()">
                     <span>RETURN TO BASE</span>
+                </button>
+            </div>
+        </div>
+        <div class="modal-box" id="modal-wizard" style="display:none;">
+            <div class="modal-box-inner">
+                <h2 class="anime-title" style="font-size: 50px;">CUSTOMIZE BOT</h2>
+                <div style="margin: 20px 0;">
+                    <p style="font-size:30px; margin-bottom:10px;">SELECT COLOR</p>
+                    <div id="color-options" style="display:flex; justify-content:center; gap:10px;">
+                        <div class="color-btn" style="background:#00ffff;" onclick="selectColor(0x00ffff, this)"></div>
+                        <div class="color-btn" style="background:#ff0044;" onclick="selectColor(0xff0044, this)"></div>
+                        <div class="color-btn" style="background:#ffe600;" onclick="selectColor(0xffe600, this)"></div>
+                        <div class="color-btn" style="background:#39ff14;" onclick="selectColor(0x39ff14, this)"></div>
+                        <div class="color-btn" style="background:#ffffff;" onclick="selectColor(0xffffff, this)"></div>
+                    </div>
+                </div>
+                <button class="anime-btn anime-btn-blue" onclick="confirmBuild()">
+                    <span>CONFIRM CREATION</span>
+                </button>
+                <button class="anime-btn anime-btn-yellow" onclick="closeWizard()" style="margin-top:10px; display:block; margin-left:auto; margin-right:auto;">
+                    <span>CANCEL</span>
                 </button>
             </div>
         </div>
@@ -556,9 +588,9 @@
         return group;
     }
 
-    function createBot(type, isEnemy = false) {
+    function createBot(type, isEnemy = false, customColor = null) {
         const botGroup = new THREE.Group();
-        const color = isEnemy ? 0xcc00ff : BOT_SPECS[type].color; // Enemies are purple
+        const color = isEnemy ? 0xcc00ff : (customColor !== null ? customColor : BOT_SPECS[type].color); // Enemies are purple
         
         if (type === 'CAR') {
             // Main body
@@ -651,18 +683,9 @@
         ptsEl.innerText = points;
     }
 
-    window.buildBot = function(type, isFree = false) {
-        const cost = BOT_SPECS[type].cost;
-        if (!isFree) {
-            if (materials < cost) {
-                flashColor('red');
-                return; // Cant afford
-            }
-            materials -= cost;
-            updateHUD();
-        }
-
-        const bot = createBot(type);
+    window.buildBot = function(type, isFree = false, customColor = null) {
+        // Free cost logic
+        const bot = createBot(type, false, customColor);
         army.push(bot);
         scene.add(bot);
         
@@ -679,6 +702,41 @@
             .start();
             
         flashColor('var(--neon-blue)');
+    };
+
+    // --- Wizard Logic ---
+    let wizardType = null;
+    let wizardColor = null;
+
+    window.openWizard = function(type) {
+        wizardType = type;
+        wizardColor = BOT_SPECS[type].color; // default color
+        
+        document.getElementById('modal-reward').style.display = 'none';
+        document.getElementById('modal-wizard').style.display = 'block';
+        modalOverlay.style.display = 'flex';
+        
+        // Reset color selections
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+    };
+
+    window.selectColor = function(colorHex, element) {
+        wizardColor = colorHex;
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+        if (element) {
+            element.classList.add('selected');
+        }
+        flashColor('white', 0.1); 
+    };
+
+    window.closeWizard = function() {
+        modalOverlay.style.display = 'none';
+        document.getElementById('modal-wizard').style.display = 'none';
+    };
+
+    window.confirmBuild = function() {
+        closeWizard();
+        buildBot(wizardType, true, wizardColor);
     };
 
     function organizeArmy() {
