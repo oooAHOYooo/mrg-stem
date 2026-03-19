@@ -3,467 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Racer: Fast & Famous</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Racing+Sans+One&display=swap" rel="stylesheet">
+    <title>Animal Typing Race</title>
+    <!-- Three.js for 3D race -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0b0c10;
-            --neon-blue: #45f3ff;
-            --neon-pink: #ff2a7a;
-            --neon-green: #39ff14;
-            --text-gray: #66fcf1;
-            --muted-gray: #455a64;
-            --error-red: #ff073a;
+            --bg-color: #f0f8ff;
+            --text-color: #333;
+            --correct: #4CAF50;
+            --incorrect: #F44336;
+            --current: #2196F3;
+            
+            /* Finger colors */
+            --c-lp: #FF6B6B; /* Left Pinky */
+            --c-lr: #FF9F43; /* Left Ring */
+            --c-lm: #FDD835; /* Left Middle */
+            --c-li: #4CAF50; /* Left Index */
+            --c-ri: #00BCD4; /* Right Index */
+            --c-rm: #3F51B5; /* Right Middle */
+            --c-rr: #9C27B0; /* Right Ring */
+            --c-rp: #E91E63; /* Right Pinky */
+            --c-thumb: #9E9E9E; /* Thumb */
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: #fff;
-            font-family: 'Fira Code', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Nunito', sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
             height: 100vh;
         }
 
+        header {
+            text-align: center;
+            padding: 10px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
         h1 {
-            font-family: 'Racing Sans One', cursive;
-            font-size: 3.5rem;
-            color: var(--neon-pink);
-            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
-            margin-top: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+            font-family: 'Fredoka One', cursive;
+            color: #4CAF50;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
         }
 
         .subtitle {
-            font-size: 1.2rem;
-            color: var(--neon-blue);
-            text-shadow: 0 0 5px var(--neon-blue);
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 700;
         }
 
-        .track-container {
-            width: 90%;
-            max-width: 1200px;
-            background: linear-gradient(180deg, #1a1a24 0%, #0d0d12 100%);
-            border: 2px solid var(--neon-blue);
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(69, 243, 255, 0.2);
-            padding: 10px 20px;
-            margin-bottom: 15px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .track-lane {
-            position: relative;
-            height: 60px;
-            border-bottom: 2px dashed #333;
+        #game-container {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            flex: 1;
         }
 
-        .track-lane:last-child {
-            border-bottom: none;
-        }
-
-        .car {
-            font-size: 2.5rem;
-            position: absolute;
-            left: 0;
-            transition: left 0.1s linear;
-            z-index: 10;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-        }
-
-        .car-player {
-            filter: drop-shadow(0 0 15px var(--neon-blue));
-        }
-
-        .exhaust {
-            position: absolute;
-            left: -15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.2rem;
-            opacity: 0;
-            transition: opacity 0.1s;
-        }
-
-        .car.moving .exhaust {
-            opacity: 1;
-            animation: flicker 0.1s infinite alternate;
-        }
-
-        @keyframes flicker {
-            from { opacity: 0.5; transform: translateY(-50%) scale(0.8); }
-            to { opacity: 1; transform: translateY(-50%) scale(1.2); }
-        }
-
-        .finish-line {
-            position: absolute;
-            right: 50px;
-            top: 0;
-            bottom: 0;
-            width: 20px;
-            background: repeating-linear-gradient(
-                45deg,
-                #fff,
-                #fff 10px,
-                #000 10px,
-                #000 20px
-            );
-            border-left: 2px solid var(--neon-pink);
-            box-shadow: -5px 0 15px rgba(255, 42, 122, 0.5);
-            z-index: 5;
-        }
-
-        .typing-container {
-            width: 90%;
-            max-width: 1000px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--neon-pink);
-            border-radius: 15px;
-            padding: 20px;
-            font-size: 1.5rem;
-            line-height: 1.5;
-            box-shadow: inset 0 0 20px rgba(255, 42, 122, 0.1), 0 0 20px rgba(255, 42, 122, 0.2);
+        #canvas-container {
+            flex: 0.8;
+            width: 100%;
+            background: #87CEEB; /* Sky blue */
             position: relative;
-        }
-
-        .text-display {
-            user-select: none;
-            word-wrap: break-word;
-        }
-
-        .char {
-            color: var(--muted-gray);
-            transition: color 0.1s;
-        }
-
-        .char.correct {
-            color: var(--neon-green);
-            text-shadow: 0 0 5px var(--neon-green);
-        }
-
-        .char.incorrect {
-            color: var(--error-red);
-            text-shadow: 0 0 5px var(--error-red);
-            background: rgba(255, 7, 58, 0.2);
-            border-radius: 3px;
-        }
-
-        .char.current {
-            color: #fff;
-            text-shadow: 0 0 8px #fff;
-            border-bottom: 3px solid var(--neon-blue);
-            animation: blink 1s infinite alternate;
-        }
-
-        @keyframes blink {
-            from { border-color: transparent; }
-            to { border-color: var(--neon-blue); }
         }
 
         .hud {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            right: 20px;
             display: flex;
             justify-content: space-between;
-            width: 90%;
-            max-width: 1000px;
-            margin-bottom: 5px;
-            font-family: 'Racing Sans One', cursive;
-            font-size: 1.3rem;
-            color: var(--neon-blue);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        .wpm-display { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
-        .acc-display { color: #f1c40f; text-shadow: 0 0 10px #f1c40f; }
-        .doc-title { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+        .hud-item { color: #333; }
+        .hud-item span { color: #2196F3; }
 
-        .overlay {
+        /* Typing Area */
+        #typing-section {
+            flex: 0.5;
+            background: #fff;
+            padding: 15px 30px;
+            border-top: 4px solid #4CAF50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .text-display {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            max-width: 1000px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px dashed #ccc;
+        }
+
+        .char {
+            color: #999;
+            transition: color 0.1s;
+        }
+
+        .char.correct { color: var(--correct); }
+        .char.incorrect { color: var(--incorrect); text-decoration: underline; background: #ffebee; }
+        .char.current {
+            color: #000;
+            background: #e3f2fd;
+            border-bottom: 3px solid var(--current);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { background: #bbdefb; }
+            to { background: #e3f2fd; }
+        }
+
+        /* Keyboard UI */
+        #keyboard-section {
+            flex: 1;
+            background: #eceff1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #cfd8dc;
+        }
+
+        .finger-guide-msg {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            padding: 5px 20px;
+            border-radius: 20px;
+            color: #fff;
+            background: #333;
+            transition: background 0.2s;
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .key {
+            width: 50px;
+            height: 50px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-bottom-width: 6px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-family: 'Nunito', sans-serif;
+            color: #555;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        /* Finger color classes for keys */
+        .key.c-lp { border-bottom-color: var(--c-lp); color: var(--c-lp); }
+        .key.c-lr { border-bottom-color: var(--c-lr); color: var(--c-lr); }
+        .key.c-lm { border-bottom-color: var(--c-lm); color: var(--c-lm); }
+        .key.c-li { border-bottom-color: var(--c-li); color: var(--c-li); }
+        .key.c-ri { border-bottom-color: var(--c-ri); color: var(--c-ri); }
+        .key.c-rm { border-bottom-color: var(--c-rm); color: var(--c-rm); }
+        .key.c-rr { border-bottom-color: var(--c-rr); color: var(--c-rr); }
+        .key.c-rp { border-bottom-color: var(--c-rp); color: var(--c-rp); }
+        .key.c-thumb { border-bottom-color: var(--c-thumb); color: var(--c-thumb); }
+
+        .key.shift { width: 115px; }
+        .key.space { width: 350px; }
+        .key.backspace { width: 80px; }
+
+        .key.highlight {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
+            background: #fff;
+        }
+        
+        /* Specific highlight classes override text color */
+        .key.highlight.c-lp { background: var(--c-lp); color: white; }
+        .key.highlight.c-lr { background: var(--c-lr); color: white; }
+        .key.highlight.c-lm { background: var(--c-lm); color: white; }
+        .key.highlight.c-li { background: var(--c-li); color: white; }
+        .key.highlight.c-ri { background: var(--c-ri); color: white; }
+        .key.highlight.c-rm { background: var(--c-rm); color: white; }
+        .key.highlight.c-rr { background: var(--c-rr); color: white; }
+        .key.highlight.c-rp { background: var(--c-rp); color: white; }
+        .key.highlight.c-thumb { background: var(--c-thumb); color: white; }
+
+        .key sub {
+            font-size: 0.7rem;
             position: absolute;
+            top: 5px;
+            left: 5px;
+            color: #999;
+        }
+
+        /* Screens */
+        .overlay {
+            position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(255, 255, 255, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
 
-        .hidden {
-            display: none !important;
+        .hidden { display: none !important; }
+
+        .menu-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 700px;
+            border: 4px solid var(--correct);
+        }
+
+        .menu-card h2 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 3rem;
+            color: var(--correct);
+            margin-bottom: 20px;
+        }
+
+        .menu-card p {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .animal-avatars {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 4rem;
+            margin-bottom: 30px;
         }
 
         .btn {
-            background: transparent;
-            border: 2px solid var(--neon-blue);
-            color: var(--neon-blue);
-            padding: 10px 30px;
+            background: var(--correct);
+            color: white;
+            border: none;
+            padding: 15px 40px;
             font-size: 1.5rem;
-            font-family: 'Racing Sans One', cursive;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 50px;
             cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(69, 243, 255, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
             margin: 10px;
         }
 
-        .btn:hover, .btn.active {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: 0 0 30px var(--neon-blue);
-            transform: scale(1.05);
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
         }
 
-        .btn-adv:hover, .btn-adv.active {
-            border-color: var(--neon-pink);
-            color: var(--neon-pink);
-            box-shadow: 0 0 30px var(--neon-pink);
+        .btn-outline {
+            background: transparent;
+            color: #555;
+            border: 2px solid #ccc;
+            box-shadow: none;
         }
-
-        .btn-adv.active {
-            background: var(--neon-pink);
-            color: #000;
-        }
-
-        .results-modal {
-            text-align: center;
-        }
-
-        .results-modal h2 {
-            font-family: 'Racing Sans One', cursive;
-            font-size: 4rem;
-            color: var(--neon-green);
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px var(--neon-green);
-        }
-
-        .stat-row {
-            font-size: 1.5rem;
-            margin: 10px 0;
-            color: #fff;
-        }
-
-        .nitro-bar-container {
-            width: 100%;
-            height: 10px;
-            background: #222;
-            margin-top: 10px;
-            border-radius: 5px;
-            overflow: hidden;
-            box-shadow: 0 0 5px #000 inset;
-        }
-
-        .nitro-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #ff073a, #ff2a7a, #45f3ff);
-            transition: width 0.2s;
-            box-shadow: 0 0 10px rgba(69,243,255,0.8);
-        }
-
-        .nitro-active {
-            animation: shake 0.5s infinite;
-        }
-
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-
-        /* Keyboard Styles */
-        .keyboard {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 15px;
-            opacity: 0.9;
-        }
-        .keyboard-row {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-        .key {
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--muted-gray);
-            border-radius: 4px;
-            color: var(--muted-gray);
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            min-width: 35px;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .key.space {
-            width: 300px;
-        }
-        .key.shift {
-            width: 80px;
-        }
-        .key.highlight {
-            background: var(--neon-pink);
-            color: #fff;
-            border-color: #fff;
-            box-shadow: 0 0 15px var(--neon-pink);
-            transform: scale(1.1);
-            z-index: 2;
-        }
+        .btn-outline:hover { background: #f5f5f5; color: #333; box-shadow: none; }
 
     </style>
 </head>
 <body>
 
-    <h1>Typing Racer</h1>
-    <div class="subtitle">Fast & Famous Documents</div>
+    <header>
+        <h1>🐾 Typing Animal Race</h1>
+        <div class="subtitle">Learn To Touch-Type with Famous Documents!</div>
+    </header>
 
-    <div class="hud">
-        <div class="wpm-display">WPM: <span id="wpm">0</span></div>
-        <div class="doc-title" id="doc-title">Document</div>
-        <div class="acc-display">ACC: <span id="acc">100</span>%</div>
-    </div>
-
-    <!-- Gameplay Area -->
-    <div class="track-container" id="track-container">
-        <div class="finish-line"></div>
-        
-        <!-- Bots -->
-        <div class="track-lane">
-            <div class="car" id="bot1" style="left: 0;">🚓</div>
-        </div>
-        
-        <!-- Player -->
-        <div class="track-lane" style="background: rgba(69, 243, 255, 0.05);">
-            <div class="car car-player" id="player" style="left: 0;">
-                <span class="exhaust">🔥</span>🏎️
+    <div id="game-container">
+        <!-- 3D Race Scene -->
+        <div id="canvas-container">
+            <div class="hud">
+                <div class="hud-item">Document: <span id="doc-title">Loading...</span></div>
+                <div class="hud-item">Rank: <span id="rank-display">1st</span></div>
+                <div class="hud-item">Accuracy: <span id="acc-display">100%</span></div>
             </div>
         </div>
-        
-        <!-- Bot -->
-        <div class="track-lane">
-            <div class="car" id="bot2" style="left: 0;">🚕</div>
-        </div>
-    </div>
 
-    <div class="typing-container">
-        <div class="text-display" id="text-display"></div>
-        <div class="nitro-bar-container">
-            <div class="nitro-bar" id="nitro-bar"></div>
-        </div>
-    </div>
-
-    <!-- Visual Keyboard -->
-    <div class="keyboard" id="keyboard">
-        <div class="keyboard-row">
-            <div class="key" data-key="1">1</div>
-            <div class="key" data-key="2">2</div>
-            <div class="key" data-key="3">3</div>
-            <div class="key" data-key="4">4</div>
-            <div class="key" data-key="5">5</div>
-            <div class="key" data-key="6">6</div>
-            <div class="key" data-key="7">7</div>
-            <div class="key" data-key="8">8</div>
-            <div class="key" data-key="9">9</div>
-            <div class="key" data-key="0">0</div>
-            <div class="key" data-key="-">-</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="key" data-key="q">Q</div>
-            <div class="key" data-key="w">W</div>
-            <div class="key" data-key="e">E</div>
-            <div class="key" data-key="r">R</div>
-            <div class="key" data-key="t">T</div>
-            <div class="key" data-key="y">Y</div>
-            <div class="key" data-key="u">U</div>
-            <div class="key" data-key="i">I</div>
-            <div class="key" data-key="o">O</div>
-            <div class="key" data-key="p">P</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="key" data-key="a">A</div>
-            <div class="key" data-key="s">S</div>
-            <div class="key" data-key="d">D</div>
-            <div class="key" data-key="f">F</div>
-            <div class="key" data-key="g">G</div>
-            <div class="key" data-key="h">H</div>
-            <div class="key" data-key="j">J</div>
-            <div class="key" data-key="k">K</div>
-            <div class="key" data-key="l">L</div>
-            <div class="key" data-key=":">:</div>
-            <div class="key" data-key="'">'</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="key shift" data-key="shift">SHIFT</div>
-            <div class="key" data-key="z">Z</div>
-            <div class="key" data-key="x">X</div>
-            <div class="key" data-key="c">C</div>
-            <div class="key" data-key="v">V</div>
-            <div class="key" data-key="b">B</div>
-            <div class="key" data-key="n">N</div>
-            <div class="key" data-key="m">M</div>
-            <div class="key" data-key=",">,</div>
-            <div class="key" data-key=".">.</div>
-            <div class="key" data-key="/">/</div>
-            <div class="key shift" data-key="shift">SHIFT</div>
-        </div>
-        <div class="keyboard-row">
-            <div class="key space" data-key=" ">SPACE</div>
-        </div>
-    </div>
-
-    <!-- Start Screen Overlay -->
-    <div class="overlay" id="start-screen">
-        <h1 style="font-size: 4.5rem; margin-bottom: 0;">TYPING RACER</h1>
-        <p style="font-size: 1.3rem; color: var(--neon-blue); margin-bottom: 20px;">Type famous historical documents to accelerate!</p>
-        
-        <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; border: 1px solid var(--neon-pink); max-width: 600px; text-align: center; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;">
-            <p style="color: var(--neon-green)">Correct keys = Accelerate 🏎💨</p>
-            <p style="color: var(--error-red)">Wrong keys = Engine Stall 💥</p>
-            <p style="color: #45f3ff">Combo = Nitro Boost 🚀</p>
-            <p style="margin-top: 5px; color: #aaa;">Follow the highlighted keyboard guide!</p>
+        <!-- Typing Area -->
+        <div id="typing-section">
+            <div class="text-display" id="text-display"></div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button class="btn active" id="btn-easy">EASY (No Case, Slow Bots)</button>
-            <button class="btn btn-adv" id="btn-adv">ADVANCED (Case Sensitive)</button>
-        </div>
-
-        <button class="btn" id="start-btn" style="padding: 15px 50px; border-color: #fff; color: #fff; background: rgba(255, 255, 255, 0.1);">START RACE</button>
-        <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
-    </div>
-
-    <!-- Results Screen Overlay -->
-    <div class="overlay hidden" id="results-screen">
-        <div class="results-modal">
-            <h2 id="result-title">YOU WIN!</h2>
-            <div class="stat-row" style="color: var(--neon-blue)">Rank: <span id="final-rank">1st Place</span></div>
-            <div class="stat-row" style="color: var(--neon-green)">Speed: <span id="final-wpm">0</span> WPM</div>
-            <div class="stat-row" style="color: #f1c40f">Accuracy: <span id="final-acc">0</span>%</div>
+        <!-- Keyboard Guide Area -->
+        <div id="keyboard-section">
+            <div class="finger-guide-msg" id="finger-guide-msg">REST FINGERS ON HOME ROW (ASDF JKL;)</div>
             
-            <button class="btn" id="restart-btn" style="margin-top: 30px;">PLAY AGAIN</button>
-            <button class="btn" style="font-size: 1rem; padding: 10px 20px; border-color: #555; color: #aaa; margin-top: 10px; display: block; margin-left: auto; margin-right: auto;" onclick="window.location.href='mge.html'">BACK TO MGE</button>
+            <div class="keyboard" id="keyboard">
+                <!-- Numbers -->
+                <div class="keyboard-row">
+                    <div class="key c-lp" data-key="1" data-shift="!"><sub>!</sub> 1</div>
+                    <div class="key c-lr" data-key="2" data-shift="@"><sub>@</sub> 2</div>
+                    <div class="key c-lm" data-key="3" data-shift="#"><sub>#</sub> 3</div>
+                    <div class="key c-li" data-key="4" data-shift="$"><sub>$</sub> 4</div>
+                    <div class="key c-li" data-key="5" data-shift="%"><sub>%</sub> 5</div>
+                    <div class="key c-ri" data-key="6" data-shift="^"><sub>^</sub> 6</div>
+                    <div class="key c-ri" data-key="7" data-shift="&"><sub>&</sub> 7</div>
+                    <div class="key c-rm" data-key="8" data-shift="*"><sub>*</sub> 8</div>
+                    <div class="key c-rr" data-key="9" data-shift="("><sub>(</sub> 9</div>
+                    <div class="key c-rp" data-key="0" data-shift=")"><sub>)</sub> 0</div>
+                    <div class="key c-rp" data-key="-" data-shift="_"><sub>_</sub> -</div>
+                    <div class="key c-rp" data-key="=" data-shift="+"><sub>+</sub> =</div>
+                </div>
+                <!-- QWERTY -->
+                <div class="keyboard-row">
+                    <div class="key c-lp" data-key="q">Q</div>
+                    <div class="key c-lr" data-key="w">W</div>
+                    <div class="key c-lm" data-key="e">E</div>
+                    <div class="key c-li" data-key="r">R</div>
+                    <div class="key c-li" data-key="t">T</div>
+                    <div class="key c-ri" data-key="y">Y</div>
+                    <div class="key c-ri" data-key="u">U</div>
+                    <div class="key c-rm" data-key="i">I</div>
+                    <div class="key c-rr" data-key="o">O</div>
+                    <div class="key c-rp" data-key="p">P</div>
+                    <div class="key c-rp" data-key="[" data-shift="{"><sub>{</sub> [</div>
+                    <div class="key c-rp" data-key="]" data-shift="}"><sub>}</sub> ]</div>
+                </div>
+                <!-- ASDFGHJKL -->
+                <div class="keyboard-row">
+                    <div class="key c-lp" data-key="a">A</div>
+                    <div class="key c-lr" data-key="s">S</div>
+                    <div class="key c-lm" data-key="d">D</div>
+                    <div class="key c-li" data-key="f">F</div>
+                    <div class="key c-li" data-key="g">G</div>
+                    <div class="key c-ri" data-key="h">H</div>
+                    <div class="key c-ri" data-key="j">J</div>
+                    <div class="key c-rm" data-key="k">K</div>
+                    <div class="key c-rr" data-key="l">L</div>
+                    <div class="key c-rp" data-key=";" data-shift=":"><sub>:</sub> ;</div>
+                    <div class="key c-rp" data-key="'" data-shift="&quot;"><sub>"</sub> '</div>
+                </div>
+                <!-- ZXCVBNM -->
+                <div class="keyboard-row">
+                    <div class="key shift c-lp" data-key="shift-l">SHIFT</div>
+                    <div class="key c-lp" data-key="z">Z</div>
+                    <div class="key c-lr" data-key="x">X</div>
+                    <div class="key c-lm" data-key="c">C</div>
+                    <div class="key c-li" data-key="v">V</div>
+                    <div class="key c-li" data-key="b">B</div>
+                    <div class="key c-ri" data-key="n">N</div>
+                    <div class="key c-ri" data-key="m">M</div>
+                    <div class="key c-rm" data-key="," data-shift="<"><sub><</sub> ,</div>
+                    <div class="key c-rr" data-key="." data-shift=">"><sub>></sub> .</div>
+                    <div class="key c-rp" data-key="/" data-shift="?"><sub>?</sub> /</div>
+                    <div class="key shift c-rp" data-key="shift-r">SHIFT</div>
+                </div>
+                <!-- SPACE -->
+                <div class="keyboard-row">
+                    <div class="key space c-thumb" data-key=" ">SPACE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div class="overlay" id="start-screen">
+        <div class="menu-card">
+            <h2>Typing Animal Race</h2>
+            <div class="animal-avatars">
+                🐶 🐢 🐌
+            </div>
+            <p>
+                Learn how to type properly while racing cute animals!<br>
+                Look at the <strong>colors</strong> on the keyboard to know which <strong>finger</strong> to use.<br>
+                This mode is <strong>Super Easy</strong> and <strong>Case-Insensitive</strong> to help you learn stress-free.
+            </p>
+            <button class="btn" id="start-btn">START RACE!</button>
+            <br>
+            <button class="btn btn-outline" onclick="window.location.href='mge.html'">Back to MGE Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Win Overlay -->
+    <div class="overlay hidden" id="win-screen">
+        <div class="menu-card" style="border-color: #2196F3;">
+            <h2 style="color: #2196F3;" id="win-title">GREAT JOB! 🐾</h2>
+            <p id="win-stats" style="font-size: 1.5rem; color: #333; font-weight: bold;"></p>
+            <p style="color: #555;">Keep practicing those finger placements!</p>
+            <button class="btn" style="background: #2196F3;" id="restart-btn">Race Again!</button>
+            <br>
+            <button class="btn btn-outline" onclick="window.location.href='mge.html'">Back to Dashboard</button>
         </div>
     </div>
 
@@ -479,256 +452,214 @@
                 text: "Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal. Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure."
             },
             {
-                title: "I Have a Dream",
-                text: "I have a dream that one day this nation will rise up and live out the true meaning of its creed: We hold these truths to be self-evident, that all men are created equal. I have a dream that my four little children will one day live in a nation where they will not be judged by the color of their skin."
-            },
-            {
                 title: "US Constitution: Preamble",
                 text: "We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution."
             }
         ];
 
-        // --- AUDIO ENGINE ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playTypeSound(isSpace) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = isSpace ? 'triangle' : 'sine';
-            osc.frequency.setValueAtTime(isSpace ? 400 : 800 + Math.random() * 200, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
-            
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
-        }
-
-        function playErrorSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
-            
-            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.2);
-        }
-
-        function playRevSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(50, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(150, audioCtx.currentTime + 0.5);
-            
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.2);
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-            
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        function playNitroSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const bufferSize = audioCtx.sampleRate * 0.5;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buffer;
-            
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-            
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
-            filter.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.5);
-            
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            
-            noise.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            noise.start();
-            
-            const osc = audioCtx.createOscillator();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
-            
-            const oscGain = audioCtx.createGain();
-            oscGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            
-            osc.connect(oscGain);
-            oscGain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        }
-
-        function playVictorySound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const notes = [440, 554.37, 659.25, 880];
-            
-            notes.forEach((freq, index) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc.type = 'square';
-                osc.frequency.value = freq;
-                
-                gain.gain.setValueAtTime(0, audioCtx.currentTime + index * 0.1);
-                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + index * 0.1 + 0.05);
-                gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + index * 0.1 + 0.3);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                osc.start(audioCtx.currentTime + index * 0.1);
-                osc.stop(audioCtx.currentTime + index * 0.1 + 0.3);
-            });
-        }
-
-        // --- GAME LOGIC ---
+        // --- GAME LOGIC STATE ---
         let currentText = "";
-        let charElements = [];
         let currentIndex = 0;
         let errors = 0;
-        let totalTyped = 0;
-        let startTime = 0;
         let isStarted = false;
-        let isFinished = false;
-        let combo = 0;
         
-        // Mode settings
-        let isAdvancedMode = false;
+        let playerProgress = 0; // 0 to 1
+        let bot1Progress = 0;
+        let bot2Progress = 0;
         
-        // Progress mechanics
-        let playerProg = 0; 
-        let bot1Prog = 0;
-        let bot2Prog = 0;
-        
-        let bot1Speed = 0.0003; 
-        let bot2Speed = 0.00025;
-
-        let gameLoopRAF;
+        // SUPER EASY BOT SPEEDS
+        const BOT1_SPEED = 0.0001; // Snail
+        const BOT2_SPEED = 0.0002; // Turtle
 
         // Elements
         const textDisplay = document.getElementById('text-display');
-        const startScreen = document.getElementById('start-screen');
-        const resultsScreen = document.getElementById('results-screen');
-        const wpmDisplay = document.getElementById('wpm');
-        const accDisplay = document.getElementById('acc');
-        const titleDisplay = document.getElementById('doc-title');
-        const playerCar = document.getElementById('player');
-        const bot1Car = document.getElementById('bot1');
-        const bot2Car = document.getElementById('bot2');
-        const nitroBar = document.getElementById('nitro-bar');
+        const fingerGuideMsg = document.getElementById('finger-guide-msg');
+        const accDisplay = document.getElementById('acc-display');
+        const rankDisplay = document.getElementById('rank-display');
+        let charElements = [];
 
-        const btnEasy = document.getElementById('btn-easy');
-        const btnAdv = document.getElementById('btn-adv');
+        // Finger Mapping for Messages
+        const fingerNames = {
+            'c-lp': 'Left Pinky',
+            'c-lr': 'Left Ring Finger',
+            'c-lm': 'Left Middle Finger',
+            'c-li': 'Left Index Finger',
+            'c-ri': 'Right Index Finger',
+            'c-rm': 'Right Middle Finger',
+            'c-rr': 'Right Ring Finger',
+            'c-rp': 'Right Pinky',
+            'c-thumb': 'Thumb'
+        };
 
-        btnEasy.addEventListener('click', () => {
-            isAdvancedMode = false;
-            btnEasy.classList.add('active');
-            btnAdv.classList.remove('active');
-            bot1Speed = 0.0003;
-            bot2Speed = 0.00025;
-        });
+        const fingerColors = {
+            'c-lp': 'var(--c-lp)',
+            'c-lr': 'var(--c-lr)',
+            'c-lm': 'var(--c-lm)',
+            'c-li': 'var(--c-li)',
+            'c-ri': 'var(--c-ri)',
+            'c-rm': 'var(--c-rm)',
+            'c-rr': 'var(--c-rr)',
+            'c-rp': 'var(--c-rp)',
+            'c-thumb': 'var(--c-thumb)'
+        };
 
-        btnAdv.addEventListener('click', () => {
-            isAdvancedMode = true;
-            btnAdv.classList.add('active');
-            btnEasy.classList.remove('active');
-            bot1Speed = 0.0008;
-            bot2Speed = 0.00075;
-        });
+        // Initialize 3D Scene
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky
+        
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 15, 25);
+        camera.lookAt(0, 0, -10);
 
-        function highlightNextKey() {
-            document.querySelectorAll('.key').forEach(k => k.classList.remove('highlight'));
-            
-            if (currentIndex >= currentText.length) return;
-            
-            const upNext = currentText[currentIndex];
-            let needsShift = false;
-            let baseKey = upNext.toLowerCase();
-            
-            const shiftMap = {
-                '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8', '(':'9', ')':'0',
-                '_':'-', '+':'=', '{':'[', '}':']', '|':'\\', ':':';', '"':'\'', '<':',', '>':'.', '?':'/'
-            };
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
 
-            if (upNext !== upNext.toLowerCase() && upNext !== upNext.toUpperCase()) {
-                needsShift = true; // it's a letter and uppercase
-            } else if (upNext !== upNext.toLowerCase() && upNext.match(/[A-Z]/)) {
-                needsShift = true;
-            }
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
 
-            if (shiftMap[upNext]) {
-                needsShift = true;
-                baseKey = shiftMap[upNext];
-            }
-            
-            // Only require shift if in advanced mode
-            if (isAdvancedMode && needsShift) {
-                document.querySelectorAll('.key[data-key="shift"]').forEach(k => k.classList.add('highlight'));
-            }
+        // Ground & Track
+        const groundGeo = new THREE.PlaneGeometry(200, 200);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
 
-            // Find the key to press
-            document.querySelectorAll('.key').forEach(k => {
-                if (k.dataset.key === baseKey) {
-                    k.classList.add('highlight');
-                }
-            });
+        // Finish line
+        const finishGeo = new THREE.BoxGeometry(40, 0.1, 2);
+        const finishMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+        const finishLine = new THREE.Mesh(finishGeo, finishMat);
+        finishLine.position.set(0, 0.05, -80);
+        scene.add(finishLine);
+
+        // Animals Models
+        function createDog() {
+            const group = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1, 3), new THREE.MeshStandardMaterial({color: 0x8B4513}));
+            body.position.y = 0.5;
+            body.castShadow = true;
+            group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshStandardMaterial({color: 0x8B4513}));
+            head.position.set(0, 1.5, -1.5);
+            head.castShadow = true;
+            group.add(head);
+            const snout = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.8), new THREE.MeshStandardMaterial({color: 0x3e2723}));
+            snout.position.set(0, 1.2, -2);
+            group.add(snout);
+            const earL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.4), new THREE.MeshStandardMaterial({color: 0x5D4037}));
+            earL.position.set(-0.7, 1.8, -1.2);
+            group.add(earL);
+            const earR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.4), new THREE.MeshStandardMaterial({color: 0x5D4037}));
+            earR.position.set(0.7, 1.8, -1.2);
+            group.add(earR);
+            return group;
         }
 
-        function initGame() {
+        function createTurtle() {
+            const group = new THREE.Group();
+            const shell = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({color: 0x2E7D32}));
+            shell.position.y = 0.2;
+            shell.castShadow = true;
+            group.add(shell);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 16), new THREE.MeshStandardMaterial({color: 0x81C784}));
+            head.position.set(0, 0.5, -1.5);
+            group.add(head);
+            return group;
+        }
+
+        function createSnail() {
+            const group = new THREE.Group();
+            const shell = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.4, 16, 16), new THREE.MeshStandardMaterial({color: 0xF57F17}));
+            shell.position.set(0, 0.8, 0);
+            shell.castShadow = true;
+            group.add(shell);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 2.5), new THREE.MeshStandardMaterial({color: 0xFFEB3B}));
+            body.position.set(0, 0.2, -0.5);
+            group.add(body);
+            return group;
+        }
+
+        const playerDog = createDog();
+        const botTurtle = createTurtle();
+        const botSnail = createSnail();
+
+        // Position on lanes
+        playerDog.position.set(0, 0, 10);
+        botTurtle.position.set(-5, 0, 10); // Left lane
+        botSnail.position.set(5, 0, 10);   // Right lane
+
+        scene.add(playerDog);
+        scene.add(botTurtle);
+        scene.add(botSnail);
+
+        // Path bounds
+        const startZ = 10;
+        const endZ = -80;
+        const totalDist = Math.abs(startZ - endZ);
+
+        // Render loop
+        function animate() {
+            requestAnimationFrame(animate);
+            if (isStarted) {
+                // Update bots
+                bot1Progress += BOT1_SPEED;
+                bot2Progress += BOT2_SPEED;
+
+                botSnail.position.z = startZ - (bot1Progress * totalDist);
+                botTurtle.position.z = startZ - (bot2Progress * totalDist);
+                playerDog.position.z = startZ - (playerProgress * totalDist);
+
+                // Bobbing animation for dog running
+                if (playerDog.position.z < startZ && playerProgress < 1) {
+                    playerDog.position.y = Math.abs(Math.sin(Date.now() * 0.01)) * 0.5;
+                } else {
+                    playerDog.position.y = 0;
+                }
+
+                // Camera follow
+                camera.position.z = playerDog.position.z + 25;
+                
+                updateHUD();
+                checkWin();
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // --- GAMEPLAY LOGIC ---
+
+        function initLevel() {
             const doc = documents[Math.floor(Math.random() * documents.length)];
             currentText = doc.text.trim();
-            titleDisplay.textContent = doc.title;
+            document.getElementById('doc-title').textContent = doc.title;
             
             textDisplay.innerHTML = '';
             charElements = [];
             currentIndex = 0;
             errors = 0;
-            totalTyped = 0;
-            combo = 0;
-            isStarted = false;
-            isFinished = false;
-            playerProg = 0;
-            bot1Prog = 0;
-            bot2Prog = 0;
+            playerProgress = 0;
+            bot1Progress = 0;
+            bot2Progress = 0;
             
-            updateCarPositions();
-            nitroBar.style.width = '0%';
-            
+            playerDog.position.set(0, 0, startZ);
+            botTurtle.position.set(-5, 0, startZ);
+            botSnail.position.set(5, 0, startZ);
+            camera.position.z = startZ + 25;
+
             for (let i = 0; i < currentText.length; i++) {
                 const span = document.createElement('span');
                 span.textContent = currentText[i];
@@ -737,181 +668,137 @@
                 textDisplay.appendChild(span);
                 charElements.push(span);
             }
-
-            wpmDisplay.textContent = '0';
-            accDisplay.textContent = '100';
-            document.body.classList.remove('nitro-active');
             
-            highlightNextKey();
-
-            if (gameLoopRAF) cancelAnimationFrame(gameLoopRAF);
-            
-            playRevSound();
+            accDisplay.textContent = '100%';
+            highlightKeyboard();
         }
 
-        function startGame() {
-            startScreen.classList.add('hidden');
-            resultsScreen.classList.add('hidden');
-            initGame();
-            startTime = Date.now();
-            isStarted = true;
+        function highlightKeyboard() {
+            document.querySelectorAll('.key').forEach(k => k.classList.remove('highlight'));
             
-            gameLoopRAF = requestAnimationFrame(gameLoop);
-        }
-
-        document.getElementById('start-btn').addEventListener('click', () => {
-            audioCtx.resume();
-            startGame();
-        });
-
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            startGame();
-        });
-
-        window.addEventListener('keydown', (e) => {
-            if (!isStarted || isFinished) return;
-            
-            if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta' || e.key === 'CapsLock' || e.key === 'Tab') {
+            if (currentIndex >= currentText.length) {
+                fingerGuideMsg.textContent = "FINISHED! 🏁";
+                fingerGuideMsg.style.background = "#4CAF50";
                 return;
             }
 
+            const upNext = currentText[currentIndex];
+            const lowerNext = upNext.toLowerCase();
+            
+            // Map character to physical key
+            let targetKeyStr = lowerNext;
+            let targetShiftCode = null;
+
+            // Check if it's a shifted symbol natively
+            const shiftedMap = {
+                '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8', '(':'9', ')':'0',
+                '_':'-', '+':'=', '{':'[', '}':']', '|':'\\', ':':';', '"':'\'', '<':',', '>':'.', '?':'/'
+            };
+
+            if (shiftedMap[upNext]) {
+                targetKeyStr = shiftedMap[upNext];
+            }
+
+            // Find key Element
+            let keyEl;
+            if (targetKeyStr === ' ') {
+                keyEl = document.querySelector('.key[data-key=" "]');
+            } else {
+                keyEl = document.querySelector(`.key[data-key="${targetKeyStr}"]`);
+            }
+
+            if (keyEl) {
+                keyEl.classList.add('highlight');
+                
+                // Determine finger class
+                const fingerClass = Array.from(keyEl.classList).find(c => c.startsWith('c-'));
+                if (fingerClass && fingerNames[fingerClass]) {
+                    fingerGuideMsg.textContent = `Use Your ${fingerNames[fingerClass].toUpperCase()}`;
+                    fingerGuideMsg.style.background = fingerColors[fingerClass];
+                }
+            } else {
+                fingerGuideMsg.textContent = `Type: ${upNext}`;
+                fingerGuideMsg.style.background = "#333";
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!isStarted) return;
+            
+            // Ignore modifiers
+            if (['Shift','Control','Alt','Meta','CapsLock','Tab'].includes(e.key)) return;
             if (e.key === ' ') e.preventDefault();
+            if (e.key === 'Backspace') return; // Easy mode ignores backspace
 
             const expectedChar = currentText[currentIndex];
             
-            if (e.key === 'Backspace') return;
-
-            totalTyped++;
-
-            let isMatch = false;
-            if (isAdvancedMode) {
-                isMatch = (e.key === expectedChar);
-            } else {
-                isMatch = (e.key.toLowerCase() === expectedChar.toLowerCase()) || (expectedChar === ' ' && e.key === ' ');
-            }
-
-            if (isMatch) {
-                playTypeSound(e.key === ' ');
+            // SUPER EASY MODE: Case IN-SENSITIVE
+            // Compare lowercased, and also maps specific tricky things if needed.
+            if (e.key.toLowerCase() === expectedChar.toLowerCase()) {
+                // Correct!
                 charElements[currentIndex].classList.remove('current', 'incorrect');
                 charElements[currentIndex].classList.add('correct');
-                
                 currentIndex++;
-                combo++;
                 
-                playerCar.classList.add('moving');
-                clearTimeout(playerCar.moveTimeout);
-                playerCar.moveTimeout = setTimeout(() => playerCar.classList.remove('moving'), 100);
-
-                if (combo % 15 === 0) {
-                    playNitroSound();
-                    document.body.classList.add('nitro-active');
-                    setTimeout(() => document.body.classList.remove('nitro-active'), 500);
-                }
-
-                playerProg = currentIndex / currentText.length;
+                playerProgress = currentIndex / currentText.length;
 
                 if (currentIndex < currentText.length) {
                     charElements[currentIndex].classList.add('current');
-                    highlightNextKey();
-                } else {
-                    document.querySelectorAll('.key').forEach(k => k.classList.remove('highlight'));
-                    finishGame();
+                    highlightKeyboard();
                 }
-
             } else {
-                playErrorSound();
+                // Incorrect
                 errors++;
-                combo = 0;
                 charElements[currentIndex].classList.add('incorrect');
-                
-                document.body.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
-                setTimeout(() => document.body.style.transform = 'none', 50);
             }
 
-            updateStats();
+            updateHUD();
         });
 
-        function updateStats() {
-            const timeElapsed = (Date.now() - startTime) / 60000;
-            if (timeElapsed > 0) {
-                const wordsTyped = (currentIndex) / 5;
-                const wpm = Math.round(wordsTyped / timeElapsed);
-                wpmDisplay.textContent = wpm;
+        function updateHUD() {
+            // Accuracy
+            if (currentIndex > 0 || errors > 0) {
+                const totalKeys = currentIndex + errors;
+                const acc = Math.round((currentIndex / totalKeys) * 100);
+                accDisplay.textContent = `${acc}%`;
             }
 
-            if (totalTyped > 0) {
-                const acc = Math.round(((totalTyped - errors) / totalTyped) * 100);
-                accDisplay.textContent = Math.max(0, acc);
-            }
-            
-            let comboMax = 15;
-            let currentCombo = combo % comboMax;
-            if (combo > 0 && currentCombo === 0) currentCombo = comboMax;
-            const nitroPct = (currentCombo / comboMax) * 100;
-            nitroBar.style.width = `${nitroPct}%`;
-            
-            if (nitroPct === 100) {
-                nitroBar.style.boxShadow = '0 0 20px #45f3ff, 0 0 40px #45f3ff';
-            } else {
-                nitroBar.style.boxShadow = '0 0 10px rgba(69,243,255,0.8)';
+            // Rank
+            let r = 1;
+            if (bot1Progress > playerProgress) r++;
+            if (bot2Progress > playerProgress) r++;
+            let rText = r === 1 ? '1st 🥇' : (r === 2 ? '2nd 🥈' : '3rd 🥉');
+            rankDisplay.textContent = rText;
+        }
+
+        function checkWin() {
+            if (playerProgress >= 1 || bot1Progress >= 1 || bot2Progress >= 1) {
+                isStarted = false;
+                
+                const won = playerProgress >= 1;
+                document.getElementById('win-title').textContent = won ? "YOU WON! 🥇🐶" : "RACE FINISHED! 🏁";
+                document.getElementById('win-title').style.color = won ? "#4CAF50" : "#ff9800";
+                
+                document.getElementById('win-stats').textContent = `Final Accuracy: ${accDisplay.textContent} | Rank: ${rankDisplay.textContent}`;
+                
+                setTimeout(() => {
+                    document.getElementById('win-screen').classList.remove('hidden');
+                }, 1000);
             }
         }
 
-        function gameLoop() {
-            if (!isStarted || isFinished) return;
+        // --- BUTTONS ---
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            initLevel();
+            isStarted = true;
+        });
 
-            let b1j = bot1Speed * (0.8 + Math.random() * 0.4);
-            let b2j = bot2Speed * (0.5 + Math.random() * 0.8);
-
-            bot1Prog += b1j;
-            bot2Prog += b2j;
-
-            updateCarPositions();
-
-            if (bot1Prog >= 1 || bot2Prog >= 1) {
-                if (playerProg < 1) {
-                    finishGame();
-                }
-            }
-
-            gameLoopRAF = requestAnimationFrame(gameLoop);
-        }
-
-        function updateCarPositions() {
-            const trackWidth = document.getElementById('track-container').clientWidth - 100; 
-            
-            playerCar.style.left = `${Math.min(1, playerProg) * trackWidth}px`;
-            bot1Car.style.left = `${Math.min(1, bot1Prog) * trackWidth}px`;
-            bot2Car.style.left = `${Math.min(1, bot2Prog) * trackWidth}px`;
-        }
-
-        function finishGame() {
-            isFinished = true;
-            playerCar.classList.remove('moving');
-            
-            let rank = 1;
-            if (bot1Prog >= 1) rank++;
-            if (bot2Prog >= 1) rank++;
-
-            let rankText = "1st Place 🏆";
-            let color = "var(--neon-green)";
-            
-            if (rank === 2) { rankText = "2nd Place 🥈"; color = "#f1c40f"; }
-            if (rank === 3) { rankText = "3rd Place 🥉"; color = "#e67e22"; }
-            if (playerProg < 1) { rankText = "DNF (Too Slow) 💥"; color = "var(--error-red)"; playErrorSound(); }
-            else { playVictorySound(); }
-
-            document.getElementById('result-title').textContent = playerProg >= 1 ? "RACE FINISHED!" : "RACE OVER";
-            const finalRank = document.getElementById('final-rank');
-            finalRank.textContent = rankText;
-            finalRank.style.color = color;
-            document.getElementById('final-wpm').textContent = wpmDisplay.textContent;
-            document.getElementById('final-acc').textContent = accDisplay.textContent;
-
-            setTimeout(() => {
-                resultsScreen.classList.remove('hidden');
-            }, 1000); 
-        }
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('win-screen').classList.add('hidden');
+            initLevel();
+            isStarted = true;
+        });
 
     </script>
 </body>

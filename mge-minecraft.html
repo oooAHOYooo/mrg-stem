@@ -1441,7 +1441,7 @@
                 if(isFlyMode) {
                     // Fly logic
                     velocity.y -= velocity.y * 10.0 * delta; // damp
-                    const upSpeed = 250.0;
+                    const upSpeed = 400.0;
                     if(moveUp) velocity.y += upSpeed * delta;
                     if(moveDown) velocity.y -= upSpeed * delta;
                     controls.getObject().position.y += ( velocity.y * delta );
@@ -1449,18 +1449,41 @@
                     // Fly height limit
                     const flyLimit = 100;
                     if (controls.getObject().position.y > flyLimit) {
+                        // Safely detect floor target y beneath player
+                        let targetY = 10;
+                        downRaycaster.ray.origin.copy( controls.getObject().position );
+                        const downHits = downRaycaster.intersectObjects( objects, false );
+                        if (downHits.length > 0) {
+                            targetY = downHits[0].point.y + 10;
+                        }
+
                         // Zap them down
-                        controls.getObject().position.y = 10;
+                        controls.getObject().position.y = targetY;
                         velocity.y = 0;
                         isFlyMode = false;
                         flyStatus.style.display = 'none';
                         canJump = true;
                         
-                        document.getElementById('blocker').style.backgroundColor = 'rgba(255,255,0,0.6)';
-                        document.getElementById('blocker').style.display = 'block';
+                        // Trigger visual zap flash safely
+                        let zapFlash = document.getElementById('zap-flash');
+                        if(!zapFlash) {
+                            zapFlash = document.createElement('div');
+                            zapFlash.id = 'zap-flash';
+                            zapFlash.style.position = 'absolute';
+                            zapFlash.style.top = '0';
+                            zapFlash.style.left = '0';
+                            zapFlash.style.width = '100vw';
+                            zapFlash.style.height = '100vh';
+                            zapFlash.style.backgroundColor = 'rgba(255, 255, 0, 0.4)';
+                            zapFlash.style.display = 'none';
+                            zapFlash.style.zIndex = '9999';
+                            zapFlash.style.pointerEvents = 'none';
+                            document.body.appendChild(zapFlash);
+                        }
+                        
+                        zapFlash.style.display = 'block';
                         setTimeout(() => { 
-                            document.getElementById('blocker').style.backgroundColor = 'rgba(0,0,0,0.5)';
-                            if(!inMenu && !inRiddle && playerHealth > 0) document.getElementById('blocker').style.display = 'none'; 
+                            if(zapFlash) zapFlash.style.display = 'none'; 
                         }, 200);
                     }
                 } else {
