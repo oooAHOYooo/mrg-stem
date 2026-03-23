@@ -409,16 +409,16 @@
             <h1 class="anime-title">BOT CREATOR DELUXE<br><span class="jp-sub">ボットマスター</span></h1>
             
             <div id="base-controls">
-                <button class="anime-btn btn-build" onclick="openWizard('CAR')">
+                <button class="anime-btn btn-build" id="btn-build-car">
                     <span>BUILD CAR BOT<span class="cost-text">FREE</span></span>
                 </button>
-                <button class="anime-btn btn-build" onclick="openWizard('HUMANOID')">
+                <button class="anime-btn btn-build" id="btn-build-brawler">
                     <span>BUILD BRAWLER BOT<span class="cost-text">FREE</span></span>
                 </button>
-                <button class="anime-btn btn-build" onclick="openWizard('HAWK')">
+                <button class="anime-btn btn-build" id="btn-build-hawk">
                     <span>BUILD HAWK BOT<span class="cost-text">FREE</span></span>
                 </button>
-                <button class="anime-btn anime-btn-blue" onclick="startBattle()">
+                <button class="anime-btn anime-btn-blue" id="btn-start-battle">
                     <span>BATTLE ENEMY ⚔️</span>
                 </button>
             </div>
@@ -438,7 +438,7 @@
 
                 <div id="battle-msg">FIGHT! 戦い!</div>
 
-                <button class="anime-btn attack-btn" onclick="playerAttack()">
+                <button class="anime-btn attack-btn" id="btn-player-attack">
                     <span>TAP TO ATTACK!!</span>
                 </button>
             </div>
@@ -451,7 +451,7 @@
             <div class="modal-box-inner">
                 <h2 class="anime-title" id="modal-title" style="font-size: 60px;">VICTORY! 勝訴!</h2>
                 <div class="reward-amount" id="modal-reward-text">+50 ⚙️ | +100 ⚡</div>
-                <button class="anime-btn anime-btn-yellow" onclick="returnToBase()">
+                <button class="anime-btn anime-btn-yellow" id="btn-return-base">
                     <span>RETURN TO BASE</span>
                 </button>
             </div>
@@ -462,17 +462,17 @@
                 <div style="margin: 20px 0;">
                     <p style="font-size:30px; margin-bottom:10px;">SELECT COLOR</p>
                     <div id="color-options" style="display:flex; justify-content:center; gap:10px;">
-                        <div class="color-btn" style="background:#00ffff;" onclick="selectColor(0x00ffff, this)"></div>
-                        <div class="color-btn" style="background:#ff0044;" onclick="selectColor(0xff0044, this)"></div>
-                        <div class="color-btn" style="background:#ffe600;" onclick="selectColor(0xffe600, this)"></div>
-                        <div class="color-btn" style="background:#39ff14;" onclick="selectColor(0x39ff14, this)"></div>
-                        <div class="color-btn" style="background:#ffffff;" onclick="selectColor(0xffffff, this)"></div>
+                        <div class="color-btn" style="background:#00ffff;" id="btn-color-1"></div>
+                        <div class="color-btn" style="background:#ff0044;" id="btn-color-2"></div>
+                        <div class="color-btn" style="background:#ffe600;" id="btn-color-3"></div>
+                        <div class="color-btn" style="background:#39ff14;" id="btn-color-4"></div>
+                        <div class="color-btn" style="background:#ffffff;" id="btn-color-5"></div>
                     </div>
                 </div>
-                <button class="anime-btn anime-btn-blue" onclick="confirmBuild()">
+                <button class="anime-btn anime-btn-blue" id="btn-confirm-build">
                     <span>CONFIRM CREATION</span>
                 </button>
-                <button class="anime-btn anime-btn-yellow" onclick="closeWizard()" style="margin-top:10px; display:block; margin-left:auto; margin-right:auto;">
+                <button class="anime-btn anime-btn-yellow" id="btn-cancel-wizard" style="margin-top:10px; display:block; margin-left:auto; margin-right:auto;">
                     <span>CANCEL</span>
                 </button>
             </div>
@@ -521,6 +521,30 @@
     const battleMsg = document.getElementById('battle-msg');
     const modalOverlay = document.getElementById('modal-overlay');
     const speedLines = document.getElementById('speed-lines');
+
+    // Attach Event Listeners
+    document.getElementById('btn-build-car').addEventListener('click', () => openWizard('CAR'));
+    document.getElementById('btn-build-car').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('CAR'); });
+    document.getElementById('btn-build-brawler').addEventListener('click', () => openWizard('HUMANOID'));
+    document.getElementById('btn-build-brawler').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('HUMANOID'); });
+    document.getElementById('btn-build-hawk').addEventListener('click', () => openWizard('HAWK'));
+    document.getElementById('btn-build-hawk').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('HAWK'); });
+    document.getElementById('btn-start-battle').addEventListener('click', startBattle);
+    document.getElementById('btn-start-battle').addEventListener('keydown', (e) => { if(e.key === 'Enter') startBattle(); });
+    document.getElementById('btn-player-attack').addEventListener('click', playerAttack);
+    document.getElementById('btn-player-attack').addEventListener('keydown', (e) => { if(e.key === 'Enter') playerAttack(); });
+    document.getElementById('btn-return-base').addEventListener('click', returnToBase);
+    document.getElementById('btn-return-base').addEventListener('keydown', (e) => { if(e.key === 'Enter') returnToBase(); });
+    document.getElementById('btn-confirm-build').addEventListener('click', confirmBuild);
+    document.getElementById('btn-confirm-build').addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmBuild(); });
+    document.getElementById('btn-cancel-wizard').addEventListener('click', closeWizard);
+    document.getElementById('btn-cancel-wizard').addEventListener('keydown', (e) => { if(e.key === 'Enter') closeWizard(); });
+
+    document.getElementById('btn-color-1').addEventListener('click', function() { selectColor(0x00ffff, this); });
+    document.getElementById('btn-color-2').addEventListener('click', function() { selectColor(0xff0044, this); });
+    document.getElementById('btn-color-3').addEventListener('click', function() { selectColor(0xffe600, this); });
+    document.getElementById('btn-color-4').addEventListener('click', function() { selectColor(0x39ff14, this); });
+    document.getElementById('btn-color-5').addEventListener('click', function() { selectColor(0xffffff, this); });
 
     init();
     animate(0);
@@ -1125,6 +1149,37 @@
             document.body.style.cursor = 'crosshair';
         }
     }
+
+    // Global Keyboard Support for Gameplay
+    window.addEventListener('keydown', (e) => {
+        if (modalOverlay.style.display === 'flex' || modalOverlay.style.display === 'block') return;
+        
+        if (gameState === 'BASE' && army.length > 0) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                let currentIndex = army.indexOf(activeBot);
+                if (e.key === 'ArrowRight') {
+                    currentIndex = (currentIndex + 1) % army.length;
+                } else {
+                    currentIndex = (currentIndex - 1 + army.length) % army.length;
+                }
+                activeBot = army[currentIndex];
+                organizeArmy();
+                flashColor('var(--neon-green)', 0.1);
+                
+                new TWEEN.Tween(activeBot.position)
+                    .to({y: activeBot.position.y + 2}, 200)
+                    .yoyo(true).repeat(1)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+            }
+        } else if (gameState === 'BATTLE') {
+            if (e.key === ' ' || e.key === 'Enter') {
+                // Prevent default scrolling for spacebar
+                if(e.key === ' ') e.preventDefault();
+                playerAttack();
+            }
+        }
+    });
 
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;

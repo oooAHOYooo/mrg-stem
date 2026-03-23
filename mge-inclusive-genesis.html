@@ -375,6 +375,9 @@
                     <button class="btn-quick" style="background: #ff2d55; color: white; font-size: 1.2rem;" onclick="submitColor('pink')">Pink (Jump) 🦘</button>
                     <button class="btn-quick" style="background: #32ade6; color: black; font-size: 1.2rem;" onclick="submitColor('cyan')">Cyan (Spin) 🌪️</button>
                     <button class="btn-quick" style="background: #333333; color: white; font-size: 1.2rem;" onclick="submitColor('black')">Black (Clear) 🧹</button>
+                    <button class="btn-quick" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff); color: white; font-size: 1.2rem;" onclick="submitColor('random cube')">Random Cube 🎲</button>
+                    <button class="btn-quick" style="background: linear-gradient(45deg, #ff00ff, #00ffff); color: black; font-size: 1.2rem;" onclick="submitColor('random sphere')">Random Sphere 🎲</button>
+                    <button class="btn-quick" style="background: var(--accent-warning); color: black; font-size: 1.2rem;" onclick="document.getElementById('tutorial-modal').style.display='flex'">Smash Tutorial 🥊</button>
                 </div>
             </div>
         </div>
@@ -392,6 +395,23 @@
     </div>
     
     <div class="toast" id="toast">Saved successfully!</div>
+
+    <!-- Help Modal -->
+    <div id="tutorial-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 999; justify-content: center; align-items: center;">
+        <div style="background: var(--bg-panel); border: 4px solid var(--accent-primary); border-radius: 20px; padding: 2rem; max-width: 600px; color: white; font-family: 'Comic Neue', sans-serif;">
+            <h2 style="color: var(--accent-primary); margin-bottom: 1rem; font-size: 2rem;">🥊 Make a Smash Bros Game!</h2>
+            <p style="margin-bottom: 1rem; font-size: 1.3rem;">Let's build a fighting arena!</p>
+            <ol style="margin-left: 2rem; margin-bottom: 1.5rem; line-height: 1.8; font-size: 1.2rem;">
+                <li>Click <strong>Green (World) 🌍</strong> to make a floor stage.</li>
+                <li>Click <strong>Blue (Cube) 🟦</strong> to add Player 1 (uses WASD keys).</li>
+                <li>Click <strong>Red (Sphere) 🔴</strong> to add Player 2 (uses Arrow keys).</li>
+                <li>Click <strong>Pink (Jump) 🦘</strong> to make the stage or players bounce.</li>
+                <li>If you click <strong>Random Cube 🎲</strong>, a randomly colored player drops in!</li>
+            </ol>
+            <p style="margin-bottom: 1.5rem; font-size: 1.3rem;">Try to push each other off the edge to win! If you fall off, you will respawn back in the center.</p>
+            <button class="btn btn-primary" onclick="document.getElementById('tutorial-modal').style.display = 'none'" style="width: 100%; justify-content: center; font-size: 1.5rem; padding: 1rem;">Let's Brawl! 👍</button>
+        </div>
+    </div>
 
     <!-- Required Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -511,8 +531,7 @@
 
         // Animated Objects tracking
         let animObjects = [];
-        let currentPlayer = null;
-        let controlMode = 0; 
+        let players = [];
         const keys = {};
 
         window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
@@ -533,17 +552,41 @@
                 }
             });
 
-            // Very simple arrow key controls for the currently active player
-            if (controlMode >= 1 && currentPlayer) {
+            // Very simple arrow key controls for players
+            if (players.length > 0) {
                 const speed = 0.15;
-                if (keys['w'] || keys['arrowup']) currentPlayer.position.z -= speed;
-                if (keys['s'] || keys['arrowdown']) currentPlayer.position.z += speed;
-                if (keys['a'] || keys['arrowleft']) currentPlayer.position.x -= speed;
-                if (keys['d'] || keys['arrowright']) currentPlayer.position.x += speed;
-                
-                // Keep player within bounds roughly
-                currentPlayer.position.x = Math.max(-10, Math.min(10, currentPlayer.position.x));
-                currentPlayer.position.z = Math.max(-10, Math.min(10, currentPlayer.position.z));
+                let p1 = players[0];
+                let p2 = players.length > 1 ? players[1] : null;
+
+                if (!p2) {
+                    // Only 1 Player uses both
+                    if (keys['w'] || keys['arrowup']) p1.position.z -= speed;
+                    if (keys['s'] || keys['arrowdown']) p1.position.z += speed;
+                    if (keys['a'] || keys['arrowleft']) p1.position.x -= speed;
+                    if (keys['d'] || keys['arrowright']) p1.position.x += speed;
+                } else {
+                    // 2 Players! Player 1 (WASD) vs Player 2 (Arrows)
+                    if (keys['w']) p1.position.z -= speed;
+                    if (keys['s']) p1.position.z += speed;
+                    if (keys['a']) p1.position.x -= speed;
+                    if (keys['d']) p1.position.x += speed;
+
+                    if (keys['arrowup']) p2.position.z -= speed;
+                    if (keys['arrowdown']) p2.position.z += speed;
+                    if (keys['arrowleft']) p2.position.x -= speed;
+                    if (keys['arrowright']) p2.position.x += speed;
+                }
+
+                players.forEach(p => {
+                    // Smash bros fall off mechanics! World size is ~40x40 (from -20 to 20)
+                    if (p.position.y < -5) {
+                        // Respawn back at center
+                        p.position.set(0, p.userData.baseY, 0); 
+                    } else if (Math.abs(p.position.x) > 20 || Math.abs(p.position.z) > 20) {
+                        // Let them fall
+                        p.position.y -= speed * 2;
+                    }
+                });
             }
 
             renderer.render(scene, camera);
@@ -594,7 +637,9 @@
                 'purple': 'purple add a star',
                 'pink': 'pink make it jump',
                 'cyan': 'cyan make it spin',
-                'black': 'black clear'
+                'black': 'black clear',
+                'random cube': 'random player cube',
+                'random sphere': 'random player sphere'
             };
             
             if (optionMap[lowerCmd]) {
@@ -615,13 +660,15 @@
             // Random distinct color if not specified
             const colorKeys = Object.keys(colors);
             let chosenColor = colors[colorKeys[Math.floor(Math.random() * (colorKeys.length - 2))]]; 
-            let colorName = "bright";
+            let colorName = "cool random";
 
-            for (let c in colors) {
-                if (lowerCmd.includes(c)) {
-                    chosenColor = colors[c];
-                    colorName = c;
-                    break;
+            if (!lowerCmd.includes('random')) {
+                for (let c in colors) {
+                    if (lowerCmd.includes(c)) {
+                        chosenColor = colors[c];
+                        colorName = c;
+                        break;
+                    }
                 }
             }
 
@@ -651,14 +698,13 @@
             if (lowerCmd.includes('cube') || lowerCmd.includes('player cube')) {
                 const geometry = new THREE.BoxGeometry(2.5, 2.5, 2.5);
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
-                obj.position.set(0, 1.25, 0);
+                obj.position.set((Math.random()-0.5)*5, 1.25, (Math.random()-0.5)*5);
                 obj.castShadow = true;
                 obj.userData = { baseY: 1.25 };
                 scene.add(obj);
-                currentPlayer = obj;
-                controlMode = 1;
+                players.push(obj);
                 animObjects.push(obj);
-                response += `🟦 Poof! A ${colorName} Player Cube appeared! Use arrow keys to move. <br>`;
+                response += `🟦 Poof! A ${colorName} Player Cube appeared! <br>`;
                 somethingHappened = true;
             }
 
@@ -670,10 +716,9 @@
                 obj.castShadow = true;
                 obj.userData = { baseY: 1.5 };
                 scene.add(obj);
-                currentPlayer = obj;
-                controlMode = 1;
+                players.push(obj);
                 animObjects.push(obj);
-                response += `🔴 Whoosh! A smooth ${colorName} Sphere! Use arrow keys to move. <br>`;
+                response += `🔴 Whoosh! A smooth ${colorName} Sphere! <br>`;
                 somethingHappened = true;
             }
 
@@ -750,8 +795,7 @@
                 });
                 toRemove.forEach(child => scene.remove(child));
                 animObjects = [];
-                currentPlayer = null;
-                controlMode = 0;
+                players = [];
                 response = "🧹 Sweep sweep! The board is all clean for a new game!<br>";
                 somethingHappened = true;
             }
