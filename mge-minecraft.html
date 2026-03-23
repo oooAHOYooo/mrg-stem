@@ -247,6 +247,7 @@
         <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
         <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
         <div class="control-item"><div class="control-key">Q</div> Change Block Size</div>
+        <div class="control-item"><div class="control-key">C</div> Throw Pokeball</div>
         <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
         <div class="control-item"><div class="control-key">R-CLICK</div> Place Block</div>
         <div class="control-item"><div class="control-key">1-8</div> Select Color</div>
@@ -1296,7 +1297,9 @@
             dragonGroup.add(wingsGroup);
 
             // Save references for animation
-            dragonGroup.userData = { pivotL, pivotR, headGroup };
+            dragonGroup.userData.pivotL = pivotL;
+            dragonGroup.userData.pivotR = pivotR;
+            dragonGroup.userData.headGroup = headGroup;
 
             return dragonGroup;
         }
@@ -1343,10 +1346,22 @@
             return dinoGroup;
         }
 
+        const colOpts = [
+            {c:0x1d4ed8, b:0x60a5fa, s:0x1e3a8a}, // blue
+            {c:0xbe185d, b:0xf472b6, s:0x831843}, // pink
+            {c:0xb45309, b:0xfcd34d, s:0x78350f}, // golden
+            {c:0x6d28d9, b:0xc4b5fd, s:0x4c1d95}, // purple
+            {c:0x0f766e, b:0xa7f3d0, s:0x134e4a}, // teal
+            {c:0xb91c1c, b:0xfca5a5, s:0x7f1d1d}, // crimson
+            {c:0x059669, b:0x34d399, s:0x064e3b}  // green
+        ];
+
         const littleDragons = [];
         for(let i=0; i<8; i++) {
-            const ld = createCoolDragon();
-            ld.scale.set(0.15, 0.15, 0.15);
+            const randCol = colOpts[Math.floor(Math.random() * colOpts.length)];
+            const ld = createCoolDragon(randCol.c, randCol.b, randCol.s);
+            const sc = 0.1 + (Math.random() * 0.1);
+            ld.scale.set(sc, sc, sc);
             ld.position.set(
                 Math.floor(Math.random() * 80 - 40) * 5,
                 10,
@@ -1664,51 +1679,40 @@
         chargeUI.appendChild(chargeBar);
         document.body.appendChild(chargeUI);
 
+        function throwPokeball() {
+            const ball = new THREE.Group();
+            const mTop = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, 0, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xff0000}));
+            const mBot = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, Math.PI/2, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xffffff}));
+            ball.add(mTop); ball.add(mBot);
+            
+            const pPos = controls.getObject().position;
+            ball.position.copy(pPos);
+            
+            raycaster.setFromCamera( mouse, camera );
+            const throwDir = raycaster.ray.direction.clone();
+            // arc up slightly
+            throwDir.y += 0.2;
+            throwDir.normalize();
+
+            const force = 100 + (ballCharge * 1.5);
+            
+            scene.add(ball);
+            activeBalls.push({
+                mesh: ball,
+                velocity: throwDir.multiplyScalar(force),
+                active: true
+            });
+        }
+
         document.addEventListener( 'mousedown', (event) => {
             if (!controls.isLocked) return;
             if (event.button === 0) breakBlock(); // Left click to break
-            if (event.button === 2) {
-                isChargingBall = true;
-                ballCharge = 0;
-                chargeUI.style.display = 'block';
-            }
+            if (event.button === 2) placeBlock(); // Right click to place
         });
 
         document.addEventListener( 'mouseup', (event) => {
             if (!controls.isLocked) return;
-            if (event.button === 2 && isChargingBall) {
-                isChargingBall = false;
-                chargeUI.style.display = 'none';
-                
-                if (ballCharge < 5) {
-                    placeBlock(); // tap to place block
-                    return;
-                }
-                
-                // Throw Pokeball!
-                const ball = new THREE.Group();
-                const mTop = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, 0, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xff0000}));
-                const mBot = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, Math.PI/2, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xffffff}));
-                ball.add(mTop); ball.add(mBot);
-                
-                const pPos = controls.getObject().position;
-                ball.position.copy(pPos);
-                
-                raycaster.setFromCamera( mouse, camera );
-                const throwDir = raycaster.ray.direction.clone();
-                // arc up slightly
-                throwDir.y += 0.2;
-                throwDir.normalize();
-
-                const force = 100 + (ballCharge * 1.5);
-                
-                scene.add(ball);
-                activeBalls.push({
-                    mesh: ball,
-                    velocity: throwDir.multiplyScalar(force),
-                    active: true
-                });
-            }
+            // Removed Pokeball logic from mouseup, moved to KeyC keyup
         });
 
         document.addEventListener('keydown', (event) => {
@@ -1734,6 +1738,13 @@
         const onKeyDown = function ( event ) {
             if(inMenu || inRiddle) return;
             switch ( event.code ) {
+                case 'KeyC':
+                    if(!isChargingBall) {
+                        isChargingBall = true;
+                        ballCharge = 0;
+                        chargeUI.style.display = 'block';
+                    }
+                    break;
                 case 'ArrowUp':
                 case 'KeyW':
                     moveForward = true;
@@ -1804,6 +1815,13 @@
 
         const onKeyUp = function ( event ) {
             switch ( event.code ) {
+                case 'KeyC':
+                    if (isChargingBall) {
+                        isChargingBall = false;
+                        chargeUI.style.display = 'none';
+                        throwPokeball();
+                    }
+                    break;
                 case 'ArrowUp':
                 case 'KeyW':
                     moveForward = false;

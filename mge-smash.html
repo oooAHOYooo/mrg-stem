@@ -380,10 +380,53 @@
             animation: pulse 0.5s ease-in-out infinite;
         }
 
-        .code-container {
+        .block-coding-panel {
             position: fixed;
             left: 1rem;
             top: 4.5rem;
+            width: 380px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 3px solid #00bcd4;
+            color: white;
+            z-index: 30;
+            box-shadow: 0 5px 20px rgba(0, 188, 212, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .code-block-btn {
+            background: linear-gradient(135deg, #2196f3, #00bcd4);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .code-block-btn:active {
+            transform: scale(0.95);
+        }
+        .sequence-block {
+            background: #9c27b0;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .code-container {
+            position: fixed;
+            left: 1rem;
+            top: 17.5rem;
             bottom: 12rem;
             width: 380px;
             background: rgba(0, 0, 0, 0.85);
@@ -684,6 +727,32 @@
         </div>
 
         <div class="timer-display" id="timer-display">BUILD: 0%</div>
+        
+        <div class="block-coding-panel" id="block-coding-panel">
+            <h3 style="color:#00bcd4; text-align:center; font-size: 0.9rem; margin-bottom: 5px;">🤖 Preprogram Robot (Block Code)</h3>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+                <select id="block-player-select" style="background:#333; color:white; border:1px solid #777; padding:2px; border-radius:4px; font-size: 0.8rem;">
+                    <option value="p1">Player 1 (Red)</option>
+                    <option value="p2">Player 2 (Cyan)</option>
+                </select>
+                <div>
+                    <button onclick="runBlockSequence()" style="background:#4caf50; color:white; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 0.8rem;">▶ Run</button>
+                    <button onclick="clearBlockSequence()" style="background:#f44336; color:white; border:none; padding:3px 8px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 0.8rem;">🗑 Clear</button>
+                </div>
+            </div>
+            <div id="block-palette" style="display:flex; gap: 5px; flex-wrap: wrap; margin-bottom:5px;">
+                <button class="code-block-btn" onclick="addBlock('jump')">Jump</button>
+                <button class="code-block-btn" onclick="addBlock('left')">← Left</button>
+                <button class="code-block-btn" onclick="addBlock('right')">Right →</button>
+                <button class="code-block-btn" onclick="addBlock('attack')">Attack</button>
+                <button class="code-block-btn" onclick="addBlock('special')">Special</button>
+                <button class="code-block-btn" onclick="addBlock('wait')">Wait</button>
+            </div>
+            <div id="block-sequence" style="background:rgba(0,0,0,0.5); min-height:40px; border-radius:6px; padding:5px; display:flex; gap:5px; flex-wrap:wrap; overflow-y:auto; border:1px inset #555;">
+                <!-- Sequence blocks go here -->
+            </div>
+        </div>
+
         <div class="code-container" id="code-container"></div>
         <div class="match-score" id="match-score">Match 1 | P1: 0 - P2: 0</div>
 
@@ -795,6 +864,108 @@
         let currentEnvIndex = 0;
         let targetEnv = null;
         let envTransitionProgress = 1;
+
+        // Block Coding Logic
+        let activeBlockSequences = {
+            p1: [],
+            p2: []
+        };
+        let blockSequenceTimers = {
+            p1: null,
+            p2: null
+        };
+        
+        function addBlock(action) {
+            const player = document.getElementById('block-player-select').value;
+            activeBlockSequences[player].push(action);
+            renderBlockSequence(player);
+        }
+        
+        function clearBlockSequence() {
+            const player = document.getElementById('block-player-select').value;
+            activeBlockSequences[player] = [];
+            renderBlockSequence();
+        }
+        
+        function renderBlockSequence() {
+            const player = document.getElementById('block-player-select').value;
+            const seqDiv = document.getElementById('block-sequence');
+            seqDiv.innerHTML = '';
+            // Make sure the action map maps back to block text
+            const textMap = {
+                'jump': 'Jump',
+                'left': '← Left',
+                'right': 'Right →',
+                'attack': 'Attack',
+                'special': 'Special',
+                'wait': 'Wait'
+            };
+            activeBlockSequences[player].forEach((action) => {
+                const span = document.createElement('span');
+                span.className = 'sequence-block';
+                span.innerText = textMap[action] || action;
+                seqDiv.appendChild(span);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('block-player-select');
+            if(select) select.addEventListener('change', renderBlockSequence);
+        });
+        
+        function runBlockSequence() {
+            const player = document.getElementById('block-player-select').value;
+            if (activeBlockSequences[player].length === 0) return;
+            
+            if (blockSequenceTimers[player]) clearInterval(blockSequenceTimers[player]);
+            let currentBlockIndex = 0;
+            
+            blockSequenceTimers[player] = setInterval(() => {
+                simulateKeyForPlayer(player, 'release_all'); // Clear previous action
+                
+                if(currentBlockIndex >= activeBlockSequences[player].length) {
+                    clearInterval(blockSequenceTimers[player]);
+                    return;
+                }
+                
+                const action = activeBlockSequences[player][currentBlockIndex];
+                simulateKeyForPlayer(player, action);
+                currentBlockIndex++;
+            }, 600); // Wait 600ms between actions
+        }
+
+        function simulateKeyForPlayer(player, action) {
+            if(player === 'p1') {
+                keys['a'] = false; keys['d'] = false; keys['w'] = false; keys['s'] = false; keys['q'] = false;
+            } else {
+                keys['arrowleft'] = false; keys['arrowright'] = false; keys['arrowup'] = false; keys['arrowdown'] = false; keys['.'] = false;
+            }
+
+            switch(action) {
+                case 'jump':
+                    keys[player === 'p1' ? 'w' : 'arrowup'] = true;
+                    setTimeout(() => keys[player === 'p1' ? 'w' : 'arrowup'] = false, 250);
+                    break;
+                case 'left':
+                    keys[player === 'p1' ? 'a' : 'arrowleft'] = true;
+                    setTimeout(() => keys[player === 'p1' ? 'a' : 'arrowleft'] = false, 500);
+                    break;
+                case 'right':
+                    keys[player === 'p1' ? 'd' : 'arrowright'] = true;
+                    setTimeout(() => keys[player === 'p1' ? 'd' : 'arrowright'] = false, 500);
+                    break;
+                case 'attack':
+                    keys[player === 'p1' ? 's' : 'arrowdown'] = true;
+                    setTimeout(() => keys[player === 'p1' ? 's' : 'arrowdown'] = false, 250);
+                    break;
+                case 'special':
+                    keys[player === 'p1' ? 'q' : '.'] = true;
+                    setTimeout(() => keys[player === 'p1' ? 'q' : '.'] = false, 250);
+                    break;
+                case 'wait':
+                    break;
+            }
+        }
 
         const ENVIRONMENTS = [
             { name: "Deep Space", bg: 0x0a0a1a, light1: 0xff6b6b, light2: 0x4ecdc4, pColor: 0x9c27b0 },
