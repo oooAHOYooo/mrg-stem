@@ -1206,15 +1206,16 @@
             }
         }
 
-        function createCoolDragon() {
+        function createCoolDragon(colorBase = 0x059669, colorBelly = 0x34d399, colorSpike = 0x064e3b) {
             const dragonGroup = new THREE.Group();
+            dragonGroup.userData.inventoryColor = '#' + colorBase.toString(16).padStart(6, '0');
             
             // Materials
-            const drMat = new THREE.MeshLambertMaterial({color: 0x059669}); // Emerald green
-            const drBellyMat = new THREE.MeshLambertMaterial({color: 0x34d399}); // Lighter green
-            const eyeMat = new THREE.MeshBasicMaterial({color: 0xfcd34d}); // Yellow glowing eyes
-            const hornMat = new THREE.MeshLambertMaterial({color: 0xfef3c7}); // Bone white
-            const spikeMat = new THREE.MeshLambertMaterial({color: 0x064e3b}); // Dark green spikes
+            const drMat = new THREE.MeshLambertMaterial({color: colorBase}); 
+            const drBellyMat = new THREE.MeshLambertMaterial({color: colorBelly}); 
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0xfcd34d}); 
+            const hornMat = new THREE.MeshLambertMaterial({color: 0xfef3c7}); 
+            const spikeMat = new THREE.MeshLambertMaterial({color: colorSpike});
 
             // Body
             const dBody = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 40), drMat);

@@ -4,50 +4,80 @@
     <meta charset="UTF-8">
     <title>Magic FPS - MGE</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: white; }
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; border: 2px solid #0ff; border-radius: 50%; pointer-events: none; }
-        #ui { position: absolute; bottom: 20px; left: 20px; font-size: 24px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #f0f; }
-        #instructions { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 100; cursor: pointer; }
-        .neon-text { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff; }
-        .neon-text-magenta { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #f0f, 0 0 40px #f0f, 0 0 80px #f0f; }
-        .btn { background: #111; border: 2px solid #0ff; color: #0ff; padding: 10px 20px; font-size: 20px; cursor: pointer; border-radius: 5px; margin-top: 20px; text-transform: uppercase; box-shadow: 0 0 10px #0ff; }
-        .btn:hover { background: #0ff; color: #000; }
-        #coding-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 4px solid #ff0; padding: 30px; border-radius: 10px; z-index: 200; box-shadow: 0 0 30px #ff0; text-align: center; }
-        select { font-size: 18px; padding: 5px; background: #222; color: #ff0; border: 1px solid #ff0; }
-        .code-block { background: #222; padding: 20px; border-radius: 5px; text-align: left; font-family: monospace; font-size: 18px; margin: 20px 0; color: #0ff; }
-        .btn-hub { position: absolute; top: 20px; left: 20px; z-index: 1000; text-decoration: none; }
+        body { margin: 0; overflow: hidden; background: #050510; font-family: 'Inter', sans-serif; color: white; user-select: none; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(0, 255, 255, 0.8); box-shadow: 0 0 8px #0ff; margin-left: -3px; margin-top: -3px; border-radius: 50%; pointer-events: none; z-index: 50; }
+        #crosshair::before, #crosshair::after { content:''; position: absolute; background: rgba(0, 255, 255, 0.5); }
+        #crosshair::before { top: 50%; left: -12px; right: -12px; height: 2px; margin-top: -1px; }
+        #crosshair::after { left: 50%; top: -12px; bottom: -12px; width: 2px; margin-left: -1px; }
+        
+        .glass-panel { background: rgba(10, 15, 30, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0, 255, 255, 0.15); border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); }
+        
+        #ui { position: absolute; bottom: 30px; left: 30px; padding: 20px; font-size: 15px; width: 300px; z-index: 50; }
+        #ui h3 { margin: 0 0 15px 0; font-size: 14px; color: #0ff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 5px #0ff; }
+        #ui p { margin: 8px 0; color: #cbd5e1; font-size: 13px; line-height: 1.5; display: flex; justify-content: space-between; }
+        #ui p strong { color: #fff; }
+        
+        #instructions { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(2, 4, 10, 0.85); backdrop-filter: blur(10px); z-index: 100; cursor: pointer; }
+        .neon-text { margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; background: linear-gradient(90deg, #0ff, #f0f); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(0,255,255,0.4); }
+        
+        .btn { background: rgba(0, 255, 255, 0.05); border: 1px solid #0ff; color: #0ff; padding: 14px 28px; font-size: 16px; font-weight: 600; letter-spacing: 2px; cursor: pointer; border-radius: 6px; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(0,255,255,0.1); outline: none; }
+        .btn:hover { background: rgba(0, 255, 255, 0.2); box-shadow: 0 0 30px rgba(0,255,255,0.4); transform: translateY(-2px); }
+        
+        #coding-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 35px; z-index: 200; width: 450px; text-align: center; }
+        select { font-size: 15px; padding: 10px; background: rgba(0, 0, 0, 0.6); color: #0ff; border: 1px solid rgba(0,255,255,0.3); border-radius: 6px; outline: none; width: 150px; cursor: pointer; }
+        select:focus { border-color: #0ff; box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+        
+        .code-block { background: rgba(0, 0, 0, 0.7); padding: 20px; border-radius: 8px; text-align: left; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; margin: 25px 0; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.8); line-height: 1.6; }
+        
+        .btn-hub { position: absolute; top: 20px; left: 20px; z-index: 1000; text-decoration: none; font-size: 13px; padding: 10px 18px; color: #aaa; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; }
+        .btn-hub:hover { color: #fff; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); transform: none; box-shadow: none; }
     </style>
 </head>
 <body>
-    <a href="mge.html" class="btn btn-hub">🏠 Return to Summer Hub</a>
+    <a href="index.html" class="btn-hub glass-panel">◂ Return to Hub</a>
     <div id="crosshair"></div>
-    <div id="ui">
-        Captured Monsters: <span id="score" style="color: #0ff">0</span><br>
-        <span style="font-size: 18px; color: #ff0; text-shadow: none;">Element Shifting Action! Use opposites, or just blast them!</span><br>
-        <span style="font-size: 16px; color: #f0f">Left Click: Fire (Magenta) | Right Click: Water (Cyan) | E: Lazer Eyes (Yellow)</span>
+    <div id="ui" class="glass-panel">
+        <h3>Combat HUD</h3>
+        <p style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Captures <span id="score" style="color: #0ff; font-weight:bold; font-size: 20px;">0</span></p>
+        <p><strong>L-Click</strong> <span style="color:#f0f">Plasma Fire</span></p>
+        <p><strong>R-Click</strong> <span style="color:#0ff">Frost Beam</span></p>
+        <p><strong>E Key</strong> <span style="color:#ff0">Solar Laser</span></p>
     </div>
     
     <div id="instructions">
-        <h1 class="neon-text" style="font-size: 60px;">MAGIC FPS: KAIJU RESCUE</h1>
-        <h2 class="neon-text-magenta">CMYK NEON EDITION</h2>
-        <p style="font-size: 20px; text-align: center; color: #ff0; text-shadow: 0 0 10px #ff0;">
-            Click to Play!<br><br>
-            WASD: Move &nbsp;|&nbsp; Mouse: Look &nbsp;|&nbsp; Esc: Pause<br>
-            You have blocky Minecraft hands!<br>
-            Defeat the shape-shifting Godzilla and Dragon to save the world!<br>
-            Solve basic block coding challenges to capture bosses like Pokemon!
-        </p>
+        <h1 class="neon-text" style="font-size: 64px;">MAGIC FPS: KAIJU</h1>
+        <h2 style="color: #4a5568; font-size: 16px; letter-spacing: 12px; margin-bottom: 40px; text-transform: uppercase;">Halo Engine Phase 3</h2>
+        
+        <div class="glass-panel" style="padding: 40px 50px; text-align: center; max-width: 500px;">
+            <p style="font-size: 15px; color: #94a3b8; margin-bottom: 30px; line-height: 1.8;">
+                Defeat the shape-shifting Godzilla and Dragon to save the sector.<br>
+                Execute system override codes to capture boss entities.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; color: #64748b; font-size: 13px; font-family: monospace;">
+                <span style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 4px;">[WASD] MOVE</span>
+                <span style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 4px;">[MOUSE] AIM</span>
+                <span style="background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 4px;">[ESC] MENU</span>
+            </div>
+            <button class="btn" style="width: 100%;">Initialize Combat Array</button>
+        </div>
     </div>
 
-    <div id="coding-modal">
-        <h2 style="color: #ff0; text-shadow: 0 0 10px #ff0;">BOSS CHALLENGE!</h2>
-        <p>Complete the block code to capture the Kaiju!</p>
+    <div id="coding-modal" class="glass-panel">
+        <h2 style="color: #0ff; margin-top: 0; font-size: 22px; letter-spacing: 2px; text-transform: uppercase;">System Override Required</h2>
+        <p style="color: #94a3b8; font-size: 14px;">Complete the payload sequence to contain the entity!</p>
         <div class="code-block" id="code-content">
-            <span style="color: #f0f">if</span> (enemy.type == <span style="color: #0ff">"Godzilla"</span>) {<br>
-            &nbsp;&nbsp;player.capture(<select id="answer"><option value="dragon">dragon</option><option value="godzilla">godzilla</option><option value="kiju">kiju</option></select>);<br>
+            <span style="color: #c678dd">if</span> (target.class === <span style="color: #98c379">"Godzilla"</span>) {<br>
+            &nbsp;&nbsp;capture_pod.deploy(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<select id="answer">
+                    <option value="none">-- select --</option>
+                    <option value="dragon">dragon</option>
+                    <option value="godzilla">godzilla</option>
+                    <option value="kiju">kiju</option>
+                </select><br>
+            &nbsp;&nbsp;);<br>
             }
         </div>
-        <button class="btn" style="border-color: #ff0; color: #ff0; box-shadow: 0 0 10px #ff0;" onclick="checkAnswer()">Execute Code ⚡</button>
+        <button class="btn" style="width: 100%;" onclick="checkAnswer()">Execute Payload</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -78,73 +108,119 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505); // near black
-            scene.fog = new THREE.FogExp2(0x050505, 0.015);
+            scene.background = new THREE.Color(0x020308); // deep space/night color
+            scene.fog = new THREE.FogExp2(0x020308, 0.007); // nice halo vibe fog
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ'; 
             camera.position.y = 10;
 
-            // Hands - Blocky Minecraft Style Fingers
-            const handGeo = new THREE.BoxGeometry(0.8, 0.8, 2.5);
-            const fingerGeo = new THREE.BoxGeometry(0.3, 0.3, 1.5);
+            // Sleek Metallic Hands
+            const handGeo = new THREE.BoxGeometry(0.8, 0.8, 3.0);
+            const handMatLeft = new THREE.MeshStandardMaterial({
+                color: colors.magenta, 
+                metalness: 0.8, 
+                roughness: 0.2,
+                emissive: 0x330033
+            });
+            const handMatRight = new THREE.MeshStandardMaterial({
+                color: colors.cyan, 
+                metalness: 0.8, 
+                roughness: 0.2,
+                emissive: 0x003333
+            });
             
-            // Left Hand (Magenta - Fire)
+            // Left Hand (Plasma - Magenta)
             const leftHand = new THREE.Group();
-            const lHandMesh = new THREE.Mesh(handGeo, new THREE.MeshBasicMaterial({color: colors.magenta, wireframe: true}));
+            const lHandMesh = new THREE.Mesh(handGeo, handMatLeft);
             leftHand.add(lHandMesh);
-            // block fingers
-            for(let i=-0.2; i<=0.2; i+=0.4) {
-                const lFinger = new THREE.Mesh(fingerGeo, new THREE.MeshBasicMaterial({color: colors.magenta}));
-                lFinger.position.set(i, 0.3, -1.5);
-                leftHand.add(lFinger);
-            }
+            
+            // adding glowing accents
+            const accentGeo = new THREE.BoxGeometry(0.9, 0.2, 1.5);
+            const lAccent = new THREE.Mesh(accentGeo, new THREE.MeshBasicMaterial({color: 0xff00ff}));
+            lAccent.position.set(0, 0.4, 0);
+            leftHand.add(lAccent);
+            
             leftHand.position.set(-2, -1.5, -4);
+            leftHand.rotation.z = Math.PI / 8;
             camera.add(leftHand);
 
-            // Right Hand (Cyan - Water)
+            // Right Hand (Frost - Cyan)
             const rightHand = new THREE.Group();
-            const rHandMesh = new THREE.Mesh(handGeo, new THREE.MeshBasicMaterial({color: colors.cyan, wireframe: true}));
+            const rHandMesh = new THREE.Mesh(handGeo, handMatRight);
             rightHand.add(rHandMesh);
-            for(let i=-0.2; i<=0.2; i+=0.4) {
-                const rFinger = new THREE.Mesh(fingerGeo, new THREE.MeshBasicMaterial({color: colors.cyan}));
-                rFinger.position.set(i, 0.3, -1.5);
-                rightHand.add(rFinger);
-            }
+            
+            const rAccent = new THREE.Mesh(accentGeo, new THREE.MeshBasicMaterial({color: 0x00ffff}));
+            rAccent.position.set(0, 0.4, 0);
+            rightHand.add(rAccent);
+
             rightHand.position.set(2, -1.5, -4);
+            rightHand.rotation.z = -Math.PI / 8;
             camera.add(rightHand);
 
             scene.add(camera);
 
-            // Neon Grid Floor
-            const gridHelper = new THREE.GridHelper(400, 100, colors.cyan, colors.magenta);
+            // Tech Grid Floor
+            const gridHelper = new THREE.GridHelper(500, 150, 0x00ffff, 0x112233);
+            gridHelper.position.y = 0;
+            // Add slight emission/glow plane below grid
+            const planeGeo = new THREE.PlaneGeometry(500, 500);
+            const planeMat = new THREE.MeshStandardMaterial({ color: 0x050812, roughness: 0.1, metalness: 0.9 });
+            const plane = new THREE.Mesh(planeGeo, planeMat);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -0.1;
+            scene.add(plane);
             scene.add(gridHelper);
 
-            // Ambient Light & Dir Light (for solid colors)
-            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            // Atmospheric Lighting
+            const ambient = new THREE.HemisphereLight(0x0a1020, 0x020308, 1.5); 
             scene.add(ambient);
-            const dir = new THREE.DirectionalLight(0xffffff, 0.5);
-            dir.position.set(10, 20, 10);
-            scene.add(dir);
 
-            // Level layout obstacles
-            const boxGeo = new THREE.BoxGeometry(20, 20, 20);
-            const boxMat = new THREE.MeshBasicMaterial({ color: colors.yellow, wireframe: true });
-            for ( let i = 0; i < 40; i ++ ) {
-                const box = new THREE.Mesh( boxGeo, boxMat );
-                box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-                box.position.y = 10;
-                box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-                scene.add( box );
-                objects.push(box);
+            // Dynamic spotlights
+            const spotLight1 = new THREE.SpotLight(0x00ffff, 2);
+            spotLight1.position.set(100, 100, 100);
+            spotLight1.angle = Math.PI/4;
+            spotLight1.penumbra = 0.5;
+            scene.add(spotLight1);
+
+            const spotLight2 = new THREE.SpotLight(0xff00ff, 2);
+            spotLight2.position.set(-100, 100, -100);
+            spotLight2.angle = Math.PI/4;
+            spotLight2.penumbra = 0.5;
+            scene.add(spotLight2);
+
+            // Environment structures (Halo aesthetic ruins / pillars)
+            const pillarGeo = new THREE.CylinderGeometry(2, 2, 40, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ 
+                color: 0x223344, 
+                metalness: 0.6, 
+                roughness: 0.4,
+                flatShading: true
+            });
+            for ( let i = 0; i < 30; i ++ ) {
+                const pillar = new THREE.Mesh( pillarGeo, pillarMat );
+                pillar.position.x = Math.floor( Math.random() * 20 - 10 ) * 15;
+                pillar.position.y = 20;
+                pillar.position.z = Math.floor( Math.random() * 20 - 10 ) * 15;
+                
+                // Add glowing rings
+                const ringGeo = new THREE.TorusGeometry(2.5, 0.2, 4, 16);
+                const ringMat = new THREE.MeshBasicMaterial({color: (i%2==0) ? 0x00ffff : 0xff00ff});
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI/2;
+                ring.position.y = Math.random() * 20 - 10;
+                pillar.add(ring);
+
+                scene.add( pillar );
+                objects.push(pillar);
             }
 
-            // Spawn Pokemon-like Enemies 
-            for(let i=0; i<30; i++) spawnEnemy();
+            // Spawn Entities 
+            for(let i=0; i<25; i++) spawnEnemy();
             
             // Spawn Bosses (Godzilla & Dragon with Kaiju Influence)
-            spawnBoss('Godzilla', -80, -80);
-            spawnBoss('Dragon', 80, 80);
+            spawnBoss('Godzilla', -60, -80);
+            spawnBoss('Dragon', 60, 80);
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -183,25 +259,35 @@
         }
 
         function spawnEnemy() {
-            // Little cube enemies that shape shift
+            // High-tech geometric enemies
             const col = typeColors[Math.floor(Math.random()*3)];
             
-            // Simple geometry (pokemon blocky style)
             const grp = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), new THREE.MeshStandardMaterial({color: col}));
-            const face = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({color: colors.black}));
-            face.position.z = 2.01;
-            grp.add(body);
-            grp.add(face);
+            // Octahedron core
+            const coreMesh = new THREE.Mesh(
+                new THREE.OctahedronGeometry(2.5, 0), 
+                new THREE.MeshStandardMaterial({color: col, metalness: 0.6, roughness: 0.2, emissive: col, emissiveIntensity: 0.2, flatShading: true})
+            );
             
-            grp.position.x = (Math.random() - 0.5) * 300;
-            grp.position.z = (Math.random() - 0.5) * 300;
-            grp.position.y = 2; // on ground
+            // Outer wireframe shell
+            const shellMesh = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(3.5, 0),
+                new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true, transparent: true, opacity: 0.3})
+            );
+
+            grp.add(coreMesh);
+            grp.add(shellMesh);
+            
+            grp.position.x = (Math.random() - 0.5) * 200;
+            grp.position.z = (Math.random() - 0.5) * 200;
+            grp.position.y = 4; // floating
             
             grp.userData = { 
                 isBoss: false, hp: 1, 
-                bodyMesh: body, 
-                shiftTimer: Math.random() // staggered shifts
+                bodyMesh: coreMesh,
+                shellMesh: shellMesh,
+                baseColor: col,
+                shiftTimer: Math.random() * 2 
             };
             
             scene.add(grp);
@@ -210,44 +296,64 @@
 
         function spawnBoss(name, x, z) {
             const bossGroup = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({color: colors.magenta, emissive: 0x330033});
+            const mat = new THREE.MeshStandardMaterial({
+                color: colors.magenta, 
+                metalness: 0.8, 
+                roughness: 0.3,
+                emissive: 0x220022,
+                flatShading: true
+            });
             
             if (name === 'Godzilla') {
-                // Blocky Kaiju structure
-                const body = new THREE.Mesh(new THREE.BoxGeometry(12, 24, 12), mat);
-                body.position.y = 12;
+                // Sleek metallic monster synth
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(6, 10, 26, 8), mat);
+                body.position.y = 13;
                 bossGroup.add(body);
                 
-                const head = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 10), mat);
-                head.position.set(0, 28, 4);
+                const head = new THREE.Mesh(new THREE.BoxGeometry(7, 7, 12), mat);
+                head.position.set(0, 28, 5);
                 bossGroup.add(head);
 
-                // spikes
-                for(let i=0; i<4; i++) {
-                    const spike = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 4), mat);
-                    spike.position.set(0, 22 - i*5, -6);
-                    spike.rotation.x = -Math.PI/4;
+                // Tech spikes
+                for(let i=0; i<5; i++) {
+                    const spike = new THREE.Mesh(new THREE.TetrahedronGeometry(4), new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe:true}));
+                    spike.position.set(0, 24 - i*4, -7);
                     bossGroup.add(spike);
                 }
             } else {
-                // Dragon
-                const body = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 24), mat);
-                body.position.y = 15;
+                // Cyber Dragon
+                const body = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 26), mat);
+                body.position.y = 16;
                 bossGroup.add(body);
                 
-                const head = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 10), mat);
-                head.position.set(0, 15, 12);
+                const head = new THREE.Mesh(new THREE.ConeGeometry(5, 12, 4), mat);
+                head.rotation.x = Math.PI / 2;
+                head.position.set(0, 16, 16);
                 bossGroup.add(head);
 
-                const wings = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), mat);
-                wings.position.y = 20;
-                wings.rotation.x = -Math.PI/2;
-                bossGroup.add(wings);
+                const wingsGeo = new THREE.BufferGeometry();
+                const wingsMat = new THREE.MeshBasicMaterial({color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 0.5});
+                // Simple energy wing planes
+                const wing1 = new THREE.Mesh(new THREE.PlaneGeometry(35, 15), wingsMat);
+                wing1.position.set(15, 20, 0);
+                wing1.rotation.y = Math.PI / 8;
+                bossGroup.add(wing1);
+                
+                const wing2 = new THREE.Mesh(new THREE.PlaneGeometry(35, 15), wingsMat);
+                wing2.position.set(-15, 20, 0);
+                wing2.rotation.y = -Math.PI / 8;
+                bossGroup.add(wing2);
             }
 
             bossGroup.position.set(x, 0, z);
-            bossGroup.userData = { isBoss: true, name: name, hp: 10, mats: [mat], shiftTimer: 0 };
+            bossGroup.userData = { isBoss: true, name: name, hp: 8, mats: [mat], shiftTimer: 0 };
             
+            // Add a boss light
+            const bossLight = new THREE.PointLight(colors.magenta, 2, 50);
+            bossLight.position.y = 15;
+            bossGroup.add(bossLight);
+            bossGroup.userData.light = bossLight;
+
             scene.add(bossGroup);
             enemies.push(bossGroup);
         }
@@ -280,38 +386,33 @@
 
         const projectiles = [];
         function shoot(type) {
-            // left hand fire (Magenta), right hand water (Cyan), eyes laser (Yellow)
-            const pGeo = new THREE.BoxGeometry(1.5, 1.5, 3);
+            const pGeo = new THREE.BoxGeometry(0.8, 0.8, 4);
             let pCol = colors.white;
-            let startOffset = new THREE.Vector3();
 
-            if (type === 'Fire') { pCol = colors.magenta; startOffset.set(-2, -1.5, -5); }
-            else if (type === 'Water') { pCol = colors.cyan; startOffset.set(2, -1.5, -5); }
-            else if (type === 'Laser') { pCol = colors.yellow; startOffset.set(0, 0, -2); pGeo.scale(2, 2, 2); }
+            if (type === 'Fire') { pCol = colors.magenta; }
+            else if (type === 'Water') { pCol = colors.cyan; }
+            else if (type === 'Laser') { pCol = colors.yellow; pGeo.scale(1.5, 1.5, 1.5); }
 
             const pMat = new THREE.MeshBasicMaterial({color: pCol});
             const proj = new THREE.Mesh(pGeo, pMat);
+            
+            // Add point light to projectile for cool effects
+            const light = new THREE.PointLight(pCol, 1, 20);
+            proj.add(light);
 
-            // Compute direct forward position
             const camPos = camera.position.clone();
             const camDir = new THREE.Vector3();
             camera.getWorldDirection(camDir);
             
-            // Actually place projectile offset relative to camera
             const finalPos = camPos.clone();
             proj.position.copy(finalPos);
-            
-            // Align rotation somewhat to camera
             proj.rotation.copy(camera.rotation);
+            proj.position.add(camDir.multiplyScalar(3));
             
-            // Move it slightly forward
-            proj.position.add(camDir.multiplyScalar(2));
-            
-            // If it's a hand attack, jitter X slightly for effect 
-            if(type === 'Fire') proj.position.x -= 2;
-            if(type === 'Water') proj.position.x += 2;
+            if(type === 'Fire') proj.position.x -= 1;
+            if(type === 'Water') proj.position.x += 1;
 
-            proj.userData = { velocity: camDir.normalize().multiplyScalar(4), type: type, life: 50 };
+            proj.userData = { velocity: camDir.normalize().multiplyScalar(6), type: type, life: 60 };
             
             scene.add(proj);
             projectiles.push(proj);
@@ -369,13 +470,15 @@
             modal.style.display = 'block';
             
             document.getElementById('code-content').innerHTML = 
-                `<span style="color: #f0f">if</span> (enemy.type == <span style="color: #0ff">"${boss.userData.name}"</span>) {<br>
-                &nbsp;&nbsp;player.capture(<select id="answer">
+                `<span style="color: #c678dd">if</span> (target.class === <span style="color: #98c379">"${boss.userData.name}"</span>) {<br>
+                &nbsp;&nbsp;capture_pod.deploy(<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<select id="answer">
                     <option value="none">-- select --</option>
                     <option value="dragon">dragon</option>
                     <option value="godzilla">godzilla</option>
                     <option value="kiju">kiju</option>
-                </select>);<br>
+                </select><br>
+                &nbsp;&nbsp;);<br>
                 }`;
         }
 
@@ -436,32 +539,34 @@
             enemies.forEach(e => {
                 e.userData.shiftTimer += delta;
                 if(e.userData.isBoss) {
-                    if(e.userData.shiftTimer > 3) {
+                    if(e.userData.shiftTimer > 2) {
                         e.userData.shiftTimer = 0;
-                        e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                        const newCol = typeColors[Math.floor(Math.random()*3)];
+                        e.userData.mats[0].color.setHex(newCol);
+                        if(e.userData.light) e.userData.light.color.setHex(newCol);
                     } else if (e.userData.shiftTimer > 0.2 && e.userData.mats[0].color.getHex() === colors.white) {
-                        // Restore color after hit
                         e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
                     }
                     
                     // Idle turning and bobbing
-                    e.rotation.y += delta * 0.5;
-                    e.position.y = Math.sin(time * 0.003) * 3;
+                    e.rotation.y += delta * 0.3;
+                    e.position.y = Math.sin(time * 0.002) * 5;
                     
-                    // Face player slowly
                     e.lookAt(camera.position.x, e.position.y, camera.position.z);
                     
                 } else {
-                    // Small enemies shape shift elements frequently 
-                    if(e.userData.shiftTimer > 2) {
+                    if(e.userData.shiftTimer > 1.5) {
                         e.userData.shiftTimer = 0;
                         e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                        e.userData.bodyMesh.material.emissive.setHex(typeColors[Math.floor(Math.random()*3)]);
                     } else if (e.userData.shiftTimer > 0.1 && e.userData.bodyMesh.material.color.getHex() === colors.white) {
-                         e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                         e.userData.bodyMesh.material.color.setHex(e.userData.baseColor);
                     }
                     
-                    e.rotation.y += delta;
-                    e.position.y = 2 + Math.abs(Math.sin(time * 0.005 + e.position.x)) * 2; // bouncing
+                    e.rotation.x += delta * 1.5;
+                    e.rotation.y += delta * 1.5;
+                    e.position.y = 4 + Math.sin(time * 0.003 + e.position.x) * 3;
+                    e.userData.shellMesh.rotation.y -= delta * 0.5;
                 }
             });
 
