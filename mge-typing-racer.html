@@ -673,8 +673,8 @@
             if(starsMesh.position.z > 50) starsMesh.position.z = 0;
 
             if (isStarted) {
-                bot1Progress += BOT1_SPEED;
-                bot2Progress += BOT2_SPEED;
+                if (bot1Progress < 1) bot1Progress += BOT1_SPEED;
+                if (bot2Progress < 1) bot2Progress += BOT2_SPEED;
 
                 botSnail.position.z = startZ - (bot2Progress * totalDist);
                 botTurtle.position.z = startZ - (bot1Progress * totalDist);
@@ -829,11 +829,10 @@
         }
 
         function checkWin() {
-            if (playerProgress >= 1 || bot1Progress >= 1 || bot2Progress >= 1) {
+            if (playerProgress >= 1) {
                 isStarted = false;
-                const won = playerProgress >= 1;
-                document.getElementById('win-title').textContent = won ? "YOU WIN! 🥇" : "GAME OVER 🏁";
-                document.getElementById('win-title').style.color = won ? "var(--neon-green)" : "var(--neon-pink)";
+                document.getElementById('win-title').textContent = "YOU WIN! 🥇";
+                document.getElementById('win-title').style.color = "var(--neon-green)";
                 document.getElementById('win-stats').textContent = `ACCURACY: ${accDisplay.textContent} // RANK: ${rankDisplay.textContent}`;
                 
                 setTimeout(() => {
