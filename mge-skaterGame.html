@@ -113,8 +113,8 @@
 
         #score-display {
             position: fixed;
-            top: 5rem;
-            left: 1rem;
+            top: 1rem;
+            left: 15rem;
             font-size: 2rem;
             font-weight: bold;
             color: white;
@@ -135,7 +135,8 @@
         #trick-display {
             position: fixed;
             bottom: 1rem;
-            left: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 1.5rem;
             font-weight: bold;
             color: #ffe66d;
@@ -159,6 +160,69 @@
             z-index: 50;
         }
 
+        #stem-data-panel {
+            position: fixed;
+            top: 5rem;
+            right: 1rem;
+            background: rgba(0, 20, 40, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #4ecdc4;
+            padding: 1rem;
+            border-radius: 10px;
+            color: #4ecdc4;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px rgba(78, 205, 196, 0.5);
+            z-index: 5;
+            line-height: 1.6;
+            pointer-events: none;
+            text-align: right;
+        }
+
+        #block-editor {
+            position: fixed;
+            top: 5rem;
+            left: 1rem;
+            bottom: 1rem;
+            width: 250px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 3px solid #ff6b6b;
+            border-radius: 15px;
+            padding: 1rem;
+            pointer-events: auto;
+            overflow-y: auto;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .block-btn {
+            background: #4ecdc4;
+            color: #111;
+            font-weight: bold;
+            border: none;
+            padding: 0.4rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.1s;
+        }
+        .block-btn:hover { background: #ffe66d; transform: scale(1.05); }
+
+        .block-sequence {
+            flex-grow: 1;
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 0.5rem;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
     </style>
 </head>
 <body>
@@ -166,9 +230,31 @@
     
     <div class="ui-overlay">
         <a href="mge.html" class="back-button">← Back to MGE</a>
-        <div class="title">🛹 SKATERGAME 🛹</div>
+        <div class="title">🔬 STEM SKATER 🛹</div>
         
         <div id="score-display">Score: 0</div>
+        
+        <div id="block-editor">
+            <h3 style="text-align: center; margin-bottom: 0.5rem; color: #111;">Auto-Trick Code<br><small>(Press X to Run)</small></h3>
+            <strong style="color: #111;">Available Blocks:</strong>
+            <button class="block-btn" onclick="addBlock('Ollie')">Ollie (Space)</button>
+            <button class="block-btn" onclick="addBlock('Kickflip')">Kickflip (E / Right)</button>
+            <button class="block-btn" onclick="addBlock('Heelflip')">Heelflip (Q / Left)</button>
+            <button class="block-btn" onclick="addBlock('PopShuvit')">Pop Shuvit (Up)</button>
+            <button class="block-btn" onclick="addBlock('360Flip')">360 Flip</button>
+            <strong style="color: #111;">Your Sequence:</strong>
+            <div id="sequence-container" class="block-sequence"></div>
+            <button class="block-btn" style="background:#ff6b6b;color:white;" onclick="clearBlocks()">Clear Sequence</button>
+        </div>
+
+        <div id="stem-data-panel">
+            <strong>🚀 STEM Telemetry</strong><br>
+            Velocity (v): <span id="stem-v">0.00</span> m/s<br>
+            Height (h): <span id="stem-h">0.00</span> m<br>
+            Kinetic Energy (½mv²): <span id="stem-ke">0</span> J<br>
+            Potential Energy (mgh): <span id="stem-pe">0</span> J<br>
+            Total Energy (E): <span id="stem-te">0</span> J
+        </div>
         <div id="timer-display">Time: 60</div>
         <div id="trick-display">Kickflip! +100</div>
         <div id="bail-display">BAIL!</div>
@@ -187,6 +273,8 @@
                 <strong>T</strong> - Board Slide (Hold in air)<br>
                 <strong>Y</strong> - Blunt Slide (Hold in air)<br>
                 <strong>C / V</strong> - Set Mark / Go to Mark<br>
+                <strong>X</strong> - Run Auto-Trick Sequence!<br>
+                <strong style="color: #4ecdc4; margin-top: 5px; display: block;">Collect Atoms for Science Bonuses!</strong>
             </div>
         </div>
     </div>
@@ -262,6 +350,36 @@
         createWedge(-90, 0, Math.PI, 200, 30, 20); // West Wall
         createWedge(0, -90, Math.PI / 2, 160, 30, 20); // North Wall
         createWedge(0, 90, -Math.PI / 2, 160, 30, 20); // South Wall
+
+        // STEM Collectibles - Atoms
+        const atoms = [];
+        const atomPositions = [
+            {x: 0, y: 15, z: 0},
+            {x: -40, y: 20, z: 10},
+            {x: 40, y: 15, z: -10},
+            {x: -50, y: 20, z: -50},
+            {x: 50, y: 25, z: 50}
+        ];
+
+        atomPositions.forEach(pos => {
+            const atom = new THREE.Group();
+            const nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshPhongMaterial({color: 0xffe66d, emissive: 0xffaa00}));
+            atom.add(nucleus);
+            
+            // Rings
+            for(let i=0; i<3; i++) {
+                const ringGeo = new THREE.TorusGeometry(2, 0.1, 8, 24);
+                const ringMat = new THREE.MeshBasicMaterial({color: 0x4ecdc4});
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.random() * Math.PI;
+                ring.rotation.y = Math.random() * Math.PI;
+                atom.add(ring);
+            }
+
+            atom.position.set(pos.x, pos.y, pos.z);
+            scene.add(atom);
+            atoms.push(atom);
+        });
 
         // Gap features and massive ramps
         createWedge(0, -20, -Math.PI / 2, 40, 12, 25); // Takeoff facing +Z
@@ -399,12 +517,94 @@
             markRotation: 0
         };
 
-        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false, x: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+
+        // --- Auto-Trick Block Editor Logic ---
+        const mySequence = [];
+        let isAutoTricking = false;
+        
+        window.addBlock = function(trickName) {
+            if (mySequence.length >= 8) return; // max 8 commands
+            mySequence.push(trickName);
+            window.renderBlocks();
+        };
+
+        window.clearBlocks = function() {
+            mySequence.length = 0;
+            window.renderBlocks();
+        };
+
+        window.renderBlocks = function() {
+            const container = document.getElementById('sequence-container');
+            container.innerHTML = '';
+            mySequence.forEach((trick, index) => {
+                const b = document.createElement('div');
+                b.style.background = '#4ecdc4';
+                b.style.padding = '0.4rem';
+                b.style.borderRadius = '5px';
+                b.style.fontWeight = 'bold';
+                b.style.color = '#111';
+                b.innerText = `${index + 1}. ${trick}`;
+                container.appendChild(b);
+            });
+        };
+
+        function executeSequence() {
+            if (mySequence.length === 0) return;
+            if (isAutoTricking) return;
+            isAutoTricking = true;
+            
+            let trickIndex = 0;
+            
+            function nextTrick() {
+                if (trickIndex >= mySequence.length || state.isBailing) {
+                    isAutoTricking = false;
+                    return;
+                }
+                const trick = mySequence[trickIndex];
+                
+                if (trick === 'Ollie') {
+                    if (!state.isJumping) {
+                        state.yVelocity = 20;
+                        state.isJumping = true;
+                        showTrick('Auto Ollie', 50);
+                    }
+                } else if (state.isJumping) {
+                    if (trick === 'Kickflip') {
+                        state.flipSpin += Math.PI * 2;
+                        showTrick('Auto Kickflip', 100);
+                    } else if (trick === 'Heelflip') {
+                        state.flipSpin -= Math.PI * 2;
+                        showTrick('Auto Heelflip', 100);
+                    } else if (trick === 'PopShuvit') {
+                        state.shuvitSpin += Math.PI * 2;
+                        showTrick('Auto Shuvit', 150);
+                    } else if (trick === '360Flip') {
+                        state.flipSpin += Math.PI * 2;
+                        state.shuvitSpin += Math.PI * 2;
+                        showTrick('Auto 360 Flip', 300);
+                    }
+                }
+                
+                trickIndex++;
+                if (trickIndex < mySequence.length) {
+                    setTimeout(nextTrick, 400); // 400ms delay between actions
+                } else {
+                    isAutoTricking = false;
+                }
+            }
+            
+            nextTrick();
+        }
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             if (key === ' ') keys.space = true;
             else if (keys.hasOwnProperty(key)) keys[key] = true;
+
+            if (key === 'x') {
+                executeSequence();
+            }
 
             if (key === 'c') {
                 state.markPosition.copy(boardGroup.position);
@@ -450,6 +650,12 @@
             state.comboPoints = 0;
         }
 
+        function resetAtoms() {
+            if (typeof atoms !== 'undefined') {
+                atoms.forEach(atom => atom.visible = true);
+            }
+        }
+
         function showTrick(name, pts) {
             state.comboPoints += pts;
             state.currentTrick = name;
@@ -491,6 +697,43 @@
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
 
+            // STEM Telemetry Update
+            const mass = 75; // kg (skater + board)
+            const g = 9.81; // m/s^2
+            const vY = state.yVelocity;
+            const vX = state.velocity;
+            const totalV = Math.sqrt(vX*vX + vY*vY);
+            const h = Math.max(0, boardGroup.position.y);
+            const ke = 0.5 * mass * totalV * totalV;
+            const pe = mass * g * h;
+            const te = ke + pe;
+
+            document.getElementById('stem-v').innerText = totalV.toFixed(2);
+            document.getElementById('stem-h').innerText = h.toFixed(2);
+            document.getElementById('stem-ke').innerText = Math.round(ke);
+            document.getElementById('stem-pe').innerText = Math.round(pe);
+            document.getElementById('stem-te').innerText = Math.round(te);
+
+            // Rotate atoms and check collision
+            if (typeof atoms !== 'undefined') {
+                atoms.forEach((atom) => {
+                    if (!atom.visible) return;
+                    atom.rotation.y += 2 * delta;
+                    atom.rotation.x += 1 * delta;
+                    
+                    atom.children.forEach((child, i) => {
+                        if (i > 0) child.rotation.x += delta * (i * 2);
+                    });
+
+                    // Check distance for collection
+                    const dist = atom.position.distanceTo(boardGroup.position);
+                    if (dist < 4) { // Collected atom
+                        atom.visible = false;
+                        showTrick('Atom Discovered', 1500);
+                    }
+                });
+            }
+
             // Handle timer
             if (state.timeLeft > 0) {
                 state.timeLeft -= delta;
@@ -499,6 +742,7 @@
                     state.score = 0;
                     document.getElementById('score-display').innerText = `Score: ${state.score}`;
                     teleportToMark(); // Reset position
+                    resetAtoms(); // Reset collectibles
                 }
                 document.getElementById('timer-display').innerText = `Time: ${Math.ceil(state.timeLeft)}`;
             }
