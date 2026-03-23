@@ -209,9 +209,15 @@
     </div>
 
     <div id="riddle-container">
+        <button onclick="closeRiddle()" style="position:absolute; top:10px; right:10px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size: 16px;">X</button>
         <h2 id="riddle-question">Question</h2>
         <div id="riddle-options"></div>
         <div class="riddle-info" id="riddle-info"></div>
+    </div>
+
+    <div id="active-code-ui" style="position: absolute; bottom: 20px; right: 20px; background: rgba(30, 41, 59, 0.9); padding: 15px; border-radius: 12px; border: 2px solid #8b5cf6; color: #f8fafc; font-family: monospace; display: none; z-index: 100;">
+        <h3 style="margin: 0 0 10px 0; color: #a855f7; font-size: 16px;">Dragon Program Runtime</h3>
+        <div id="active-code-list" style="display: flex; flex-direction: column; gap: 5px;"></div>
     </div>
 
     <div id="block-coding-container">
@@ -228,7 +234,7 @@
         <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
             <button id="run-code-btn" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Run Code</button>
             <button id="clear-code-btn" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Reset Workspace</button>
-            <button id="cancel-code-btn" style="padding: 10px 20px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancel</button>
+            <button id="cancel-code-btn" style="padding: 10px 20px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">❌ Exit Programmer</button>
         </div>
     </div>
 
@@ -734,6 +740,18 @@
                 });
                 
                 closeBlockCoding();
+
+                const activeCodeUI = document.getElementById('active-code-ui');
+                const activeCodeList = document.getElementById('active-code-list');
+                activeCodeUI.style.display = 'block';
+                
+                const codeBlock = document.createElement('div');
+                codeBlock.style.background = 'rgba(0,0,0,0.5)';
+                codeBlock.style.padding = '5px 10px';
+                codeBlock.style.borderLeft = '3px solid #10b981';
+                codeBlock.style.marginBottom = '5px';
+                codeBlock.innerHTML = `<strong>Dragon Friend</strong>: <br/>${currentWorkspace.join('<br/>&nbsp;&nbsp;&#8595; ')}`;
+                activeCodeList.appendChild(codeBlock);
 
                 const msg = document.createElement('div');
                 msg.style.position = 'absolute';
@@ -1513,17 +1531,7 @@
                 }
             }
 
-            // Check little dragons interaction for block coding
-            raycaster.setFromCamera( mouse, camera );
-            for(let i = 0; i < littleDragons.length; i++) {
-                const ld = littleDragons[i];
-                if(!ld.visible || ld.userData.isFriend) continue;
-                const hitboxes = raycaster.intersectObject(ld.userData.hitbox);
-                if(hitboxes.length > 0 && hitboxes[0].distance < 40) {
-                    openBlockCoding(ld);
-                    return;
-                }
-            }
+            // Ball throw handles little dragons now
             
             // Then check blocks
             raycaster.setFromCamera( mouse, camera );
@@ -1538,9 +1546,66 @@
             }
         };
 
+        const activeBalls = [];
+        let ballCharge = 0;
+        let isChargingBall = false;
+        
+        // Add visual charge meter to DOM
+        const chargeUI = document.createElement('div');
+        chargeUI.style.position = 'absolute'; chargeUI.style.bottom = '150px'; chargeUI.style.left = '50%';
+        chargeUI.style.transform = 'translateX(-50%)'; chargeUI.style.width = '200px'; chargeUI.style.height = '10px';
+        chargeUI.style.background = 'rgba(0,0,0,0.5)'; chargeUI.style.border = '2px solid white';
+        chargeUI.style.borderRadius = '5px'; chargeUI.style.display = 'none'; chargeUI.style.zIndex=100;
+        const chargeBar = document.createElement('div');
+        chargeBar.style.width = '0%'; chargeBar.style.height = '100%'; chargeBar.style.background = '#f59e0b';
+        chargeUI.appendChild(chargeBar);
+        document.body.appendChild(chargeUI);
+
         document.addEventListener( 'mousedown', (event) => {
+            if (!controls.isLocked) return;
             if (event.button === 0) breakBlock(); // Left click to break
-            if (event.button === 2) placeBlock(); // Right click to place
+            if (event.button === 2) {
+                isChargingBall = true;
+                ballCharge = 0;
+                chargeUI.style.display = 'block';
+            }
+        });
+
+        document.addEventListener( 'mouseup', (event) => {
+            if (!controls.isLocked) return;
+            if (event.button === 2 && isChargingBall) {
+                isChargingBall = false;
+                chargeUI.style.display = 'none';
+                
+                if (ballCharge < 5) {
+                    placeBlock(); // tap to place block
+                    return;
+                }
+                
+                // Throw Pokeball!
+                const ball = new THREE.Group();
+                const mTop = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, 0, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xff0000}));
+                const mBot = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, Math.PI/2, Math.PI/2), new THREE.MeshLambertMaterial({color: 0xffffff}));
+                ball.add(mTop); ball.add(mBot);
+                
+                const pPos = controls.getObject().position;
+                ball.position.copy(pPos);
+                
+                raycaster.setFromCamera( mouse, camera );
+                const throwDir = raycaster.ray.direction.clone();
+                // arc up slightly
+                throwDir.y += 0.2;
+                throwDir.normalize();
+
+                const force = 100 + (ballCharge * 1.5);
+                
+                scene.add(ball);
+                activeBalls.push({
+                    mesh: ball,
+                    velocity: throwDir.multiplyScalar(force),
+                    active: true
+                });
+            }
         });
 
         document.addEventListener('keydown', (event) => {
@@ -1776,6 +1841,38 @@
                             if(Math.random() < 0.03) {
                                 ld.rotation.y += (Math.random() - 0.5) * 2.0;
                             }
+                        }
+                    }
+                }
+
+                if (isChargingBall) {
+                    ballCharge += 100 * delta;
+                    if (ballCharge > 100) ballCharge = 100;
+                    chargeBar.style.width = ballCharge + '%';
+                }
+
+                // Update active balls (Pokeballs)
+                for (let i = activeBalls.length - 1; i >= 0; i--) {
+                    const b = activeBalls[i];
+                    if (!b.active) continue;
+                    
+                    b.mesh.position.add(b.velocity.clone().multiplyScalar(delta));
+                    b.velocity.y -= 9.8 * 8 * delta; // gravity
+                    
+                    if (b.mesh.position.y <= 0) {
+                        scene.remove(b.mesh);
+                        activeBalls.splice(i, 1);
+                        continue;
+                    }
+                    
+                    for(let j=0; j<littleDragons.length; j++) {
+                        const ld = littleDragons[j];
+                        if (!ld.visible || ld.userData.isFriend) continue;
+                        if (b.mesh.position.distanceTo(ld.position) < 15) { 
+                            scene.remove(b.mesh);
+                            activeBalls.splice(i, 1);
+                            openBlockCoding(ld);
+                            break;
                         }
                     }
                 }
