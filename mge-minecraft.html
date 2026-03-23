@@ -674,7 +674,7 @@
                 invUI.style.transform = 'translateX(-50%)';
                 invUI.style.display = 'flex';
                 invUI.style.gap = '10px';
-                invUI.style.zIndex = '100';
+                invUI.style.zIndex = '2500';
                 document.body.appendChild(invUI);
             }
             invUI.innerHTML = '';
@@ -728,10 +728,9 @@
                 
                 btn.onclick = (e) => {
                     e.stopPropagation();
-                    if(!controls.isLocked) return;
                     document.querySelectorAll('#pokemon-inventory > div > div:nth-child(2)').forEach(m => m.style.display='none');
                     menu.style.display = 'flex';
-                    controls.unlock();
+                    if (controls.isLocked) controls.unlock();
                 };
 
                 invUI.appendChild(btnContainer);
@@ -820,7 +819,19 @@
             if(currentWorkspace.length === expectedCode.length && currentWorkspace.every((val, index) => val === expectedCode[index])) {
                 // Turn target into friend
                 codingTarget.userData.isFriend = true;
-                friends.push(codingTarget);
+                if (!friends.includes(codingTarget)) friends.push(codingTarget);
+                
+                const idx = capturedInventory.indexOf(codingTarget);
+                if(idx > -1) {
+                    capturedInventory.splice(idx, 1);
+                    updateInventoryUI();
+                }
+                
+                codingTarget.visible = true;
+                if(controls.isLocked) {
+                    const p = controls.getObject().position;
+                    codingTarget.position.set(p.x, p.y, p.z - 10);
+                }
                 
                 // Visual change
                 const dMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); 
