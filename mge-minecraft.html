@@ -906,6 +906,112 @@
             }
         }
         
+        const activeDragons = [];
+        let ridableDragon = null;
+        
+        function removeRidableDragon() {
+            if(ridableDragon) {
+                controls.getObject().remove(ridableDragon);
+                const idx = activeDragons.indexOf(ridableDragon);
+                if(idx > -1) activeDragons.splice(idx, 1);
+                ridableDragon = null;
+            }
+        }
+
+        function createCoolDragon() {
+            const dragonGroup = new THREE.Group();
+            
+            // Materials
+            const drMat = new THREE.MeshLambertMaterial({color: 0x059669}); // Emerald green
+            const drBellyMat = new THREE.MeshLambertMaterial({color: 0x34d399}); // Lighter green
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0xfcd34d}); // Yellow glowing eyes
+            const hornMat = new THREE.MeshLambertMaterial({color: 0xfef3c7}); // Bone white
+            const spikeMat = new THREE.MeshLambertMaterial({color: 0x064e3b}); // Dark green spikes
+
+            // Body
+            const dBody = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 40), drMat);
+            dBody.castShadow = true;
+            dragonGroup.add(dBody);
+            
+            // Belly
+            const dBelly = new THREE.Mesh(new THREE.BoxGeometry(18, 5, 38), drBellyMat);
+            dBelly.position.y = -8;
+            dragonGroup.add(dBelly);
+            
+            // Head Group
+            const headGroup = new THREE.Group();
+            headGroup.position.set(0, 5, 25);
+            const dHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 22), drMat);
+            dHead.castShadow = true;
+            headGroup.add(dHead);
+            
+            // Snout
+            const dSnout = new THREE.Mesh(new THREE.BoxGeometry(14, 10, 15), drMat);
+            dSnout.position.set(0, -3, 15);
+            headGroup.add(dSnout);
+
+            // Eyes
+            const dEyeL = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 2), eyeMat);
+            dEyeL.position.set(-8.5, 3, 5);
+            headGroup.add(dEyeL);
+            
+            const dEyeR = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 2), eyeMat);
+            dEyeR.position.set(8.5, 3, 5);
+            headGroup.add(dEyeR);
+
+            // Horns
+            const hornL = new THREE.Mesh(new THREE.ConeGeometry(2, 12, 4), hornMat);
+            hornL.rotation.x = -Math.PI / 4;
+            hornL.position.set(-6, 12, -5);
+            headGroup.add(hornL);
+
+            const hornR = new THREE.Mesh(new THREE.ConeGeometry(2, 12, 4), hornMat);
+            hornR.rotation.x = -Math.PI / 4;
+            hornR.position.set(6, 12, -5);
+            headGroup.add(hornR);
+
+            dragonGroup.add(headGroup);
+            
+            // Tail
+            const dTail = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 30), drMat);
+            dTail.position.set(0, 0, -35);
+            dragonGroup.add(dTail);
+
+            // Spikes along back and tail
+            for(let i=0; i<6; i++) {
+                const spike = new THREE.Mesh(new THREE.ConeGeometry(3, 10, 4), spikeMat);
+                spike.position.set(0, 12, -35 + i*10); // from tail to mid back
+                dragonGroup.add(spike);
+            }
+
+            // Wings
+            const wingsGroup = new THREE.Group();
+            const pivotL = new THREE.Group();
+            pivotL.position.set(-10, 8, 0);
+            
+            const dWingL = new THREE.Mesh(new THREE.BoxGeometry(40, 2, 25), drMat);
+            dWingL.castShadow = true;
+            dWingL.position.set(-20, 0, 0); 
+            pivotL.add(dWingL);
+            wingsGroup.add(pivotL);
+            
+            const pivotR = new THREE.Group();
+            pivotR.position.set(10, 8, 0);
+            
+            const dWingR = new THREE.Mesh(new THREE.BoxGeometry(40, 2, 25), drMat);
+            dWingR.castShadow = true;
+            dWingR.position.set(20, 0, 0); 
+            pivotR.add(dWingR);
+            wingsGroup.add(pivotR);
+            
+            dragonGroup.add(wingsGroup);
+
+            // Save references for animation
+            dragonGroup.userData = { pivotL, pivotR, headGroup };
+
+            return dragonGroup;
+        }
+
         let isDragon = false;
         
         function defeatBoss() {
@@ -926,29 +1032,11 @@
                 leftEye.visible = false;
                 rightEye.visible = false;
 
-                const dragonGroup = new THREE.Group();
+                const dragonGroup = createCoolDragon();
+                dragonGroup.position.set(0, 25, 0);
+                dragonGroup.scale.set(1.5, 1.5, 1.5);
                 bossGroup.add(dragonGroup);
-                
-                const drMat = new THREE.MeshLambertMaterial({color: 0x10b981});
-                const dBody = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 40), drMat);
-                dBody.castShadow = true;
-                dBody.position.y = 25;
-                dragonGroup.add(dBody);
-                
-                const dHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 20), drMat);
-                dHead.castShadow = true;
-                dHead.position.set(0, 35, 30);
-                dragonGroup.add(dHead);
-                
-                const dWingL = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 20), drMat);
-                dWingL.castShadow = true;
-                dWingL.position.set(-25, 35, 0);
-                dragonGroup.add(dWingL);
-                
-                const dWingR = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 20), drMat);
-                dWingR.castShadow = true;
-                dWingR.position.set(25, 35, 0);
-                dragonGroup.add(dWingR);
+                activeDragons.push(dragonGroup);
 
                 riddles.length = 0;
                 riddles.push(
@@ -1252,8 +1340,24 @@
                         flyStatus.style.display = 'block';
                         velocity.y = 0; // stop falling instantly when entering fly mode
                         canJump = false;
+
+                        // Spawn ridable dragon
+                        if(!ridableDragon) {
+                            ridableDragon = createCoolDragon();
+                            ridableDragon.scale.set(0.12, 0.12, 0.12);
+                            // Position it beneath and slightly forward of camera
+                            ridableDragon.position.set(0, -3, -4);
+                            
+                            // It faces forward by default (Z positive in its local space)
+                            // But usually three.js camera looks down -Z. So we may need to spin it 180 or not based on our Z.
+                            ridableDragon.rotation.y = Math.PI; // Face away from camera (-Z direction)
+
+                            controls.getObject().add(ridableDragon);
+                            activeDragons.push(ridableDragon);
+                        }
                     } else {
                         flyStatus.style.display = 'none';
+                        removeRidableDragon();
                     }
                     break;
                 case 'Digit1': window.selectColor(0); break;
@@ -1398,6 +1502,34 @@
                 // Animation updates inside the loop
                 const pPos = controls.getObject().position;
 
+                // Flap dragons wings
+                for (let i = 0; i < activeDragons.length; i++) {
+                    const d = activeDragons[i];
+                    if (d.userData && d.userData.pivotL && d.userData.pivotR) {
+                        // Flap speed faster if we are in fly mode and moving? Let's just do constant flap
+                        const flSpeed = isFlyMode && d === ridableDragon ? 0.012 : 0.005;
+                        d.userData.pivotL.rotation.z = Math.sin(time * flSpeed) * 0.5;
+                        d.userData.pivotR.rotation.z = -Math.sin(time * flSpeed) * 0.5;
+                        
+                        // Bob head
+                        if (d.userData.headGroup) {
+                            d.userData.headGroup.rotation.x = Math.sin(time * 0.002) * 0.1;
+                        }
+
+                        // if it's ridable dragon, tilt it up or down depending on moveUp / moveDown
+                        if (d === ridableDragon) {
+                            if (moveUp) d.rotation.x = -0.2;
+                            else if (moveDown) d.rotation.x = 0.2;
+                            else d.rotation.x = 0;
+
+                            // banking when moving left/right
+                            if (moveLeft) d.rotation.z = -0.2;
+                            else if (moveRight) d.rotation.z = 0.2;
+                            else d.rotation.z = 0;
+                        }
+                    }
+                }
+
                 // Planes update
                 for (let i = activePlanes.length - 1; i >= 0; i--) {
                     const planeData = activePlanes[i];
@@ -1463,6 +1595,7 @@
                         isFlyMode = false;
                         flyStatus.style.display = 'none';
                         canJump = true;
+                        removeRidableDragon();
                         
                         // Trigger visual zap flash safely
                         let zapFlash = document.getElementById('zap-flash');

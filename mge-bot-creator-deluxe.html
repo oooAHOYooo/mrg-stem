@@ -483,6 +483,7 @@
     // System Variables
     let scene, camera, renderer, clock;
     let pointLight;
+    let raycaster, mouse;
     
     // Game State
     let materials = 200;
@@ -556,8 +557,13 @@
 
         clock = new THREE.Clock();
 
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
         // Handle resize
         window.addEventListener('resize', onWindowResize, false);
+        window.addEventListener('pointerdown', onPointerDown, false);
+        window.addEventListener('pointermove', onPointerMove, false);
 
         // Build a starter bot
         materials += 50; // temporary boost for first bot
@@ -1063,6 +1069,61 @@
         flash.style.background = color;
         flash.style.opacity = opacity;
         setTimeout(() => { flash.style.opacity = 0; }, 100);
+    }
+
+    function onPointerDown(event) {
+        if (modalOverlay.style.display === 'flex' || modalOverlay.style.display === 'block') return;
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        if (gameState === 'BASE') {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(army, true);
+            if (intersects.length > 0) {
+                let object = intersects[0].object;
+                while (object.parent && !army.includes(object)) {
+                    object = object.parent;
+                }
+                if (army.includes(object) && activeBot !== object) {
+                    activeBot = object;
+                    organizeArmy(); 
+                    flashColor('var(--neon-green)', 0.1);
+                    
+                    new TWEEN.Tween(activeBot.position)
+                        .to({y: activeBot.position.y + 2}, 200)
+                        .yoyo(true).repeat(1)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .start();
+                }
+            }
+        } else if (gameState === 'BATTLE') {
+            if (!event.target.closest('.anime-btn') && battleStats.isActive) {
+                playerAttack();
+            }
+        }
+    }
+
+    function onPointerMove(event) {
+        if (modalOverlay.style.display === 'flex' || modalOverlay.style.display === 'block') {
+            document.body.style.cursor = 'default';
+            return;
+        }
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        if (gameState === 'BASE') {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(army, true);
+            if (intersects.length > 0) {
+                document.body.style.cursor = 'pointer';
+            } else {
+                document.body.style.cursor = 'default';
+            }
+        } else {
+            document.body.style.cursor = 'crosshair';
+        }
     }
 
     function onWindowResize() {
