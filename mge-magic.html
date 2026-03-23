@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Magic FPS - MGE</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #050510; font-family: 'Inter', sans-serif; color: white; user-select: none; }
+        body { margin: 0; overflow: hidden; background: #2a0845; font-family: 'Inter', sans-serif; color: white; user-select: none; }
         #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: rgba(0, 255, 255, 0.8); box-shadow: 0 0 8px #0ff; margin-left: -3px; margin-top: -3px; border-radius: 50%; pointer-events: none; z-index: 50; }
         #crosshair::before, #crosshair::after { content:''; position: absolute; background: rgba(0, 255, 255, 0.5); }
         #crosshair::before { top: 50%; left: -12px; right: -12px; height: 2px; margin-top: -1px; }
@@ -17,7 +17,7 @@
         #ui p { margin: 8px 0; color: #cbd5e1; font-size: 13px; line-height: 1.5; display: flex; justify-content: space-between; }
         #ui p strong { color: #fff; }
         
-        #instructions { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(2, 4, 10, 0.85); backdrop-filter: blur(10px); z-index: 100; cursor: pointer; }
+        #instructions { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(2, 4, 10, 0.4); backdrop-filter: blur(5px); z-index: 100; cursor: pointer; }
         .neon-text { margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 4px; font-weight: 900; background: linear-gradient(90deg, #0ff, #f0f); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(0,255,255,0.4); }
         
         .btn { background: rgba(0, 255, 255, 0.05); border: 1px solid #0ff; color: #0ff; padding: 14px 28px; font-size: 16px; font-weight: 600; letter-spacing: 2px; cursor: pointer; border-radius: 6px; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(0,255,255,0.1); outline: none; }
@@ -91,6 +91,32 @@
         let score = 0;
         let enemies = [];
         let currentBoss = null;
+        let currentDuelEnemy = null;
+        let currentDuelQuestion = null;
+        let playerSpeedMultiplier = 1.0;
+        let multiShotCount = 1;
+        let projectileScale = 1.0;
+
+        const duelQuestions = [
+            {
+               html: `<span style="color: #61afef; font-weight: bold; font-size: 18px;">[DUEL INITIATED]</span><br><br><span style="color: #c678dd">let</span> <span style="color: #e5c07b">power</span> = <span style="color: #d19a66">10</span>;<br>power += <select id="answer"><option value="0">0</option><option value="5">5</option><option value="string">"5"</option></select>;<br><span style="color: #5c6370">// Make power equal 15</span>`,
+               answer: "5",
+               powerupName: "SPEED BOOST",
+               applyOption: () => { playerSpeedMultiplier += 0.5; }
+            },
+            {
+               html: `<span style="color: #61afef; font-weight: bold; font-size: 18px;">[DUEL INITIATED]</span><br><br><span style="color: #c678dd">const</span> lasers = [<span style="color: #98c379">"red"</span>, <span style="color: #98c379">"blue"</span>];<br>lasers.<select id="answer"><option value="pop">pop()</option><option value="push">push("green")</option><option value="shift">shift()</option></select>;<br><span style="color: #5c6370">// Add a green laser to the array</span>`,
+               answer: "push",
+               powerupName: "MULTI-SHOT",
+               applyOption: () => { multiShotCount += 1; }
+            },
+            {
+               html: `<span style="color: #61afef; font-weight: bold; font-size: 18px;">[DUEL INITIATED]</span><br><br><span style="color: #c678dd">function</span> <span style="color: #61afef">getUpgrade</span>() {<br>&nbsp;&nbsp;<span style="color: #c678dd">return</span> <select id="answer"><option value="none">null</option><option value="true">true</option><option value="false">false</option></select>;<br>}<br><span style="color: #5c6370">// Return true to activate</span>`,
+               answer: "true",
+               powerupName: "MEGA BLASTER",
+               applyOption: () => { projectileScale += 0.5; }
+            }
+        ];
 
         // CMYK palette
         const colors = {
@@ -108,8 +134,8 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020308); // deep space/night color
-            scene.fog = new THREE.FogExp2(0x020308, 0.007); // nice halo vibe fog
+            scene.background = new THREE.Color(0xff00aa); // very bright hot pink!
+            scene.fog = new THREE.Fog(0xff00aa, 10, 250); // clear visibility, neon fog
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ'; 
@@ -161,11 +187,11 @@
             scene.add(camera);
 
             // Tech Grid Floor
-            const gridHelper = new THREE.GridHelper(500, 150, 0x00ffff, 0x112233);
+            const gridHelper = new THREE.GridHelper(500, 150, 0x00ffff, 0xffffff);
             gridHelper.position.y = 0;
             // Add slight emission/glow plane below grid
             const planeGeo = new THREE.PlaneGeometry(500, 500);
-            const planeMat = new THREE.MeshStandardMaterial({ color: 0x050812, roughness: 0.1, metalness: 0.9 });
+            const planeMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1, metalness: 0.1, emissive: 0x0088ff });
             const plane = new THREE.Mesh(planeGeo, planeMat);
             plane.rotation.x = -Math.PI / 2;
             plane.position.y = -0.1;
@@ -173,7 +199,7 @@
             scene.add(gridHelper);
 
             // Atmospheric Lighting
-            const ambient = new THREE.HemisphereLight(0x0a1020, 0x020308, 1.5); 
+            const ambient = new THREE.HemisphereLight(0xff00ff, 0x00ffff, 2.0); 
             scene.add(ambient);
 
             // Dynamic spotlights
@@ -386,15 +412,16 @@
 
         const projectiles = [];
         function shoot(type) {
-            const pGeo = new THREE.BoxGeometry(0.8, 0.8, 4);
-            let pCol = colors.white;
+            for(let s = 0; s < multiShotCount; s++) {
+                const pGeo = new THREE.BoxGeometry(0.8 * projectileScale, 0.8 * projectileScale, 4 * projectileScale);
+                let pCol = colors.white;
 
-            if (type === 'Fire') { pCol = colors.magenta; }
-            else if (type === 'Water') { pCol = colors.cyan; }
-            else if (type === 'Laser') { pCol = colors.yellow; pGeo.scale(1.5, 1.5, 1.5); }
+                if (type === 'Fire') { pCol = colors.magenta; }
+                else if (type === 'Water') { pCol = colors.cyan; }
+                else if (type === 'Laser') { pCol = colors.yellow; pGeo.scale(1.5, 1.5, 1.5); }
 
-            const pMat = new THREE.MeshBasicMaterial({color: pCol});
-            const proj = new THREE.Mesh(pGeo, pMat);
+                const pMat = new THREE.MeshBasicMaterial({color: pCol});
+                const proj = new THREE.Mesh(pGeo, pMat);
             
             // Add point light to projectile for cool effects
             const light = new THREE.PointLight(pCol, 1, 20);
@@ -403,19 +430,25 @@
             const camPos = camera.position.clone();
             const camDir = new THREE.Vector3();
             camera.getWorldDirection(camDir);
-            
-            const finalPos = camPos.clone();
-            proj.position.copy(finalPos);
-            proj.rotation.copy(camera.rotation);
-            proj.position.add(camDir.multiplyScalar(3));
-            
-            if(type === 'Fire') proj.position.x -= 1;
-            if(type === 'Water') proj.position.x += 1;
+                        const finalPos = camPos.clone();
+                proj.position.copy(finalPos);
+                proj.rotation.copy(camera.rotation);
 
-            proj.userData = { velocity: camDir.normalize().multiplyScalar(6), type: type, life: 60 };
-            
-            scene.add(proj);
-            projectiles.push(proj);
+                if (multiShotCount > 1 && s > 0) {
+                    proj.position.x += (Math.random() - 0.5) * 3;
+                    proj.position.y += (Math.random() - 0.5) * 3;
+                }
+
+                proj.position.add(camDir.multiplyScalar(3));
+                
+                if(type === 'Fire') proj.position.x -= 1;
+                if(type === 'Water') proj.position.x += 1;
+
+                proj.userData = { velocity: camDir.normalize().multiplyScalar(6), type: type, life: 60 };
+                
+                scene.add(proj);
+                projectiles.push(proj);
+            }
         }
 
         function checkCollisions() {
@@ -446,10 +479,7 @@
                             if (e.userData.isBoss) {
                                 triggerBossCoding(e);
                             } else {
-                                scene.remove(e);
-                                enemies.splice(j, 1);
-                                score++;
-                                document.getElementById('score').innerText = score;
+                                triggerDuelCoding(e);
                             }
                         }
                         break;
@@ -482,25 +512,58 @@
                 }`;
         }
 
+        function triggerDuelCoding(enemy) {
+            document.exitPointerLock();
+            currentDuelEnemy = enemy;
+            const modal = document.getElementById('coding-modal');
+            modal.style.display = 'block';
+            
+            // Pick random question
+            currentDuelQuestion = duelQuestions[Math.floor(Math.random() * duelQuestions.length)];
+            
+            document.getElementById('code-content').innerHTML = currentDuelQuestion.html;
+        }
+
         window.checkAnswer = function() {
             const ans = document.getElementById('answer').value.toLowerCase();
-            const bName = currentBoss.userData.name.toLowerCase();
             
-            if (ans === bName || (bName === 'godzilla' && ans === 'kiju') || (bName === 'dragon' && ans === 'kiju')) {
-                // Success! Give positive reinforcement
-                alert("Correct code! You captured a Boss Kaiju!");
-                document.getElementById('coding-modal').style.display = 'none';
-                scene.remove(currentBoss);
-                enemies.splice(enemies.indexOf(currentBoss), 1);
-                score += 50;
-                document.getElementById('score').innerText = score;
-                currentBoss = null;
-                document.body.requestPointerLock();
-            } else {
-                alert("Incorrect Code! The Boss recovers health!");
-                document.getElementById('coding-modal').style.display = 'none';
-                currentBoss.userData.hp = 10; // heal boss
-                document.body.requestPointerLock();
+            if (currentBoss) {
+                const bName = currentBoss.userData.name.toLowerCase();
+                if (ans === bName || (bName === 'godzilla' && ans === 'kiju') || (bName === 'dragon' && ans === 'kiju')) {
+                    alert("Correct code! You captured a Boss Kaiju!");
+                    document.getElementById('coding-modal').style.display = 'none';
+                    scene.remove(currentBoss);
+                    enemies.splice(enemies.indexOf(currentBoss), 1);
+                    score += 50;
+                    document.getElementById('score').innerText = score;
+                    currentBoss = null;
+                    document.body.requestPointerLock();
+                } else {
+                    alert("Incorrect Code! The Boss recovers health!");
+                    document.getElementById('coding-modal').style.display = 'none';
+                    currentBoss.userData.hp = 10;
+                    document.body.requestPointerLock();
+                }
+            } else if (currentDuelEnemy) {
+                if (ans === currentDuelQuestion.answer) {
+                    alert("Duel Won! You gained: " + currentDuelQuestion.powerupName);
+                    document.getElementById('coding-modal').style.display = 'none';
+                    scene.remove(currentDuelEnemy);
+                    enemies.splice(enemies.indexOf(currentDuelEnemy), 1);
+                    score += 5;
+                    document.getElementById('score').innerText = score;
+                    currentDuelEnemy = null;
+                    currentDuelQuestion.applyOption();
+                    document.body.requestPointerLock();
+                } else {
+                    alert("Duel Lost! The enemy evaded your attack!");
+                    document.getElementById('coding-modal').style.display = 'none';
+                    currentDuelEnemy.userData.hp = 1;
+                    currentDuelEnemy.position.x += (Math.random() - 0.5) * 40;
+                    currentDuelEnemy.position.z += (Math.random() - 0.5) * 40;
+                    currentDuelEnemy = null;
+                    document.body.requestPointerLock();
+                }
             }
         }
 
@@ -519,8 +582,8 @@
                 direction.x = Number( moveRight ) - Number( moveLeft );
                 direction.normalize();
 
-                if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta;
-                if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta;
+                if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta * playerSpeedMultiplier;
+                if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta * playerSpeedMultiplier;
 
                 camera.translateX( velocity.x * delta );
                 camera.translateZ( velocity.z * delta );

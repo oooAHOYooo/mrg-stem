@@ -506,85 +506,68 @@
             createTree(tx, tz);
         }
         
-        // --- MR GONZALEZ ROBOT BOSS ---
-        let bossHealth = 100;
+        // --- INFINITE HORDE BOSSES ---
+        let bossHealth = 150;
+        let maxBossHealth = 150;
         let isBossDefeated = false;
+        let currentBossIndex = 0;
+        let activeBossModel = null;
         
         const bossGroup = new THREE.Group();
         bossGroup.position.set(0, 0, -60);
         scene.add(bossGroup);
         
-        const robotMat = new THREE.MeshLambertMaterial({color: 0xe2e8f0, wireframe: false});
-        const robotMetalMat = new THREE.MeshLambertMaterial({color: 0x94a3b8});
-        const robotAccentMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); // blue
-        
-        // Body
-        const bossBody = new THREE.Mesh(new THREE.BoxGeometry(20, 30, 15), robotMat);
-        bossBody.position.y = 25;
-        bossBody.castShadow = true;
-        bossGroup.add(bossBody);
-        
-        // Head
-        const bossHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), robotMetalMat);
-        bossHead.position.y = 50;
-        bossHead.castShadow = true;
-        bossGroup.add(bossHead);
-
-        // Face Text
-        const faceCanvas = document.createElement('canvas');
-        faceCanvas.width = 512;
-        faceCanvas.height = 512;
-        const fctx = faceCanvas.getContext('2d');
-        fctx.fillStyle = 'rgba(0,0,0,0)';
-        fctx.fillRect(0, 0, 512, 512);
-        fctx.fillStyle = '#ff0000';
-        fctx.font = 'bold 50px Inter';
-        fctx.textAlign = 'center';
-        fctx.fillText('MR GONZALEZ', 256, 100);
-        fctx.fillText('ROBOT', 256, 160);
-        fctx.fillText('MASTERMIND', 256, 220);
-        fctx.font = 'bold 60px Inter';
-        fctx.fillText('INSTRUCTIONS:', 256, 320);
-        fctx.font = 'bold 80px Inter';
-        fctx.fillText('DESTROY!', 256, 420);
-
-        const faceTexture = new THREE.CanvasTexture(faceCanvas);
-        const faceMat = new THREE.MeshBasicMaterial({map: faceTexture, transparent: true});
-        const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), faceMat);
-        facePlane.position.set(0, 50, 8.1); // slightly in front of head
-        bossGroup.add(facePlane);
-        
-        // Eyes
-        const eyeMat = new THREE.MeshBasicMaterial({color: 0xef4444}); // glowing red
-        const leftEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
-        leftEye.position.set(-4, 52, 8);
-        bossGroup.add(leftEye);
-        const rightEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
-        rightEye.position.set(4, 52, 8);
-        bossGroup.add(rightEye);
-        
-        // Arms
-        const leftArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
-        leftArm.position.set(-15, 25, 0);
-        bossGroup.add(leftArm);
-        const rightArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
-        rightArm.position.set(15, 25, 0);
-        bossGroup.add(rightArm);
-        
-        // Legs
-        const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
-        leftLeg.position.set(-6, 7.5, 0);
-        bossGroup.add(leftLeg);
-        const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
-        rightLeg.position.set(6, 7.5, 0);
-        bossGroup.add(rightLeg);
-        
-        // Hitbox for the boss (invisible)
         const bossHitbox = new THREE.Mesh(new THREE.BoxGeometry(40, 60, 40), new THREE.MeshBasicMaterial({visible: false}));
         bossHitbox.position.y = 30;
         bossGroup.add(bossHitbox);
         
         document.getElementById('boss-health-container').style.display = 'block';
+        
+        function createRobotBoss() {
+            const group = new THREE.Group();
+            const robotMat = new THREE.MeshLambertMaterial({color: 0xe2e8f0});
+            const robotMetalMat = new THREE.MeshLambertMaterial({color: 0x94a3b8});
+            const robotAccentMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); 
+            
+            const bBody = new THREE.Mesh(new THREE.BoxGeometry(20, 30, 15), robotMat);
+            bBody.position.y = 25; bBody.castShadow = true; group.add(bBody);
+            
+            const bHead = new THREE.Mesh(new THREE.BoxGeometry(16, 16, 16), robotMetalMat);
+            bHead.position.y = 50; bHead.castShadow = true; group.add(bHead);
+
+            const faceCanvas = document.createElement('canvas');
+            faceCanvas.width = 512; faceCanvas.height = 512;
+            const fctx = faceCanvas.getContext('2d');
+            fctx.fillStyle = 'rgba(0,0,0,0)'; fctx.fillRect(0, 0, 512, 512);
+            fctx.fillStyle = '#ff0000'; fctx.font = 'bold 50px Inter'; fctx.textAlign = 'center';
+            fctx.fillText('MR GONZALEZ', 256, 100); fctx.fillText('ROBOT', 256, 160);
+            fctx.fillText('MASTERMIND', 256, 220); fctx.font = 'bold 60px Inter';
+            fctx.fillText('INSTRUCTIONS:', 256, 320); fctx.font = 'bold 80px Inter';
+            fctx.fillText('DESTROY!', 256, 420);
+
+            const faceTexture = new THREE.CanvasTexture(faceCanvas);
+            const faceMat = new THREE.MeshBasicMaterial({map: faceTexture, transparent: true});
+            const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), faceMat);
+            facePlane.position.set(0, 50, 8.1); group.add(facePlane);
+            
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0xef4444}); 
+            const lEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
+            lEye.position.set(-4, 52, 8); group.add(lEye);
+            const rEye = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 2), eyeMat);
+            rEye.position.set(4, 52, 8); group.add(rEye);
+            
+            const lArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
+            lArm.position.set(-15, 25, 0); group.add(lArm);
+            const rArm = new THREE.Mesh(new THREE.BoxGeometry(8, 25, 8), robotAccentMat);
+            rArm.position.set(15, 25, 0); group.add(rArm);
+            
+            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
+            lLeg.position.set(-6, 7.5, 0); group.add(lLeg);
+            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
+            rLeg.position.set(6, 7.5, 0); group.add(rLeg);
+            
+            return group;
+        }
 
         // --- MINI ROBOTS (HOMEWORK) ---
         let homeworksCompleted = 0;
@@ -1178,15 +1161,27 @@
         function damageBoss(amount) {
             bossHealth -= amount;
             if(bossHealth < 0) bossHealth = 0;
-            document.getElementById('boss-health-bar').style.width = bossHealth + '%';
+            document.getElementById('boss-health-bar').style.width = (bossHealth / maxBossHealth * 100) + '%';
             
             // Flash boss red
-            bossBody.material.color.setHex(0xff0000);
-            bossHead.material.color.setHex(0xff0000);
+            if (activeBossModel) {
+                activeBossModel.traverse(mesh => {
+                    if (mesh.isMesh && mesh.material && mesh.material.color) {
+                        if (mesh.userData.origColor === undefined) {
+                             mesh.userData.origColor = mesh.material.color.getHex();
+                        }
+                        mesh.material.color.setHex(0xff0000);
+                    }
+                });
+            }
+
             setTimeout(() => {
-                if(!isBossDefeated) {
-                    bossBody.material.color.setHex(0xe2e8f0);
-                    bossHead.material.color.setHex(0x94a3b8);
+                if(!isBossDefeated && activeBossModel) {
+                    activeBossModel.traverse(mesh => {
+                        if (mesh.isMesh && mesh.material && mesh.material.color && mesh.userData.origColor !== undefined) {
+                            mesh.material.color.setHex(mesh.userData.origColor);
+                        }
+                    });
                 }
             }, 300);
             
@@ -1378,74 +1373,169 @@
             activeDragons.push(ld);
         }
 
-        let isDragon = false;
-        let isDinosaur = false;
-        let activeDinosaur = null;
-        
-        function defeatBoss() {
-            if (!isDragon && !isDinosaur) {
-                isDragon = true;
-                bossHealth = 100;
-                document.getElementById('boss-health-text').textContent = "DRAGON";
-                document.getElementById('boss-health-bar').style.width = '100%';
-                document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #10b981, #34d399)';
-                
-                bossBody.visible = false;
-                bossHead.visible = false;
-                leftArm.visible = false;
-                rightArm.visible = false;
-                leftLeg.visible = false;
-                rightLeg.visible = false;
-                facePlane.visible = false;
-                leftEye.visible = false;
-                rightEye.visible = false;
+        let inParkour = false;
+        let hasFireballAbility = false;
+        let mountCycle = 0;
+        const parkourObjects = [];
+        let parkourGoal = null;
 
-                const dragonGroup = createCoolDragon();
-                dragonGroup.position.set(0, 25, 0);
-                dragonGroup.scale.set(1.5, 1.5, 1.5);
-                bossGroup.add(dragonGroup);
-                activeDragons.push(dragonGroup);
+        function createBear(colorBase = 0x8b4513) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({color: colorBase});
+            const body = new THREE.Mesh(new THREE.BoxGeometry(20, 15, 30), mat); body.position.set(0, 0, 0); body.castShadow = true; group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), mat); head.position.set(0, 8, 18); head.castShadow = true; group.add(head);
+            const snout = new THREE.Mesh(new THREE.BoxGeometry(8, 6, 8), new THREE.MeshLambertMaterial({color: 0xd2b48c})); snout.position.set(0, 4, 24); group.add(snout);
+            const lFront = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 6), mat); lFront.position.set(-8, -10, 10); group.add(lFront);
+            const rFront = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 6), mat); rFront.position.set(8, -10, 10); group.add(rFront);
+            const lBack = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 6), mat); lBack.position.set(-8, -10, -10); group.add(lBack);
+            const rBack = new THREE.Mesh(new THREE.BoxGeometry(6, 10, 6), mat); rBack.position.set(8, -10, -10); group.add(rBack);
+            group.userData.headGroup = head; return group;
+        }
 
-                riddles.length = 0;
-                riddles.push(
-                    { q: "What is the primary gas found in Earth's atmosphere?", opts: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], a: 2 },
-                    { q: "What is the fundamental unit of matter?", opts: ["Molecule", "Atom", "Electron", "Cell"], a: 1 },
-                    { q: "In chemistry, what is the pH of pure water at room temperature?", opts: ["0", "7", "14", "10"], a: 1 }
-                );
-            } else if (isDragon && !isDinosaur) {
-                isDinosaur = true;
-                bossHealth = 150;
-                document.getElementById('boss-health-text').textContent = "DINOSAUR BOSS";
-                document.getElementById('boss-health-bar').style.width = '100%';
+        function createEagle(col = 0xa0522d) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({color: col});
+            const whiteMat = new THREE.MeshLambertMaterial({color: 0xffffff});
+            const beakMat = new THREE.MeshLambertMaterial({color: 0xffd700});
+            const body = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 20), mat); group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 8), whiteMat); head.position.set(0, 5, 12); group.add(head);
+            const beak = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 4), beakMat); beak.rotation.x = Math.PI / 2; beak.position.set(0, 3, 18); group.add(beak);
+            const pivotL = new THREE.Group(); pivotL.position.set(-5, 5, 0);
+            const wL = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 12), mat); wL.position.set(-15, 0, 0); pivotL.add(wL); group.add(pivotL);
+            const pivotR = new THREE.Group(); pivotR.position.set(5, 5, 0);
+            const wR = new THREE.Mesh(new THREE.BoxGeometry(30, 2, 12), mat); wR.position.set(15, 0, 0); pivotR.add(wR); group.add(pivotR);
+            group.userData.pivotL = pivotL; group.userData.pivotR = pivotR; group.userData.headGroup = head;
+            return group;
+        }
+
+        function startParkour() {
+            inParkour = true;
+            controls.getObject().position.set(0, 1000, 0);
+            velocity.set(0, 0, 0);
+
+            const mat = new THREE.MeshLambertMaterial({color: 0x9333ea, emissive: 0x6b21a8});
+            const startPlat = new THREE.Mesh(new THREE.BoxGeometry(20, 5, 20), mat);
+            startPlat.position.set(0, 990, 0); scene.add(startPlat); objects.push(startPlat); parkourObjects.push(startPlat);
+
+            for(let i=1; i<=10; i++) {
+                const jump = new THREE.Mesh(new THREE.BoxGeometry(10, 5, 10), mat);
+                jump.position.set(0, 990 + i*5, -i * 25); scene.add(jump); objects.push(jump); parkourObjects.push(jump);
+            }
+            
+            const endMat = new THREE.MeshLambertMaterial({color: 0xf59e0b, emissive: 0xd97706});
+            const endPlat = new THREE.Mesh(new THREE.BoxGeometry(30, 5, 30), endMat);
+            endPlat.position.set(0, 990 + 11*5, -11 * 25); scene.add(endPlat); objects.push(endPlat); parkourObjects.push(endPlat);
+            
+            const goal = new THREE.Mesh(new THREE.TorusGeometry(8, 2, 16, 100), new THREE.MeshBasicMaterial({color: 0xff0000}));
+            goal.position.set(0, 1000 + 11*5 + 10, -11 * 25); scene.add(goal); parkourGoal = goal;
+            
+            document.getElementById('boss-health-container').style.display = 'none';
+            const msg = document.createElement('div');
+            msg.style.position = 'absolute'; msg.style.top = '30%'; msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#c084fc';
+            msg.style.fontSize = '48px'; msg.style.fontWeight = 'bold'; msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
+            msg.textContent = "NEW ABILITY UNLOCKED IN THE SKY! CLIMB!"; document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 4000);
+        }
+
+        function completeParkour() {
+            inParkour = false;
+            hasFireballAbility = true;
+            parkourObjects.forEach(obj => { scene.remove(obj); const idx = objects.indexOf(obj); if (idx > -1) objects.splice(idx, 1); });
+            parkourObjects.length = 0;
+            if(parkourGoal) scene.remove(parkourGoal); parkourGoal = null;
+            
+            controls.getObject().position.set(0, 50, 0); velocity.set(0, 0, 0);
+            
+            const msg = document.createElement('div');
+            msg.style.position = 'absolute'; msg.style.top = '30%'; msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#ef4444';
+            msg.style.fontSize = '48px'; msg.style.fontWeight = 'bold'; msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
+            msg.textContent = "FIREBALL CAPABILITY UNLOCKED! LEFT CLICK TO SHOOT!"; document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 4000);
+            
+            spawnBoss(3);
+        }
+
+        function spawnBoss(index) {
+            if (index === 3 && !hasFireballAbility && !inParkour) {
+                startParkour();
+                return;
+            }
+            if(activeBossModel) {
+                bossGroup.remove(activeBossModel);
+                activeBossModel = null;
+            }
+            bossGroup.position.y = 0;
+            bossGroup.rotation.z = 0;
+            isBossDefeated = false;
+            let type = index % 3;
+            
+            if (type === 0) {
+                activeBossModel = createDinosaur();
+                activeBossModel.position.set(0, 25, 0);
+                maxBossHealth = 150 + (Math.floor(index/3)*50);
+                document.getElementById('boss-health-text').textContent = "DINOSAUR BOSS (WAVE " + (index+1) + ")";
                 document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
-                
-                activeDragons.forEach(d => {
-                    if (d.scale.x === 1.5) d.visible = false;
-                });
-
-                const dinoGroup = createDinosaur();
-                dinoGroup.position.set(0, 25, 0);
-                bossGroup.add(dinoGroup);
-                activeDinosaur = dinoGroup;
-
                 riddles.length = 0;
                 riddles.push(
                     { q: "What force keeps the planets in orbit around the sun?", opts: ["Magnetism", "Gravity", "Friction", "Inertia"], a: 1 },
                     { q: "Which state of matter has a definite volume but no definite shape?", opts: ["Solid", "Liquid", "Gas", "Plasma"], a: 1 },
                     { q: "What is the term for the amount of matter in an object?", opts: ["Weight", "Volume", "Mass", "Density"], a: 2 }
                 );
-            } else {
-                isBossDefeated = true;
-                document.getElementById('boss-health-text').textContent = "DEFEATED";
-                if (typeof bombInterval !== 'undefined' && bombInterval) clearInterval(bombInterval);
-                
-                setInterval(() => {
-                    bossGroup.position.y -= 1;
-                    bossGroup.rotation.z += 0.05;
-                    if(bossGroup.position.y < -50) bossGroup.visible = false;
-                }, 50);
+            } else if (type === 1) {
+                activeBossModel = createRobotBoss();
+                maxBossHealth = 200 + (Math.floor(index/3)*50);
+                document.getElementById('boss-health-text').textContent = "MR GONZALEZ ROBOT (WAVE " + (index+1) + ")";
+                document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #3b82f6, #60a5fa)';
+                riddles.length = 0;
+                riddles.push(
+                    { q: "In physics, what is the tendency of a body to resist a change in motion?", opts: ["Gravity", "Friction", "Inertia", "Velocity"], a: 2 },
+                    { q: "What mathematical sequence starts with 0 and 1, and each subsequent number is the sum of the previous two?", opts: ["Prime Numbers", "Fibonacci Sequence", "Geometric Progression", "Pascal's Triangle"], a: 1 },
+                    { q: "Which engineering concept refers to a bridge's ability to balance pushing (compression) and pulling (tension) forces?", opts: ["Aerodynamics", "Structural Equilibrium", "Thermodynamics", "Conductivity"], a: 1 }
+                );
+            } else if (type === 2) {
+                activeBossModel = createCoolDragon();
+                activeBossModel.position.set(0, 25, 0);
+                activeBossModel.scale.set(1.5, 1.5, 1.5);
+                maxBossHealth = 250 + (Math.floor(index/3)*50);
+                document.getElementById('boss-health-text').textContent = "DRAGON BOSS (WAVE " + (index+1) + ")";
+                document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                riddles.length = 0;
+                riddles.push(
+                    { q: "What is the primary gas found in Earth's atmosphere?", opts: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], a: 2 },
+                    { q: "What is the fundamental unit of matter?", opts: ["Molecule", "Atom", "Electron", "Cell"], a: 1 },
+                    { q: "In chemistry, what is the pH of pure water at room temperature?", opts: ["0", "7", "14", "10"], a: 1 }
+                );
             }
+            bossHealth = maxBossHealth;
+            document.getElementById('boss-health-bar').style.width = '100%';
+            bossGroup.add(activeBossModel);
+            bossGroup.visible = true;
         }
+
+        function defeatBoss() {
+            isBossDefeated = true;
+            document.getElementById('boss-health-text').textContent = "NEXT WAVE INCOMING...";
+            
+            let sinkTicks = 0;
+            const sinkInt = setInterval(() => {
+                bossGroup.position.y -= 1;
+                bossGroup.rotation.z += 0.05;
+                sinkTicks++;
+                if(sinkTicks > 60) {
+                    clearInterval(sinkInt);
+                    bossGroup.visible = false;
+                    setTimeout(() => {
+                        currentBossIndex++;
+                        spawnBoss(currentBossIndex);
+                    }, 2000);
+                }
+            }, 50);
+        }
+        
+        // Initial boss spawn
+        setTimeout(() => spawnBoss(0), 100);
 
         // --- BOMB & PLANE MECHANIC ---
         let planeInterval;
@@ -1704,9 +1794,30 @@
             });
         }
 
+        const fireballs = [];
+        function shootFireball() {
+            const geo = new THREE.SphereGeometry(1.5, 16, 16);
+            const mat = new THREE.MeshBasicMaterial({color: 0xff3300});
+            const fb = new THREE.Mesh(geo, mat);
+            raycaster.setFromCamera( mouse, camera );
+            const dir = raycaster.ray.direction.clone().normalize();
+            
+            fb.position.copy(controls.getObject().position).add(dir.clone().multiplyScalar(5));
+            scene.add(fb);
+            fireballs.push({ mesh: fb, velocity: dir.multiplyScalar(300), active: true });
+            
+            const light = new THREE.PointLight(0xff5500, 1, 50);
+            fb.add(light);
+        }
+
         document.addEventListener( 'mousedown', (event) => {
             if (!controls.isLocked) return;
-            if (event.button === 0) breakBlock(); // Left click to break
+            if (event.button === 0) {
+                if (hasFireballAbility) {
+                    shootFireball();
+                }
+                breakBlock(); 
+            }
             if (event.button === 2) placeBlock(); // Right click to place
         });
 
@@ -1777,29 +1888,32 @@
                     window.toggleBlockSize(); 
                     break;
                 case 'KeyF':
-                    isFlyMode = !isFlyMode;
-                    if(isFlyMode) {
+                    if (isFlyMode) {
+                        isFlyMode = false;
+                        flyStatus.style.display = 'none';
+                        removeRidableDragon();
+                    } else {
+                        isFlyMode = true;
                         flyStatus.style.display = 'block';
-                        velocity.y = 0; // stop falling instantly when entering fly mode
+                        velocity.y = 0; 
                         canJump = false;
 
-                        // Spawn ridable dragon
                         if(!ridableDragon) {
-                            ridableDragon = createCoolDragon();
-                            ridableDragon.scale.set(0.12, 0.12, 0.12);
-                            // Position it beneath and slightly forward of camera
-                            ridableDragon.position.set(0, -3, -4);
+                            const cBase = Math.floor(Math.random()*16777215);
+                            let mountType = mountCycle % 3; // 0=Dragon, 1=Bear, 2=Eagle
+                            mountCycle++;
                             
-                            // It faces forward by default (Z positive in its local space)
-                            // But usually three.js camera looks down -Z. So we may need to spin it 180 or not based on our Z.
-                            ridableDragon.rotation.y = Math.PI; // Face away from camera (-Z direction)
+                            if (mountType === 0) ridableDragon = createCoolDragon(cBase);
+                            else if (mountType === 1) ridableDragon = createBear(cBase);
+                            else ridableDragon = createEagle(cBase);
+                            
+                            ridableDragon.scale.set(0.12, 0.12, 0.12);
+                            ridableDragon.position.set(0, -3, -4);
+                            ridableDragon.rotation.y = Math.PI;
 
                             controls.getObject().add(ridableDragon);
                             activeDragons.push(ridableDragon);
                         }
-                    } else {
-                        flyStatus.style.display = 'none';
-                        removeRidableDragon();
                     }
                     break;
                 case 'Digit1': window.selectColor(0); break;
@@ -1998,8 +2112,53 @@
                     }
                 }
 
+                // Update active fireballs
+                for (let i = fireballs.length - 1; i >= 0; i--) {
+                    const fb = fireballs[i];
+                    if (!fb.active) continue;
+                    fb.mesh.position.add(fb.velocity.clone().multiplyScalar(delta));
+                    
+                    if(activeBossModel && !isBossDefeated && fb.mesh.position.distanceTo(bossGroup.position) < 40) {
+                        createExplosion(fb.mesh.position);
+                        scene.remove(fb.mesh);
+                        fb.active = false;
+                        fireballs.splice(i, 1);
+                        damageBoss(15);
+                        continue;
+                    }
+
+                    downRaycaster.ray.origin.copy(fb.mesh.position);
+                    downRaycaster.ray.direction.set(fb.velocity.x, fb.velocity.y, fb.velocity.z).normalize();
+                    const hits = downRaycaster.intersectObjects(objects, false);
+                    if (hits.length > 0 && hits[0].distance < 3) {
+                        createExplosion(fb.mesh.position);
+                        scene.remove(fb.mesh);
+                        fb.active = false;
+                        fireballs.splice(i, 1);
+                        continue;
+                    }
+                    
+                    if (fb.mesh.position.y < -50 || fb.mesh.position.x > 1000 || fb.mesh.position.x < -1000) {
+                        scene.remove(fb.mesh);
+                        fireballs.splice(i, 1);
+                    }
+                }
+
                 // Animation updates inside the loop
                 const pPos = controls.getObject().position;
+
+                if (inParkour) {
+                    if (parkourGoal) {
+                        parkourGoal.rotation.y += 0.05;
+                        if (pPos.distanceTo(parkourGoal.position) < 20) {
+                            completeParkour();
+                        }
+                    }
+                    if (pPos.y < 500) {
+                        controls.getObject().position.set(0, 1000, 0);
+                        velocity.set(0,0,0);
+                    }
+                }
 
                 // Flap dragons wings
                 for (let i = 0; i < activeDragons.length; i++) {
