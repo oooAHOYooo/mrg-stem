@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Magic FPS - MGE</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; color: white; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; border: 2px solid #0ff; border-radius: 50%; pointer-events: none; }
+        #ui { position: absolute; bottom: 20px; left: 20px; font-size: 24px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #f0f; }
+        #instructions { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); z-index: 100; cursor: pointer; }
+        .neon-text { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff; }
+        .neon-text-magenta { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #f0f, 0 0 40px #f0f, 0 0 80px #f0f; }
+        .btn { background: #111; border: 2px solid #0ff; color: #0ff; padding: 10px 20px; font-size: 20px; cursor: pointer; border-radius: 5px; margin-top: 20px; text-transform: uppercase; box-shadow: 0 0 10px #0ff; }
+        .btn:hover { background: #0ff; color: #000; }
+        #coding-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 4px solid #ff0; padding: 30px; border-radius: 10px; z-index: 200; box-shadow: 0 0 30px #ff0; text-align: center; }
+        select { font-size: 18px; padding: 5px; background: #222; color: #ff0; border: 1px solid #ff0; }
+        .code-block { background: #222; padding: 20px; border-radius: 5px; text-align: left; font-family: monospace; font-size: 18px; margin: 20px 0; color: #0ff; }
+        .btn-hub { position: absolute; top: 20px; left: 20px; z-index: 1000; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <a href="mge.html" class="btn btn-hub">🏠 Return to Hub</a>
+    <div id="crosshair"></div>
+    <div id="ui">
+        Captured Monsters: <span id="score" style="color: #0ff">0</span><br>
+        <span style="font-size: 18px; color: #ff0; text-shadow: none;">Element Shifting Action! Use opposites, or just blast them!</span><br>
+        <span style="font-size: 16px; color: #f0f">Left Click: Fire (Magenta) | Right Click: Water (Cyan) | E: Lazer Eyes (Yellow)</span>
+    </div>
+    
+    <div id="instructions">
+        <h1 class="neon-text" style="font-size: 60px;">MAGIC FPS: KAIJU RESCUE</h1>
+        <h2 class="neon-text-magenta">CMYK NEON EDITION</h2>
+        <p style="font-size: 20px; text-align: center; color: #ff0; text-shadow: 0 0 10px #ff0;">
+            Click to Play!<br><br>
+            WASD: Move &nbsp;|&nbsp; Mouse: Look &nbsp;|&nbsp; Esc: Pause<br>
+            You have blocky Minecraft hands!<br>
+            Defeat the shape-shifting Godzilla and Dragon to save the world!<br>
+            Solve basic block coding challenges to capture bosses like Pokemon!
+        </p>
+    </div>
+
+    <div id="coding-modal">
+        <h2 style="color: #ff0; text-shadow: 0 0 10px #ff0;">BOSS CHALLENGE!</h2>
+        <p>Complete the block code to capture the Kaiju!</p>
+        <div class="code-block" id="code-content">
+            <span style="color: #f0f">if</span> (enemy.type == <span style="color: #0ff">"Godzilla"</span>) {<br>
+            &nbsp;&nbsp;player.capture(<select id="answer"><option value="dragon">dragon</option><option value="godzilla">godzilla</option><option value="kiju">kiju</option></select>);<br>
+            }
+        </div>
+        <button class="btn" style="border-color: #ff0; color: #ff0; box-shadow: 0 0 10px #ff0;" onclick="checkAnswer()">Execute Code ⚡</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let camera, scene, renderer;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let velocity = new THREE.Vector3();
+        let direction = new THREE.Vector3();
+        let prevTime = performance.now();
+        const objects = [];
+        let score = 0;
+        let enemies = [];
+        let currentBoss = null;
+
+        // CMYK palette
+        const colors = {
+            cyan: 0x00ffff,
+            magenta: 0xff00ff,
+            yellow: 0xffff00,
+            black: 0x111111,
+            white: 0xffffff
+        };
+
+        const typeColors = [colors.magenta, colors.cyan, colors.yellow];
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505); // near black
+            scene.fog = new THREE.FogExp2(0x050505, 0.015);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.rotation.order = 'YXZ'; 
+            camera.position.y = 10;
+
+            // Hands - Blocky Minecraft Style Fingers
+            const handGeo = new THREE.BoxGeometry(0.8, 0.8, 2.5);
+            const fingerGeo = new THREE.BoxGeometry(0.3, 0.3, 1.5);
+            
+            // Left Hand (Magenta - Fire)
+            const leftHand = new THREE.Group();
+            const lHandMesh = new THREE.Mesh(handGeo, new THREE.MeshBasicMaterial({color: colors.magenta, wireframe: true}));
+            leftHand.add(lHandMesh);
+            // block fingers
+            for(let i=-0.2; i<=0.2; i+=0.4) {
+                const lFinger = new THREE.Mesh(fingerGeo, new THREE.MeshBasicMaterial({color: colors.magenta}));
+                lFinger.position.set(i, 0.3, -1.5);
+                leftHand.add(lFinger);
+            }
+            leftHand.position.set(-2, -1.5, -4);
+            camera.add(leftHand);
+
+            // Right Hand (Cyan - Water)
+            const rightHand = new THREE.Group();
+            const rHandMesh = new THREE.Mesh(handGeo, new THREE.MeshBasicMaterial({color: colors.cyan, wireframe: true}));
+            rightHand.add(rHandMesh);
+            for(let i=-0.2; i<=0.2; i+=0.4) {
+                const rFinger = new THREE.Mesh(fingerGeo, new THREE.MeshBasicMaterial({color: colors.cyan}));
+                rFinger.position.set(i, 0.3, -1.5);
+                rightHand.add(rFinger);
+            }
+            rightHand.position.set(2, -1.5, -4);
+            camera.add(rightHand);
+
+            scene.add(camera);
+
+            // Neon Grid Floor
+            const gridHelper = new THREE.GridHelper(400, 100, colors.cyan, colors.magenta);
+            scene.add(gridHelper);
+
+            // Ambient Light & Dir Light (for solid colors)
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+            const dir = new THREE.DirectionalLight(0xffffff, 0.5);
+            dir.position.set(10, 20, 10);
+            scene.add(dir);
+
+            // Level layout obstacles
+            const boxGeo = new THREE.BoxGeometry(20, 20, 20);
+            const boxMat = new THREE.MeshBasicMaterial({ color: colors.yellow, wireframe: true });
+            for ( let i = 0; i < 40; i ++ ) {
+                const box = new THREE.Mesh( boxGeo, boxMat );
+                box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
+                box.position.y = 10;
+                box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
+                scene.add( box );
+                objects.push(box);
+            }
+
+            // Spawn Pokemon-like Enemies 
+            for(let i=0; i<30; i++) spawnEnemy();
+            
+            // Spawn Bosses (Godzilla & Dragon with Kaiju Influence)
+            spawnBoss('Godzilla', -80, -80);
+            spawnBoss('Dragon', 80, 80);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Controls
+            const instructions = document.getElementById('instructions');
+            instructions.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            });
+            
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement === document.body) {
+                    instructions.style.display = 'none';
+                } else {
+                    if(document.getElementById('coding-modal').style.display !== 'block') {
+                        instructions.style.display = 'flex';
+                    }
+                }
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    camera.rotation.y -= e.movementX * 0.002;
+                    camera.rotation.x -= e.movementY * 0.002;
+                    // limit vertical look
+                    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+                }
+            });
+
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function spawnEnemy() {
+            // Little cube enemies that shape shift
+            const col = typeColors[Math.floor(Math.random()*3)];
+            
+            // Simple geometry (pokemon blocky style)
+            const grp = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), new THREE.MeshStandardMaterial({color: col}));
+            const face = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({color: colors.black}));
+            face.position.z = 2.01;
+            grp.add(body);
+            grp.add(face);
+            
+            grp.position.x = (Math.random() - 0.5) * 300;
+            grp.position.z = (Math.random() - 0.5) * 300;
+            grp.position.y = 2; // on ground
+            
+            grp.userData = { 
+                isBoss: false, hp: 1, 
+                bodyMesh: body, 
+                shiftTimer: Math.random() // staggered shifts
+            };
+            
+            scene.add(grp);
+            enemies.push(grp);
+        }
+
+        function spawnBoss(name, x, z) {
+            const bossGroup = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({color: colors.magenta, emissive: 0x330033});
+            
+            if (name === 'Godzilla') {
+                // Blocky Kaiju structure
+                const body = new THREE.Mesh(new THREE.BoxGeometry(12, 24, 12), mat);
+                body.position.y = 12;
+                bossGroup.add(body);
+                
+                const head = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 10), mat);
+                head.position.set(0, 28, 4);
+                bossGroup.add(head);
+
+                // spikes
+                for(let i=0; i<4; i++) {
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 4), mat);
+                    spike.position.set(0, 22 - i*5, -6);
+                    spike.rotation.x = -Math.PI/4;
+                    bossGroup.add(spike);
+                }
+            } else {
+                // Dragon
+                const body = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 24), mat);
+                body.position.y = 15;
+                bossGroup.add(body);
+                
+                const head = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 10), mat);
+                head.position.set(0, 15, 12);
+                bossGroup.add(head);
+
+                const wings = new THREE.Mesh(new THREE.PlaneGeometry(30, 10), mat);
+                wings.position.y = 20;
+                wings.rotation.x = -Math.PI/2;
+                bossGroup.add(wings);
+            }
+
+            bossGroup.position.set(x, 0, z);
+            bossGroup.userData = { isBoss: true, name: name, hp: 10, mats: [mat], shiftTimer: 0 };
+            
+            scene.add(bossGroup);
+            enemies.push(bossGroup);
+        }
+
+        function onKeyDown(e) {
+            if(document.pointerLockElement !== document.body) return;
+            switch(e.code) {
+                case 'KeyW': moveForward = true; break;
+                case 'KeyA': moveLeft = true; break;
+                case 'KeyS': moveBackward = true; break;
+                case 'KeyD': moveRight = true; break;
+                case 'KeyE': shoot('Laser'); break; // Lazer Eyes
+            }
+        }
+        function onKeyUp(e) {
+            switch(e.code) {
+                case 'KeyW': moveForward = false; break;
+                case 'KeyA': moveLeft = false; break;
+                case 'KeyS': moveBackward = false; break;
+                case 'KeyD': moveRight = false; break;
+            }
+        }
+        function onMouseDown(e) {
+            if(document.pointerLockElement !== document.body) return;
+            if(e.button === 0) shoot('Fire'); // Left click
+            if(e.button === 2) shoot('Water'); // Right click
+        }
+        // prevent context menu on right click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        const projectiles = [];
+        function shoot(type) {
+            // left hand fire (Magenta), right hand water (Cyan), eyes laser (Yellow)
+            const pGeo = new THREE.BoxGeometry(1.5, 1.5, 3);
+            let pCol = colors.white;
+            let startOffset = new THREE.Vector3();
+
+            if (type === 'Fire') { pCol = colors.magenta; startOffset.set(-2, -1.5, -5); }
+            else if (type === 'Water') { pCol = colors.cyan; startOffset.set(2, -1.5, -5); }
+            else if (type === 'Laser') { pCol = colors.yellow; startOffset.set(0, 0, -2); pGeo.scale(2, 2, 2); }
+
+            const pMat = new THREE.MeshBasicMaterial({color: pCol});
+            const proj = new THREE.Mesh(pGeo, pMat);
+
+            // Compute direct forward position
+            const camPos = camera.position.clone();
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            
+            // Actually place projectile offset relative to camera
+            const finalPos = camPos.clone();
+            proj.position.copy(finalPos);
+            
+            // Align rotation somewhat to camera
+            proj.rotation.copy(camera.rotation);
+            
+            // Move it slightly forward
+            proj.position.add(camDir.multiplyScalar(2));
+            
+            // If it's a hand attack, jitter X slightly for effect 
+            if(type === 'Fire') proj.position.x -= 2;
+            if(type === 'Water') proj.position.x += 2;
+
+            proj.userData = { velocity: camDir.normalize().multiplyScalar(4), type: type, life: 50 };
+            
+            scene.add(proj);
+            projectiles.push(proj);
+        }
+
+        function checkCollisions() {
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const p = projectiles[i];
+                p.position.add(p.userData.velocity);
+                p.userData.life--;
+                
+                let hit = false;
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const e = enemies[j];
+                    const dist = p.position.distanceTo(e.position);
+                    
+                    // Simple radial collision
+                    if (dist < (e.userData.isBoss ? 20 : 6)) {
+                        hit = true;
+                        e.userData.hp--;
+                        
+                        // Hit reaction
+                        if (e.userData.isBoss) {
+                            e.userData.mats[0].color.setHex(colors.white);
+                        } else {
+                            e.userData.bodyMesh.material.color.setHex(colors.white);
+                        }
+
+                        if (e.userData.hp <= 0) {
+                            // Captured!
+                            if (e.userData.isBoss) {
+                                triggerBossCoding(e);
+                            } else {
+                                scene.remove(e);
+                                enemies.splice(j, 1);
+                                score++;
+                                document.getElementById('score').innerText = score;
+                            }
+                        }
+                        break;
+                    }
+                }
+                
+                if (hit || p.userData.life <= 0) {
+                    scene.remove(p);
+                    projectiles.splice(i, 1);
+                }
+            }
+        }
+
+        function triggerBossCoding(boss) {
+            document.exitPointerLock();
+            currentBoss = boss;
+            const modal = document.getElementById('coding-modal');
+            modal.style.display = 'block';
+            
+            document.getElementById('code-content').innerHTML = 
+                `<span style="color: #f0f">if</span> (enemy.type == <span style="color: #0ff">"${boss.userData.name}"</span>) {<br>
+                &nbsp;&nbsp;player.capture(<select id="answer">
+                    <option value="none">-- select --</option>
+                    <option value="dragon">dragon</option>
+                    <option value="godzilla">godzilla</option>
+                    <option value="kiju">kiju</option>
+                </select>);<br>
+                }`;
+        }
+
+        window.checkAnswer = function() {
+            const ans = document.getElementById('answer').value.toLowerCase();
+            const bName = currentBoss.userData.name.toLowerCase();
+            
+            if (ans === bName || (bName === 'godzilla' && ans === 'kiju') || (bName === 'dragon' && ans === 'kiju')) {
+                // Success! Give positive reinforcement
+                alert("Correct code! You captured a Boss Kaiju!");
+                document.getElementById('coding-modal').style.display = 'none';
+                scene.remove(currentBoss);
+                enemies.splice(enemies.indexOf(currentBoss), 1);
+                score += 50;
+                document.getElementById('score').innerText = score;
+                currentBoss = null;
+                document.body.requestPointerLock();
+            } else {
+                alert("Incorrect Code! The Boss recovers health!");
+                document.getElementById('coding-modal').style.display = 'none';
+                currentBoss.userData.hp = 10; // heal boss
+                document.body.requestPointerLock();
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame( animate );
+            
+            const time = performance.now();
+            const delta = ( time - prevTime ) / 1000;
+
+            if ( document.pointerLockElement === document.body ) {
+                // Player Physics / Movement
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                
+                direction.z = Number( moveForward ) - Number( moveBackward );
+                direction.x = Number( moveRight ) - Number( moveLeft );
+                direction.normalize();
+
+                if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta;
+                if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta;
+
+                camera.translateX( velocity.x * delta );
+                camera.translateZ( velocity.z * delta );
+                camera.position.y = 10;
+                
+                // Boundaries
+                if (camera.position.x < -180) camera.position.x = -180;
+                if (camera.position.x > 180) camera.position.x = 180;
+                if (camera.position.z < -180) camera.position.z = -180;
+                if (camera.position.z > 180) camera.position.z = 180;
+            }
+
+            checkCollisions();
+
+            // Element Shape Shifting & Animations!
+            enemies.forEach(e => {
+                e.userData.shiftTimer += delta;
+                if(e.userData.isBoss) {
+                    if(e.userData.shiftTimer > 3) {
+                        e.userData.shiftTimer = 0;
+                        e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                    } else if (e.userData.shiftTimer > 0.2 && e.userData.mats[0].color.getHex() === colors.white) {
+                        // Restore color after hit
+                        e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                    }
+                    
+                    // Idle turning and bobbing
+                    e.rotation.y += delta * 0.5;
+                    e.position.y = Math.sin(time * 0.003) * 3;
+                    
+                    // Face player slowly
+                    e.lookAt(camera.position.x, e.position.y, camera.position.z);
+                    
+                } else {
+                    // Small enemies shape shift elements frequently 
+                    if(e.userData.shiftTimer > 2) {
+                        e.userData.shiftTimer = 0;
+                        e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                    } else if (e.userData.shiftTimer > 0.1 && e.userData.bodyMesh.material.color.getHex() === colors.white) {
+                         e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                    }
+                    
+                    e.rotation.y += delta;
+                    e.position.y = 2 + Math.abs(Math.sin(time * 0.005 + e.position.x)) * 2; // bouncing
+                }
+            });
+
+            renderer.render( scene, camera );
+            prevTime = time;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+    </script>
+</body>
+</html>

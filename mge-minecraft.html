@@ -640,12 +640,103 @@
             { q: "In biology, what is the basic unit of heredity transferred from parent to offspring?", opts: ["Chromosome", "Protein", "Gene", "Enzyme"], a: 2 }
         ];
         
-        // --- BLOCK CODING LOGIC ---
+        // --- BLOCK CODING LOGIC & INVENTORY ---
         let friends = [];
+        let capturedInventory = [];
         let inBlockCoding = false;
         let codingTarget = null;
         let currentWorkspace = [];
         const expectedCode = ["on_catch", "set_friend_mode(true)", "follow_player()"];
+
+        function addDragonToInventory(d) {
+            d.visible = false;
+            capturedInventory.push(d);
+            updateInventoryUI();
+            
+            const msg = document.createElement('div');
+            msg.style.position = 'absolute'; msg.style.top = '30%'; msg.style.left = '50%';
+            msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#f59e0b';
+            msg.style.fontSize = '48px'; msg.style.fontWeight = 'bold';
+            msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
+            msg.textContent = "DRAGON CAUGHT!";
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 2000);
+        }
+
+        function updateInventoryUI() {
+            let invUI = document.getElementById('pokemon-inventory');
+            if(!invUI) {
+                invUI = document.createElement('div');
+                invUI.id = 'pokemon-inventory';
+                invUI.style.position = 'absolute';
+                invUI.style.bottom = '85px';
+                invUI.style.left = '50%';
+                invUI.style.transform = 'translateX(-50%)';
+                invUI.style.display = 'flex';
+                invUI.style.gap = '10px';
+                invUI.style.zIndex = '100';
+                document.body.appendChild(invUI);
+            }
+            invUI.innerHTML = '';
+            
+            capturedInventory.forEach((dr, index) => {
+                const btnContainer = document.createElement('div');
+                btnContainer.style.position = 'relative';
+
+                const btn = document.createElement('div');
+                btn.style.width = '40px'; btn.style.height = '40px'; 
+                btn.style.borderRadius = '50%'; btn.style.background = '#10b981';
+                btn.style.border = '2px solid white'; btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '0 0 10px rgba(16,185,129,0.8)';
+                btn.style.display = 'flex'; btn.style.justifyContent = 'center'; btn.style.alignItems = 'center';
+                btn.style.fontSize = '24px';
+                btn.innerHTML = '🐉';
+                
+                const menu = document.createElement('div');
+                menu.style.position = 'absolute'; menu.style.bottom = '50px'; menu.style.left = '50%';
+                menu.style.transform = 'translateX(-50%)'; menu.style.background = 'rgba(0,0,0,0.8)';
+                menu.style.padding = '10px'; menu.style.borderRadius = '8px'; menu.style.display = 'none';
+                menu.style.flexDirection = 'column'; menu.style.gap = '5px'; menu.style.border = '1px solid #3b82f6';
+                
+                const optFollow = document.createElement('button');
+                optFollow.textContent = 'Follow Me';
+                optFollow.style.padding = '5px 10px'; optFollow.style.background = '#3b82f6'; optFollow.style.color = 'white';
+                optFollow.style.border='none'; optFollow.style.borderRadius='4px'; optFollow.style.cursor='pointer';
+                optFollow.onclick = () => {
+                    dr.userData.isFriend = true;
+                    friends.push(dr);
+                    dr.visible = true;
+                    dr.position.copy(controls.getObject().position).add(new THREE.Vector3(0,0,-5));
+                    capturedInventory.splice(index, 1);
+                    updateInventoryUI();
+                    controls.lock();
+                };
+
+                const optCode = document.createElement('button');
+                optCode.textContent = 'Block Code';
+                optCode.style.padding = '5px 10px'; optCode.style.background = '#8b5cf6'; optCode.style.color = 'white';
+                optCode.style.border='none'; optCode.style.borderRadius='4px'; optCode.style.cursor='pointer';
+                optCode.onclick = () => {
+                    menu.style.display = 'none';
+                    openBlockCoding(dr);
+                };
+
+                menu.appendChild(optFollow);
+                menu.appendChild(optCode);
+                btnContainer.appendChild(btn);
+                btnContainer.appendChild(menu);
+                
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(!controls.isLocked) return;
+                    document.querySelectorAll('#pokemon-inventory > div > div:nth-child(2)').forEach(m => m.style.display='none');
+                    menu.style.display = 'flex';
+                    controls.unlock();
+                };
+
+                invUI.appendChild(btnContainer);
+            });
+        }
         const blockOptions = [
             { id: "destroy()", label: "Robot.Destroy()", color: "#ef4444" },
             { id: "set_friend_mode(true)", label: "FriendMode = true", color: "#ec4899" },
@@ -1871,7 +1962,7 @@
                         if (b.mesh.position.distanceTo(ld.position) < 15) { 
                             scene.remove(b.mesh);
                             activeBalls.splice(i, 1);
-                            openBlockCoding(ld);
+                            addDragonToInventory(ld);
                             break;
                         }
                     }
