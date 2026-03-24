@@ -2269,5 +2269,47 @@
         bindTouch('btn-space', ' ', 'Space');
         bindTouch('btn-mash', 'a', 'KeyA');
     </script>
+    <!-- iPad UI Toggle -->
+    <div id="mobile-ui-toggle">👁️</div>
+    <style>
+        #mobile-ui-toggle { display: none; }
+        @media (max-width: 1024px) {
+            #mobile-ui-toggle {
+                display: flex; position: fixed; top: 10px; right: 10px; z-index: 10001;
+                background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%;
+                width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 1.2rem;
+                user-select: none; -webkit-user-select: none; pointer-events: auto;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;
+            }
+            body.ui-hidden #mobile-controls,
+            body.ui-hidden #controls,
+            body.ui-hidden #info,
+            body.ui-hidden .controls-panel,
+            body.ui-hidden #instructions,
+            body.ui-hidden #score-container,
+            body.ui-hidden #crosshair,
+            body.ui-hidden #inventory,
+            body.ui-hidden #game-header,
+            body.ui-hidden #wave-info,
+            body.ui-hidden #fact-progress-container,
+            body.ui-hidden #orb-status,
+            body.ui-hidden #ui-overlay {
+                display: none !important;
+            }
+        }
+    </style>
+    <script>
+        const uiToggleBtn = document.getElementById('mobile-ui-toggle');
+        if (uiToggleBtn) {
+            const toggleUI = (e) => {
+                e.preventDefault();
+                document.body.classList.toggle('ui-hidden');
+                uiToggleBtn.style.opacity = document.body.classList.contains('ui-hidden') ? '0.5' : '1';
+            };
+            uiToggleBtn.addEventListener('touchstart', toggleUI);
+            uiToggleBtn.addEventListener('mousedown', toggleUI);
+        }
+    </script>
 </body>
 </html>
