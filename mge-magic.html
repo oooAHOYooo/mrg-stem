@@ -44,6 +44,17 @@
         <p style="border-top: 2px solid rgba(0,0,0,0.5); padding-top: 10px; margin-top: 15px;"><strong>F Key</strong> <span style="color:#32cd32">Dragon Flight: <span id="fly-status" style="color:#ff0000">OFF</span></span></p>
         <p><strong>Space / Shift</strong> <span>Fly Up / Down</span></p>
     </div>
+    <div id="hotbar" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 50;">
+        <div id="slot1" style="border: 3px solid #dfc27d; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
+            <b>1</b><br><span style="font-size: 10px;">Crate</span>
+        </div>
+        <div id="slot2" style="border: 3px solid #3b2f2f; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
+            <b>2</b><br><span style="font-size: 10px;">Bounce</span>
+        </div>
+        <div id="slot3" style="border: 3px solid #3b2f2f; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
+            <b>3</b><br><span style="font-size: 10px;">Anchor</span>
+        </div>
+    </div>
     
     <div id="instructions">
         <h1 class="fantasy-text" style="font-size: 64px;">AERO RANGERS</h1>
@@ -85,6 +96,14 @@
         let triggers = [];
         let projectiles = [];
         let interactiveObjects = [];
+        let playerVelocityY = 0;
+        let activeSlot = 1;
+        
+        function updateHotbar() {
+            document.getElementById('slot1').style.borderColor = activeSlot === 1 ? '#dfc27d' : '#3b2f2f';
+            document.getElementById('slot2').style.borderColor = activeSlot === 2 ? '#dfc27d' : '#3b2f2f';
+            document.getElementById('slot3').style.borderColor = activeSlot === 3 ? '#dfc27d' : '#3b2f2f';
+        }
 
         // Earthy Palette
         const colors = {
@@ -457,7 +476,10 @@
                 case 'KeyD': moveRight = true; break;
                 case 'KeyE': shoot('Laser'); break; 
                 case 'KeyC': shoot('Balloon'); break;
-                case 'KeyV': spawnCrateFront(); break;
+                case 'KeyV': spawnObjectFront(); break;
+                case 'Digit1': activeSlot = 1; updateHotbar(); break;
+                case 'Digit2': activeSlot = 2; updateHotbar(); break;
+                case 'Digit3': activeSlot = 3; updateHotbar(); break;
                 case 'KeyF': 
                     isFlying = !isFlying; 
                     document.getElementById('fly-status').innerText = isFlying ? "ON" : "OFF";
@@ -486,19 +508,38 @@
         }
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        function spawnCrateFront() {
+        function spawnObjectFront() {
             const camDir = new THREE.Vector3();
             camera.getWorldDirection(camDir);
             const pos = camera.position.clone().add(camDir.multiplyScalar(8));
-            pos.y = 2;
-            const crateGeo = new THREE.BoxGeometry(4, 4, 4);
-            const crateMat = new THREE.MeshStandardMaterial({color: colors.wood, roughness: 0.9});
-            const crate = new THREE.Mesh(crateGeo, crateMat);
-            crate.position.copy(pos);
-            crate.userData = { isEnvironment: true, capturing: false };
-            scene.add(crate);
-            pushableBlocks.push(crate);
-            interactiveObjects.push(crate);
+            
+            let geo, mat, name;
+            let fallSpeed = 50;
+            
+            if (activeSlot === 1) { // Crate
+                pos.y = 2;
+                geo = new THREE.BoxGeometry(4, 4, 4);
+                mat = new THREE.MeshStandardMaterial({color: colors.wood, roughness: 0.9});
+                name = 'Crate';
+            } else if (activeSlot === 2) { // Bounce Pad
+                pos.y = 0.5;
+                geo = new THREE.CylinderGeometry(3, 3, 1, 16);
+                mat = new THREE.MeshStandardMaterial({color: 0x32cd32, roughness: 0.2}); 
+                name = 'BouncePad';
+            } else if (activeSlot === 3) { // Anchor
+                pos.y = 2;
+                geo = new THREE.BoxGeometry(3, 3, 3);
+                mat = new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.8, roughness: 0.4});
+                name = 'Anchor';
+                fallSpeed = 200; 
+            }
+            
+            const obj = new THREE.Mesh(geo, mat);
+            obj.position.copy(pos);
+            obj.userData = { isEnvironment: true, capturing: false, name: name, fallVelocity: fallSpeed };
+            scene.add(obj);
+            pushableBlocks.push(obj);
+            interactiveObjects.push(obj);
         }
 
         function shoot(type) {
@@ -553,6 +594,14 @@
                         
                         if (p.userData.type === 'Balloon') {
                             attachBalloon(e);
+                        } else if (p.userData.type === 'Laser' && e.userData.capturing) {
+                            // Pop balloon!
+                            e.userData.capturing = false;
+                            if (e.children.length > 0) {
+                                scene.remove(e.children[e.children.length-1]);
+                                scene.remove(e.children[e.children.length-2]);
+                                e.children.pop(); e.children.pop();
+                            }
                         } else if (!e.userData.isEnvironment) {
                             e.userData.hp--;
                             
@@ -629,11 +678,20 @@
                     camera.position.y += vY;
                     if (camera.position.y < targetY) camera.position.y = targetY;
                 } else {
-                    if (camera.position.y > targetY + 1) { 
-                        camera.position.y -= 60 * delta; // Falling gravity
-                        if (camera.position.y < targetY) camera.position.y = targetY;
-                    } else {
+                    playerVelocityY -= 150 * delta; // Gravity
+                    camera.position.y += playerVelocityY * delta;
+                    
+                    if (camera.position.y <= targetY + 1) { 
                         camera.position.y = targetY;
+                        playerVelocityY = 0; // Grounded
+                        
+                        // Bounce mechanics!
+                        if (activePlatform && activePlatform.userData.name === 'BouncePad') {
+                            playerVelocityY = 120; // BOING!
+                            camera.position.y += 2; // Detach
+                        } else if (moveUp) { // Normal Jump
+                            playerVelocityY = 50;
+                        }
                     }
                 }
                 
@@ -683,14 +741,20 @@
                 }
             }
 
-            // Environment items floating
+            // Environment items floating & falling (Anchors)
             interactiveObjects.forEach((e, index) => {
                 if (e.userData.capturing) {
-                    e.position.y += delta * 10;
+                    e.position.y += delta * 15;
                     e.rotation.y += delta * 0.5;
-                    if (e.position.y > 300) {
+                    if (e.position.y > 600) {
                         scene.remove(e);
                         interactiveObjects.splice(index, 1);
+                    }
+                } else {
+                    // Fall physics if it's an anchor or a popped balloon object higher than ground
+                    if (e.position.y > 2) {
+                        e.position.y -= (e.userData.fallVelocity || 50) * delta;
+                        if (e.position.y < 2) e.position.y = 2; // Floor collision
                     }
                 }
             });
