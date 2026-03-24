@@ -109,8 +109,8 @@
             camera.rotation.order = 'YXZ'; 
             camera.position.y = 10;
 
-            // Earthy Hands
-            const handGeo = new THREE.BoxGeometry(0.8, 0.8, 3.0);
+            // Fantasy Hands (Short with glowing palm sphere)
+            const palmGeo = new THREE.BoxGeometry(1.2, 0.6, 1.5);
             const handMatLeft = new THREE.MeshStandardMaterial({
                 color: colors.darkWood, 
                 roughness: 0.9,
@@ -122,24 +122,46 @@
                 metalness: 0.1
             });
             
-            // Left Hand (Fire / Bark)
+            // Left Hand (Fire Palm)
             const leftHand = new THREE.Group();
-            leftHand.add(new THREE.Mesh(handGeo, handMatLeft));
-            const lAccent = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 1.5), new THREE.MeshBasicMaterial({color: colors.magicFire}));
-            lAccent.position.set(0, 0.4, 0);
-            leftHand.add(lAccent);
-            leftHand.position.set(-2, -1.5, -4);
-            leftHand.rotation.z = Math.PI / 8;
+            
+            const lPalm = new THREE.Mesh(palmGeo, handMatLeft);
+            leftHand.add(lPalm);
+            
+            const lFingers = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 1.0), handMatLeft);
+            lFingers.position.set(0, -0.1, -1.2);
+            lFingers.rotation.x = -Math.PI / 6; // curved fingers
+            leftHand.add(lFingers);
+            
+            const lOrb = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshBasicMaterial({color: colors.magicFire}));
+            lOrb.position.set(0, 0.3, -0.2); // sitting on the palm
+            leftHand.add(lOrb);
+            
+            leftHand.position.set(-2.5, -1.2, -3.5);
+            leftHand.rotation.z = Math.PI / 8; // tilted inward
+            leftHand.rotation.x = -Math.PI / 6; // Angled as if presenting the palm forward
+            leftHand.rotation.y = Math.PI / 10;
             camera.add(leftHand);
 
-            // Right Hand (Water / Bark)
+            // Right Hand (Water Palm)
             const rightHand = new THREE.Group();
-            rightHand.add(new THREE.Mesh(handGeo, handMatRight));
-            const rAccent = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 1.5), new THREE.MeshBasicMaterial({color: colors.magicWater}));
-            rAccent.position.set(0, 0.4, 0);
-            rightHand.add(rAccent);
-            rightHand.position.set(2, -1.5, -4);
+            
+            const rPalm = new THREE.Mesh(palmGeo, handMatRight);
+            rightHand.add(rPalm);
+            
+            const rFingers = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 1.0), handMatRight);
+            rFingers.position.set(0, -0.1, -1.2);
+            rFingers.rotation.x = -Math.PI / 6;
+            rightHand.add(rFingers);
+            
+            const rOrb = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshBasicMaterial({color: colors.magicWater}));
+            rOrb.position.set(0, 0.3, -0.2);
+            rightHand.add(rOrb);
+            
+            rightHand.position.set(2.5, -1.2, -3.5);
             rightHand.rotation.z = -Math.PI / 8;
+            rightHand.rotation.x = -Math.PI / 6;
+            rightHand.rotation.y = -Math.PI / 10;
             camera.add(rightHand);
 
             scene.add(camera);
