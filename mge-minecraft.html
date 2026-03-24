@@ -1858,6 +1858,7 @@
                         isChargingBall = true;
                         ballCharge = 0;
                         chargeUI.style.display = 'block';
+                        chargeBar.style.background = '#f59e0b'; // Reset color
                     }
                     break;
                 case 'ArrowUp':
@@ -1935,9 +1936,17 @@
             switch ( event.code ) {
                 case 'KeyC':
                     if (isChargingBall) {
+                        // Cancel throw if released early
                         isChargingBall = false;
                         chargeUI.style.display = 'none';
-                        throwPokeball();
+                        
+                        // Show hint
+                        const msg = document.createElement('div');
+                        msg.style.position = 'absolute'; msg.style.top = '30%'; msg.style.left = '50%';
+                        msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#ef4444';
+                        msg.style.fontSize = '32px'; msg.style.fontWeight = 'bold'; msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
+                        msg.textContent = "Hold C for 5 seconds to throw!"; document.body.appendChild(msg);
+                        setTimeout(() => msg.remove(), 2000);
                     }
                     break;
                 case 'ArrowUp':
@@ -2091,9 +2100,18 @@
                 }
 
                 if (isChargingBall) {
-                    ballCharge += 100 * delta;
-                    if (ballCharge > 100) ballCharge = 100;
-                    chargeBar.style.width = ballCharge + '%';
+                    ballCharge += 20 * delta; // 5 seconds to reach 100
+                    if (ballCharge >= 100) {
+                        ballCharge = 100;
+                        chargeBar.style.background = '#10b981'; // Turn green when ready/thrown
+                        isChargingBall = false;
+                        setTimeout(() => {
+                            chargeUI.style.display = 'none';
+                        }, 200);
+                        throwPokeball();
+                    } else {
+                        chargeBar.style.width = ballCharge + '%';
+                    }
                 }
 
                 // Update active balls (Pokeballs)
