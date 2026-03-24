@@ -605,20 +605,53 @@
                 camera.translateX( velocity.x * delta );
                 camera.translateZ( velocity.z * delta );
                 
-                // Flight mechanics
+                // Physics and Platforming
+                let targetY = 10;
+                let activePlatform = null;
+                
+                interactiveObjects.forEach(obj => {
+                    const box = new THREE.Box3().setFromObject(obj);
+                    if (camera.position.x >= box.min.x - 1.5 && camera.position.x <= box.max.x + 1.5 &&
+                        camera.position.z >= box.min.z - 1.5 && camera.position.z <= box.max.z + 1.5) {
+                        if (camera.position.y >= box.max.y) {
+                            if (box.max.y + 10 > targetY) {
+                                targetY = box.max.y + 10;
+                                activePlatform = obj;
+                            }
+                        }
+                    }
+                });
+
                 if (isFlying) {
                     let vY = 0;
                     if (moveUp) vY = 60 * delta;
                     if (moveDown) vY = -60 * delta;
                     camera.position.y += vY;
-                    if (camera.position.y < 5) camera.position.y = 5;
+                    if (camera.position.y < targetY) camera.position.y = targetY;
                 } else {
-                    if (camera.position.y > 10) {
-                        camera.position.y -= 40 * delta;
-                        if (camera.position.y < 10) camera.position.y = 10;
+                    if (camera.position.y > targetY + 1) { 
+                        camera.position.y -= 60 * delta; // Falling gravity
+                        if (camera.position.y < targetY) camera.position.y = targetY;
                     } else {
-                        camera.position.y = 10;
+                        camera.position.y = targetY;
                     }
+                }
+                
+                // Airship Steer Controls
+                if (!isFlying && activePlatform && activePlatform.userData.capturing) {
+                    const speed = 50 * delta;
+                    const cDir = new THREE.Vector3();
+                    camera.getWorldDirection(cDir);
+                    cDir.y = 0; cDir.normalize();
+                    const cSide = new THREE.Vector3(-cDir.z, 0, cDir.x);
+                    
+                    if (moveForward) activePlatform.position.add(cDir.clone().multiplyScalar(speed));
+                    if (moveBackward) activePlatform.position.add(cDir.clone().multiplyScalar(-speed));
+                    if (moveLeft) activePlatform.position.add(cSide.clone().multiplyScalar(speed));
+                    if (moveRight) activePlatform.position.add(cSide.clone().multiplyScalar(-speed));
+                    
+                    if (moveUp) activePlatform.position.y += speed;
+                    if (moveDown) activePlatform.position.y -= speed * 2.0; 
                 }
                 
                 // Boundaries
