@@ -234,6 +234,14 @@
         
         <div id="score-display">Score: 0</div>
         
+        <div id="boss-panel" style="position: fixed; top: 1rem; right: 20rem; background: rgba(0,0,0,0.8); border: 2px solid #ff1744; padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; z-index: 5;">
+            👾 GLITCH BOSS<br>
+            <div style="width: 200px; height: 10px; background: #333; margin-top: 5px; border-radius: 5px; overflow: hidden;">
+                <div id="boss-hp-bar" style="width: 100%; height: 100%; background: #ff1744; transition: transform 0.3s; transform-origin: left; transform: scaleX(1);"></div>
+            </div>
+            <div id="boss-hp-text" style="font-size: 0.8rem; margin-top: 5px;">1000 / 1000</div>
+        </div>
+
         <div id="block-editor">
             <h3 style="text-align: center; margin-bottom: 0.5rem; color: #111;">Auto-Trick Code<br><small>(Press X to Run)</small></h3>
             <strong style="color: #111;">Available Blocks:</strong>
@@ -499,6 +507,58 @@
         boardGroup.position.set(0, 0, 0);
         scene.add(boardGroup);
 
+        // Robot Companion
+        const robotGroup = new THREE.Group();
+        const robotDeckGroup = new THREE.Group();
+        const rDeck = new THREE.Mesh(deckGeo, new THREE.MeshPhongMaterial({ color: 0x555555 }));
+        rDeck.position.y = 0.2;
+        robotDeckGroup.add(rDeck);
+        const rfWheel = new THREE.Mesh(wheelGeo, wheelMat);
+        rfWheel.rotation.z = Math.PI / 2;
+        rfWheel.position.set(0, 0.15, 1);
+        robotDeckGroup.add(rfWheel);
+        const rbWheel = new THREE.Mesh(wheelGeo, wheelMat);
+        rbWheel.rotation.z = Math.PI / 2;
+        rbWheel.position.set(0, 0.15, -1);
+        robotDeckGroup.add(rbWheel);
+        robotGroup.add(robotDeckGroup);
+
+        const rSkaterGroup = new THREE.Group();
+        const rTorso = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.4), new THREE.MeshPhongMaterial({ color: 0x888888 }));
+        rTorso.position.y = 1.0;
+        rSkaterGroup.add(rTorso);
+        const rHeadGroup = new THREE.Group();
+        const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshPhongMaterial({ color: 0x4ecdc4 }));
+        rHead.position.set(0, 0.25, 0);
+        rHeadGroup.position.set(0, 1.6, 0);
+        rHeadGroup.add(rHead);
+        rSkaterGroup.add(rHeadGroup);
+        
+        rSkaterGroup.rotation.y = Math.PI / 2;
+        rHeadGroup.rotation.y = -Math.PI / 2;
+        rTorso.position.y = 0.9;
+        rTorso.rotation.x = 0.2;
+        rSkaterGroup.position.set(0, 0.25, 0);
+        robotGroup.add(rSkaterGroup);
+        
+        robotGroup.position.set(5, 0, -5);
+        scene.add(robotGroup);
+
+        // STEM Boss
+        const bossGroup = new THREE.Group();
+        const bossGeo = new THREE.IcosahedronGeometry(8, 0);
+        const bossMat = new THREE.MeshPhongMaterial({ color: 0xff1744, wireframe: true, emissive: 0x550000 });
+        const bossMesh = new THREE.Mesh(bossGeo, bossMat);
+        bossGroup.add(bossMesh);
+        
+        const coreGeo = new THREE.IcosahedronGeometry(4, 1);
+        const coreMat = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0xff1744 });
+        const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        bossGroup.add(coreMesh);
+
+        bossGroup.position.set(0, 10, -70); // Far north
+        scene.add(bossGroup);
+
         // Game state
         const state = {
             velocity: 0,
@@ -514,7 +574,17 @@
             comboPoints: 0,
             timeLeft: 60,
             markPosition: new THREE.Vector3(0, 0, 0),
-            markRotation: 0
+            markRotation: 0,
+            bossHealth: 1000,
+            bossMaxHealth: 1000
+        };
+
+        const robotState = {
+            flipSpin: 0,
+            shuvitSpin: 0,
+            yVelocity: 0,
+            isJumping: false,
+            baseY: 0
         };
 
         const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false, x: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
@@ -552,46 +622,71 @@
         function executeSequence() {
             if (mySequence.length === 0) return;
             if (isAutoTricking) return;
-            isAutoTricking = true;
+            if (state.bossHealth <= 0) {
+                showTrick('Boss Already Defeated!', 0);
+                return;
+            }
             
+            isAutoTricking = true;
             let trickIndex = 0;
+            let totalDamage = 0;
             
             function nextTrick() {
-                if (trickIndex >= mySequence.length || state.isBailing) {
+                if (trickIndex >= mySequence.length) {
                     isAutoTricking = false;
+                    
+                    // Apply Damage if near boss
+                    const distToBoss = robotGroup.position.distanceTo(bossGroup.position);
+                    if (distToBoss < 40) {
+                        state.bossHealth = Math.max(0, state.bossHealth - totalDamage);
+                        document.getElementById('boss-hp-bar').style.transform = `scaleX(${state.bossHealth / state.bossMaxHealth})`;
+                        document.getElementById('boss-hp-text').innerText = `${state.bossHealth} / ${state.bossMaxHealth}`;
+                        
+                        showTrick(`Robot Hits Boss! -${totalDamage}`, 500);
+                        
+                        // Boss shake effect
+                        bossGroup.position.x += (Math.random() - 0.5) * 5;
+                        bossGroup.position.y += (Math.random() - 0.5) * 5;
+
+                        if (state.bossHealth <= 0) {
+                            bossMesh.material.color.setHex(0x555555);
+                            bossMesh.material.emissive.setHex(0x000000);
+                            coreMesh.material.color.setHex(0x222222);
+                            showTrick('GLITCH BOSS DEFEATED!', 5000);
+                        }
+                    } else {
+                        showTrick('Robot too far from Boss!', 0);
+                    }
                     return;
                 }
                 const trick = mySequence[trickIndex];
                 
+                // Robot performs trick
                 if (trick === 'Ollie') {
-                    if (!state.isJumping) {
-                        state.yVelocity = 20;
-                        state.isJumping = true;
-                        showTrick('Auto Ollie', 50);
+                    if (!robotState.isJumping) {
+                        robotState.yVelocity = 20;
+                        robotState.isJumping = true;
+                        totalDamage += 50;
                     }
-                } else if (state.isJumping) {
+                } else {
                     if (trick === 'Kickflip') {
-                        state.flipSpin += Math.PI * 2;
-                        showTrick('Auto Kickflip', 100);
+                        robotState.flipSpin += Math.PI * 2;
+                        totalDamage += 100;
                     } else if (trick === 'Heelflip') {
-                        state.flipSpin -= Math.PI * 2;
-                        showTrick('Auto Heelflip', 100);
+                        robotState.flipSpin -= Math.PI * 2;
+                        totalDamage += 100;
                     } else if (trick === 'PopShuvit') {
-                        state.shuvitSpin += Math.PI * 2;
-                        showTrick('Auto Shuvit', 150);
+                        robotState.shuvitSpin += Math.PI * 2;
+                        totalDamage += 150;
                     } else if (trick === '360Flip') {
-                        state.flipSpin += Math.PI * 2;
-                        state.shuvitSpin += Math.PI * 2;
-                        showTrick('Auto 360 Flip', 300);
+                        robotState.flipSpin += Math.PI * 2;
+                        robotState.shuvitSpin += Math.PI * 2;
+                        totalDamage += 300;
                     }
                 }
                 
                 trickIndex++;
-                if (trickIndex < mySequence.length) {
-                    setTimeout(nextTrick, 400); // 400ms delay between actions
-                } else {
-                    isAutoTricking = false;
-                }
+                setTimeout(nextTrick, 400); // 400ms delay
             }
             
             nextTrick();
@@ -780,6 +875,10 @@
                 boardGroup.position.x += Math.sin(state.rotation) * state.velocity * delta;
                 boardGroup.position.z += Math.cos(state.rotation) * state.velocity * delta;
 
+                // Apply strict world boundaries
+                boardGroup.position.x = Math.max(-88, Math.min(88, boardGroup.position.x));
+                boardGroup.position.z = Math.max(-88, Math.min(88, boardGroup.position.z));
+
                 // Raycast downwards to find surface height
                 const raycaster = new THREE.Raycaster(new THREE.Vector3(boardGroup.position.x, boardGroup.position.y + 10, boardGroup.position.z), new THREE.Vector3(0, -1, 0));
                 const intersects = raycaster.intersectObjects(collidables, true);
@@ -895,6 +994,75 @@
                         finishLanding();
                     }
                 }
+            }
+
+            // --- ANIMATE BOSS AND ROBOT ---
+            if (state.bossHealth > 0) {
+                bossMesh.rotation.y += delta;
+                bossMesh.rotation.x += delta * 0.5;
+                coreMesh.rotation.y -= delta * 2;
+                // Move boss back slightly towards origin when shaken
+                bossGroup.position.lerp(new THREE.Vector3(0, 10, -70), 0.1);
+            }
+
+            // Robot Follow Logic
+            if (!isAutoTricking) {
+                // Follow the player
+                const targetPos = new THREE.Vector3().copy(boardGroup.position);
+                const offset = new THREE.Vector3(-4, 0, 4);
+                offset.applyAxisAngle(new THREE.Vector3(0,1,0), state.rotation);
+                targetPos.add(offset);
+                robotGroup.position.lerp(targetPos, 5 * delta);
+                // Turn towards direction of movement
+                const targetRot = state.rotation;
+                robotGroup.rotation.y += (targetRot - robotGroup.rotation.y) * 5 * delta;
+            } else {
+                // If auto tricking and boss not dead, robot races toward boss!
+                if(state.bossHealth > 0) {
+                    const dirToBoss = new THREE.Vector3().subVectors(bossGroup.position, robotGroup.position);
+                    dirToBoss.y = 0;
+                    dirToBoss.normalize();
+                    robotGroup.position.addScaledVector(dirToBoss, 30 * delta); // Race speed
+                    robotGroup.lookAt(robotGroup.position.x + dirToBoss.x, robotGroup.position.y, robotGroup.position.z + dirToBoss.z);
+                }
+            }
+
+            // Robot Jump Logic
+            const robotRaycaster = new THREE.Raycaster(new THREE.Vector3(robotGroup.position.x, robotGroup.position.y + 10, robotGroup.position.z), new THREE.Vector3(0, -1, 0));
+            const rIntersects = robotRaycaster.intersectObjects(collidables, true);
+            let rTargetY = 0;
+            if (rIntersects.length > 0) rTargetY = rIntersects[0].point.y;
+
+            if (robotState.isJumping) {
+                robotState.yVelocity -= 35 * delta;
+                robotGroup.position.y += robotState.yVelocity * delta;
+
+                // Flip Spin
+                if (robotState.flipSpin > 0) {
+                    const step = Math.min(Math.PI * 5 * delta, robotState.flipSpin);
+                    robotDeckGroup.rotation.z += step;
+                    robotState.flipSpin -= step;
+                } else if (robotState.flipSpin < 0) {
+                    const step = Math.max(-Math.PI * 5 * delta, robotState.flipSpin);
+                    robotDeckGroup.rotation.z += step;
+                    robotState.flipSpin -= step;
+                }
+                
+                // Shuvit Spin
+                if (robotState.shuvitSpin > 0) {
+                    const step = Math.min(Math.PI * 5 * delta, robotState.shuvitSpin);
+                    robotDeckGroup.rotation.y += step;
+                    robotState.shuvitSpin -= step;
+                }
+
+                if (robotGroup.position.y <= rTargetY && robotState.yVelocity <= 0) {
+                    robotGroup.position.y = rTargetY;
+                    robotState.isJumping = false;
+                    robotState.yVelocity = 0;
+                    robotDeckGroup.rotation.set(0,0,0);
+                }
+            } else {
+                robotGroup.position.y = rTargetY;
             }
 
             // --- ANIMATE CHARACTER HEAD AND ARMS ---

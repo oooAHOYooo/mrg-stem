@@ -129,15 +129,14 @@
 
         const typeColors = [colors.magenta, colors.cyan, colors.yellow];
 
-        init();
-        animate();
-
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xff00aa); // very bright hot pink!
-            scene.fog = new THREE.Fog(0xff00aa, 10, 250); // clear visibility, neon fog
+            scene.background = new THREE.Color('#ff00aa'); // very bright hot pink!
+            // Removed fog just in case it caused shader issues
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const w = window.innerWidth || 1024;
+            const h = window.innerHeight || 768;
+            camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
             camera.rotation.order = 'YXZ'; 
             camera.position.y = 10;
 
@@ -249,8 +248,13 @@
             spawnBoss('Dragon', 60, 80);
 
             // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer = new THREE.WebGLRenderer({ antialias: true }); 
+            renderer.setClearColor('#ff00aa', 1);
+            
+            const rw = window.innerWidth || 1024;
+            const rh = window.innerHeight || 768;
+            renderer.setSize(rw, rh);
+            renderer.setPixelRatio(window.devicePixelRatio || 1);
             document.body.appendChild(renderer.domElement);
 
             // Controls
@@ -568,79 +572,93 @@
         }
 
         function animate() {
-            requestAnimationFrame( animate );
-            
-            const time = performance.now();
-            const delta = ( time - prevTime ) / 1000;
-
-            if ( document.pointerLockElement === document.body ) {
-                // Player Physics / Movement
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
+            try {
+                requestAnimationFrame( animate );
                 
-                direction.z = Number( moveForward ) - Number( moveBackward );
-                direction.x = Number( moveRight ) - Number( moveLeft );
-                direction.normalize();
+                const time = performance.now();
+                const delta = ( time - prevTime ) / 1000;
 
-                if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta * playerSpeedMultiplier;
-                if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta * playerSpeedMultiplier;
+                if ( document.pointerLockElement === document.body ) {
+                    // Player Physics / Movement
+                    velocity.x -= velocity.x * 10.0 * delta;
+                    velocity.z -= velocity.z * 10.0 * delta;
+                    
+                    direction.z = Number( moveForward ) - Number( moveBackward );
+                    direction.x = Number( moveRight ) - Number( moveLeft );
+                    direction.normalize();
 
-                camera.translateX( velocity.x * delta );
-                camera.translateZ( velocity.z * delta );
-                camera.position.y = 10;
-                
-                // Boundaries
-                if (camera.position.x < -180) camera.position.x = -180;
-                if (camera.position.x > 180) camera.position.x = 180;
-                if (camera.position.z < -180) camera.position.z = -180;
-                if (camera.position.z > 180) camera.position.z = 180;
-            }
+                    if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta * playerSpeedMultiplier;
+                    if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta * playerSpeedMultiplier;
 
-            checkCollisions();
-
-            // Element Shape Shifting & Animations!
-            enemies.forEach(e => {
-                e.userData.shiftTimer += delta;
-                if(e.userData.isBoss) {
-                    if(e.userData.shiftTimer > 2) {
-                        e.userData.shiftTimer = 0;
-                        const newCol = typeColors[Math.floor(Math.random()*3)];
-                        e.userData.mats[0].color.setHex(newCol);
-                        if(e.userData.light) e.userData.light.color.setHex(newCol);
-                    } else if (e.userData.shiftTimer > 0.2 && e.userData.mats[0].color.getHex() === colors.white) {
-                        e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
-                    }
+                    camera.translateX( velocity.x * delta );
+                    camera.translateZ( velocity.z * delta );
+                    camera.position.y = 10;
                     
-                    // Idle turning and bobbing
-                    e.rotation.y += delta * 0.3;
-                    e.position.y = Math.sin(time * 0.002) * 5;
-                    
-                    e.lookAt(camera.position.x, e.position.y, camera.position.z);
-                    
-                } else {
-                    if(e.userData.shiftTimer > 1.5) {
-                        e.userData.shiftTimer = 0;
-                        e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
-                        e.userData.bodyMesh.material.emissive.setHex(typeColors[Math.floor(Math.random()*3)]);
-                    } else if (e.userData.shiftTimer > 0.1 && e.userData.bodyMesh.material.color.getHex() === colors.white) {
-                         e.userData.bodyMesh.material.color.setHex(e.userData.baseColor);
-                    }
-                    
-                    e.rotation.x += delta * 1.5;
-                    e.rotation.y += delta * 1.5;
-                    e.position.y = 4 + Math.sin(time * 0.003 + e.position.x) * 3;
-                    e.userData.shellMesh.rotation.y -= delta * 0.5;
+                    // Boundaries
+                    if (camera.position.x < -180) camera.position.x = -180;
+                    if (camera.position.x > 180) camera.position.x = 180;
+                    if (camera.position.z < -180) camera.position.z = -180;
+                    if (camera.position.z > 180) camera.position.z = 180;
                 }
-            });
 
-            renderer.render( scene, camera );
-            prevTime = time;
+                checkCollisions();
+
+                // Element Shape Shifting & Animations!
+                enemies.forEach(e => {
+                    e.userData.shiftTimer += delta;
+                    if(e.userData.isBoss) {
+                        if(e.userData.shiftTimer > 2) {
+                            e.userData.shiftTimer = 0;
+                            const newCol = typeColors[Math.floor(Math.random()*3)];
+                            e.userData.mats[0].color.setHex(newCol);
+                            if(e.userData.light) e.userData.light.color.setHex(newCol);
+                        } else if (e.userData.shiftTimer > 0.2 && e.userData.mats[0].color.getHex() === colors.white) {
+                            e.userData.mats[0].color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                        }
+                        
+                        // Idle turning and bobbing
+                        e.rotation.y += delta * 0.3;
+                        e.position.y = Math.sin(time * 0.002) * 5;
+                        
+                        e.lookAt(camera.position.x, e.position.y, camera.position.z);
+                        
+                    } else {
+                        if(e.userData.shiftTimer > 1.5) {
+                            e.userData.shiftTimer = 0;
+                            e.userData.bodyMesh.material.color.setHex(typeColors[Math.floor(Math.random()*3)]);
+                            e.userData.bodyMesh.material.emissive.setHex(typeColors[Math.floor(Math.random()*3)]);
+                        } else if (e.userData.shiftTimer > 0.1 && e.userData.bodyMesh.material.color.getHex() === colors.white) {
+                             e.userData.bodyMesh.material.color.setHex(e.userData.baseColor);
+                        }
+                        
+                        e.rotation.x += delta * 1.5;
+                        e.rotation.y += delta * 1.5;
+                        e.position.y = 4 + Math.sin(time * 0.003 + e.position.x) * 3;
+                        e.userData.shellMesh.rotation.y -= delta * 0.5;
+                    }
+                });
+
+                renderer.render( scene, camera );
+                prevTime = time;
+            } catch (e) {
+                if (!window.errLogged) {
+                    document.body.innerHTML += '<h1 style="color:white; background:red; position:absolute; top:100px; z-index:9999; padding:20px;">RENDER ERROR: ' + e.message + '</h1>';
+                    window.errLogged = true;
+                }
+            }
         }
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+
+        try {
+            init();
+            animate();
+        } catch (e) {
+            document.body.innerHTML += '<h1 style="color:white; background:red; position:absolute; top:0; z-index:9999; padding:20px;">INIT ERROR: ' + e.message + '</h1>';
         }
     </script>
 </body>
