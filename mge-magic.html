@@ -10,6 +10,10 @@
         #crosshair::before { top: 50%; left: -12px; right: -12px; height: 2px; margin-top: -1px; }
         #crosshair::after { left: 50%; top: -12px; bottom: -12px; width: 2px; margin-left: -1px; }
         
+        .slot { border: 3px solid #3b2f2f; background: rgba(92, 64, 51, 0.8); padding: 8px; width: 45px; height: 45px; text-align: center; border-radius: 8px; color: white; display:flex; flex-direction:column; justify-content:center; }
+        .slot span { font-size: 10px; margin-top:2px; }
+        .slot.active { border-color: #dfc27d; background: rgba(140, 90, 43, 0.9); }
+        
         .wood-panel { background: rgba(92, 64, 51, 0.8); border: 3px solid #3b2f2f; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.4); }
         
         #ui { position: absolute; top: 30px; right: 30px; padding: 15px; font-size: 13px; width: 260px; z-index: 50; pointer-events: none; background: rgba(92, 64, 51, 0.65); }
@@ -36,25 +40,21 @@
     <div id="ui" class="wood-panel">
         <h3>Ranger's Journal</h3>
         <p style="font-size: 16px; border-bottom: 2px solid rgba(0,0,0,0.5); padding-bottom: 10px; margin-bottom: 15px;">Captures: <span id="score" style="color: #dfc27d; font-weight:900; font-size: 22px;">0</span></p>
-        <p><strong>L-Click</strong> <span style="color:#ff8c00">Fire Magic</span></p>
-        <p><strong>R-Click</strong> <span style="color:#00bfff">Water Magic</span></p>
-        <p><strong>L+R Click</strong> <span style="color:#ddddff; font-weight: bold; text-shadow: 0 0 5px #fff;">Storm Blast</span></p>
-        <p><strong>E Key</strong> <span style="color:#ffff00">Sun Beam</span></p>
-        <p><strong>C Key</strong> <span style="color:#ffb6c1">Balloon Magic</span></p>
-        <p><strong>V Key</strong> <span style="color:#8b4513">Spawn Crate</span></p>
+        <p><strong>Left Click</strong> <span style="color:#dfc27d">Use Item</span></p>
+        <p><strong>Scroll Wheel</strong> <span style="color:#dfc27d">Select Item</span></p>
+        <p><strong>1-8 Keys</strong> <span style="color:#dfc27d">Quick Select</span></p>
         <p style="border-top: 2px solid rgba(0,0,0,0.5); padding-top: 10px; margin-top: 15px;"><strong>F Key</strong> <span style="color:#32cd32">Dragon Flight: <span id="fly-status" style="color:#ff0000">OFF</span></span></p>
         <p><strong>Space / Shift</strong> <span>Fly Up / Down</span></p>
     </div>
-    <div id="hotbar" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 50;">
-        <div id="slot1" style="border: 3px solid #dfc27d; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
-            <b>1</b><br><span style="font-size: 10px;">Crate</span>
-        </div>
-        <div id="slot2" style="border: 3px solid #3b2f2f; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
-            <b>2</b><br><span style="font-size: 10px;">Bounce</span>
-        </div>
-        <div id="slot3" style="border: 3px solid #3b2f2f; background: rgba(92, 64, 51, 0.8); padding: 10px; width: 50px; height: 50px; text-align: center; border-radius: 8px; color: white;">
-            <b>3</b><br><span style="font-size: 10px;">Anchor</span>
-        </div>
+    <div id="hotbar" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 50;">
+        <div id="slot1" class="slot active"><b>1</b><br><span>Crate</span></div>
+        <div id="slot2" class="slot"><b>2</b><br><span>Bounce</span></div>
+        <div id="slot3" class="slot"><b>3</b><br><span>Anchor</span></div>
+        <div id="slot4" class="slot"><b>4</b><br><span>Fire</span></div>
+        <div id="slot5" class="slot"><b>5</b><br><span>Water</span></div>
+        <div id="slot6" class="slot"><b>6</b><br><span>Storm</span></div>
+        <div id="slot7" class="slot"><b>7</b><br><span>Balloon</span></div>
+        <div id="slot8" class="slot"><b>8</b><br><span>Popper</span></div>
     </div>
     
     <div id="instructions">
@@ -103,9 +103,11 @@
         let rightDown = false;
         
         function updateHotbar() {
-            document.getElementById('slot1').style.borderColor = activeSlot === 1 ? '#dfc27d' : '#3b2f2f';
-            document.getElementById('slot2').style.borderColor = activeSlot === 2 ? '#dfc27d' : '#3b2f2f';
-            document.getElementById('slot3').style.borderColor = activeSlot === 3 ? '#dfc27d' : '#3b2f2f';
+            for(let i=1; i<=8; i++) {
+                const el = document.getElementById('slot'+i);
+                if(i === activeSlot) el.classList.add('active');
+                else el.classList.remove('active');
+            }
         }
 
         // Earthy Palette
@@ -304,7 +306,6 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseDown);
-            document.addEventListener('mouseup', onMouseUp);
             window.addEventListener('resize', onWindowResize);
         }
 
@@ -478,12 +479,14 @@
                 case 'KeyA': moveLeft = true; break;
                 case 'KeyS': moveBackward = true; break;
                 case 'KeyD': moveRight = true; break;
-                case 'KeyE': shoot('Laser'); break; 
-                case 'KeyC': shoot('Balloon'); break;
-                case 'KeyV': spawnObjectFront(); break;
                 case 'Digit1': activeSlot = 1; updateHotbar(); break;
                 case 'Digit2': activeSlot = 2; updateHotbar(); break;
                 case 'Digit3': activeSlot = 3; updateHotbar(); break;
+                case 'Digit4': activeSlot = 4; updateHotbar(); break;
+                case 'Digit5': activeSlot = 5; updateHotbar(); break;
+                case 'Digit6': activeSlot = 6; updateHotbar(); break;
+                case 'Digit7': activeSlot = 7; updateHotbar(); break;
+                case 'Digit8': activeSlot = 8; updateHotbar(); break;
                 case 'KeyF': 
                     isFlying = !isFlying; 
                     document.getElementById('fly-status').innerText = isFlying ? "ON" : "OFF";
@@ -507,22 +510,24 @@
         }
         function onMouseDown(e) {
             if(document.pointerLockElement !== document.body) return;
-            if(e.button === 0) leftDown = true;
-            if(e.button === 2) rightDown = true;
-            
-            if (leftDown && rightDown) {
-                shoot('StormBlast');
-            } else if (e.button === 0 && !rightDown) {
-                shoot('Fire');
-            } else if (e.button === 2 && !leftDown) {
-                shoot('Water');
+            if(e.button === 0) {
+                if (activeSlot <= 3) spawnObjectFront();
+                else if (activeSlot === 4) shoot('Fire');
+                else if (activeSlot === 5) shoot('Water');
+                else if (activeSlot === 6) shoot('StormBlast');
+                else if (activeSlot === 7) shoot('Balloon');
+                else if (activeSlot === 8) shoot('Laser');
             }
         }
         
-        function onMouseUp(e) {
-            if(e.button === 0) leftDown = false;
-            if(e.button === 2) rightDown = false;
-        }
+        document.addEventListener('wheel', (e) => {
+            if(document.pointerLockElement !== document.body) return;
+            if (e.deltaY > 0) activeSlot++;
+            else activeSlot--;
+            if (activeSlot > 8) activeSlot = 1;
+            if (activeSlot < 1) activeSlot = 8;
+            updateHotbar();
+        });
         document.addEventListener('contextmenu', e => e.preventDefault());
 
         function spawnObjectFront() {
