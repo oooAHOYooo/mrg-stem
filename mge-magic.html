@@ -57,7 +57,13 @@
                 <span style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 4px; border: 1px solid #3b2f2f;">[MOUSE] AIM</span>
                 <span style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 4px; border: 1px solid #3b2f2f;">[F] TOGGLE FLIGHT</span>
             </div>
-            <button class="btn" style="width: 100%;">Enter The Realm</button>
+            <div id="loading-container" style="width: 100%;">
+                <div id="loading-text" style="color: #dfc27d; font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px;">Summoning Magic... 0%</div>
+                <div style="width: 100%; background: rgba(0,0,0,0.5); border: 2px solid #3b2f2f; border-radius: 4px; height: 16px; overflow: hidden;">
+                    <div id="progress-bar" style="width: 0%; height: 100%; background: #dfc27d; transition: width 0.2s;"></div>
+                </div>
+            </div>
+            <button id="enter-btn" class="btn" style="width: 100%; display: none;">Enter The Realm</button>
         </div>
     </div>
 
@@ -194,9 +200,39 @@
 
             // Controls
             const instructions = document.getElementById('instructions');
-            instructions.addEventListener('click', () => {
+            const enterBtn = document.getElementById('enter-btn');
+            
+            enterBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 document.body.requestPointerLock();
             });
+
+            instructions.addEventListener('click', () => {
+                if (enterBtn.style.display === 'block') {
+                    document.body.requestPointerLock();
+                }
+            });
+            
+            let progress = 0;
+            const bar = document.getElementById('progress-bar');
+            const text = document.getElementById('loading-text');
+            const container = document.getElementById('loading-container');
+            
+            const loadInterval = setInterval(() => {
+                progress += Math.floor(Math.random() * 20) + 10;
+                if(progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadInterval);
+                    setTimeout(() => {
+                        container.style.display = 'none';
+                        enterBtn.style.display = 'block';
+                    }, 400);
+                }
+                if(bar && text) {
+                    bar.style.width = progress + '%';
+                    text.innerText = 'Summoning Magic... ' + progress + '%';
+                }
+            }, 200);
             
             document.addEventListener('pointerlockchange', () => {
                 if (document.pointerLockElement === document.body) {
@@ -588,6 +624,9 @@
             camera.updateProjectionMatrix();
             renderer.setSize( window.innerWidth, window.innerHeight );
         }
+
+        init();
+        animate();
     </script>
 </body>
 </html>
