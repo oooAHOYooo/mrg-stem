@@ -42,7 +42,7 @@
         <p style="font-size: 16px; border-bottom: 2px solid rgba(0,0,0,0.5); padding-bottom: 10px; margin-bottom: 15px;">Captures: <span id="score" style="color: #dfc27d; font-weight:900; font-size: 22px;">0</span></p>
         <p><strong>Left Click</strong> <span style="color:#dfc27d">Use Item</span></p>
         <p><strong>Scroll Wheel</strong> <span style="color:#dfc27d">Select Item</span></p>
-        <p><strong>1-8 Keys</strong> <span style="color:#dfc27d">Quick Select</span></p>
+        <p><strong>1-9 Keys</strong> <span style="color:#dfc27d">Quick Select</span></p>
         <p style="border-top: 2px solid rgba(0,0,0,0.5); padding-top: 10px; margin-top: 15px;"><strong>F Key</strong> <span style="color:#32cd32">Dragon Flight: <span id="fly-status" style="color:#ff0000">OFF</span></span></p>
         <p><strong>Space / Shift</strong> <span>Fly Up / Down</span></p>
     </div>
@@ -55,6 +55,7 @@
         <div id="slot6" class="slot"><b>6</b><br><span>Storm</span></div>
         <div id="slot7" class="slot"><b>7</b><br><span>Balloon</span></div>
         <div id="slot8" class="slot"><b>8</b><br><span>Popper</span></div>
+        <div id="slot9" class="slot" style="border-width: 2px;"><b>9</b><br><span>Bow</span></div>
     </div>
     
     <div id="instructions">
@@ -103,10 +104,12 @@
         let rightDown = false;
         
         function updateHotbar() {
-            for(let i=1; i<=8; i++) {
+            for(let i=1; i<=9; i++) {
                 const el = document.getElementById('slot'+i);
-                if(i === activeSlot) el.classList.add('active');
-                else el.classList.remove('active');
+                if(el) {
+                    if(i === activeSlot) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
             }
         }
 
@@ -236,6 +239,32 @@
                 rock.userData = { isEnvironment: true, capturing: false };
                 scene.add(rock);
                 interactiveObjects.push(rock);
+            }
+
+            // Archery Targets
+            for(let i=0; i<15; i++) {
+                const trgGrp = new THREE.Group();
+                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 10), new THREE.MeshStandardMaterial({color: colors.darkWood}));
+                post.position.y = 5;
+                trgGrp.add(post);
+                
+                const bMat1 = new THREE.MeshBasicMaterial({color: 0xffffff});
+                const bMat2 = new THREE.MeshBasicMaterial({color: 0xff0000});
+                const boardGroup = new THREE.Group();
+                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 0.5, 16), bMat1));
+                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.6, 16), bMat2));
+                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.7, 16), bMat1));
+                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.8, 16), bMat2));
+                
+                boardGroup.rotation.x = Math.PI/2;
+                boardGroup.position.set(0, 8, 1);
+                trgGrp.add(boardGroup);
+                
+                trgGrp.position.set((Math.random()-0.5)*300, 0, (Math.random()-0.5)*300);
+                trgGrp.rotation.y = Math.random() * Math.PI * 2;
+                trgGrp.userData = { isEnvironment: true, capturing: false, isTarget: true, board: boardGroup };
+                scene.add(trgGrp);
+                interactiveObjects.push(trgGrp);
             }
 
             // Spawn Enemies
@@ -487,6 +516,7 @@
                 case 'Digit6': activeSlot = 6; updateHotbar(); break;
                 case 'Digit7': activeSlot = 7; updateHotbar(); break;
                 case 'Digit8': activeSlot = 8; updateHotbar(); break;
+                case 'Digit9': activeSlot = 9; updateHotbar(); break;
                 case 'KeyF': 
                     isFlying = !isFlying; 
                     document.getElementById('fly-status').innerText = isFlying ? "ON" : "OFF";
@@ -517,6 +547,7 @@
                 else if (activeSlot === 6) shoot('StormBlast');
                 else if (activeSlot === 7) shoot('Balloon');
                 else if (activeSlot === 8) shoot('Laser');
+                else if (activeSlot === 9) shoot('Arrow');
             }
         }
         
@@ -524,8 +555,8 @@
             if(document.pointerLockElement !== document.body) return;
             if (e.deltaY > 0) activeSlot++;
             else activeSlot--;
-            if (activeSlot > 8) activeSlot = 1;
-            if (activeSlot < 1) activeSlot = 8;
+            if (activeSlot > 9) activeSlot = 1;
+            if (activeSlot < 1) activeSlot = 9;
             updateHotbar();
         });
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -565,6 +596,31 @@
         }
 
         function shoot(type) {
+            if (type === 'Arrow') {
+                const arrowGeo = new THREE.CylinderGeometry(0.1, 0.1, 3, 8);
+                arrowGeo.rotateX(Math.PI/2); 
+                const proj = new THREE.Mesh(arrowGeo, new THREE.MeshStandardMaterial({color: 0x8b5a2b}));
+                
+                const head = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.6, 8), new THREE.MeshStandardMaterial({color: 0xcccccc}));
+                head.rotation.x = -Math.PI/2;
+                head.position.z = -1.5;
+                proj.add(head);
+
+                const fMat = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide});
+                const f1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.8), fMat);
+                f1.rotation.y = Math.PI/2; f1.position.z = 1.3;
+                const f2 = f1.clone(); f2.rotation.z = Math.PI/2;
+                proj.add(f1, f2);
+                
+                const camDir = new THREE.Vector3(); camera.getWorldDirection(camDir);
+                proj.position.copy(camera.position).add(camDir.clone().multiplyScalar(4));
+                proj.rotation.copy(camera.rotation);
+
+                proj.userData = { velocity: camDir.normalize().multiplyScalar(9), type: type, life: 100, hasGravity: true };
+                scene.add(proj); projectiles.push(proj);
+                return;
+            }
+
             const pGeo = new THREE.SphereGeometry(1.5, 8, 8);
             let pCol = colors.white;
 
@@ -599,6 +655,11 @@
         function checkCollisions() {
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const p = projectiles[i];
+                if (p.userData.hasGravity) {
+                    p.userData.velocity.y -= 0.12; 
+                    const target = p.position.clone().add(p.userData.velocity);
+                    p.lookAt(target);
+                }
                 p.position.add(p.userData.velocity);
                 p.userData.life--;
                 
@@ -615,7 +676,11 @@
                     if (dist < hitDist) {
                         hit = true;
                         
-                        if (p.userData.type === 'Balloon') {
+                        if (p.userData.type === 'Arrow' && e.userData.isTarget) {
+                            score += 10;
+                            document.getElementById('score').innerText = score;
+                            e.userData.spinSpeed = 30; // Pinwheel effect
+                        } else if (p.userData.type === 'Balloon') {
                             attachBalloon(e);
                         } else if (p.userData.type === 'StormBlast') {
                             // AOE Push Explosion
@@ -777,6 +842,11 @@
 
             // Environment items floating & falling (Anchors)
             interactiveObjects.forEach((e, index) => {
+                if (e.userData.spinSpeed) {
+                    e.userData.board.rotation.y += e.userData.spinSpeed * delta;
+                    e.userData.spinSpeed *= 0.95;
+                }
+
                 if (e.userData.capturing) {
                     e.position.y += delta * 15;
                     e.rotation.y += delta * 0.5;
