@@ -38,6 +38,7 @@
         <p style="font-size: 16px; border-bottom: 2px solid rgba(0,0,0,0.5); padding-bottom: 10px; margin-bottom: 15px;">Captures: <span id="score" style="color: #dfc27d; font-weight:900; font-size: 22px;">0</span></p>
         <p><strong>L-Click</strong> <span style="color:#ff8c00">Fire Magic</span></p>
         <p><strong>R-Click</strong> <span style="color:#00bfff">Water Magic</span></p>
+        <p><strong>L+R Click</strong> <span style="color:#ddddff; font-weight: bold; text-shadow: 0 0 5px #fff;">Storm Blast</span></p>
         <p><strong>E Key</strong> <span style="color:#ffff00">Sun Beam</span></p>
         <p><strong>C Key</strong> <span style="color:#ffb6c1">Balloon Magic</span></p>
         <p><strong>V Key</strong> <span style="color:#8b4513">Spawn Crate</span></p>
@@ -98,6 +99,8 @@
         let interactiveObjects = [];
         let playerVelocityY = 0;
         let activeSlot = 1;
+        let leftDown = false;
+        let rightDown = false;
         
         function updateHotbar() {
             document.getElementById('slot1').style.borderColor = activeSlot === 1 ? '#dfc27d' : '#3b2f2f';
@@ -301,6 +304,7 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mouseup', onMouseUp);
             window.addEventListener('resize', onWindowResize);
         }
 
@@ -503,8 +507,21 @@
         }
         function onMouseDown(e) {
             if(document.pointerLockElement !== document.body) return;
-            if(e.button === 0) shoot('Fire'); 
-            if(e.button === 2) shoot('Water'); 
+            if(e.button === 0) leftDown = true;
+            if(e.button === 2) rightDown = true;
+            
+            if (leftDown && rightDown) {
+                shoot('StormBlast');
+            } else if (e.button === 0 && !rightDown) {
+                shoot('Fire');
+            } else if (e.button === 2 && !leftDown) {
+                shoot('Water');
+            }
+        }
+        
+        function onMouseUp(e) {
+            if(e.button === 0) leftDown = false;
+            if(e.button === 2) rightDown = false;
         }
         document.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -550,6 +567,7 @@
             else if (type === 'Water') pCol = colors.magicWater;
             else if (type === 'Laser') { pCol = colors.magicSun; pGeo.scale(1.5, 1.5, 1.5); }
             else if (type === 'Balloon') { pCol = 0xff69b4; pGeo.scale(0.8, 0.8, 0.8); }
+            else if (type === 'StormBlast') { pCol = 0xddddff; pGeo.scale(3.0, 3.0, 3.0); }
 
             const pMat = new THREE.MeshBasicMaterial({color: pCol});
             const proj = new THREE.Mesh(pGeo, pMat);
@@ -594,6 +612,17 @@
                         
                         if (p.userData.type === 'Balloon') {
                             attachBalloon(e);
+                        } else if (p.userData.type === 'StormBlast') {
+                            // AOE Push Explosion
+                            const allProps = enemies.concat(interactiveObjects);
+                            allProps.forEach(prop => {
+                                if (prop.position.distanceTo(p.position) < 35) {
+                                    const pushDir = prop.position.clone().sub(p.position).normalize();
+                                    pushDir.y = 0.5; // push up slightly
+                                    prop.position.add(pushDir.multiplyScalar(15));
+                                    if (!prop.userData.isEnvironment) prop.userData.hp -= 3;
+                                }
+                            });
                         } else if (p.userData.type === 'Laser' && e.userData.capturing) {
                             // Pop balloon!
                             e.userData.capturing = false;
