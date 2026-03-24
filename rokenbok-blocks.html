@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Rokenbok Blocks – What You Can Build | Mr. Gonzalez STEM</title>
+        <meta name="description" content="Get inspired by Rokenbok building blocks! Discover tracks, ramps, elevators, vehicles, cities, and endless STEM projects kids build with Rokenbok." />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="styles.css">
+        <script src="status-bar.js" defer></script>
+        <script src="ticker-nav.js" defer></script>
+        <style>
+        :root {
+            --blocks-primary: #b45309;
+            --blocks-secondary: #d97706;
+            --blocks-accent: #92400e;
+            --blocks-bg-1: #fffbeb;
+            --blocks-bg-2: #fef3c7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #fde68a;
+            --shadow-md: rgba(180, 83, 9, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --blocks-primary: #fbbf24;
+            --blocks-secondary: #f59e0b;
+            --blocks-accent: #fcd34d;
+            --blocks-bg-1: #1E293B;
+            --blocks-bg-2: #0F172A;
+            --card-bg: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --border-color: #334155;
+            --shadow-md: rgba(251, 191, 36, 0.3);
+        }
+
+        .card {
+            background: var(--card-bg) !important;
+            border: 2px solid var(--border-color) !important;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px var(--shadow-md);
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+        }
+        .card h2 {
+            color: var(--blocks-accent);
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+        .card h3 {
+            color: var(--blocks-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+        }
+        .card p, .card ul, .card li {
+            color: var(--text-primary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .card a {
+            color: var(--blocks-accent);
+            font-weight: 600;
+        }
+        .step-box {
+            background: rgba(180, 83, 9, 0.1);
+            border-left: 4px solid var(--blocks-accent);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        [data-theme="dark"] .step-box {
+            background: rgba(251, 191, 36, 0.15);
+        }
+        .highlight-box {
+            background: rgba(180, 83, 9, 0.12);
+            border: 2px solid rgba(180, 83, 9, 0.35);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        [data-theme="dark"] .highlight-box {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: rgba(251, 191, 36, 0.5);
+        }
+        .start-here-widget {
+            background: linear-gradient(135deg, var(--blocks-bg-1), var(--blocks-bg-2));
+            border: 3px solid var(--blocks-accent);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .start-here-widget h2 {
+            color: var(--blocks-accent);
+            margin-bottom: 1rem;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+        }
+        .start-here-widget p {
+            color: var(--text-secondary);
+            font-size: clamp(1rem, 2vw, 1.2rem);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .feature-card {
+            background: rgba(180, 83, 9, 0.08);
+            border: 2px solid rgba(180, 83, 9, 0.25);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .feature-card {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.35);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-md);
+            border-color: var(--blocks-accent);
+        }
+        .feature-card h3 {
+            color: var(--blocks-accent);
+            margin-bottom: 0.75rem;
+            margin-top: 0;
+        }
+        .feature-card p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+        .hero-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 16px;
+            border: 3px solid rgba(180, 83, 9, 0.3);
+            margin: 1.5rem auto;
+            display: block;
+        }
+        [data-theme="dark"] .hero-img {
+            border-color: rgba(251, 191, 36, 0.4);
+        }
+        </style>
+    </head>
+    <body>
+        <div class="background"></div>
+        <nav class="navbar navbar-top">
+            <div class="navbar-container">
+                <div class="status-bar" id="status-bar"></div>
+                <div class="navbar-actions">
+                    <a href="/" class="navbar-brand" title="Home">⚡</a>
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📚 Quick Links</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/" class="sidebar-link">🏠 Homepage</a>
+                        <a href="/#featured-blocks" class="sidebar-link">📸 Block Gallery</a>
+                        <a href="/portfolio.html" class="sidebar-link">📁 My Portfolio</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🧱 Rokenbok Blocks</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/rokenbok-blocks.html" class="sidebar-link" style="background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(217, 119, 6, 0.2)); border: 2px solid rgba(180, 83, 9, 0.4); font-weight: 700;">🧱 What You Can Build</a>
+                    </nav>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">🎯 Other Resources</h3>
+                    <nav class="sidebar-nav">
+                        <a href="/minecraft.html" class="sidebar-link">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="sidebar-link">💻 Scratch</a>
+                        <a href="/tinkercad-tutorials.html" class="sidebar-link">🌍 Tinkercad</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <main class="dashboard-main">
+                <div class="main-content-scroll">
+                    <header><div class="wrap">
+                        <h1 class="title">🧱 Rokenbok Blocks – What You Can Build</h1>
+                        <p style="color:var(--text-secondary);margin-top:8px">Get inspired! See all the amazing things kids build with Rokenbok—tracks, ramps, elevators, vehicles, cities, and more.</p>
+                    </div></header>
+
+                    <div class="start-here-widget">
+                        <h2>🌟 Kids Everywhere Are Building with Rokenbok!</h2>
+                        <p>Rokenbok is a building system where blocks snap together to make tracks, structures, vehicles, and whole worlds. See what’s possible and start planning your next build!</p>
+                        <img src="https://img.ricardostatic.ch/images/e76c0f37-cf0b-401f-b60e-2b7abde7a73f/t_1000x750/rokenbok-system-sets" alt="Kids building with Rokenbok system sets" class="hero-img">
+                    </div>
+
+                    <div class="card">
+                        <h2>🛤️ Tracks & Roller Coasters</h2>
+                        <p>Build tracks for balls and vehicles! Create loops, drops, curves, and bridges. Design your own roller coasters and see how far you can make things roll.</p>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h3>🔄 Loops & Curves</h3>
+                                <p>Snap together curves and loops so balls or vehicles can go around and around.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>📐 Ramps & Drops</h3>
+                                <p>Add ramps and drops to speed things up and make exciting runs.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>🌉 Bridges</h3>
+                                <p>Build bridges that carry tracks over other parts of your layout.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>⬆️ Elevators & Lifts</h2>
+                        <p>Move things up and down! Build elevators and lifts to bring balls or cargo to different levels. Great for learning about simple machines and cause-and-effect.</p>
+                        <div class="highlight-box">
+                            <h3>💡 Ideas:</h3>
+                            <ul>
+                                <li>Lift balls to the top of a track so they roll down</li>
+                                <li>Connect multiple levels with one elevator</li>
+                                <li>Use elevators in a factory or city layout</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>🚗 Vehicles & Moving Parts</h2>
+                        <p>Rokenbok sets often include vehicles and moving parts. Combine them with your tracks and structures for action-packed builds.</p>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h3>🚂 Cars & Trains</h3>
+                                <p>Run vehicles on your tracks and design stations or parking.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>🏗️ Cranes & Loaders</h3>
+                                <p>Add cranes and loaders to move “cargo” and run a mini factory.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>⚙️ Gears & Motors</h3>
+                                <p>Use gears and motors to make things spin, lift, or move automatically.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>🏙️ Cities & Structures</h2>
+                        <p>Go big! Build cities, towers, factories, and landscapes. Combine tracks, elevators, and vehicles into one huge Rokenbok world.</p>
+                        <div class="highlight-box">
+                            <h3>🎯 Build Ideas:</h3>
+                            <ul>
+                                <li><strong>City:</strong> Buildings, roads, and a train or ball run through the middle</li>
+                                <li><strong>Factory:</strong> Conveyors, elevators, and loading zones</li>
+                                <li><strong>Theme Park:</strong> Roller coasters, ramps, and loops</li>
+                                <li><strong>Space Station:</strong> Multi-level layout with lifts and tracks</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>🔬 STEM Skills You Practice</h2>
+                        <p>When you build with Rokenbok, you’re doing real engineering and problem-solving!</p>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h3>📐 Engineering</h3>
+                                <p>Plan structures that stay up and carry weight. Test and improve your designs.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>⚡ Physics</h3>
+                                <p>See how slope, speed, and gravity affect balls and vehicles on your tracks.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>🧩 Problem-Solving</h3>
+                                <p>Fix jams, redesign curves, and make your layout run smoothly from start to finish.</p>
+                            </div>
+                            <div class="feature-card">
+                                <h3>🎨 Creativity</h3>
+                                <p>There’s no single “right” build—you decide what to make and how it works.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(180, 83, 9, 0.12), rgba(217, 119, 6, 0.12)); border: 3px solid rgba(180, 83, 9, 0.45);">
+                        <h2 style="color: var(--blocks-accent);">📸 See the Block Gallery on the Homepage</h2>
+                        <p>Check out the <strong>Featured Block Gallery</strong> on the homepage to see kids across the internet building with Rokenbok. Then plan your next project!</p>
+                        <div style="margin-top: 1.5rem;">
+                            <a href="/#featured-blocks" class="project-button" style="display: inline-block; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(217, 119, 6, 0.2)); border: 2px solid rgba(180, 83, 9, 0.5); border-radius: 10px; color: #92400e; text-decoration: none; font-weight: 600;">📸 View Block Gallery →</a>
+                            <a href="/" class="project-button" style="display: inline-block; margin-left: 1rem; padding: 0.75rem 1.5rem; background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.4); border-radius: 10px; color: #1e40af; text-decoration: none; font-weight: 600;">🏠 Back to Homepage</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="sidebar sidebar-right">
+                <div class="sidebar-content">
+                    <h3 class="sidebar-title">📅 Today</h3>
+                    <div id="sidebar-date-display" style="font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; padding: 0.75rem; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); text-align: center;"></div>
+                    <div class="sidebar-divider"></div>
+                    <h3 class="sidebar-title">💡 Build Tip</h3>
+                    <div class="tip-of-day" id="tip-of-day">
+                        <span class="tip-icon">🧱</span>
+                        <p class="tip-text" id="tip-text">Start with a simple track or ramp, then add one new idea at a time. Every build teaches you something new!</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <nav class="navbar navbar-bottom">
+            <div class="navbar-container">
+                <div class="navbar-menu" id="navbar-menu">
+                    <a href="/" class="navbar-link">🏠 Home</a>
+                    <a href="/rokenbok-blocks.html" class="navbar-link" style="background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(217, 119, 6, 0.2)); border-color: rgba(180, 83, 9, 0.4);">🧱 Rokenbok</a>
+                    <a href="/minecraft.html" class="navbar-link">⛏️ Minecraft</a>
+                    <a href="/scratch-tutorials.html" class="navbar-link">💻 Scratch</a>
+                    <a href="/portfolio.html" class="navbar-link">📁 Portfolio</a>
+                    <a href="/submit-portfolio.html" class="navbar-link">📮 Submit</a>
+                </div>
+            </div>
+        </nav>
+
+        <script>
+        (function() {
+            var themeToggle = document.getElementById('theme-toggle');
+            var currentTheme = localStorage.getItem('theme') || 'light';
+            function setTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                var icon = themeToggle && themeToggle.querySelector('.theme-icon');
+                if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+            setTheme(currentTheme);
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    setTheme(currentTheme);
+                });
+            }
+        })();
+        (function() {
+            try {
+                var now = new Date();
+                var formatted = now.toLocaleDateString('en-US', { weekday: 'long' }) + ', ' + now.toLocaleDateString('en-US', { month: 'short' }) + ' ' + now.getDate();
+                var el = document.getElementById('sidebar-date-display');
+                if (el) el.textContent = '📅 ' + formatted;
+            } catch (e) {}
+        })();
+        </script>
+    </body>
+</html>

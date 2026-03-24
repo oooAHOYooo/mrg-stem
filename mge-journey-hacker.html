@@ -2219,11 +2219,55 @@
             }
         }
 
-        document.addEventListener('keydown', resetInactivityTimer);
-        document.addEventListener('mousemove', resetInactivityTimer);
         document.addEventListener('mousedown', resetInactivityTimer);
         resetInactivityTimer();
+    </script>
+    <!-- Mobile Controls -->
+    <style>
+        #mobile-controls { display: none; }
+        @media (max-width: 1024px) {
+            #mobile-controls { display: flex; position: fixed; bottom: 80px; left: 0; right: 0; padding: 10px; z-index: 10000; pointer-events: none; justify-content: space-around; }
+            .mobile-btn {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 15px;
+                padding: 15px 10px;
+                color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+                font-weight: 900; font-family: 'Fira Code', monospace; font-size: 1.2rem;
+                user-select: none; -webkit-user-select: none; touch-action: none;
+                pointer-events: auto;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+                text-align: center;
+                display: flex; justify-content: center; align-items: center;
+            }
+            .mobile-btn:active { background: rgba(255, 255, 255, 0.3); }
+        }
+    </style>
+    <div id="mobile-controls">
+        <div class="mobile-btn" id="btn-esc" style="flex: 1; max-width: 80px;">ESC</div>
+        <div class="mobile-btn" id="btn-space" style="flex: 1; margin: 0 10px;">SPACE</div>
+        <div class="mobile-btn" id="btn-mash" style="flex: 2;">MASH (HACK)</div>
+    </div>
+    <script>
+        // Mobile Controls JS Addon
+        const bindTouch = (id, key, code) => {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                document.dispatchEvent(new KeyboardEvent('keydown', {key: key, code: code}));
+            });
+            el.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                document.dispatchEvent(new KeyboardEvent('keyup', {key: key, code: code}));
+            });
+        };
 
+        bindTouch('btn-esc', 'Escape', 'Escape');
+        bindTouch('btn-space', ' ', 'Space');
+        bindTouch('btn-mash', 'a', 'KeyA');
     </script>
 </body>
 </html>

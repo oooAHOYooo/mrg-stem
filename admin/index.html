@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Mr. Gonzalez STEM</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Marked.js for MD rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Admin Dashboard</h1>
+            <p class="subtitle">Teaching Statistics & Schedule Manager</p>
+        </header>
+
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value" id="total-students">...</span>
+                <span class="stat-label">Total Students</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="total-classes">...</span>
+                <span class="stat-label">Total Classes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="avg-class-size">...</span>
+                <span class="stat-label">Avg Class Size</span>
+            </div>
+        </div>
+
+        <div class="dashboard-main">
+            <div class="content-panel">
+                <section>
+                    <h2><span id="markdown-title">Teaching Data</span></h2>
+                    <div id="content" class="markdown-body">
+                        <div class="loading">Loading dashboard data...</div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="content-panel">
+                <section>
+                    <h2>Grade Distribution</h2>
+                    <div id="grade-distribution">
+                        <!-- Dynamic Grade Distribution -->
+                        <div class="loading">Calculating...</div>
+                    </div>
+                </section>
+                
+                <section style="margin-top: 2rem;">
+                    <h2>Quick Info</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        This dashboard is powered by <code>admin/index.md</code>. To update your stats, simply edit the Markdown file. The dashboard will automatically recalculate everything.
+                    </p>
+                </section>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        async function initDashboard() {
+            try {
+                const response = await fetch('index.md');
+                const markdown = await response.text();
+                
+                // Render Markdown
+                document.getElementById('content').innerHTML = marked.parse(markdown);
+                
+                // Calculate Stats
+                processStats(markdown);
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('content').innerHTML = `
+                    <div style="color: #ef4444; padding: 2rem; text-align: center;">
+                        <h3>Error Loading Dashboard</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function processStats(markdown) {
+            // Find the table and parse rows
+            const tableRegex = /\|(.+)\|/g;
+            const rows = markdown.split('\n').filter(line => line.trim().startsWith('|'));
+            
+            // Skip the header and separator rows
+            const dataRows = rows.slice(2);
+            
+            let totalStudents = 0;
+            let classCount = 0;
+            const gradeDistribution = {};
+
+            dataRows.forEach(row => {
+                const cells = row.split('|').map(c => c.trim()).filter(c => c !== '');
+                if (cells.length >= 4) {
+                    const courseName = cells[1]; // e.g. "STEM Grade 2"
+                    const count = parseInt(cells[3]); // e.g. "23"
+
+                    if (!isNaN(count)) {
+                        totalStudents += count;
+                        classCount++;
+
+                        // Extract grade
+                        const gradeMatch = courseName.match(/Grade (\d+)/i);
+                        if (gradeMatch) {
+                            const grade = `Grade ${gradeMatch[1]}`;
+                            gradeDistribution[grade] = (gradeDistribution[grade] || 0) + count;
+                        }
+                    }
+                }
+            });
+
+            // Update Header Stats
+            document.getElementById('total-students').textContent = totalStudents;
+            document.getElementById('total-classes').textContent = classCount;
+            document.getElementById('avg-class-size').textContent = classCount > 0 ? (totalStudents / classCount).toFixed(1) : 0;
+
+            // Render Grade Distribution
+            renderGradeDistribution(gradeDistribution, totalStudents);
+        }
+
+        function renderGradeDistribution(dist, total) {
+            const container = document.getElementById('grade-distribution');
+            container.innerHTML = '';
+
+            // Sort grades numerically
+            const sortedGrades = Object.keys(dist).sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)[0]);
+                const numB = parseInt(b.match(/\d+/)[0]);
+                return numA - numB;
+            });
+
+            const maxCount = Math.max(...Object.values(dist));
+
+            sortedGrades.forEach(grade => {
+                const count = dist[grade];
+                const percentage = (count / maxCount) * 100;
+                
+                const item = document.createElement('div');
+                item.className = 'grade-item';
+                item.innerHTML = `
+                    <span class="grade-label">${grade}</span>
+                    <div class="grade-bar-container">
+                        <div class="grade-bar" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="grade-value">${count}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        initDashboard();
+    </script>
+</body>
+</html>

@@ -2315,5 +2315,139 @@
         }
 
     </script>
+    <!-- Mobile Controls -->
+    <style>
+        #mobile-controls { display: none; }
+        @media (max-width: 1024px) {
+            #mobile-controls { display: block; position: fixed; inset: 0; z-index: 10000; pointer-events: none; }
+            .mobile-btn {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                width: 60px; height: 60px;
+                color: white; font-weight: 900; font-family: sans-serif;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+                display: flex; justify-content: center; align-items: center;
+                user-select: none; -webkit-user-select: none; touch-action: none;
+                pointer-events: auto;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+            }
+            .mobile-btn:active { background: rgba(255, 255, 255, 0.3); }
+            .dpad { position: absolute; bottom: 20px; left: 20px; width: 180px; height: 180px; }
+            .btn-up { position: absolute; top: 0; left: 60px; }
+            .btn-down { position: absolute; bottom: 0; left: 60px; }
+            .btn-left { position: absolute; top: 60px; left: 0; }
+            .btn-right { position: absolute; top: 60px; right: 0; }
+            
+            .action-buttons { position: absolute; bottom: 20px; right: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            .touch-look-area { position: absolute; top: 0; left: 0; right: 0; bottom: 200px; pointer-events: auto; touch-action: none; }
+        }
+    </style>
+    <div id="mobile-controls">
+        <div class="touch-look-area" id="touch-look-area"></div>
+        <div class="dpad">
+            <div class="mobile-btn btn-up" id="btn-w">W</div>
+            <div class="mobile-btn btn-left" id="btn-a">A</div>
+            <div class="mobile-btn btn-down" id="btn-s">S</div>
+            <div class="mobile-btn btn-right" id="btn-d">D</div>
+        </div>
+        <div class="action-buttons">
+            <div class="mobile-btn" id="btn-fly" style="font-size:12px;">FLY(F)</div>
+            <div class="mobile-btn" id="btn-jump" style="font-size:12px;">JUMP</div>
+            <div class="mobile-btn" id="btn-break" style="font-size:12px;">BREAK</div>
+            <div class="mobile-btn" id="btn-place" style="font-size:12px;">PLACE</div>
+            <div class="mobile-btn" id="btn-col" style="font-size:12px;">COLOR</div>
+            <div class="mobile-btn" id="btn-ball" style="font-size:12px;">BALL</div>
+        </div>
+    </div>
+    <script>
+        // Mobile Controls JS Addon
+        const bindTouch = (id, onStart, onEnd) => {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); onStart(); });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); onEnd(); });
+        };
+
+        bindTouch('btn-w', () => moveForward = true, () => moveForward = false);
+        bindTouch('btn-s', () => moveBackward = true, () => moveBackward = false);
+        bindTouch('btn-a', () => moveLeft = true, () => moveLeft = false);
+        bindTouch('btn-d', () => moveRight = true, () => moveRight = false);
+        
+        bindTouch('btn-jump', () => {
+            if(isFlyMode) moveUp = true;
+            else if(canJump) { velocity.y += 120; canJump = false; }
+            controls.isLocked = true; // force lock for actions
+        }, () => moveUp = false);
+
+        bindTouch('btn-fly', () => {
+            document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyF'}));
+        }, () => {});
+
+        bindTouch('btn-break', () => {
+            controls.isLocked = true;
+            if (typeof hasFireballAbility !== 'undefined' && hasFireballAbility) shootFireball();
+            if (typeof breakBlock === 'function') breakBlock();
+        }, () => {});
+
+        bindTouch('btn-place', () => {
+            controls.isLocked = true;
+            if (typeof placeBlock === 'function') placeBlock();
+        }, () => {});
+
+        let colIdx = 0;
+        bindTouch('btn-col', () => {
+            colIdx = (colIdx + 1) % 8;
+            if (typeof window.selectColor === 'function') window.selectColor(colIdx);
+        }, () => {});
+
+        bindTouch('btn-ball', () => {
+            if (typeof isChargingBall !== 'undefined') {
+                if(!isChargingBall) { isChargingBall = true; ballCharge = 0; if (typeof chargeUI !== 'undefined') chargeUI.style.display = 'block'; }
+            }
+        }, () => {
+            if (typeof isChargingBall !== 'undefined') {
+                if (isChargingBall) { isChargingBall = false; if (typeof chargeUI !== 'undefined') chargeUI.style.display = 'none'; if (typeof throwPokeball === 'function') throwPokeball(); }
+            }
+        });
+
+        // Touch Look Area
+        const touchArea = document.getElementById('touch-look-area');
+        let touchStartX, touchStartY;
+        touchArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            controls.isLocked = true; // ensure game is active
+            touchStartX = e.touches[0].pageX;
+            touchStartY = e.touches[0].pageY;
+            
+            // start game if not started
+            const b = document.getElementById('blocker');
+            if (b && b.style.display !== 'none') {
+                const instr = document.getElementById('instructions');
+                if (instr) instr.click();
+            }
+        });
+        touchArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if(touchStartX !== undefined) {
+                const deltaX = e.touches[0].pageX - touchStartX;
+                const deltaY = e.touches[0].pageY - touchStartY;
+                
+                const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+                euler.setFromQuaternion(camera.quaternion);
+                
+                euler.y -= deltaX * 0.005;
+                euler.x -= deltaY * 0.005;
+                euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+                
+                camera.quaternion.setFromEuler(euler);
+                
+                touchStartX = e.touches[0].pageX;
+                touchStartY = e.touches[0].pageY;
+            }
+        });
+        touchArea.addEventListener('touchend', () => { touchStartX = undefined; });
+    </script>
 </body>
-</html>

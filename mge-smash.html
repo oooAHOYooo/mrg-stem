@@ -2772,6 +2772,61 @@
         // Start the game
         init();
     </script>
-</body>
+    <!-- Mobile Controls -->
+    <style>
+        #mobile-controls { display: none; }
+        @media (max-width: 1024px) {
+            #mobile-controls { display: block; position: fixed; inset: 0; z-index: 10000; pointer-events: none; }
+            .mobile-btn {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                width: 60px; height: 60px;
+                color: white; font-weight: 900; font-family: sans-serif;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+                display: flex; justify-content: center; align-items: center;
+                user-select: none; -webkit-user-select: none; touch-action: none;
+                pointer-events: auto;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+            }
+            .mobile-btn:active { background: rgba(255, 255, 255, 0.3); }
+            .dpad { position: absolute; bottom: 20px; left: 20px; width: 180px; height: 120px; }
+            .btn-left { position: absolute; bottom: 0; left: 0; }
+            .btn-right { position: absolute; bottom: 0; left: 80px; }
+            
+            .action-buttons { position: absolute; bottom: 20px; right: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            #btn-jump { grid-column: 1 / span 2; justify-self: center; width: 135px; border-radius: 30px; }
+        }
+    </style>
+    <div id="mobile-controls">
+        <div class="dpad">
+            <div class="mobile-btn btn-left" id="btn-a" style="font-size:12px;">LEFT</div>
+            <div class="mobile-btn btn-right" id="btn-d" style="font-size:12px;">RIGHT</div>
+        </div>
+        <div class="action-buttons">
+            <div class="mobile-btn" id="btn-jump">JUMP</div>
+            <div class="mobile-btn" id="btn-s" style="font-size:12px;">ATK</div>
+            <div class="mobile-btn" id="btn-q" style="background:rgba(156,39,176,0.6); color:white; font-size:12px;">SPC</div>
+        </div>
+    </div>
+    <script>
+        // Mobile Controls JS Addon
+        if (typeof keys === 'undefined') window.keys = {};
+        
+        const bindTouch = (id, key) => {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+        };
 
+        bindTouch('btn-a', 'a');
+        bindTouch('btn-d', 'd');
+        bindTouch('btn-jump', 'w');
+        bindTouch('btn-s', 's');
+        bindTouch('btn-q', 'q');
+    </script>
+</body>
 </html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposal Invoice | Mr. G STEM</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="portfolio.css">
+    <style>
+      body { font-size: 18px; line-height: 1.5; }
+      .invoice-page { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+      .invoice-header {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.12));
+        border-radius: 20px;
+        border: 2px solid rgba(59, 130, 246, 0.3);
+      }
+      .invoice-header h1 { font-size: clamp(1.8rem, 4vw, 2.2rem); color: #1e40af; margin: 0 0 0.5rem; font-weight: 800; }
+      .invoice-header p { color: #475569; margin: 0; font-size: 1.1rem; }
+      .invoice-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+      }
+      .invoice-from, .invoice-to {
+        padding: 1rem 1.25rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+      .invoice-from h3, .invoice-to h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin: 0 0 0.5rem; }
+      .invoice-from p, .invoice-to p { margin: 0; color: #1e293b; font-weight: 500; }
+      .invoice-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        padding: 1rem 0;
+        border-bottom: 2px solid #e2e8f0;
+      }
+      .invoice-details dt { font-size: 0.8rem; color: #64748b; margin: 0 0 0.25rem; }
+      .invoice-details dd { margin: 0; font-weight: 600; color: #1e40af; }
+      .invoice-table-wrap { overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid #e2e8f0; border-radius: 12px; }
+      .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      .invoice-table th {
+        text-align: left;
+        padding: 0.85rem 1rem;
+        background: #1e40af;
+        color: white;
+        font-weight: 700;
+      }
+      .invoice-table th:first-child { border-radius: 12px 0 0 0; }
+      .invoice-table th:last-child { border-radius: 0 12px 0 0; text-align: right; }
+      .invoice-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+      .invoice-table tbody tr:last-child td { border-bottom: none; }
+      .invoice-table td:last-child { text-align: right; font-weight: 600; }
+      .invoice-table .num { text-align: center; }
+      .invoice-totals {
+        max-width: 320px;
+        margin-left: auto;
+        padding: 1rem 1.25rem;
+        background: #f1f5f9;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+      }
+      .invoice-totals .row { display: flex; justify-content: space-between; padding: 0.4rem 0; }
+      .invoice-totals .row.total { font-size: 1.2rem; font-weight: 800; color: #1e40af; border-top: 2px solid #1e40af; margin-top: 0.5rem; padding-top: 0.75rem; }
+      .invoice-notes { margin-top: 2rem; padding: 1rem; background: #fffbeb; border-radius: 10px; border: 1px solid #fde68a; color: #92400e; font-size: 0.9rem; }
+      .invoice-notes strong { display: block; margin-bottom: 0.25rem; }
+      .nav-invoice { margin-bottom: 1.5rem; }
+      .nav-invoice a { color: #3b82f6; font-weight: 600; text-decoration: none; }
+      .nav-invoice a:hover { text-decoration: underline; }
+      @media print {
+        .nav-invoice, .navbar-top, .theme-toggle, .navbar-toggle { display: none !important; }
+        .invoice-page { padding: 0; max-width: 100%; }
+        body { background: white; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-top">
+      <div class="navbar-container">
+        <div class="navbar-menu" id="top-nav-menu">
+          <a href="/" class="navbar-brand">⚡ Home</a>
+          <a href="/portfolio" class="navbar-brand">🏫 Portfolios</a>
+          <a href="/student-work.html" class="navbar-brand">🎨 Student Work</a>
+          <a href="/submit-portfolio.html" class="navbar-brand">📮 Submit</a>
+        </div>
+        <div style="display:flex; align-items:center; gap: 0.5rem;">
+          <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="theme-icon">🌙</span></button>
+          <button class="navbar-toggle" id="navbar-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="invoice-page">
+      <p class="nav-invoice"><a href="/">← Back to site</a></p>
+
+      <header class="invoice-header">
+        <h1>Invoice</h1>
+        <p>Proposal — Blocks / Deliverables</p>
+      </header>
+
+      <div class="invoice-meta">
+        <div class="invoice-from">
+          <h3>From</h3>
+          <p>[Your name or company]</p>
+          <p>[Email / contact]</p>
+        </div>
+        <div class="invoice-to">
+          <h3>Bill to</h3>
+          <p>[Client or school name]</p>
+          <p>[Address or contact]</p>
+        </div>
+      </div>
+
+      <dl class="invoice-details">
+        <div><dt>Invoice number</dt><dd>INV-001</dd></div>
+        <div><dt>Date</dt><dd>[Date]</dd></div>
+        <div><dt>Due date</dt><dd>[Due date]</dd></div>
+      </dl>
+
+      <div class="invoice-table-wrap">
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Group</th>
+              <th class="num">Qty</th>
+              <th>Distribution</th>
+              <th>Unit / Rate</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>[Block or deliverable 1]</td>
+              <td>[Group name]</td>
+              <td class="num">1</td>
+              <td>[e.g. Per class / per school]</td>
+              <td>$ —</td>
+              <td>$ —</td>
+            </tr>
+            <tr>
+              <td>[Block or deliverable 2]</td>
+              <td>[Group name]</td>
+              <td class="num">1</td>
+              <td>[Distribution]</td>
+              <td>$ —</td>
+              <td>$ —</td>
+            </tr>
+            <tr>
+              <td>[Block or deliverable 3]</td>
+              <td>[Group name]</td>
+              <td class="num">1</td>
+              <td>[Distribution]</td>
+              <td>$ —</td>
+              <td>$ —</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="invoice-totals">
+        <div class="row"><span>Subtotal</span><span>$ —</span></div>
+        <div class="row"><span>Tax (if applicable)</span><span>$ —</span></div>
+        <div class="row total"><span>Total</span><span>$ —</span></div>
+      </div>
+
+      <div class="invoice-notes">
+        <strong>Payment terms</strong>
+        [e.g. Net 30. Payable to: name / account details.]
+      </div>
+    </main>
+
+    <script>
+      (function() {
+        var toggle = document.getElementById('navbar-toggle');
+        var menu = document.getElementById('top-nav-menu');
+        if (toggle && menu) {
+          toggle.addEventListener('click', function() {
+            var open = menu.classList.toggle('navbar-menu-open');
+            toggle.setAttribute('aria-expanded', open);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

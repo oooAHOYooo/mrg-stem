@@ -961,5 +961,99 @@
         }
 
     </script>
+    <!-- Mobile Controls -->
+    <style>
+        #mobile-controls { display: none; }
+        @media (max-width: 1024px) {
+            #mobile-controls { display: block; position: fixed; inset: 0; z-index: 10000; pointer-events: none; }
+            .mobile-btn {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                width: 50px; height: 50px;
+                color: white; font-weight: 900; font-family: sans-serif; font-size: 1rem;
+                text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+                display: flex; justify-content: center; align-items: center;
+                user-select: none; -webkit-user-select: none; touch-action: none;
+                pointer-events: auto;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+            }
+            .mobile-btn:active { background: rgba(255, 255, 255, 0.3); }
+            
+            /* Movement DPAD (Left) */
+            .dpad-left { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; }
+            .dpad-left .btn-up { position: absolute; top: 0; left: 50px; }
+            .dpad-left .btn-down { position: absolute; bottom: 0; left: 50px; }
+            .dpad-left .btn-left { position: absolute; top: 50px; left: 0; }
+            .dpad-left .btn-right { position: absolute; top: 50px; right: 0; }
+            
+            /* Trick DPAD (Right) */
+            .dpad-right { position: absolute; bottom: 80px; right: 20px; width: 150px; height: 150px; }
+            .dpad-right .btn-up { position: absolute; top: 0; right: 50px; }
+            .dpad-right .btn-down { position: absolute; bottom: 0; right: 50px; }
+            .dpad-right .btn-left { position: absolute; top: 50px; left: 0; }
+            .dpad-right .btn-right { position: absolute; top: 50px; right: 0; }
+            
+            /* Action Buttons */
+            .btn-jump { position: absolute; bottom: 20px; right: 55px; width: 80px; height: 50px; border-radius: 25px; }
+            
+            /* Utility Buttons */
+            .util-btns { position: absolute; top: 80px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
+            .util-btn { width: 50px; height: 50px; font-size: 0.8rem; }
+        }
+    </style>
+    <div id="mobile-controls">
+        <div class="dpad-left">
+            <div class="mobile-btn btn-up" id="btn-w">W</div>
+            <div class="mobile-btn btn-left" id="btn-a">A</div>
+            <div class="mobile-btn btn-down" id="btn-s">S</div>
+            <div class="mobile-btn btn-right" id="btn-d">D</div>
+        </div>
+        <div class="dpad-right">
+            <div class="mobile-btn btn-up" id="btn-up">↑</div>
+            <div class="mobile-btn btn-left" id="btn-left">←</div>
+            <div class="mobile-btn btn-down" id="btn-down">↓</div>
+            <div class="mobile-btn btn-right" id="btn-right">→</div>
+        </div>
+        <div class="mobile-btn btn-jump" id="btn-space">JUMP</div>
+        
+        <div class="util-btns">
+            <div class="mobile-btn util-btn" id="btn-c">Mark</div>
+            <div class="mobile-btn util-btn" id="btn-v">Recall</div>
+            <div class="mobile-btn util-btn" id="btn-x">Auto</div>
+        </div>
+    </div>
+    <script>
+        // Mobile Controls JS Addon
+        const bindTouchKey = (id, keyChar, keyCode) => {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                document.dispatchEvent(new KeyboardEvent('keydown', {key: keyChar, code: keyCode}));
+            });
+            el.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                document.dispatchEvent(new KeyboardEvent('keyup', {key: keyChar, code: keyCode}));
+            });
+        };
+
+        bindTouchKey('btn-w', 'w', 'KeyW');
+        bindTouchKey('btn-a', 'a', 'KeyA');
+        bindTouchKey('btn-s', 's', 'KeyS');
+        bindTouchKey('btn-d', 'd', 'KeyD');
+        
+        bindTouchKey('btn-up', 'ArrowUp', 'ArrowUp');
+        bindTouchKey('btn-down', 'ArrowDown', 'ArrowDown');
+        bindTouchKey('btn-left', 'ArrowLeft', 'ArrowLeft');
+        bindTouchKey('btn-right', 'ArrowRight', 'ArrowRight');
+        
+        bindTouchKey('btn-space', ' ', 'Space');
+        bindTouchKey('btn-c', 'c', 'KeyC');
+        bindTouchKey('btn-v', 'v', 'KeyV');
+        bindTouchKey('btn-x', 'x', 'KeyX');
+    </script>
 </body>
 </html>
