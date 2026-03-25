@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inclusive Genesis - Sensory Friendly 3D Maker</title>
+    <title>Aqua Genesis - Deep Blue 3D Maker</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #121212;
-            --bg-panel: #1e1e1e;
-            --border-color: #333333;
-            --accent-primary: #ffb703; /* High contrast yellow */
-            --accent-secondary: #8ecae6; /* Soft blue */
-            --accent-warning: #fb8500; /* Distinct orange */
-            --text-main: #ffffff;
-            --text-dim: #cccccc;
+            --bg-dark: #001219; /* Deep ocean dark */
+            --bg-panel: #002233; /* Dark oceanic panel */
+            --border-color: #005f73; /* Muted teal border */
+            --accent-primary: #94d2bd; /* Soft aqua primary */
+            --accent-secondary: #0a9396; /* Deep teal secondary */
+            --accent-warning: #ee9b00; /* Contrast orange/amber */
+            --text-main: #e9d8a6; /* Soft cream/sand text */
+            --text-dim: #94d2bd;
         }
 
         * {
@@ -329,7 +329,7 @@
 <body>
     <nav class="top-nav">
         <div class="nav-brand">
-            <span style="font-size: 2rem;">🌟</span> Inclusive Genesis
+            <span style="font-size: 2rem;">🌊</span> Aqua Genesis
         </div>
         <div class="nav-actions">
             <a href="mge.html" class="btn" style="text-decoration: none;">🏠 Hub</a>
@@ -377,6 +377,7 @@
                     <button class="btn-quick" style="background: #333333; color: white; font-size: 1.2rem;" onclick="submitColor('black')">Black (Clear) 🧹</button>
                     <button class="btn-quick" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff); color: white; font-size: 1.2rem;" onclick="submitColor('random cube')">Random Cube 🎲</button>
                     <button class="btn-quick" style="background: linear-gradient(45deg, #ff00ff, #00ffff); color: black; font-size: 1.2rem;" onclick="submitColor('random sphere')">Random Sphere 🎲</button>
+                    <button class="btn-quick" style="background: var(--bg-dark); color: #ff3b30; border-color: #ff3b30; font-size: 1.2rem;" onclick="submitColor('black')">CLEAR EVERYTHING 🧹</button>
                     <button class="btn-quick" style="background: var(--accent-warning); color: black; font-size: 1.2rem;" onclick="document.getElementById('tutorial-modal').style.display='flex'">Smash Tutorial 🥊</button>
                 </div>
             </div>
@@ -386,11 +387,22 @@
         <div class="panel preview-view">
             <div class="panel-header" style="background:#1a1a1a;">
                 <span>🎮 Big Preview Window</span>
-                <span style="display: flex; gap: 0.8rem;">
-                    🔴 🟡 🟢
+                <span id="object-limit-container" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; width: 120px;">
+                    <span id="object-limit-text" style="font-size: 0.8rem; color: #aaa;">0 / 25 Objects</span>
+                    <div style="width: 100%; background: #333; height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div id="object-limit-bar" style="width: 0%; height: 100%; background: #34c759; transition: width 0.3s, background 0.3s;"></div>
+                    </div>
                 </span>
             </div>
-            <div id="canvas-container"></div>
+            <div id="canvas-container">
+                <!-- Transform Mode Selector -->
+                <div id="transform-controls-ui" style="position: absolute; top: 10px; left: 10px; display: none; flex-direction: column; gap: 8px; z-index: 5;">
+                    <button class="btn-quick" id="btn-mode-translate" onclick="setTransformMode('translate')" style="width: 50px; height: 50px; font-size: 1.0rem;">MOVE</button>
+                    <button class="btn-quick" id="btn-mode-rotate" onclick="setTransformMode('rotate')" style="width: 50px; height: 50px; font-size: 1.0rem;">TURN</button>
+                    <button class="btn-quick" id="btn-mode-scale" onclick="setTransformMode('scale')" style="width: 50px; height: 50px; font-size: 1.0rem;">SIZE</button>
+                    <button class="btn-quick" onclick="detachTransform()" style="width: 50px; height: 50px; font-size: 1.5rem; background: #ff3b30;">❌</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -415,6 +427,8 @@
 
     <!-- Required Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 
     <script>
         // === STATE & HISTORY ===
@@ -529,9 +543,55 @@
         gridHelper.material.transparent = true;
         scene.add(gridHelper);
 
+        // Interaction Tools
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+        orbit.enableDamping = true;
+        orbit.dampingFactor = 0.05;
+
+        const transformControls = new THREE.TransformControls(camera, renderer.domElement);
+        transformControls.addEventListener('dragging-changed', (e) => {
+            orbit.enabled = !e.value;
+        });
+        scene.add(transformControls);
+
+        function setTransformMode(mode) {
+            transformControls.setMode(mode);
+        }
+
+        function detachTransform() {
+            transformControls.detach();
+            document.getElementById('transform-controls-ui').style.display = 'none';
+        }
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const targets = animObjects.filter(o => o.isMesh);
+            const intersects = raycaster.intersectObjects(targets);
+            
+            if (intersects.length > 0) {
+                const selected = intersects[0].object;
+                transformControls.attach(selected);
+                document.getElementById('transform-controls-ui').style.display = 'flex';
+            } else if (transformControls.dragging === false) {
+                // Don't detach if we just clicked the control handles
+                // But Three.js handles handle clicking internally
+            }
+        });
+
+        window.detachTransform = detachTransform;
+        window.setTransformMode = setTransformMode;
+
         // Animated Objects tracking
         let animObjects = [];
         let players = [];
+        let objectCount = 0;
         const keys = {};
 
         window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
@@ -541,8 +601,11 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            const time = performance.now() * 0.0015; // Slightly slower, relaxing animations
+            const time = performance.now() * 0.0015;
             animObjects.forEach(obj => {
+                // Don't animate if this object is being transformed
+                if (transformControls.object === obj) return;
+
                 if(obj.userData.bounce) {
                     obj.position.y = obj.userData.baseY + Math.abs(Math.sin(time * 3)) * 3;
                 }
@@ -552,8 +615,8 @@
                 }
             });
 
-            // Very simple arrow key controls for players
-            if (players.length > 0) {
+            // Suspend player controls if we are transforming ANY object
+            if (players.length > 0 && !transformControls.object) {
                 const speed = 0.15;
                 let p1 = players[0];
                 let p2 = players.length > 1 ? players[1] : null;
@@ -589,6 +652,7 @@
                 });
             }
 
+            orbit.update();
             renderer.render(scene, camera);
         }
         animate();
@@ -646,6 +710,10 @@
                 lowerCmd = optionMap[lowerCmd];
             }
 
+            if (objectCount >= 25 && !lowerCmd.includes('clear')) {
+                return "Wait! You have 25 objects! 🛑 That is the limit. <br>Clear the board to add more!";
+            }
+
             let response = "";
             let somethingHappened = false;
 
@@ -679,19 +747,43 @@
                 metalness: 0.1,
             });
 
+            const updateMeter = () => {
+                const bar = document.getElementById('object-limit-bar');
+                const text = document.getElementById('object-limit-text');
+                const percent = (objectCount / 25) * 100;
+                bar.style.width = percent + '%';
+                text.innerText = `${objectCount} / 25 Objects`;
+                
+                if (percent < 50) bar.style.background = "#34c759";
+                else if (percent < 90) bar.style.background = "#ffcc00";
+                else bar.style.background = "#ff3b30";
+            };
+
+            const addObject = (obj) => {
+                obj.castShadow = true;
+                scene.add(obj);
+                animObjects.push(obj);
+                objectCount++;
+                updateMeter();
+            };
+
             // 1. World / Floor
             if (lowerCmd.includes('floor') || lowerCmd.includes('ground') || lowerCmd.includes('world')) {
-                const geometry = new THREE.PlaneGeometry(40, 40);
-                const material = new THREE.MeshStandardMaterial({ 
-                    color: 0x228b22, // Nice grass green
-                    roughness: 1.0 
-                });
-                const plane = new THREE.Mesh(geometry, material);
-                plane.rotation.x = -Math.PI / 2;
-                plane.receiveShadow = true;
-                scene.add(plane);
-                response += "🌍 Bam! Added a lovely green world floor! <br>";
-                somethingHappened = true;
+                if (objectCount < 25) {
+                    const geometry = new THREE.PlaneGeometry(40, 40);
+                    const material = new THREE.MeshStandardMaterial({ 
+                        color: 0x228b22, // Nice grass green
+                        roughness: 1.0 
+                    });
+                    const plane = new THREE.Mesh(geometry, material);
+                    plane.rotation.x = -Math.PI / 2;
+                    plane.receiveShadow = true;
+                    scene.add(plane);
+                    objectCount++;
+                    updateMeter();
+                    response += "🌍 Bam! Added a lovely green world floor! <br>";
+                    somethingHappened = true;
+                }
             }
 
             // 2. Player Cube
@@ -699,11 +791,9 @@
                 const geometry = new THREE.BoxGeometry(2.5, 2.5, 2.5);
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
                 obj.position.set((Math.random()-0.5)*5, 1.25, (Math.random()-0.5)*5);
-                obj.castShadow = true;
                 obj.userData = { baseY: 1.25 };
-                scene.add(obj);
+                addObject(obj);
                 players.push(obj);
-                animObjects.push(obj);
                 response += `🟦 Poof! A ${colorName} Player Cube appeared! <br>`;
                 somethingHappened = true;
             }
@@ -713,11 +803,9 @@
                 const geometry = new THREE.SphereGeometry(1.5, 32, 32);
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
                 obj.position.set((Math.random()-0.5)*5, 1.5, (Math.random()-0.5)*5);
-                obj.castShadow = true;
                 obj.userData = { baseY: 1.5 };
-                scene.add(obj);
+                addObject(obj);
                 players.push(obj);
-                animObjects.push(obj);
                 response += `🔴 Whoosh! A smooth ${colorName} Sphere! <br>`;
                 somethingHappened = true;
             }
@@ -727,23 +815,19 @@
                 const geometry = new THREE.TorusGeometry(1.5, 0.6, 16, 100);
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
                 obj.position.set((Math.random()-0.5)*6, 2, (Math.random()-0.5)*6);
-                obj.castShadow = true;
-                obj.userData = { baseY: 2, spin: true }; // Auto spin for fun
-                scene.add(obj);
-                animObjects.push(obj);
+                obj.userData = { baseY: 2, spin: true };
+                addObject(obj);
                 response += `🍩 Yum! A ${colorName} Donut shape was added! <br>`;
                 somethingHappened = true;
             }
 
             // 5. Pyramid / Cone
             if (lowerCmd.includes('pyramid') || lowerCmd.includes('cone')) {
-                const geometry = new THREE.ConeGeometry(2, 3, 4); // 4 sides = pyramid
+                const geometry = new THREE.ConeGeometry(2, 3, 4);
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
                 obj.position.set((Math.random()-0.5)*6, 1.5, (Math.random()-0.5)*6);
-                obj.castShadow = true;
                 obj.userData = { baseY: 1.5 };
-                scene.add(obj);
-                animObjects.push(obj);
+                addObject(obj);
                 response += `🔺 Tada! A tall ${colorName} Pyramid stands there! <br>`;
                 somethingHappened = true;
             }
@@ -753,10 +837,8 @@
                 const geometry = createStarGeometry();
                 const obj = new THREE.Mesh(geometry, getMaterial(chosenColor));
                 obj.position.set((Math.random()-0.5)*6, 3, (Math.random()-0.5)*6);
-                obj.castShadow = true;
-                obj.userData = { baseY: 3, bounce: true, spin: true }; // Magical star bounces and spins
-                scene.add(obj);
-                animObjects.push(obj);
+                obj.userData = { baseY: 3, bounce: true, spin: true };
+                addObject(obj);
                 response += `⭐ Twinkle! A magical ${colorName} Star is floating! <br>`;
                 somethingHappened = true;
             }
@@ -796,6 +878,9 @@
                 toRemove.forEach(child => scene.remove(child));
                 animObjects = [];
                 players = [];
+                objectCount = 0;
+                updateMeter();
+                detachTransform();
                 response = "🧹 Sweep sweep! The board is all clean for a new game!<br>";
                 somethingHappened = true;
             }
