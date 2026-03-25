@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ ROBOT-MON: CYBER MATH BATTLE ⚡</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --gb-black: #081820;
+            --gb-dark: #346856;
+            --gb-light: #88c070;
+            --gb-white: #e0f8cf;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff007f;
+            --neon-yellow: #f8fb00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: 'Press Start 2P', cursive;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--gb-black);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-boundary {
+            width: 900px;
+            height: 700px;
+            position: relative;
+            background: var(--gb-white);
+            border: 12px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(0,240,255,0.3);
+        }
+
+        #three-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 60%;
+            z-index: 1;
+            filter: grayscale(0.5) contrast(1.2);
+        }
+
+        /* --- BATTLE SCENE --- */
+        #battle-top {
+            position: relative;
+            height: 60%;
+            z-index: 10;
+        }
+
+        /* Scanlines */
+        #battle-top::after {
+            content: ""; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%), linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+            background-size: 100% 4px, 3px 100%; pointer-events: none; z-index: 50;
+        }
+
+        .hud {
+            position: absolute; background: white; border: 4px solid black;
+            padding: 8px; width: 340px; box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+        }
+        .hud-enemy { top: 30px; left: 30px; border-radius: 0 15px 0 15px; }
+        .hud-player { bottom: 80px; right: 30px; border-radius: 15px 0 15px 0; }
+
+        .hp-bar { width: 100%; height: 12px; background: #333; border: 2px solid black; margin-top: 5px; position: relative; }
+        .hp-fill { height: 100%; width: 100%; background: #78c850; transition: width 0.3s; }
+
+        .sprite { position: absolute; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; z-index: 20; }
+        .sprite-enemy { top: 40px; right: 100px; }
+        .sprite-player { bottom: 40px; left: 100px; }
+
+        /* Badass 2D Robot Art (CSS) */
+        .bot-art { font-size: 150px; text-shadow: 4px 4px 0px white, -4px -4px 0px white; }
+
+        /* --- UI TRAY (POKEMON STYLE) --- */
+        #bottom-tray {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 40%;
+            background: white; border-top: 10px solid black; z-index: 100;
+            display: flex;
+        }
+
+        #msg-text {
+            flex: 1; padding: 25px; font-family: 'VT323', monospace; font-size: 40px;
+            line-height: 1.1; border-right: 10px solid black; display: flex; align-items: center;
+        }
+
+        #menu-grid { width: 320px; display: grid; grid-template-columns: 1fr 1fr; padding: 15px; gap: 15px; }
+
+        .m-btn {
+            background: white; border: 5px solid black; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; cursor: pointer; transition: all 0.1s; position: relative;
+        }
+        .m-btn:hover { background: #eee; }
+        .m-btn.selected::before { content: "▶"; position: absolute; left: 8px; }
+
+        /* Party (6 Bots) */
+        #party-strip {
+            position: absolute; bottom: 210px; left: 40px; display: flex; gap: 8px; z-index: 80;
+        }
+        .p-dot { width: 35px; height: 35px; background: white; border: 3px solid black; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
+        .p-dot.active { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transform: translateY(-5px); }
+        .p-dot.dead { filter: grayscale(1); opacity: 0.4; }
+
+        /* --- PROGRAMMING OVERLAY --- */
+        #prog-ui {
+            position: absolute; top: 30px; left: 30px; right: 30px; bottom: 250px;
+            background: white; border: 10px solid black; z-index: 200; display: none; padding: 30px;
+            flex-direction: column; box-shadow: 10px 10px 0 rgba(0,0,0,0.5);
+        }
+
+        .slot-row { height: 75px; border: 5px solid #ccc; margin-bottom: 15px; display: flex; align-items: center; padding: 0 25px; font-size: 14px; cursor: pointer; }
+        .slot-row.active { border-color: black; background: #eee; }
+        .slot-row.set { border-color: var(--neon-blue); background: #f0fbff; font-weight: bold; }
+
+        #math-pop {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; border: 12px solid black; padding: 50px; z-index: 500; display: none;
+            text-align: center; box-shadow: 0 0 0 100vmax rgba(0,0,0,0.85); animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop { from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+        #math-q { font-size: 48px; margin-bottom: 25px; }
+        #math-ans { width: 180px; height: 70px; font-size: 38px; text-align: center; border: 6px solid black; outline: none; }
+
+        /* FX */
+        .shake { animation: s-kf 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes s-kf { 10%, 90% { transform: translate3d(-3px,0,0); } 20%, 80% { transform: translate3d(6px,0,0); } 30%, 50%, 70% { transform: translate3d(-8px,0,0); } 40%, 60% { transform: translate3d(8px,0,0); } }
+        .hit-flash { animation: f-kf 0.1s 6; }
+        @keyframes f-kf { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-boundary">
+        <canvas id="three-canvas"></canvas>
+
+        <div id="battle-top">
+            <!-- Party State -->
+            <div id="party-strip">
+                <div class="p-dot active" id="dot-0">🤖</div>
+                <div class="p-dot" id="dot-1">🦾</div>
+                <div class="p-dot" id="dot-2">👹</div>
+                <div class="p-dot" id="dot-3">🤖</div>
+                <div class="p-dot" id="dot-4">🦾</div>
+                <div class="p-dot" id="dot-5">👹</div>
+            </div>
+
+            <!-- Enemy -->
+            <div class="hud hud-enemy">
+                <div style="font-size:12px; display:flex; justify-content:space-between;"><span>DARK-CORE-MAX</span><span>Lv100</span></div>
+                <div class="hp-bar"><div id="e-hp-fill" class="hp-fill"></div></div>
+            </div>
+            <div class="sprite sprite-enemy" id="e-sprite-wrap"><div class="bot-art" id="e-bot">👾</div></div>
+
+            <!-- Player -->
+            <div class="hud hud-player">
+                <div style="font-size:12px; display:flex; justify-content:space-between;"><span id="p-name-lab">MECHA-X</span><span>Lv42</span></div>
+                <div class="hp-bar"><div id="p-hp-fill" class="hp-fill"></div></div>
+            </div>
+            <div class="sprite sprite-player" id="p-sprite-wrap"><div class="bot-art" id="p-bot">⚔️</div></div>
+        </div>
+
+        <div id="bottom-tray">
+            <div id="msg-text">What will MECHA-X do?</div>
+            <div id="menu-grid">
+                <div class="m-btn selected" onclick="openProg()">PROGRAM</div>
+                <div class="m-btn" onclick="msgText('SERVER OFFLINE. NO ITEMS.')">UPLOADS</div>
+                <div class="m-btn" onclick="msgText('ACCESSING BOT DATABASE...')">DATA</div>
+                <div class="m-btn" onclick="location.href='mge.html'">MGE HUB</div>
+            </div>
+        </div>
+
+        <!-- Overlays -->
+        <div id="prog-ui">
+            <h2 style="font-size:16px; margin-bottom:20px; text-decoration: underline;">SEQUENTIAL INSTRUCTION PIPELINE</h2>
+            <div id="slot-container">
+                <div class="slot-row" onclick="cycleMove(0)">[ EMPTY ]</div>
+                <div class="slot-row" onclick="cycleMove(1)">[ EMPTY ]</div>
+                <div class="slot-row" onclick="cycleMove(2)">[ EMPTY ]</div>
+            </div>
+            <div style="display:flex; gap:15px; margin-top:auto;">
+                <button onclick="closeProg()" style="flex:1; padding:20px; font-family:inherit; cursor:pointer;">DISCARD</button>
+                <button onclick="beginSequence()" style="flex:1; padding:20px; background:black; color:white; font-family:inherit; cursor:pointer;">EXECUTE(RUN)</button>
+            </div>
+        </div>
+
+        <div id="math-pop">
+            <div id="math-q">?? + ??</div>
+            <input type="number" id="math-ans">
+            <div style="font-size:10px; margin-top:20px; color:#666;">TYPE ANSWER & PRESS ENTER</div>
+        </div>
+    </div>
+
+    <script>
+        // --- 3D ENVIRONMENT ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 900/420, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), antialias: true, alpha: true });
+        renderer.setSize(900, 420);
+
+        const grid = new THREE.GridHelper(100, 30, 0x00f0ff, 0x012222);
+        grid.position.y = -8;
+        scene.add(grid);
+
+        const group = new THREE.Group();
+        for(let i=0; i<40; i++) {
+            const geo = new THREE.BoxGeometry(2,2,2);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(Math.random()*80-40, Math.random()*20, Math.random()*100-80);
+            group.add(mesh);
+        }
+        scene.add(group);
+
+        camera.position.set(0, 5, 25);
+        camera.lookAt(0,0,0);
+
+        function render3D() {
+            requestAnimationFrame(render3D);
+            grid.rotation.y += 0.002;
+            group.position.z += 0.08;
+            if(group.position.z > 50) group.position.z = 0;
+            renderer.render(scene, camera);
+        }
+        render3D();
+
+        // --- GAME LOGIC ---
+        const MOVES = {
+            'LASER': { p: 25, t: "fired a PLASMA LASER!" },
+            'STRIKE': { p: 40, t: "used GIGA-STRIKE!" },
+            'BUFF': { p: -30, t: "optimized CORE PERFORMANCE!" }
+        };
+
+        const TEAM = [
+            { n: "TITAN-01", i: "⚔️" }, { n: "BLAST-BOT", i: "☄️" }, { n: "RECON-X", i: "🛸" },
+            { n: "OMEGA-M", i: "🛡️" }, { n: "VOLT-C", i: "⚡" }, { n: "SHREDDER", i: "🔪" }
+        ];
+
+        const state = {
+            pParty: TEAM.map(t => ({ ...t, hp: 100, live: true })),
+            eHp: 100, pIdx: 0,
+            prog: [null, null, null],
+            busy: false
+        };
+
+        const msgBox = document.getElementById('msg-text');
+        const progOverlay = document.getElementById('prog-ui');
+        const mathPop = document.getElementById('math-pop');
+
+        function msgText(t, cb) {
+            msgBox.innerText = t;
+            if (cb) setTimeout(cb, 1500);
+        }
+
+        window.openProg = () => { if(state.busy) return; progOverlay.style.display = 'flex'; };
+        window.closeProg = () => { progOverlay.style.display = 'none'; };
+
+        window.cycleMove = (idx) => {
+            const keys = Object.keys(MOVES);
+            const cur = state.prog[idx];
+            const nIdx = (keys.indexOf(cur) + 1) % (keys.length + 1);
+            const next = nIdx === keys.length ? null : keys[nIdx];
+            state.prog[idx] = next;
+            const rows = document.querySelectorAll('.slot-row');
+            rows[idx].innerText = next ? `>>> ${next} <<<` : "[ EMPTY ]";
+            rows[idx].className = next ? "slot-row set" : "slot-row";
+        };
+
+        window.beginSequence = async () => {
+            if(state.prog.some(p => p === null)) return alert("Full Program Required!");
+            closeProg();
+            state.busy = true;
+
+            for(let i=0; i<3; i++) {
+                if(!state.pParty[state.pIdx].live || state.eHp <= 0) break;
+                
+                const move = state.prog[i];
+                const win = await doMath();
+                
+                if(win) {
+                    await executeTurn(true, move);
+                } else {
+                    await msgText("COMPUTE ERROR! Move failed!");
+                    await sleep(1000);
+                }
+
+                if(state.eHp > 0 && state.pParty[state.pIdx].live) {
+                    const keys = Object.keys(MOVES);
+                    await executeTurn(false, keys[Math.floor(Math.random()*keys.length)]);
+                }
+            }
+
+            state.busy = false;
+            msgText(`What will ${state.pParty[state.pIdx].n} do?`);
+        };
+
+        async function doMath() {
+            return new Promise(res => {
+                const a = Math.floor(Math.random()*12) + 1;
+                const b = Math.floor(Math.random()*12) + 1;
+                const op = Math.random() > 0.5 ? '+' : '-';
+                const ans = op === '+' ? a+b : Math.abs(a-b);
+                
+                document.getElementById('math-q').innerText = `${Math.max(a,b)} ${op} ${Math.min(a,b)} = ?`;
+                mathPop.style.display = 'block';
+                const input = document.getElementById('math-ans');
+                input.value = '';
+                input.focus();
+
+                const handler = (e) => {
+                    if(e.key === 'Enter') {
+                        input.removeEventListener('keydown', handler);
+                        mathPop.style.display = 'none';
+                        res(parseInt(input.value) === ans);
+                    }
+                };
+                input.addEventListener('keydown', handler);
+            });
+        }
+
+        async function executeTurn(isP, moveKey) {
+            const data = MOVES[moveKey];
+            const bot = isP ? state.pParty[state.pIdx] : { n: "DARK-CORE-MAX" };
+            const atkDir = isP ? 1 : -1;
+            const atkWrap = document.getElementById(isP ? 'p-sprite-wrap' : 'e-sprite-wrap');
+            const defWrap = document.getElementById(isP ? 'e-sprite-wrap' : 'p-sprite-wrap');
+
+            await msgText(`${bot.n} ${data.t}`);
+            
+            atkWrap.style.transform = `translate(${atkDir*60}px, ${atkDir*-60}px) scale(1.1)`;
+            await sleep(300);
+            atkWrap.style.transform = "";
+
+            if(data.p > 0) {
+                defWrap.classList.add('shake', 'hit-flash');
+                if(isP) state.eHp = Math.max(0, state.eHp - data.p);
+                else {
+                    state.pParty[state.pIdx].hp = Math.max(0, state.pParty[state.pIdx].hp - data.p);
+                    if(state.pParty[state.pIdx].hp === 0) state.pParty[state.pIdx].live = false;
+                }
+                updateUI();
+                await sleep(600);
+                defWrap.classList.remove('shake', 'hit-flash');
+            } else {
+                if(isP) state.pParty[state.pIdx].hp = Math.min(100, state.pParty[state.pIdx].hp + Math.abs(data.p));
+                else state.eHp = Math.min(100, state.eHp + Math.abs(data.p));
+                updateUI();
+                await sleep(600);
+            }
+
+            if(state.eHp === 0) await msgText("DARK-CORE-MAX CRASHED! VICTORY!");
+            if(!state.pParty[state.pIdx].live) {
+                await msgText(`${state.pParty[state.pIdx].n} OFFLINE!`);
+                await sleep(1000);
+                await findNext();
+            }
+        }
+
+        async function findNext() {
+            const next = state.pParty.findIndex(b => b.live);
+            if(next === -1) { await msgText("ALL BOTS DOWN. MISSION FAILED."); return; }
+            state.pIdx = next;
+            document.getElementById('p-bot').innerText = state.pParty[state.pIdx].i;
+            document.getElementById('p-name-lab').innerText = state.pParty[state.pIdx].n;
+            updateUI();
+            await msgText(`DATA UPLOADED! GO, ${state.pParty[state.pIdx].n}!`);
+        }
+
+        function updateUI() {
+            const bot = state.pParty[state.pIdx];
+            document.getElementById('p-hp-fill').style.width = bot.hp + "%";
+            document.getElementById('e-hp-fill').style.width = state.eHp + "%";
+            
+            document.getElementById('p-hp-fill').style.background = bot.hp > 50 ? "#78c850" : (bot.hp > 20 ? "#f8d030" : "#f85888");
+            document.getElementById('e-hp-fill').style.background = state.eHp > 50 ? "#78c850" : (state.eHp > 20 ? "#f8d030" : "#f85888");
+
+            state.pParty.forEach((b, i) => {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.className = `p-dot ${i === state.pIdx ? 'active' : ''} ${!b.live ? 'dead' : ''}`;
+            });
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    </script>
+</body>
+</html>
