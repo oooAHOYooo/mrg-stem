@@ -456,7 +456,7 @@
     </div>
 
     <div class="controls-hint">
-        BUILD: L-Click Raise | R-Click Lower | Wheel Zoom | Mid-Drag Orbit<br>
+        BUILD: L-Click Build | R-Drag Rotate | Wheel Zoom | Mid-Drag Pan<br>
         PLAY: WASD Drive | SPACE Jump | SHIFT Nitro | ESC Unlock
     </div>
 
@@ -615,6 +615,11 @@
         const orbit = new THREE.OrbitControls(camera, renderer.domElement);
         orbit.enableDamping = true;
         orbit.dampingFactor = 0.05;
+        orbit.mouseButtons = {
+            LEFT: null,
+            MIDDLE: THREE.MOUSE.PAN,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
         camera.position.set(120, 120, 120);
         orbit.update();
 
@@ -697,9 +702,9 @@
         function moveCar(delta) {
             if(!state.isPlaying) return;
 
-            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 120 : 50;
+            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 60 : 30; // Reduced from 120/50
             const friction = 0.985;
-            const turnSpeed = 2.8;
+            const turnSpeed = 2.4; // Slightly slower turn
             const grav = 50;
 
             if(keys['KeyA']) carYaw += turnSpeed * delta;
@@ -712,8 +717,15 @@
             carVel.x *= friction;
             carVel.z *= friction;
 
-            car.position.x += carVel.x * delta * 30; // Scale for speed
-            car.position.z += carVel.z * delta * 30;
+            car.position.x += carVel.x * delta * 20; // Reduced from 30
+            car.position.z += carVel.z * delta * 20;
+            
+            // Boundary Check
+            const bound = terrainSize / 2 - 5;
+            if (car.position.x > bound) { car.position.x = bound; carVel.x = 0; }
+            if (car.position.x < -bound) { car.position.x = -bound; carVel.x = 0; }
+            if (car.position.z > bound) { car.position.z = bound; carVel.z = 0; }
+            if (car.position.z < -bound) { car.position.z = -bound; carVel.z = 0; }
             car.position.y += carVel.y * delta;
 
             const groundY = findGround(car.position.x, car.position.z);
