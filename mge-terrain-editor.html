@@ -393,6 +393,10 @@
                         <span>🎨</span>
                         <span>Layer</span>
                     </div>
+                    <div class="tool-btn" data-tool="flatten">
+                        <span>📏</span>
+                        <span>Flatten</span>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -405,10 +409,15 @@
 
                 <div class="control-group">
                     <div class="control-label">
-                        <span>Intensity</span>
+                        <span>Brush Intensity</span>
                         <span id="brush-intensity-label">0.8</span>
                     </div>
                     <input type="range" id="brush-intensity" min="0.1" max="2.0" step="0.1" value="0.8">
+                </div>
+
+                <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <strong style="color:var(--mge-gold)">PRO TIP:</strong><br>
+                    Hold <b>SHIFT</b> while clicking to invert Raise/Lower or for extra control!
                 </div>
 
                 <div style="margin-top:auto">
@@ -548,9 +557,9 @@
         scene.add(grid);
 
         // Brush Ring
-        const ringGeom = new THREE.RingGeometry(0.95, 1, 64);
+        const ringGeom = new THREE.RingBufferGeometry(0.98, 1.0, 64);
         ringGeom.rotateX(-Math.PI / 2);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0xff4757, side: THREE.DoubleSide });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, side: THREE.DoubleSide, transparent:true, opacity:0.8 });
         const brushRing = new THREE.Mesh(ringGeom, ringMat);
         scene.add(brushRing);
 
@@ -643,51 +652,107 @@
             }
         }
 
+        const keyboard = {};
+        window.addEventListener('keydown', e => keyboard[e.code] = true);
+        window.addEventListener('keyup', e => keyboard[e.code] = false);
+
         function runTool() {
             const pos = terrainGeom.attributes.position.array;
             const cols = terrainGeom.attributes.color.array;
             const center = state.lastPoint;
             
+            // UE5 Style: Shift inverts or triggers alternate tools
+            const isShift = keyboard['ShiftLeft'] || keyboard['ShiftRight'];
+            
             let mod = state.brushIntensity;
-            if(state.mouseButton === 2) mod *= -1;
-            if(state.tool === 'lower') mod = -Math.abs(mod);
-            if(state.tool === 'raise') mod = Math.abs(mod);
+            let currentTool = state.tool;
+
+            if (state.tool === 'raise') {
+                if (isShift) currentTool = 'lower';
+            } else if (state.tool === 'lower') {
+                if (isShift) currentTool = 'raise';
+            }
+
+            if (currentTool === 'lower') mod = -state.brushIntensity;
+            if (currentTool === 'raise') mod = state.brushIntensity;
+
+            // Spatial optimization: only iterate over vertices in brush range
+            const step = terrainSize / RES;
+            const gridX = Math.round((center.x + terrainSize/2) / step);
+            const gridZ = Math.round((center.z + terrainSize/2) / step);
+            const radiusInCells = Math.ceil(state.brushSize / step);
 
             let changed = false;
-            for(let i=0; i<pos.length; i+=3) {
-                const dx = pos[i] - center.x;
-                const dz = pos[i+2] - center.z;
-                const dSquared = dx*dx + dz*dz;
-                const rSquared = state.brushSize * state.brushSize;
+            
+            const startX = Math.max(0, gridX - radiusInCells);
+            const endX = Math.min(RES, gridX + radiusInCells);
+            const startZ = Math.max(0, gridZ - radiusInCells);
+            const endZ = Math.min(RES, gridZ + radiusInCells);
 
-                if(dSquared < rSquared) {
-                    const dist = Math.sqrt(dSquared);
-                    const falloff = (1 - dist / state.brushSize);
-                    const effort = falloff * falloff; // Exponential falloff for smoother peaks
+            for (let j = startZ; j <= endZ; j++) {
+                for (let i = startX; i <= endX; i++) {
+                    const idx = (j * (RES + 1) + i) * 3;
+                    const vx = pos[idx];
+                    const vy = pos[idx+1];
+                    const vz = pos[idx+2];
 
-                    if(state.tool === 'raise' || state.tool === 'lower') {
-                        pos[i+1] += mod * effort * 0.8;
-                        changed = true;
-                    } 
-                    else if(state.tool === 'mountains') {
-                        const noise = Math.sin(pos[i]*0.1) * Math.cos(pos[i+2]*0.1) * 3;
-                        pos[i+1] += (mod * 6 + noise) * effort * 0.4;
-                        changed = true;
-                    }
-                    else if(state.tool === 'smooth') {
-                        pos[i+1] *= 0.94;
-                        changed = true;
-                    }
-                    else if(state.tool === 'grass' && Math.random() < 0.15) {
-                        placeGrassAt(new THREE.Vector3(pos[i], pos[i+1], pos[i+2]));
-                    }
-                    else if(state.tool === 'paint') {
-                        // Change color to "Rock/Dirt"
-                        cols[i] = 0.55; cols[i+1] = 0.45; cols[i+2] = 0.35;
-                        terrainGeom.attributes.color.needsUpdate = true;
+                    const dx = vx - center.x;
+                    const dz = vz - center.z;
+                    const dSquared = dx*dx + dz*dz;
+                    const rSquared = state.brushSize * state.brushSize;
+
+                    if (dSquared < rSquared) {
+                        const dist = Math.sqrt(dSquared);
+                        const falloff = 1 - (dist / state.brushSize);
+                        const effort = Math.pow(falloff, 2); // Quadratic falloff for UE5 look
+
+                        if (currentTool === 'raise' || currentTool === 'lower') {
+                            pos[idx+1] += mod * effort * 1.5;
+                            changed = true;
+                        } 
+                        else if (currentTool === 'mountains') {
+                            const noise = (Math.sin(vx * 0.2) * Math.cos(vz * 0.2)) * 2;
+                            pos[idx+1] += (mod * 5 + noise) * effort * 0.5;
+                            changed = true;
+                        }
+                        else if (currentTool === 'smooth') {
+                            // Real Laplacian smooth: average Neighbors
+                            let sum = 0;
+                            let count = 0;
+                            for (let nj = -1; nj <= 1; nj++) {
+                                for (let ni = -1; ni <= 1; ni++) {
+                                    if (i+ni >= 0 && i+ni <= RES && j+nj >= 0 && j+nj <= RES) {
+                                        sum += pos[((j+nj) * (RES + 1) + (i+ni)) * 3 + 1];
+                                        count++;
+                                    }
+                                }
+                            }
+                            const avg = sum / count;
+                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], avg, 0.2 * falloff);
+                            changed = true;
+                        }
+                        else if (currentTool === 'grass' && Math.random() < 0.2) {
+                            placeGrassAt(new THREE.Vector3(vx, vy, vz));
+                        }
+                        else if (currentTool === 'paint') {
+                            // Multi-layer painting feel
+                            const rockCol = [0.5, 0.45, 0.4];
+                            const grassCol = [0.2, 0.6, 0.3];
+                            const lerpVal = effort * 0.2;
+                            
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], rockCol[0], lerpVal);
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], rockCol[1], lerpVal);
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], rockCol[2], lerpVal);
+                            terrainGeom.attributes.color.needsUpdate = true;
+                        }
+                        else if (currentTool === 'flatten') {
+                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], center.y, effort * (state.brushIntensity * 0.5));
+                            changed = true;
+                        }
                     }
                 }
             }
+
             if(changed) {
                 terrainGeom.attributes.position.needsUpdate = true;
                 terrainGeom.computeVertexNormals();
@@ -702,9 +767,9 @@
         function moveCar(delta) {
             if(!state.isPlaying) return;
 
-            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 60 : 30; // Reduced from 120/50
-            const friction = 0.985;
-            const turnSpeed = 2.4; // Slightly slower turn
+            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 15 : 6; // Much slower
+            const friction = 0.98;
+            const turnSpeed = 1.8; // Slower turn
             const grav = 50;
 
             if(keys['KeyA']) carYaw += turnSpeed * delta;
@@ -717,8 +782,8 @@
             carVel.x *= friction;
             carVel.z *= friction;
 
-            car.position.x += carVel.x * delta * 20; // Reduced from 30
-            car.position.z += carVel.z * delta * 20;
+            car.position.x += carVel.x * delta * 8; // Much slower
+            car.position.z += carVel.z * delta * 8;
             
             // Boundary Check
             const bound = terrainSize / 2 - 5;
@@ -764,22 +829,40 @@
         // --- INTERACTION ---
 
         window.addEventListener('mousedown', e => {
-            if(e.button === 1) return;
-            state.isMouseDown = true;
-            state.mouseButton = e.button;
-            if(state.mode === 'build') runTool();
+            // Ignore if clicking on UI
+            if (e.target.closest('.sidebar') || e.target.closest('.header') || e.target.closest('.footer') || e.target.closest('.mode-selector')) {
+                return;
+            }
+            
+            // Only Left Click (0) for sculpting in Build mode
+            // Right Click (2) is reserved for Camera Rotation
+            if (e.button === 0) {
+                state.isMouseDown = true;
+                state.mouseButton = e.button;
+                if(state.mode === 'build') runTool();
+            }
         });
-        window.addEventListener('mouseup', () => state.isMouseDown = false);
+
+        window.addEventListener('mouseup', () => {
+            state.isMouseDown = false;
+        });
+
         window.addEventListener('mousemove', e => {
             pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
             pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
         });
+
         window.addEventListener('keydown', e => { 
             keys[e.code] = true; 
             if(e.code === 'Escape') cancelPlay();
         });
+
         window.addEventListener('keyup', e => keys[e.code] = false);
-        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Prevent context menu on right click to allow smooth camera rotation
+        window.addEventListener('contextmenu', e => {
+            if (state.mode === 'build') e.preventDefault();
+        });
 
         // UI Events
         document.querySelectorAll('.tool-btn').forEach(btn => {
