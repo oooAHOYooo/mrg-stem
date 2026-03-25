@@ -96,6 +96,12 @@
             width: 100%; height: 100%; background: #ef4444; transition: width 0.2s;
         }
 
+        #pokeball-status {
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); 
+            color: #f472b6; font-weight: 900; font-size: 24px; display: none; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 100;
+        }
+        
         #fly-status {
             position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); 
             color: #34d399; font-weight: 900; font-size: 24px; display: none; 
@@ -200,6 +206,7 @@
     
     <div id="homework-tracker">📚 Homework: 0 / 5</div>
     
+    <div id="pokeball-status">🔴 POKEBALL MODE ACTIVE</div>
     <div id="fly-status">🦅 FLY MODE ACTIVE</div>
 
     <div id="build-challenge-ui" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #34d399; padding: 20px; border-radius: 10px; color: white; text-align: center; z-index: 100;">
@@ -247,10 +254,10 @@
         <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
         <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
         <div class="control-item"><div class="control-key">Q</div> Change Block Size</div>
-        <div class="control-item"><div class="control-key">C</div> Throw Pokeball</div>
+        <div class="control-item"><div class="control-key">C</div> Select/Throw Pokeball</div>
         <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
-        <div class="control-item"><div class="control-key">R-CLICK</div> Place Block</div>
-        <div class="control-item"><div class="control-key">1-8</div> Select Color</div>
+        <div class="control-item"><div class="control-key">R-CLICK</div> <span id="rclick-action-text">Place Block</span></div>
+        <div class="control-item"><div class="control-key">1-9</div> Select Item</div>
     </div>
 
     <div id="blocker">
@@ -404,12 +411,28 @@
         const colorPicker = document.getElementById('colorPicker');
         const colorBtns = [];
         
+        let pokeballMode = false;
+        const pokeballStatus = document.getElementById('pokeball-status');
+
         window.selectColor = function(index) {
-            if(index >= 0 && index < colors.length) {
+            // Index 8 is our new Pokeball slot
+            if (index === 8) {
+                pokeballMode = true;
+                pokeballStatus.style.display = 'block';
+                document.getElementById('rclick-action-text').textContent = "Throw Pokeball";
+                document.getElementById('rclick-action-text').style.color = "#f472b6";
+            } else if(index >= 0 && index < colors.length) {
                 currentColor = colors[index];
-                colorBtns.forEach(b => b.classList.remove('active'));
-                colorBtns[index].classList.add('active');
+                pokeballMode = false;
+                pokeballStatus.style.display = 'none';
+                document.getElementById('rclick-action-text').textContent = "Place Block";
+                document.getElementById('rclick-action-text').style.color = "white";
             }
+            
+            colorBtns.forEach((b, i) => {
+                if(i === index) b.classList.add('active');
+                else b.classList.remove('active');
+            });
         };
 
         colors.forEach((c, index) => {
@@ -433,6 +456,25 @@
             colorBtns.push(btn);
             colorPicker.appendChild(btn);
         });
+
+        // Add Pokeball Item Slot (Slot 9)
+        const ballBtn = document.createElement('div');
+        ballBtn.className = 'color-btn';
+        ballBtn.style.background = 'radial-gradient(circle at 30% 30%, #ff4444, #990000)';
+        ballBtn.style.display = 'flex';
+        ballBtn.style.justifyContent = 'center';
+        ballBtn.style.alignItems = 'center';
+        ballBtn.style.color = 'white';
+        ballBtn.style.fontWeight = 'bold';
+        ballBtn.style.textShadow = '1px 1px 2px black';
+        ballBtn.textContent = '9';
+        ballBtn.title = "Pokeball";
+        ballBtn.onclick = (e) => {
+            e.stopPropagation();
+            window.selectColor(8);
+        };
+        colorBtns.push(ballBtn);
+        colorPicker.appendChild(ballBtn);
 
         const getMaterial = (colorValue) => {
             return new THREE.MeshLambertMaterial({ color: colorValue });
@@ -1822,12 +1864,27 @@
                 }
                 breakBlock(); 
             }
-            if (event.button === 2) placeBlock(); // Right click to place
+            if (event.button === 2) {
+                if (pokeballMode) {
+                    if(!isChargingBall) {
+                        isChargingBall = true;
+                        ballCharge = 0;
+                        chargeUI.style.display = 'block';
+                        chargeBar.style.background = '#f59e0b';
+                    }
+                } else {
+                    placeBlock(); // Right click to place
+                }
+            }
         });
 
         document.addEventListener( 'mouseup', (event) => {
             if (!controls.isLocked) return;
-            // Removed Pokeball logic from mouseup, moved to KeyC keyup
+            if (event.button === 2 && pokeballMode && isChargingBall) {
+                isChargingBall = false;
+                chargeUI.style.display = 'none';
+                throwPokeball();
+            }
         });
 
         document.addEventListener('keydown', (event) => {
@@ -1854,11 +1911,11 @@
             if(inMenu || inRiddle) return;
             switch ( event.code ) {
                 case 'KeyC':
-                    if(!isChargingBall) {
-                        isChargingBall = true;
-                        ballCharge = 0;
-                        chargeUI.style.display = 'block';
-                        chargeBar.style.background = '#f59e0b'; // Reset color
+                    // Toggle Pokeball mode
+                    if (pokeballMode) {
+                        window.selectColor(0); // Back to first color
+                    } else {
+                        window.selectColor(8); // To Pokeball slot
                     }
                     break;
                 case 'ArrowUp':
@@ -1929,25 +1986,14 @@
                 case 'Digit6': window.selectColor(5); break;
                 case 'Digit7': window.selectColor(6); break;
                 case 'Digit8': window.selectColor(7); break;
+                case 'Digit9': window.selectColor(8); break;
             }
         };
 
         const onKeyUp = function ( event ) {
             switch ( event.code ) {
                 case 'KeyC':
-                    if (isChargingBall) {
-                        // Cancel throw if released early
-                        isChargingBall = false;
-                        chargeUI.style.display = 'none';
-                        
-                        // Show hint
-                        const msg = document.createElement('div');
-                        msg.style.position = 'absolute'; msg.style.top = '30%'; msg.style.left = '50%';
-                        msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#ef4444';
-                        msg.style.fontSize = '32px'; msg.style.fontWeight = 'bold'; msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
-                        msg.textContent = "Hold C for 5 seconds to throw!"; document.body.appendChild(msg);
-                        setTimeout(() => msg.remove(), 2000);
-                    }
+                    // handled in keydown
                     break;
                 case 'ArrowUp':
                 case 'KeyW':
