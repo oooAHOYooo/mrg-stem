@@ -273,6 +273,67 @@
             0% { transform: translateX(-50%) skewX(-15deg) scale(1); box-shadow: -8px 8px 0px var(--neon-pink); }
             100% { transform: translateX(-50%) skewX(-15deg) scale(1.1); box-shadow: -15px 15px 0px var(--neon-pink); }
         }
+        
+        /* Combo UI */
+        .combo-slots {
+            position: absolute;
+            bottom: 120px;
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .combo-slots-p1 { left: 40px; }
+        .combo-slots-p2 { right: 40px; }
+        
+        .combo-slot {
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-family: 'Bangers';
+            transform: skewX(-10deg);
+        }
+        .combo-slot.attack { border-color: var(--neon-pink); color: var(--neon-pink); }
+        .combo-slot.heavy { border-color: var(--neon-yellow); color: var(--neon-yellow); }
+        .combo-slot.block { border-color: var(--neon-blue); color: var(--neon-blue); }
+
+        .energy-bar-container {
+            position: absolute;
+            bottom: 170px;
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border: 2px solid white;
+            transform: skewX(-20deg);
+        }
+        .energy-bar-p1 { left: 40px; }
+        .energy-bar-p2 { right: 40px; }
+        .energy-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--neon-yellow);
+            transition: width 0.3s;
+        }
+
+        .controls-hint {
+            position: absolute;
+            top: 70px;
+            padding: 10px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid white;
+            font-size: 18px;
+            letter-spacing: 1px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hint-p1 { left: 20px; border-left: 8px solid var(--neon-blue); text-align: left; }
+        .hint-p2 { right: 20px; border-right: 8px solid var(--neon-pink); text-align: right; }
+        .hint-p1 b { color: var(--neon-blue); }
+        .hint-p2 b { color: var(--neon-pink); }
 
         .damage-number {
             position: absolute;
@@ -421,6 +482,9 @@
                 <button class="anime-btn anime-btn-blue" id="btn-start-battle">
                     <span>BATTLE ENEMY ⚔️</span>
                 </button>
+                <button class="anime-btn btn-build" id="btn-start-versus" style="background: linear-gradient(to bottom, #ff00ff, #800080); color: white;">
+                    <span>VERSUS MODE (2P) 🤜🤛</span>
+                </button>
             </div>
         </div>
 
@@ -435,6 +499,30 @@
                     <div class="health-bar-fill" id="hp-enemy"></div>
                     <div class="health-text" id="hp-text-enemy">ENEMY: 100/100</div>
                 </div>
+
+                <!-- Controls Hints -->
+                <div class="controls-hint hint-p1" id="hint-p1">
+                    <b>P1 CONTROLS:</b><br>
+                    [Q] LIGHT [W] HEAVY [E] BLOCK<br>
+                    <b>[SPACE] DEPLOY COMBO!</b>
+                </div>
+                <div class="controls-hint hint-p2" id="hint-p2">
+                    <b>P2 CONTROLS:</b><br>
+                    [I] LIGHT [O] HEAVY [P] BLOCK<br>
+                    <b>[ENTER] DEPLOY COMBO!</b>
+                </div>
+
+                <!-- Energy Bars -->
+                <div class="energy-bar-container energy-bar-p1">
+                    <div class="energy-fill" id="en-p1"></div>
+                </div>
+                <div class="energy-bar-container energy-bar-p2">
+                    <div class="energy-fill" id="en-p2"></div>
+                </div>
+
+                <!-- Combo Slots -->
+                <div class="combo-slots combo-slots-p1" id="combo-p1"></div>
+                <div class="combo-slots combo-slots-p2" id="combo-p2"></div>
 
                 <div id="battle-msg">FIGHT! 戦い!</div>
 
@@ -502,9 +590,9 @@
     };
 
     let battleStats = {
-        pMaxHp: 100, pHp: 100, pAttack: 10,
-        eMaxHp: 100, eHp: 100, eAttack: 5,
-        isActive: false
+        pMaxHp: 100, pHp: 100, pAttack: 10, pEnergy: 100, pCombo: [],
+        eMaxHp: 100, eHp: 100, eAttack: 5, eEnergy: 100, eCombo: [],
+        isActive: false, isVersus: false, isExecuting: { p1: false, p2: false }
     };
 
     // DOM elements and Listeners will be setup in init()
@@ -547,8 +635,9 @@
         document.getElementById('btn-build-car').onclick = () => window.openWizard('CAR');
         document.getElementById('btn-build-brawler').onclick = () => window.openWizard('HUMANOID');
         document.getElementById('btn-build-hawk').onclick = () => window.openWizard('HAWK');
-        document.getElementById('btn-start-battle').onclick = () => window.startBattle();
-        document.getElementById('btn-player-attack').onclick = () => window.playerAttack();
+        document.getElementById('btn-start-battle').onclick = () => window.startBattle(false);
+        document.getElementById('btn-start-versus').onclick = () => window.startBattle(true);
+        document.getElementById('btn-player-attack').onclick = () => window.playerAttack('P1', 'LIGHT');
         document.getElementById('btn-return-base').onclick = () => window.returnToBase();
         document.getElementById('btn-confirm-build').onclick = () => window.confirmBuild();
         document.getElementById('btn-cancel-wizard').onclick = () => window.closeWizard();
@@ -832,19 +921,28 @@
         speedLines.style.opacity = '0';
     }
 
-    window.startBattle = function() {
+    window.startBattle = function(isVersus = false) {
         if (army.length === 0) return;
         
         gameState = 'BATTLE';
+        battleStats.isVersus = isVersus;
         screenBase.classList.remove('active');
         screenBattle.classList.add('active');
         
         speedLines.style.opacity = '1';
 
-        // Choose random bot to fight
-        const types = ['CAR', 'HUMANOID', 'HAWK'];
-        const eType = types[Math.floor(Math.random() * types.length)];
-        battleEnemyBot = createBot(eType, true);
+        // Choose enemy bot
+        let eType;
+        if (isVersus) {
+            // Player 2 is a random bot from current specs for now, but purple
+            const types = ['CAR', 'HUMANOID', 'HAWK'];
+            eType = types[Math.floor(Math.random() * types.length)];
+            battleEnemyBot = createBot(eType, true);
+        } else {
+            const types = ['CAR', 'HUMANOID', 'HAWK'];
+            eType = types[Math.floor(Math.random() * types.length)];
+            battleEnemyBot = createBot(eType, true);
+        }
         scene.add(battleEnemyBot);
 
         // Position Active Bot and Enemy
@@ -864,25 +962,23 @@
         // Battle Stats Setup
         const pSpec = BOT_SPECS[activeBot.userData.type];
         const eSpec = BOT_SPECS[eType];
-
-        // Enemy gets stronger based on points
-        const eMulti = 1 + (points / 200);
+        const eMulti = isVersus ? 1 : (1 + (points / 200));
 
         battleStats = {
-            pMaxHp: pSpec.hp,
-            pHp: pSpec.hp,
-            pAttack: pSpec.attack,
-            
-            eMaxHp: Math.floor(eSpec.hp * eMulti),
-            eHp: Math.floor(eSpec.hp * eMulti),
-            eAttack: Math.floor(eSpec.attack * eMulti),
-            
-            isActive: true
+            pMaxHp: pSpec.hp, pHp: pSpec.hp, pAttack: pSpec.attack, pEnergy: 100, pCombo: [],
+            eMaxHp: isVersus ? eSpec.hp : Math.floor(eSpec.hp * eMulti),
+            eHp: isVersus ? eSpec.hp : Math.floor(eSpec.hp * eMulti),
+            eAttack: isVersus ? eSpec.attack : Math.floor(eSpec.attack * eMulti),
+            eEnergy: 100, eCombo: [],
+            isActive: true,
+            isVersus: isVersus,
+            isExecuting: { p1: false, p2: false }
         };
 
         updateHealthUI();
+        updateComboUI();
         
-        showBattleMessage("BATTLE START!!", 1000);
+        showBattleMessage(isVersus ? "VERSUS START!!" : "BATTLE START!!", 1000);
 
         // Camera to battle view
         new TWEEN.Tween(camera.position)
@@ -893,8 +989,11 @@
         const target = new THREE.Vector3(0,2,0);
         camera.lookAt(target);
 
-        // Start Enemy Attack Loop
-        enemyAttackLoop();
+        // Hide attack button for versus
+        document.getElementById('btn-player-attack').style.display = isVersus ? 'none' : 'block';
+
+        // Start Enemy Attack Loop only if NOT versus
+        if (!isVersus) enemyAttackLoop();
     }
 
     function updateHealthUI() {
@@ -904,14 +1003,49 @@
         hpFillPlayer.style.width = pPct + '%';
         hpFillEnemy.style.width = ePct + '%';
 
-        hpTextPlayer.innerText = `MY BOT: ${Math.max(0, battleStats.pHp)}/${battleStats.pMaxHp}`;
-        hpTextEnemy.innerText = `ENEMY: ${Math.max(0, battleStats.eHp)}/${battleStats.eMaxHp}`;
+        hpTextPlayer.innerText = `${battleStats.isVersus ? 'P1' : 'MY BOT'}: ${Math.max(0, battleStats.pHp)}/${battleStats.pMaxHp}`;
+        hpTextEnemy.innerText = `${battleStats.isVersus ? 'P2' : 'ENEMY'}: ${Math.max(0, battleStats.eHp)}/${battleStats.eMaxHp}`;
 
         if (pPct < 30) hpFillPlayer.style.background = 'red';
         else hpFillPlayer.style.background = 'var(--neon-green)';
 
         if (ePct < 30) hpFillEnemy.style.background = 'red';
         else hpFillEnemy.style.background = 'var(--neon-pink)';
+
+        // Update Energy
+        document.getElementById('en-p1').style.width = battleStats.pEnergy + '%';
+        document.getElementById('en-p2').style.width = battleStats.eEnergy + '%';
+    }
+
+    function updateComboUI() {
+        const c1 = document.getElementById('combo-p1');
+        const c2 = document.getElementById('combo-p2');
+        c1.innerHTML = '';
+        c2.innerHTML = '';
+
+        battleStats.pCombo.forEach(type => {
+            const div = document.createElement('div');
+            div.className = `combo-slot ${type.toLowerCase()}`;
+            div.innerText = type[0];
+            c1.appendChild(div);
+        });
+
+        battleStats.eCombo.forEach(type => {
+            const div = document.createElement('div');
+            div.className = `combo-slot ${type.toLowerCase()}`;
+            div.innerText = type[0];
+            c2.appendChild(div);
+        });
+    }
+
+    function recordMove(player, type) {
+        if (!battleStats.isActive) return;
+        const combo = (player === 'P1') ? battleStats.pCombo : battleStats.eCombo;
+        if (combo.length >= 5) return;
+        
+        combo.push(type);
+        updateComboUI();
+        flashColor(player === 'P1' ? 'var(--neon-blue)' : 'var(--neon-pink)', 0.05);
     }
 
     function createDamageText(x, y, text) {
@@ -944,13 +1078,42 @@
         return {x, y};
     }
 
-    window.playerAttack = function() {
+    window.playerAttack = function(player = 'P1', type = 'LIGHT') {
         if (!battleStats.isActive) return;
+        
+        const isP1 = (player === 'P1');
+        const attacker = isP1 ? activeBot : battleEnemyBot;
+        const target = isP1 ? battleEnemyBot : activeBot;
+        const targetPos = isP1 ? enemyPos : playerPos;
+        const attackerPos = isP1 ? playerPos : enemyPos;
 
-        // Animate Player Bot Dash
-        const dashTime = 150;
-        new TWEEN.Tween(activeBot.position)
-            .to({x: enemyPos.x - 2}, dashTime)
+        // Energy Cost
+        const cost = (type === 'HEAVY') ? 30 : (type === 'BLOCK' ? 10 : 15);
+        if (isP1) {
+            if (battleStats.pEnergy < cost) return;
+            battleStats.pEnergy -= cost;
+        } else {
+            if (battleStats.eEnergy < cost) return;
+            battleStats.eEnergy -= cost;
+        }
+
+        if (type === 'BLOCK') {
+            // Visualize Block
+            new TWEEN.Tween(attacker.scale)
+                .to({x: 1.2, z: 1.2}, 100)
+                .yoyo(true).repeat(1)
+                .start();
+            attacker.userData.isBlocking = true;
+            setTimeout(() => attacker.userData.isBlocking = false, 500);
+            return;
+        }
+
+        // Animate Dash
+        const dashTime = (type === 'HEAVY') ? 300 : 150;
+        const offset = isP1 ? -2 : 2;
+        
+        new TWEEN.Tween(attacker.position)
+            .to({x: targetPos.x + offset}, dashTime)
             .yoyo(true).repeat(1)
             .easing(function(k) { return k * (2 - k); })
             .start();
@@ -963,21 +1126,59 @@
             .onComplete(() => { camera.position.x = 0; })
             .start();
 
-        // Damage enemy
-        // Critical hit chance 20%
-        const isCrit = Math.random() < 0.2;
-        const dmg = Math.floor(battleStats.pAttack * (isCrit ? 2 : (0.8 + Math.random()*0.4)));
-        battleStats.eHp -= dmg;
+        // Damage calculation
+        const baseAtk = isP1 ? battleStats.pAttack : battleStats.eAttack;
+        const multiplier = (type === 'HEAVY') ? 2.5 : 1.0;
+        const isCrit = Math.random() < (isP1 ? 0.2 : 0.1);
         
-        const sp = getScreenPos(battleEnemyBot.position);
+        let dmg = Math.floor(baseAtk * multiplier * (isCrit ? 2 : (0.8 + Math.random()*0.4)));
+        
+        // Target Block Check
+        if (target.userData.isBlocking) {
+            dmg = Math.floor(dmg * 0.2);
+            showBattleMessage("BLOCKED!", 500);
+        }
+
+        if (isP1) battleStats.eHp -= dmg;
+        else battleStats.pHp -= dmg;
+        
+        const sp = getScreenPos(target.position);
         createDamageText(sp.x + (Math.random()*50-25), sp.y - 100, isCrit ? `${dmg} CRIT!` : dmg);
 
         updateHealthUI();
-        flashColor('white', 0.1);
+        flashColor(isP1 ? 'white' : 'red', 0.1);
 
-        if (battleStats.eHp <= 0) {
-            endBattle(true);
+        if (battleStats.eHp <= 0) endBattle(true);
+        else if (battleStats.pHp <= 0) endBattle(false);
+    }
+
+    async function deployCombo(player) {
+        if (!battleStats.isActive) return;
+        const isP1 = (player === 'P1');
+        if (isP1 && battleStats.isExecuting.p1) return;
+        if (!isP1 && battleStats.isExecuting.p2) return;
+        
+        const combo = isP1 ? battleStats.pCombo : battleStats.eCombo;
+        if (combo.length === 0) return;
+
+        if (isP1) battleStats.isExecuting.p1 = true; else battleStats.isExecuting.p2 = true;
+
+        showBattleMessage(player + " COMBO!!", 500);
+
+        for (const type of combo) {
+            if (!battleStats.isActive) break;
+            playerAttack(player, type);
+            await new Promise(r => setTimeout(r, 400));
         }
+
+        if (isP1) {
+            battleStats.pCombo = [];
+            battleStats.isExecuting.p1 = false;
+        } else {
+            battleStats.eCombo = [];
+            battleStats.isExecuting.p2 = false;
+        }
+        updateComboUI();
     }
 
     function enemyAttackLoop() {
@@ -1140,9 +1341,9 @@
                         .start();
                 }
             }
-        } else if (gameState === 'BATTLE') {
+        } else if (gameState === 'BATTLE' && !battleStats.isVersus) {
             if (!event.target.closest('.anime-btn') && battleStats.isActive) {
-                playerAttack();
+                playerAttack('P1', 'LIGHT');
             }
         }
     }
@@ -1192,10 +1393,20 @@
                     .start();
             }
         } else if (gameState === 'BATTLE') {
-            if (e.key === ' ' || e.key === 'Enter') {
-                // Prevent default scrolling for spacebar
-                if(e.key === ' ') e.preventDefault();
-                playerAttack();
+            // PLAYER 1
+            if (e.key.toLowerCase() === 'q') recordMove('P1', 'LIGHT');
+            if (e.key.toLowerCase() === 'w') recordMove('P1', 'HEAVY');
+            if (e.key.toLowerCase() === 'e') recordMove('P1', 'BLOCK');
+            if (e.key === ' ') { e.preventDefault(); deployCombo('P1'); }
+
+            // PLAYER 2 (Only in Versus)
+            if (battleStats.isVersus) {
+                if (e.key.toLowerCase() === 'i') recordMove('P2', 'LIGHT');
+                if (e.key.toLowerCase() === 'o') recordMove('P2', 'HEAVY');
+                if (e.key.toLowerCase() === 'p') recordMove('P2', 'BLOCK');
+                if (e.key === 'Enter') deployCombo('P2');
+            } else {
+                if (e.key === 'Enter') deployCombo('P1'); // Fallback for single player
             }
         }
     });
@@ -1212,6 +1423,13 @@
         
         const t = clock.getElapsedTime();
 
+        // Energy Regeneration
+        if (gameState === 'BATTLE' && battleStats.isActive) {
+            battleStats.pEnergy = Math.min(100, battleStats.pEnergy + 0.1);
+            battleStats.eEnergy = Math.min(100, battleStats.eEnergy + 0.1);
+            updateHealthUI();
+        }
+
         // Bobbing animations for bots
         army.forEach(bot => {
             if (bot.userData.startY !== undefined) {
@@ -1219,7 +1437,7 @@
             }
         });
         if (battleEnemyBot) {
-            battleEnemyBot.position.y = battleEnemyBot.userData.startY + Math.sin(t * 3 + battleEnemyBot.userData.bobOffset) * 0.2;
+            battleEnemyBot.position.y = (battleEnemyBot.userData.startY || 0) + Math.sin(t * 3 + (battleEnemyBot.userData.bobOffset || 0)) * 0.2;
         }
 
         renderer.render(scene, camera);

@@ -725,6 +725,74 @@
             box-shadow: 0 0 15px rgba(127, 140, 141, 0.5);
         }
 
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            color: #00ffff;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            width: 300px;
+            text-align: center;
+        }
+
+        .loader-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 20px #00ffff;
+            transition: width 0.3s ease;
+        }
+
+        .loader-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .loader-subtext {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* --- ANIME FLUTTER EFFECT --- */
         .anime-flutter {
             position: fixed;
@@ -774,6 +842,16 @@
 </head>
 
 <body>
+    <div id="loading-screen">
+        <div class="loader-container">
+            <div class="loader-text">Initializing Smash Engine</div>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <div id="loader-subtext" class="loader-subtext">Compiling physics shaders...</div>
+        </div>
+    </div>
+
     <a href="mge.html" class="back-button">← Back to Experiments</a>
 
     <div id="game-container"></div>
@@ -857,7 +935,7 @@
             </div>
         </div>
 
-        <div class="timer-display" id="timer-display">BUILD: 0%</div>
+        <div class="timer-display" id="timer-display">MATCH: 0%</div>
         
         <div class="block-coding-panel" id="block-coding-panel">
             <h3 style="color:#00bcd4; text-align:center; font-size: 0.9rem; margin-bottom: 5px;">🤖 Preprogram Robot (Block Code)</h3>
@@ -1363,20 +1441,44 @@
             // Initialize powerup system
             spawnPowerup();
 
+            // Fake loading steps for premium feel
+            const lProgress = document.getElementById('loader-progress');
+            const lSub = document.getElementById('loader-subtext');
+            
+            setTimeout(() => { if(lProgress) lProgress.style.width = '30%'; if(lSub) lSub.textContent = 'Mapping input buffers...'; }, 100);
+            setTimeout(() => { if(lProgress) lProgress.style.width = '60%'; if(lSub) lSub.textContent = 'Allocating memory for fighters...'; }, 250);
+            setTimeout(() => { if(lProgress) lProgress.style.width = '90%'; if(lSub) lSub.textContent = 'Universal physics sync...'; }, 400);
+
             // Event listeners
             window.addEventListener('resize', onWindowResize);
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
+
+            // Reset game state to ensure everything is initialized
+            restartGame();
 
             // Start game loop
             animate();
 
             // Initialize match score display
             updateMatchScore();
+            console.log("Super Smash Fighters: Initialization complete.");
+
+            // Hide loading screen
+            const loaderProgress = document.getElementById('loader-progress');
+            const loaderSubtext = document.getElementById('loader-subtext');
+            const loadingScreen = document.getElementById('loading-screen');
+
+            if (loaderProgress) loaderProgress.style.width = '100%';
+            if (loaderSubtext) loaderSubtext.textContent = 'Ready to Fight!';
+
+            setTimeout(() => {
+                if (loadingScreen) loadingScreen.classList.add('hidden');
+            }, 500);
         }
 
         function createPlayer(num) {
-            const player = players[num === 1 ? 'p1' : 'p2'];
+            const player = players['p' + num];
             const group = new THREE.Group();
 
             // Body
@@ -2593,7 +2695,7 @@
 
             const percent = Math.floor((currentCodeLine / SOURCE_CODE.length) * 100);
             const timerDisplay = document.getElementById('timer-display');
-            timerDisplay.textContent = `BUILD: ${percent}%`;
+            timerDisplay.textContent = `MATCH: ${percent}%`;
 
             if (currentCodeLine >= SOURCE_CODE.length && !matchEnded) {
                 endMatchByTime();
@@ -2669,7 +2771,7 @@
         function updateGameCode() {
             if (!gameRunning) return;
             const now = Date.now();
-            if (now - lastCodeUpdate >= 2000) { // Every 2s auto-add
+            if (now - lastCodeUpdate >= 1000) { // Every 1s auto-add
                 lastCodeUpdate = now;
                 appendCodeLine(null);
             }
@@ -2910,8 +3012,11 @@
             p2CodeLines = 0;
             lastCodeUpdate = Date.now();
             document.getElementById('code-container').innerHTML = '';
-            document.getElementById('timer-display').textContent = 'BUILD: 0%';
+            document.getElementById('timer-display').textContent = 'MATCH: 0%';
             matchEnded = false;
+            
+            // Add first line immediately to show it's working
+            appendCodeLine(null);
 
             // Reset combo
             comboCount = { p1: 0, p2: 0 };
@@ -3077,8 +3182,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // Start the game
-        init();
+        // Start the game when the window loads
+        window.addEventListener('load', () => {
+            init();
+        });
     </script>
     <!-- Mobile Controls -->
     <style>
