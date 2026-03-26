@@ -165,33 +165,39 @@
     <script>
         // --- GAME CONFIG ---
         const CONFIG = {
-            gravity: -0.6,
-            jumpForce: 12.5,
-            scrollSpeed: 0.25,
+            gravity: -0.5, // Slightly lighter gravity for kids
+            jumpForce: 11, // Adjusted jump
+            baseSpeed: 0.15, // Slower start
             cubeSize: 1,
-            obstacleFreq: 0.02,
             groundY: -2
         };
+
+        const LEVELS = [
+            { name: "LEVEL 1: BIOLOGY BASIN", speed: 0.15, freq: 0.01, color: 0x47d147, goal: 200 },
+            { name: "LEVEL 2: CHEMICAL CLIMB", speed: 0.18, freq: 0.015, color: 0x4facfe, goal: 500 },
+            { name: "LEVEL 3: PHYSICS PLAIN", speed: 0.22, freq: 0.02, color: 0xffa500, goal: 900 },
+            { name: "LEVEL 4: CODING CANYON", speed: 0.26, freq: 0.025, color: 0xff4d4d, goal: 1400 }
+        ];
 
         // --- STEM FACTS ---
         const STEM_FACTS = [
             "Force = Mass x Acceleration",
-            "The speed of light is 299,792 km/s",
-            "Gravity pulls objects with 9.8 m/s² acceleration",
-            "An atom is mostly empty space!",
-            "DNA is the blueprint of life",
-            "Python is a readable, multi-purpose language",
-            "Binary is base-2 numbering system",
-            "A triangle's angles always add to 180°"
+            "Plants use sunlight to make food!",
+            "Gravity pulls us down to Earth.",
+            "Water can be solid, liquid, or gas.",
+            "Computers use code to follow instructions.",
+            "DNA is like a recipe for your body.",
+            "The Sun is a medium-sized star.",
+            "A triangle has 3 sides and 3 corners."
         ];
 
         const DEATH_MSGS = [
-            "MOMENTUM LOST",
-            "CRITICAL ERROR",
-            "LOGIC FAILURE",
-            "GRAVITY WON",
-            "FRICTIONLESS COLLISION",
-            "STEM OVERLOAD"
+            "WHOOPS! TRY AGAIN!",
+            "STAY FOCUSED!",
+            "YOU GOT THIS!",
+            "ALMOST HAD IT!",
+            "GEAR DETECTED!",
+            "STEM POWER!"
         ];
 
         // --- GLOBAL VARIABLES ---
@@ -206,6 +212,8 @@
         let distanceCovered = 0;
         let lastObstacleX = 10;
         let targetRotation = 0;
+        let currentLevelIndex = 0;
+        let scrollSpeed = CONFIG.baseSpeed;
 
         // --- INITIALIZATION ---
         function init() {
@@ -223,16 +231,12 @@
             document.getElementById('game-container').appendChild(renderer.domElement);
 
             // Lighting
-            const ambient = new THREE.AmbientLight(0x404040, 2);
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambient);
 
-            const directional = new THREE.DirectionalLight(0x00f2fe, 5);
-            directional.position.set(5, 5, 5);
+            const directional = new THREE.DirectionalLight(0xffffff, 1.5);
+            directional.position.set(5, 10, 5);
             scene.add(directional);
-
-            const point = new THREE.PointLight(0x4facfe, 10);
-            point.position.set(-5, 5, 5);
-            scene.add(point);
 
             createBackgroundGrid();
             createPlayer();
@@ -249,6 +253,7 @@
             const gridHelper = new THREE.GridHelper(200, 40, 0x4facfe, 0x1a1a3a);
             gridHelper.rotation.x = Math.PI / 2;
             gridHelper.position.z = -5;
+            gridHelper.name = "grid";
             scene.add(gridHelper);
 
             // Floating STEM elements in background
@@ -269,12 +274,12 @@
             const texture = loader.load('static/imgs/mge_dash_cube.png');
             
             const material = [
-                new THREE.MeshPhongMaterial({ color: 0x888888 }), // Left
-                new THREE.MeshPhongMaterial({ color: 0x888888 }), // Right
-                new THREE.MeshPhongMaterial({ color: 0x888888 }), // Top
-                new THREE.MeshPhongMaterial({ color: 0x888888 }), // Bottom
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Left
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Right
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Top
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Bottom
                 new THREE.MeshPhongMaterial({ map: texture }),    // Front
-                new THREE.MeshPhongMaterial({ color: 0x888888 })  // Back
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa })  // Back
             ];
 
             player = new THREE.Mesh(geometry, material);
@@ -282,8 +287,8 @@
             scene.add(player);
 
             // Inner glow for STEM vibe
-            const glowGeo = new THREE.BoxGeometry(1.1, 1.1, 1.1);
-            const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true, transparent: true, opacity: 0.2 });
+            const glowGeo = new THREE.BoxGeometry(1.05, 1.05, 1.05);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.1 });
             const glow = new THREE.Mesh(glowGeo, glowMat);
             player.add(glow);
         }
@@ -298,8 +303,7 @@
             const geo = new THREE.BoxGeometry(1, 4, 2);
             const mat = new THREE.MeshPhongMaterial({ 
                 color: 0x111122, 
-                emissive: 0x0a0a1a,
-                side: THREE.BackSide 
+                emissive: 0x0a0a1a
             });
             const block = new THREE.Mesh(geo, mat);
             block.position.set(x, CONFIG.groundY - 2, 0);
@@ -308,6 +312,7 @@
             const edgeGeo = new THREE.EdgesGeometry(geo);
             const edgeMat = new THREE.LineBasicMaterial({ color: 0x4facfe, transparent: true, opacity: 0.2 });
             const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            edges.name = "edge";
             block.add(edges);
 
             scene.add(block);
@@ -319,14 +324,12 @@
         function handleInput(e) {
             if(!isStarted || isDead) return;
             if(e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp') return;
-
             jump();
         }
 
         function jump() {
-            // Check if on ground (loose check for simple jump)
-            if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.01) {
-                velocityY = CONFIG.jumpForce * 0.016 * 15; // Adjusted for delta
+            if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
+                velocityY = CONFIG.jumpForce * 0.016 * 15;
                 targetRotation -= Math.PI / 2;
             }
         }
@@ -335,6 +338,39 @@
             document.getElementById('menu').style.display = 'none';
             isStarted = true;
             isDead = false;
+            currentLevelIndex = 0;
+            updateLevelUI();
+        }
+
+        function updateLevelUI() {
+            const level = LEVELS[currentLevelIndex];
+            scrollSpeed = level.speed;
+            
+            // Update grid color
+            const grid = scene.getObjectByName("grid");
+            if(grid) grid.material.color.setHex(level.color);
+
+            groundBlocks.forEach(b => {
+                const edge = b.getObjectByName("edge");
+                if(edge) edge.material.color.setHex(level.color);
+            });
+
+            // Show level name briefly
+            const dashTitle = document.querySelector('h1').innerText;
+            const statusText = document.createElement('div');
+            statusText.style.position = 'absolute';
+            statusText.style.top = '40%';
+            statusText.style.left = '50%';
+            statusText.style.transform = 'translate(-50%, -50%)';
+            statusText.style.fontSize = '3rem';
+            statusText.style.color = '#' + level.color.toString(16).padStart(6, '0');
+            statusText.style.textShadow = '0 0 20px rgba(255,255,255,0.5)';
+            statusText.innerText = level.name;
+            statusText.style.zIndex = '100';
+            document.body.appendChild(statusText);
+            
+            gsap.fromTo(statusText, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5 });
+            gsap.to(statusText, { opacity: 0, y: -100, delay: 1.5, duration: 0.5, onComplete: () => statusText.remove() });
         }
 
         function die() {
@@ -344,20 +380,17 @@
             attempts++;
             document.getElementById('attempt-count').innerText = attempts;
             
-            // Death UI
             const deathMsg = document.getElementById('death-msg');
             document.getElementById('death-text').innerText = DEATH_MSGS[Math.floor(Math.random() * DEATH_MSGS.length)];
             document.getElementById('fact-text').innerText = STEM_FACTS[Math.floor(Math.random() * STEM_FACTS.length)];
             
             gsap.to(deathMsg, { opacity: 1, y: -20, duration: 0.5 });
-            
-            // Shake camera
             gsap.to(camera.position, { x: 0.5, duration: 0.05, repeat: 5, yoyo: true });
 
             setTimeout(() => {
                 resetGame();
                 gsap.to(deathMsg, { opacity: 0, y: 0, duration: 0.5 });
-            }, 1000);
+            }, 1200);
         }
 
         function resetGame() {
@@ -367,61 +400,98 @@
             velocityY = 0;
             isDead = false;
             distanceCovered = 0;
+            currentLevelIndex = 0;
+            scrollSpeed = CONFIG.baseSpeed;
+            updateLevelUI();
             
-            // Clear obstacles
             obstacles.forEach(o => scene.remove(o));
             obstacles = [];
             lastObstacleX = 10;
         }
 
         function spawnObstacle() {
-            lastObstacleX += 1; // Base movement
+            lastObstacleX += scrollSpeed;
             
-            if(lastObstacleX > 8) {
+            const level = LEVELS[currentLevelIndex];
+            const minSpacing = (currentLevelIndex === 0) ? 12 : (currentLevelIndex === 1) ? 10 : 8;
+
+            if(lastObstacleX > minSpacing) {
                 const rand = Math.random();
-                if(rand < 0.3) {
-                    // Spike (Gear)
-                    createGear(20);
+                if(rand < level.freq * 50) { // Frequency check
+                    if(currentLevelIndex === 0) {
+                        createGear(20); // Only single spikes in level 1
+                    } else if(currentLevelIndex === 1) {
+                         if(rand < 0.2) createBlock(20); else createGear(20);
+                    } else {
+                        if(rand < 0.2) createBlock(20);
+                        else if(rand < 0.3) { createGear(20); createGear(20.8); }
+                        else createGear(20);
+                    }
                     lastObstacleX = 0;
-                } else if(rand < 0.5) {
-                    // Block
-                    createBlock(20);
-                    lastObstacleX = -2;
-                } else if(rand < 0.6) {
-                    // Double Spike
-                    createGear(20);
-                    createGear(20.8);
-                    lastObstacleX = -3;
                 }
             }
         }
 
         function createGear(x) {
-            const geo = new THREE.ConeGeometry(0.5, 0.8, 4);
-            const mat = new THREE.MeshPhongMaterial({ color: 0xff4d4d, emissive: 0x440000 });
-            const spike = new THREE.Mesh(geo, mat);
-            spike.position.set(x, CONFIG.groundY + 0.4, 0);
-            spike.name = "spike";
-            
-            // Outer ring
-            const ringGeo = new THREE.TorusGeometry(0.4, 0.05, 10, 20);
-            const ringMat = new THREE.MeshPhongMaterial({ color: 0x4facfe });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            spike.add(ring);
+            const group = new THREE.Group();
+            group.position.set(x, CONFIG.groundY + 0.5, 0);
+            group.name = "spike";
 
-            scene.add(spike);
-            obstacles.push(spike);
+            // Gear Core
+            const coreGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.2, 8);
+            const coreMat = new THREE.MeshPhongMaterial({ color: 0xff4d4d });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            core.rotation.x = Math.PI / 2;
+            group.add(core);
+
+            // Gear Teeth
+            for(let i=0; i<8; i++) {
+                const toothGeo = new THREE.BoxGeometry(0.15, 0.6, 0.2);
+                const tooth = new THREE.Mesh(toothGeo, coreMat);
+                tooth.rotation.z = (i / 8) * Math.PI * 2;
+                group.add(tooth);
+            }
+
+            // Central Bolt
+            const boltGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.25, 6);
+            const boltMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const bolt = new THREE.Mesh(boltGeo, boltMat);
+            bolt.rotation.x = Math.PI / 2;
+            group.add(bolt);
+
+            scene.add(group);
+            obstacles.push(group);
         }
 
         function createBlock(x) {
+            const group = new THREE.Group();
+            group.position.set(x, CONFIG.groundY + 0.4, 0);
+            group.name = "block";
+
+            // Circuit Block
             const geo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-            const mat = new THREE.MeshPhongMaterial({ color: 0x4facfe, transparent: true, opacity: 0.8 });
+            const mat = new THREE.MeshPhongMaterial({ 
+                color: 0x4facfe, 
+                transparent: true, 
+                opacity: 0.8,
+                shininess: 100
+            });
             const block = new THREE.Mesh(geo, mat);
-            block.position.set(x, CONFIG.groundY + 0.4, 0);
-            block.name = "block";
-            
-            scene.add(block);
-            obstacles.push(block);
+            group.add(block);
+
+            // Internal "Circuit" Lines
+            const lineGeo = new THREE.BoxGeometry(0.82, 0.05, 0.82);
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
+            const line1 = new THREE.Mesh(lineGeo, lineMat);
+            line1.position.y = 0.2;
+            block.add(line1);
+
+            const line2 = new THREE.Mesh(lineGeo, lineMat);
+            line2.position.y = -0.2;
+            block.add(line2);
+
+            scene.add(group);
+            obstacles.push(group);
         }
 
         // --- ANIMATION LOOP ---
@@ -440,30 +510,25 @@
                 if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2) {
                     player.position.y = CONFIG.groundY + CONFIG.cubeSize/2;
                     velocityY = 0;
-                    // Snap rotation to 90deg increments when landing
                     player.rotation.z = Math.round(player.rotation.z / (Math.PI/2)) * (Math.PI/2);
                     targetRotation = player.rotation.z;
                 } else {
-                    // In-air rotation
                     player.rotation.z += (targetRotation - player.rotation.z) * 0.1;
                 }
 
                 // Move obstacles
                 obstacles.forEach((obj, index) => {
-                    obj.position.x -= CONFIG.scrollSpeed;
+                    obj.position.x -= scrollSpeed;
                     
-                    // Collision Physics
                     const dx = Math.abs(player.position.x - obj.position.x);
                     const dy = Math.abs(player.position.y - obj.position.y);
 
                     if(obj.name === "spike") {
-                        if(dx < 0.6 && dy < 0.7) die();
+                        if(dx < 0.5 && dy < 0.6) die(); // Forgiving hitbox
                     } else if(obj.name === "block") {
-                        // Front collision (X-axis)
-                        if(dx < 0.8 && dy < 0.6 && player.position.x < obj.position.x) die();
-                        // Top collision (Landing)
+                        if(dx < 0.8 && dy < 0.5 && player.position.x < obj.position.x) die();
                         if(dx < 0.6 && dy < 0.9 && player.position.y > obj.position.y) {
-                            player.position.y = obj.position.y + 0.85;
+                            player.position.y = obj.position.y + 0.8;
                             velocityY = 0;
                             player.rotation.z = Math.round(player.rotation.z / (Math.PI/2)) * (Math.PI/2);
                         }
@@ -477,21 +542,26 @@
 
                 // Move ground
                 groundBlocks.forEach(block => {
-                    block.position.x -= CONFIG.scrollSpeed;
-                    if(block.position.x < -20) {
-                        block.position.x += 60;
-                    }
+                    block.position.x -= scrollSpeed;
+                    if(block.position.x < -20) block.position.x += 60;
                 });
 
-                // Update Progress
-                distanceCovered += CONFIG.scrollSpeed;
-                const progress = Math.min((distanceCovered / 1000) * 100, 100);
+                // Update Progress & Level Up
+                distanceCovered += scrollSpeed * 10;
+                const level = LEVELS[currentLevelIndex];
+                const progress = Math.min((distanceCovered / level.goal) * 100, 100);
                 document.getElementById('progress-bar').style.width = progress + '%';
 
-                if(progress >= 100) {
-                    isStarted = false;
-                    alert("COURSE COMPLETE! STEM LEVEL: EXPERT");
-                    location.reload();
+                if(distanceCovered >= level.goal) {
+                    if(currentLevelIndex < LEVELS.length - 1) {
+                        currentLevelIndex++;
+                        distanceCovered = 0;
+                        updateLevelUI();
+                    } else {
+                        isStarted = false;
+                        alert("STEM MASTER REACHED! YOU ARE A SCIENTIST!");
+                        location.reload();
+                    }
                 }
 
                 spawnObstacle();
@@ -499,6 +569,7 @@
 
             renderer.render(scene, camera);
         }
+
 
         function onResize() {
             camera.aspect = window.innerWidth / window.innerHeight;

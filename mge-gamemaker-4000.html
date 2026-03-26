@@ -444,7 +444,10 @@
                     </div>
                 </div>
                 <div class="chat-input-area">
-                    <textarea id="ai-input" placeholder="Type a request (e.g. 'Make a neon race track')"></textarea>
+                    <textarea id="ai-input" placeholder="Try: 'Create a red fast hero for player 2' or 'Start 2-player wizard'"></textarea>
+                </div>
+                <div style="padding: 0 1rem 1rem 1rem;">
+                    <button class="btn" style="width: 100%; background: var(--accent-tertiary); font-size: 0.8rem;" onclick="startWizard()">✨ 2-PLAYER WIZARD</button>
                 </div>
             </div>
 
@@ -517,6 +520,8 @@
                     <div class="prop-label">Behavior</div>
                     <select id="logic-select" style="width: 100%; background: #000; color: #fff; border: 1px solid var(--border); padding: 5px; border-radius: 4px;">
                         <option value="none">Static</option>
+                        <option value="p1">Player 1 (WASD)</option>
+                        <option value="p2">Player 2 (Arrows)</option>
                         <option value="patrol">Patrol (X-axis)</option>
                         <option value="bounce">Bounce (Y-axis)</option>
                         <option value="rotate">Constant Spin</option>
@@ -555,7 +560,9 @@
         let isPlaying = false;
         let selectedObject = null;
         let gameObjects = [];
-        let player = null;
+        let player1 = null;
+        let player2 = null;
+        let wizardStep = 0;
         let score = 0;
         let clock = new THREE.Clock();
 
@@ -624,11 +631,17 @@
             light: new THREE.MeshBasicMaterial({ color: 0xffffff })
         };
 
-        function spawnObject(type, pos = {x: 0, y: 0.5, z: 0}) {
+        function spawnObject(type, pos = {x: 0, y: 0.5, z: 0}, customProps = {}) {
             if (isPlaying) return;
 
             const geo = geometries[type];
             const mat = materials[type].clone();
+            
+            if (customProps.color) {
+                mat.color.set(customProps.color);
+                if (mat.emissive) mat.emissive.set(customProps.color);
+            }
+
             const mesh = new THREE.Mesh(geo, mat);
             
             mesh.position.set(pos.x, pos.y, pos.z);
@@ -636,17 +649,25 @@
             mesh.receiveShadow = true;
             mesh.userData = { 
                 type: type, 
-                logic: 'none', 
+                logic: customProps.logic || 'none', 
                 id: Math.random().toString(36).substr(2, 9),
-                initialPos: mesh.position.clone()
+                initialPos: mesh.position.clone(),
+                speed: customProps.speed || 0.15,
+                playerID: customProps.playerID || 0
             };
+
+            // Set default logic if hero
+            if (type === 'hero' && mesh.userData.logic === 'none') {
+                mesh.userData.logic = customProps.playerID === 2 ? 'p2' : 'p1';
+            }
 
             scene.add(mesh);
             gameObjects.push(mesh);
             selectObject(mesh);
             updateStats();
 
-            addMessage(`Created a new ${type.toUpperCase()} asset.`, 'ai');
+            const name = customProps.name || type.toUpperCase();
+            addMessage(`Deployed ${name} system into workspace.`, 'ai');
         }
 
         function selectObject(obj) {
@@ -761,12 +782,14 @@
                 `;
                 selectObject(null);
                 
-                // Find player
-                player = gameObjects.find(o => o.userData.type === 'hero');
-                if (!player) {
-                    addMessage("Warning: No HERO found in scene! Spawning emergency avatar.", "ai");
-                    spawnObject('hero', {x: 0, y: 1, z: 0});
-                    player = gameObjects.find(o => o.userData.type === 'hero');
+                // Find players
+                player1 = gameObjects.find(o => o.userData.logic === 'p1');
+                player2 = gameObjects.find(o => o.userData.logic === 'p2');
+                
+                if (!player1 && !player2) {
+                    addMessage("Warning: No controlled units found! Spawning emergency Hero.", "ai");
+                    spawnObject('hero', {x: 0, y: 1, z: 0}, { logic: 'p1', playerID: 1 });
+                    player1 = gameObjects.find(o => o.userData.logic === 'p1');
                 }
                 
                 // Store initial states for reset
@@ -776,7 +799,7 @@
                 });
 
                 orbit.enableDamping = false;
-                orbit.enabled = false; // We use game controls
+                orbit.enabled = false; 
             } else {
                 playBtn.innerText = '▶️ RUN GAME';
                 playBtn.classList.remove('active');
@@ -791,6 +814,10 @@
                     obj.rotation.copy(obj.userData.initialRot);
                 });
                 
+                // Clear runtime players
+                player1 = null;
+                player2 = null;
+
                 orbit.enabled = true;
                 orbit.enableDamping = true;
             }
@@ -824,6 +851,45 @@
         function processAIRequest(text) {
             const low = text.toLowerCase();
             setTimeout(() => {
+                // Wizard patterns
+                if (low.includes('wizard') || low.includes('step by step') || low.includes('tutorial')) {
+                    startWizard();
+                    return;
+                }
+
+                // Custom Character Creation
+                if (low.includes('create') || low.includes('make') || low.includes('spawn')) {
+                    if (low.includes('hero') || low.includes('player') || low.includes('character')) {
+                        const props = { type: 'hero' };
+                        
+                        // Parse Color
+                        if (low.includes('red')) props.color = 0xff3344;
+                        if (low.includes('blue')) props.color = 0x3344ff;
+                        if (low.includes('green')) props.color = 0x33ff44;
+                        if (low.includes('yellow')) props.color = 0xffff33;
+                        if (low.includes('purple')) props.color = 0x8833ff;
+                        
+                        // Parse Player ID
+                        if (low.includes('player 2') || low.includes('p2') || low.includes('second')) {
+                            props.playerID = 2;
+                            props.logic = 'p2';
+                            props.name = "Player 2 Unit";
+                        } else {
+                            props.playerID = 1;
+                            props.logic = 'p1';
+                            props.name = "Player 1 Unit";
+                        }
+
+                        // Parse Speed/Conditions
+                        if (low.includes('fast')) props.speed = 0.3;
+                        if (low.includes('slow')) props.speed = 0.05;
+                        if (low.includes('tiny')) props.scale = 0.5;
+
+                        spawnObject('hero', {x: Math.random()*4-2, y: 0.5, z: Math.random()*4-2}, props);
+                        return;
+                    }
+                }
+
                 if (low.includes('platform') || low.includes('floor')) {
                     for(let i=0; i<3; i++) {
                         spawnObject('platform', {x: Math.random()*10-5, y: 0.1, z: Math.random()*10-5});
@@ -841,9 +907,38 @@
                     updateStats();
                     addMessage("Scene memory wiped. Clean slate ready.", "ai");
                 } else {
-                    addMessage("Request acknowledged. I'm waiting for your creative directive.", "ai");
+                    addMessage("Request acknowledged. I'm waiting for your creative directive. Try asking for a 'fast red player 2 hero'.", "ai");
                 }
             }, 500);
+        }
+
+        function startWizard() {
+            wizardStep = 1;
+            addMessage("Initializing 2-PLAYER WIZARD protocol. 🛠️", "ai");
+            setTimeout(() => {
+                addMessage("Step 1: Spawning Player 1. Controls: WASD.", "ai");
+                spawnObject('hero', {x: -2, y: 1, z: 0}, { color: 0x00f2ff, playerID: 1, logic: 'p1', name: "Player 1" });
+                
+                setTimeout(() => {
+                    addMessage("Step 2: Spawning Player 2. Controls: Arrow Keys.", "ai");
+                    spawnObject('hero', {x: 2, y: 1, z: 0}, { color: 0xff007b, playerID: 2, logic: 'p2', name: "Player 2" });
+                    
+                    setTimeout(() => {
+                        addMessage("Step 3: Creating the arena platforms.", "ai");
+                        for(let i=0; i<3; i++) {
+                            spawnObject('platform', {x: i*4-4, y: 0.1, z: 0});
+                        }
+                        
+                        setTimeout(() => {
+                            addMessage("Step 4: Adding Data Cores (Coins) and the End-Goal.", "ai");
+                            spawnObject('coin', {x: 0, y: 1, z: 4});
+                            spawnObject('goal', {x: 0, y: 1, z: 8});
+                            
+                            addMessage("2-Player environment ready! Press RUN GAME to test with a friend.", "ai");
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }, 1000);
         }
 
         // === ANIMATION LOOP ===
@@ -854,21 +949,43 @@
 
             if (isPlaying) {
                 // Game Logic
-                if (player) {
-                    const speed = 0.15;
+                // Find players dynamically if not cached
+                if (!player1) player1 = gameObjects.find(o => o.userData.logic === 'p1');
+                if (!player2) player2 = gameObjects.find(o => o.userData.logic === 'p2');
+
+                if (player1) {
+                    const speed = player1.userData.speed || 0.15;
                     const moveDir = new THREE.Vector3();
-                    
                     if (keys['w']) moveDir.z -= 1;
                     if (keys['s']) moveDir.z += 1;
                     if (keys['a']) moveDir.x -= 1;
                     if (keys['d']) moveDir.x += 1;
-                    
                     moveDir.normalize().multiplyScalar(speed);
-                    player.position.add(moveDir);
+                    player1.position.add(moveDir);
+                }
 
-                    // Camera follows player
-                    camera.position.lerp(new THREE.Vector3(player.position.x + 8, player.position.y + 8, player.position.z + 8), 0.1);
-                    camera.lookAt(player.position);
+                if (player2) {
+                    const speed = player2.userData.speed || 0.15;
+                    const moveDir = new THREE.Vector3();
+                    if (keys['arrowup']) moveDir.z -= 1;
+                    if (keys['arrowdown']) moveDir.z += 1;
+                    if (keys['arrowleft']) moveDir.x -= 1;
+                    if (keys['arrowright']) moveDir.x += 1;
+                    moveDir.normalize().multiplyScalar(speed);
+                    player2.position.add(moveDir);
+                }
+
+                // Camera follows midpoint of players or p1
+                const activePlayer = player1 || player2;
+                if (activePlayer) {
+                    let targetPos;
+                    if (player1 && player2) {
+                        targetPos = player1.position.clone().lerp(player2.position, 0.5);
+                    } else {
+                        targetPos = activePlayer.position;
+                    }
+                    camera.position.lerp(new THREE.Vector3(targetPos.x + 12, targetPos.y + 12, targetPos.z + 12), 0.1);
+                    camera.lookAt(targetPos);
                 }
 
                 // Object Logic
@@ -880,9 +997,12 @@
                         obj.position.y = obj.userData.initialPos.y + Math.abs(Math.sin(time * 3)) * 2;
                     } else if (logic === 'rotate') {
                         obj.rotation.y += 0.05;
-                    } else if (logic === 'follow' && player) {
-                        const dir = player.position.clone().sub(obj.position).normalize();
-                        obj.position.add(dir.multiplyScalar(0.05));
+                    } else if (logic === 'follow') {
+                        const target = player1 || player2;
+                        if (target) {
+                            const dir = target.position.clone().sub(obj.position).normalize();
+                            obj.position.add(dir.multiplyScalar(0.05));
+                        }
                     }
                     
                     if (obj.userData.type === 'coin') {
@@ -892,26 +1012,26 @@
                 });
 
                 // Collisions (Simple distance-based)
-                if (player) {
+                [player1, player2].forEach(p => {
+                    if (!p) return;
                     gameObjects.forEach(obj => {
-                        if (obj === player) return;
-                        const dist = player.position.distanceTo(obj.position);
+                        if (obj === p) return;
+                        const dist = p.position.distanceTo(obj.position);
                         if (dist < 1.0) {
                             if (obj.userData.type === 'coin') {
                                 scene.remove(obj);
                                 gameObjects = gameObjects.filter(o => o !== obj);
                                 score++;
-                                // Add popup or sound?
                             } else if (obj.userData.type === 'enemy') {
-                                togglePlay(); // Reset on death
-                                addMessage("CRITICAL ERROR: Hero unit destroyed by Virus.", "ai");
+                                togglePlay(); 
+                                addMessage(`SYSTEM FAILURE: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'} unit lost to Virus.`, "ai");
                             } else if (obj.userData.type === 'goal') {
-                                addMessage(`SYSTEM BRAVO! Level complete. Score: ${score}`, "ai");
+                                addMessage(`PROTOCOL COMPLETE! Winner: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'}! Score: ${score}`, "ai");
                                 togglePlay();
                             }
                         }
                     });
-                }
+                });
             } else {
                 orbit.update();
             }

@@ -448,6 +448,7 @@
                     <button class="btn-quick" style="background: linear-gradient(45deg, #ff00ff, #00ffff); color: black; font-size: 1.2rem;" onclick="submitColor('random sphere')">Random Sphere 🎲</button>
                     <button class="btn-quick" style="background: #55acee; color: white; font-size: 1.2rem;" onclick="submitColor('clear')">Tornado Clear 🌪️</button>
                     <button class="btn-quick" style="background: var(--bg-dark); color: #ff3b30; border-color: #ff3b30; font-size: 1.2rem; grid-column: span 2;" onclick="submitColor('clear')">CLEAR EVERYTHING 🧹</button>
+                    <button class="btn-quick" style="background: #a52a2a; color: white; font-size: 1.2rem;" onclick="submitColor('dinosaur')">Add Dinosaur 🦖</button>
                     <button class="btn-quick" style="background: var(--accent-warning); color: black; font-size: 1.2rem;" onclick="document.getElementById('tutorial-modal').style.display='flex'">Help? ❓</button>
                 </div>
             </div>
@@ -727,7 +728,7 @@
             if (isPaintMode) {
                 transformControls.detach();
                 document.getElementById('transform-controls-ui').style.display = 'none';
-                showToast("Draw Mode Active! Click objects to paint! ✨");
+                showToast("Draw Mode Active! Click & Drag to paint in 3D! ✨");
             }
         }
 
@@ -782,7 +783,23 @@
         window.togglePaintMode = togglePaintMode;
         window.setPaintColor = setPaintColor;
 
+        let isMouseDown = false;
         renderer.domElement.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            handleInteractions(e);
+        });
+
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (isMouseDown && isPaintMode) {
+                handleInteractions(e);
+            }
+        });
+
+        renderer.domElement.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        function handleInteractions(e) {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -790,30 +807,48 @@
             raycaster.setFromCamera(mouse, camera);
             
             if (isPaintMode) {
-                const targets = animObjects.filter(o => o.isMesh);
-                const intersects = raycaster.intersectObjects(targets);
+                const targets = animObjects.filter(o => o.isMesh || o.type === 'Group');
+                const intersects = raycaster.intersectObjects(targets, true);
+                
+                const paintGeo = new THREE.SphereGeometry(0.2, 8, 8);
+                const paintMat = new THREE.MeshStandardMaterial({ color: paintColor });
+                const blob = new THREE.Mesh(paintGeo, paintMat);
+
                 if (intersects.length > 0) {
                     const intersect = intersects[0];
-                    const paintGeo = new THREE.SphereGeometry(0.15, 8, 8);
-                    const paintMat = new THREE.MeshStandardMaterial({ color: paintColor });
-                    const blob = new THREE.Mesh(paintGeo, paintMat);
                     blob.position.copy(intersect.point);
                     // Add a tiny bit of offset along normal to prevent z-fighting
-                    blob.position.add(intersect.face.normal.clone().multiplyScalar(0.05));
-                    intersect.object.add(blob); // Parenting keeps dots attached to moving objects!
+                    if (intersect.face) {
+                        blob.position.add(intersect.face.normal.clone().multiplyScalar(0.05));
+                    }
+                    intersect.object.add(blob); // Parent to the object
+                } else {
+                    // DRAW IN 3D SPACE: If nothing is hit, draw at a fixed distance (10 units)
+                    const targetPos = new THREE.Vector3();
+                    raycaster.ray.at(10, targetPos);
+                    blob.position.copy(targetPos);
+                    scene.add(blob);
+                    // We don't necessarily add to animObjects to keep them static "paint"
+                    // but we might want them cleared. Clear logic uses scene.traverse so it's fine.
                 }
                 return;
             }
 
-            const targets = animObjects.filter(o => o.isMesh);
-            const intersects = raycaster.intersectObjects(targets);
-            
-            if (intersects.length > 0) {
-                const selected = intersects[0].object;
-                transformControls.attach(selected);
-                document.getElementById('transform-controls-ui').style.display = 'flex';
+            if (e.type === 'mousedown') {
+                const targets = animObjects.filter(o => o.isMesh || o.type === 'Group');
+                const intersects = raycaster.intersectObjects(targets, true);
+                
+                if (intersects.length > 0) {
+                    let selected = intersects[0].object;
+                    // Find the top-level group if it's part of one
+                    while (selected.parent && selected.parent !== scene && selected.parent.type !== 'Scene') {
+                        selected = selected.parent;
+                    }
+                    transformControls.attach(selected);
+                    document.getElementById('transform-controls-ui').style.display = 'flex';
+                }
             }
-        });
+        }
 
         window.detachTransform = detachTransform;
         window.setTransformMode = setTransformMode;
@@ -848,6 +883,34 @@
                 if(obj.userData.spin) {
                     obj.rotation.y += 0.02;
                     obj.rotation.x += 0.01;
+                }
+
+                // Dinosaur AI
+                if (obj.userData.isEnemy && players.length > 0) {
+                    // Find closest player
+                    let closest = players[0];
+                    let minDist = obj.position.distanceTo(players[0].position);
+                    players.forEach(p => {
+                        let d = obj.position.distanceTo(p.position);
+                        if (d < minDist) {
+                            minDist = d;
+                            closest = p;
+                        }
+                    });
+                    
+                    // Move towards player
+                    const dir = new THREE.Vector3().subVectors(closest.position, obj.position).normalize();
+                    dir.y = 0; // stay on ground
+                    obj.position.add(dir.multiplyScalar(0.04));
+                    
+                    // Look at player (with smooth rotation)
+                    const targetRotation = Math.atan2(closest.position.x - obj.position.x, closest.position.z - obj.position.z);
+                    obj.rotation.y = targetRotation + Math.PI; // Adjust base rotation if needed
+                    
+                    // Simple walk animation
+                    obj.userData.legs?.forEach((leg, i) => {
+                        leg.rotation.x = Math.sin(time * 10 + i * Math.PI) * 0.5;
+                    });
                 }
             });
 
@@ -924,6 +987,49 @@
             return new THREE.ExtrudeGeometry(shape, extrudeSettings);
         }
 
+        // --- NEW: Dinosaur Creation ---
+        function createDinosaur(color) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: color });
+            
+            // Body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2, 1.8, 3.5), mat);
+            body.position.set(0, 2.5, 0);
+            body.castShadow = true;
+            group.add(body);
+            
+            // Neck
+            const neck = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.5, 0.8), mat);
+            neck.position.set(0, 4, 1.5);
+            neck.rotation.x = -0.3;
+            group.add(neck);
+            
+            // Head
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 1.8), mat);
+            head.position.set(0, 5.2, 2.2);
+            group.add(head);
+            
+            // Tail
+            const tail = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 2.5), mat);
+            tail.position.set(0, 2.5, -2.5);
+            tail.rotation.x = 0.4;
+            group.add(tail);
+            
+            // Legs
+            const legGeo = new THREE.BoxGeometry(0.6, 2, 0.6);
+            const legs = [];
+            const legOffsets = [[0.6, 1, 1], [-0.6, 1, 1], [0.6, 1, -1], [-0.6, 1, -1]];
+            legOffsets.forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, mat);
+                leg.position.set(pos[0], pos[1], pos[2]);
+                group.add(leg);
+                legs.push(leg);
+            });
+            
+            group.userData.legs = legs;
+            return group;
+        }
+
         // === PSEUDO-LLM PARSER ===
         function parseCommand(cmd) {
             let lowerCmd = cmd.toLowerCase().trim();
@@ -939,7 +1045,8 @@
                 'cyan': 'cyan make it spin',
                 'black': 'black clear',
                 'random cube': 'random player cube',
-                'random sphere': 'random player sphere'
+                'random sphere': 'random player sphere',
+                'dinosaur': 'dinosaur enemy'
             };
             
             if (optionMap[lowerCmd]) {
@@ -1101,6 +1208,16 @@
                     response = "Oops! I need an object first. Try adding a pyramid! 🔺<br>";
                     somethingHappened = true;
                 }
+            }
+
+            // --- DINOSAUR ENEMY ---
+            if (lowerCmd.includes('dinosaur')) {
+                const dino = createDinosaur(chosenColor || 0x4a7c59);
+                dino.position.set((Math.random()-0.5)*15, 0, (Math.random()-0.5)*15);
+                dino.userData = { baseY: 0, isEnemy: true };
+                addObject(dino);
+                response += `🦖 RAWR! A Dinosaur Enemy appeared! Watch out! <br>`;
+                somethingHappened = true;
             }
 
             // 9. Clear
