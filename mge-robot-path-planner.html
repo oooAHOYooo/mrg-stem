@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Path Planner ⭐ – MGE STEM Lab</title>
+  <meta name="description" content="Teach sequencing, debugging, and spatial thinking with a 3D robot path planner. Program the robot, watch it execute, and debug failures in real time!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    /* ── RESET & BASE ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0d0f1a;
+      --panel:    #13172a;
+      --card:     #1a2040;
+      --border:   #2a2f50;
+      --blue:     #4fc3f7;
+      --cyan:     #00e5ff;
+      --green:    #69f0ae;
+      --red:      #ff5252;
+      --yellow:   #ffe066;
+      --purple:   #b388ff;
+      --orange:   #ff9800;
+      --white:    #e8ecff;
+      --gray:     #64748b;
+    }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── TOP BAR ───────────────────────────────────────── */
+    #topbar {
+      height: 52px;
+      background: var(--panel);
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    #topbar .logo { font-size: 1.5rem; }
+    #topbar h1 {
+      font-size: 1.1rem; font-weight: 900; color: var(--cyan);
+      text-shadow: 0 0 12px rgba(0,229,255,.6);
+    }
+    #topbar .sep { flex: 1; }
+    #topbar .hint {
+      font-size: .78rem; color: var(--gray);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 4px 10px;
+    }
+    #backBtn {
+      background: rgba(79,195,247,.15);
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      border-radius: 8px; padding: 6px 14px;
+      font-family: inherit; font-weight: 700; cursor: pointer;
+      transition: all .2s;
+    }
+    #backBtn:hover { background: var(--blue); color: #000; }
+
+    /* ── BODY LAYOUT ───────────────────────────────────── */
+    #layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 3D VIEWPORT ───────────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Level & score overlay */
+    #hud {
+      position: absolute;
+      top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      pointer-events: none;
+    }
+    .hud-chip {
+      background: rgba(13,15,26,.8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: .85rem; font-weight: 700;
+    }
+
+    /* ── RIGHT PANEL ───────────────────────────────────── */
+    #panel {
+      width: 290px;
+      background: var(--panel);
+      border-left: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* Level selector */
+    #levelBar {
+      padding: 10px 12px 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .lvlBtn {
+      flex: 1; min-width: 60px;
+      background: var(--card); border: 2px solid var(--border);
+      color: var(--white); font-family: inherit; font-weight: 700;
+      font-size: .78rem; border-radius: 8px; padding: 5px 4px;
+      cursor: pointer; transition: all .2s;
+    }
+    .lvlBtn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .lvlBtn.active { border-color: var(--cyan); background: rgba(0,229,255,.15); color: var(--cyan); }
+
+    /* Command palette */
+    #palette {
+      padding: 10px 12px 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    #palette h3 { font-size: .78rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    #palette .tiles {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .cmd-source {
+      user-select: none;
+      cursor: grab;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: .85rem; font-weight: 700;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .cmd-source:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+    .cmd-source[data-cmd="forward"]  { border-color: var(--green);  color: var(--green);  }
+    .cmd-source[data-cmd="left"]     { border-color: var(--blue);   color: var(--blue);   }
+    .cmd-source[data-cmd="right"]    { border-color: var(--purple);  color: var(--purple);  }
+    .cmd-source[data-cmd="backward"] { border-color: var(--orange);  color: var(--orange);  }
+    .cmd-source[data-cmd="loop"]     { border-color: var(--yellow);  color: var(--yellow);  }
+
+    /* Command rail */
+    #rail-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    #rail-wrap h3 { font-size: .78rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    #rail {
+      min-height: 120px;
+      display: flex; flex-direction: column; gap: 5px;
+      background: rgba(0,0,0,.2);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      transition: border-color .2s;
+    }
+    #rail.drag-over { border-color: var(--cyan); background: rgba(0,229,255,.05); }
+    .cmd-tile {
+      display: flex; align-items: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: .88rem; font-weight: 700;
+      gap: 7px;
+      cursor: grab;
+      user-select: none;
+      transition: all .25s;
+      position: relative;
+    }
+    .cmd-tile .del {
+      margin-left: auto;
+      background: none; border: none;
+      color: var(--gray); cursor: pointer;
+      font-size: 1.1rem; padding: 0 2px;
+      line-height: 1;
+      transition: color .15s;
+    }
+    .cmd-tile .del:hover { color: var(--red); }
+    .cmd-tile[data-cmd="forward"]  { border-color: var(--green);  color: var(--green);  }
+    .cmd-tile[data-cmd="left"]     { border-color: var(--blue);   color: var(--blue);   }
+    .cmd-tile[data-cmd="right"]    { border-color: var(--purple);  color: var(--purple);  }
+    .cmd-tile[data-cmd="backward"] { border-color: var(--orange);  color: var(--orange);  }
+    .cmd-tile[data-cmd="loop"]     { border-color: var(--yellow);  color: var(--yellow);  }
+    .cmd-tile.executing {
+      box-shadow: 0 0 16px 4px currentColor;
+      transform: scale(1.04);
+    }
+    .cmd-tile.error {
+      animation: flash-red .4s ease 3;
+      border-color: var(--red) !important;
+      color: var(--red) !important;
+    }
+    @keyframes flash-red {
+      0%,100% { background: var(--card); }
+      50%      { background: rgba(255,82,82,.25); }
+    }
+
+    /* Controls */
+    #controls {
+      padding: 10px 12px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .ctrl-btn {
+      flex: 1; min-width: 70px;
+      font-family: inherit; font-weight: 700; font-size: .88rem;
+      border-radius: 10px; padding: 9px 4px;
+      cursor: pointer; border: 2px solid transparent;
+      transition: all .2s;
+    }
+    #runBtn {
+      background: linear-gradient(135deg, #00c853, #00e676);
+      color: #000; border-color: #00e676;
+    }
+    #runBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,200,83,.5); }
+    #resetBtn {
+      background: rgba(255,82,82,.15);
+      color: var(--red); border-color: var(--red);
+    }
+    #resetBtn:hover { background: var(--red); color: #fff; }
+    #clearBtn {
+      background: rgba(100,116,139,.15);
+      color: var(--gray); border-color: var(--border);
+    }
+    #clearBtn:hover { background: rgba(100,116,139,.3); color: var(--white); }
+
+    /* Status message */
+    #statusMsg {
+      padding: 8px 12px;
+      font-size: .82rem; font-weight: 700;
+      border-top: 1px solid var(--border);
+      min-height: 36px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* ── DEBUG OVERLAY ─────────────────────────────────── */
+    #debugOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,5,20,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 30;
+      display: none;
+    }
+    #debugBox {
+      background: var(--panel);
+      border: 3px solid var(--red);
+      border-radius: 20px;
+      padding: 28px 36px;
+      text-align: center;
+      max-width: 360px;
+      box-shadow: 0 0 60px rgba(255,82,82,.3);
+      animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(.6); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+    #debugBox .bug-icon { font-size: 3.5rem; margin-bottom: 10px; }
+    #debugBox h2 { color: var(--red); font-size: 1.5rem; margin-bottom: 8px; }
+    #debugBox p  { color: var(--white); font-size: 1rem; margin-bottom: 18px; line-height: 1.5; }
+    #debugBox button {
+      font-family: inherit; font-weight: 700; font-size: 1rem;
+      background: var(--red); color: #fff;
+      border: none; border-radius: 12px; padding: 10px 24px;
+      cursor: pointer; transition: all .2s;
+    }
+    #debugBox button:hover { background: #ff1744; transform: translateY(-2px); }
+
+    /* ── WIN OVERLAY ───────────────────────────────────── */
+    #winOverlay {
+      position: absolute; inset: 0;
+      background: rgba(0,10,0,.75);
+      display: none; align-items: center; justify-content: center;
+      z-index: 30;
+    }
+    #winBox {
+      background: var(--panel);
+      border: 3px solid var(--green);
+      border-radius: 20px;
+      padding: 28px 36px;
+      text-align: center;
+      max-width: 380px;
+      box-shadow: 0 0 80px rgba(105,240,174,.35);
+      animation: popIn .5s cubic-bezier(.175,.885,.32,1.275);
+    }
+    #winBox .win-icon { font-size: 4rem; margin-bottom: 10px; }
+    #winBox h2 { color: var(--green); font-size: 1.8rem; margin-bottom: 8px; }
+    #winBox p  { color: var(--white); margin-bottom: 18px; line-height: 1.5; }
+    #winBox button {
+      font-family: inherit; font-weight: 700; font-size: 1rem;
+      background: linear-gradient(135deg, #00c853, #69f0ae); color: #000;
+      border: none; border-radius: 12px; padding: 10px 24px;
+      cursor: pointer; transition: all .2s;
+    }
+    #winBox button:hover { transform: scale(1.05); }
+
+    /* scrollbar */
+    #rail-wrap::-webkit-scrollbar { width: 5px; }
+    #rail-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- ── TOP BAR ──────────────────────────────────────── -->
+<div id="topbar">
+  <span class="logo">🤖</span>
+  <h1>Robot Path Planner ⭐</h1>
+  <div class="sep"></div>
+  <div class="hint">Drag blocks → Press RUN</div>
+  <button id="backBtn" onclick="location.href='mge.html'">← Back to MGE</button>
+</div>
+
+<!-- ── MAIN LAYOUT ──────────────────────────────────── -->
+<div id="layout">
+
+  <!-- 3D VIEWPORT -->
+  <div id="canvas-wrap">
+    <div id="hud">
+      <div class="hud-chip">⭐ Level: <span id="hudLevel">1</span></div>
+      <div class="hud-chip">✅ Moves: <span id="hudMoves">0</span></div>
+    </div>
+    <div id="debugOverlay">
+      <div id="debugBox">
+        <div class="bug-icon">🐛</div>
+        <h2>Debug Mode!</h2>
+        <p id="debugMsg">The robot hit a wall and got confused.<br>Fix your code and try again!</p>
+        <button id="debugClose">Got it! Fix Code 🔧</button>
+      </div>
+    </div>
+    <div id="winOverlay">
+      <div id="winBox">
+        <div class="win-icon">🎉</div>
+        <h2>You did it!</h2>
+        <p id="winMsg">Your robot reached the star!<br>Amazing sequencing skills!</p>
+        <button id="winNext">Next Level ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="panel">
+
+    <!-- Level selector -->
+    <div id="levelBar">
+      <button class="lvlBtn active" data-level="0">⬜ L1</button>
+      <button class="lvlBtn" data-level="1">🟦 L2</button>
+      <button class="lvlBtn" data-level="2">🟥 L3</button>
+      <button class="lvlBtn" data-level="3">⭐ Boss</button>
+    </div>
+
+    <!-- Command palette -->
+    <div id="palette">
+      <h3>🧩 Blocks</h3>
+      <div class="tiles">
+        <div class="cmd-source" data-cmd="forward"  draggable="true">⬆ Forward</div>
+        <div class="cmd-source" data-cmd="backward" draggable="true">⬇ Back</div>
+        <div class="cmd-source" data-cmd="left"     draggable="true">↩ Turn L</div>
+        <div class="cmd-source" data-cmd="right"    draggable="true">↪ Turn R</div>
+        <div class="cmd-source" data-cmd="loop"     draggable="true">🔁 ×2</div>
+      </div>
+    </div>
+
+    <!-- Command rail -->
+    <div id="rail-wrap">
+      <h3>📋 Your Program</h3>
+      <div id="rail"></div>
+    </div>
+
+    <!-- Control buttons -->
+    <div id="controls">
+      <button class="ctrl-btn" id="runBtn">▶ Run</button>
+      <button class="ctrl-btn" id="resetBtn">↺ Reset</button>
+      <button class="ctrl-btn" id="clearBtn">🗑 Clear</button>
+    </div>
+
+    <!-- Status message -->
+    <div id="statusMsg">Add blocks, then press RUN!</div>
+
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─────────────────────────────────────────────────────────────
+//  LEVELS  (grid 8×8, 0=empty tile, 1=wall, G=goal, S=start)
+// ─────────────────────────────────────────────────────────────
+const LEVELS = [
+  {
+    name: "Straight Shot",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,1,0,0,1,0,1],
+      [1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,  // dir: 0=+Z, 1=+X, 2=-Z, 3=-X
+    goal:  [1,6],
+    tip: "Forward 5 times!"
+  },
+  {
+    name: "Right Turn",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 2,
+    goal:  [6,6],
+    tip: "Forward 3, Turn Right, Forward 2!"
+  },
+  {
+    name: "Maze Run",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,1],
+      [1,1,1,0,1,0,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,1,0,1],
+      [1,1,1,1,0,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,
+    goal:  [6,6],
+    tip: "Follow the path carefully!"
+  },
+  {
+    name: "Boss: The Star",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,1,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,0,1,0,1,1],
+      [1,0,0,0,1,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,
+    goal:  [6,6],
+    tip: "Think before you code — this one needs a plan!"
+  }
+];
+
+// ─────────────────────────────────────────────────────────────
+//  THREE.JS SETUP
+// ─────────────────────────────────────────────────────────────
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0f1a);
+scene.fog = new THREE.FogExp2(0x0d0f1a, 0.03);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(0, 14, 16);
+camera.lookAt(0, 0, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.minDistance = 6;
+controls.maxDistance = 30;
+
+// Lights
+const ambient = new THREE.AmbientLight(0x2a2f4a, 1.5);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffffff, 2);
+sun.position.set(8, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+const fillLight = new THREE.DirectionalLight(0x4fc3f7, 0.6);
+fillLight.position.set(-8, 5, -8);
+scene.add(fillLight);
+
+// ─────────────────────────────────────────────────────────────
+//  GRID / WORLD BUILDER
+// ─────────────────────────────────────────────────────────────
+const TILE  = 1.5;
+const WALL_H = 1.0;
+const TILE_H = 0.3;
+
+const tileGroup = new THREE.Group();
+scene.add(tileGroup);
+
+const matFloor = new THREE.MeshStandardMaterial({ color: 0x1e2d4a, roughness: .8 });
+const matWall  = new THREE.MeshStandardMaterial({ color: 0x0a1428, roughness: .9,
+  emissive: 0x0a1020, emissiveIntensity: .3 });
+const matGoal  = new THREE.MeshStandardMaterial({ color: 0xffe066, roughness: .3,
+  emissive: 0xffe066, emissiveIntensity: .4 });
+
+let goalMesh = null;
+let floorTiles = [];  // {mesh, gx, gz}
+let wallMeshes = [];
+
+function clearWorld() {
+  while (tileGroup.children.length) tileGroup.remove(tileGroup.children[0]);
+  floorTiles = [];
+  wallMeshes = [];
+  goalMesh = null;
+}
+
+function buildWorld(level) {
+  clearWorld();
+  const grid = level.grid;
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const offsetX = -(cols / 2 - 0.5) * TILE;
+  const offsetZ = -(rows / 2 - 0.5) * TILE;
+
+  const floorGeo = new THREE.BoxGeometry(TILE - .06, TILE_H, TILE - .06);
+  const wallGeo  = new THREE.BoxGeometry(TILE, WALL_H, TILE);
+  const goalGeo  = new THREE.CylinderGeometry(.45, .45, TILE_H * 2, 6);
+
+  for (let z = 0; z < rows; z++) {
+    for (let x = 0; x < cols; x++) {
+      const wx = offsetX + x * TILE;
+      const wz = offsetZ + z * TILE;
+
+      if (grid[z][x] === 1) {
+        const m = new THREE.Mesh(wallGeo, matWall.clone());
+        m.position.set(wx, WALL_H / 2, wz);
+        m.castShadow = true; m.receiveShadow = true;
+        tileGroup.add(m);
+        wallMeshes.push({ mesh: m, gx: x, gz: z });
+      } else {
+        // Slightly randomise floor tile height for "terrain" feel
+        const jitter = Math.random() * 0.06;
+        const m = new THREE.Mesh(floorGeo, matFloor.clone());
+        m.position.set(wx, -jitter, wz);
+        m.receiveShadow = true;
+        tileGroup.add(m);
+        floorTiles.push({ mesh: m, gx: x, gz: z });
+
+        // Goal tile
+        if (x === level.goal[0] && z === level.goal[1]) {
+          const gm = new THREE.Mesh(goalGeo, matGoal);
+          gm.position.set(wx, TILE_H, wz);
+          tileGroup.add(gm);
+          goalMesh = gm;
+          // pulsing light
+          const gl = new THREE.PointLight(0xffe066, 2, 3);
+          gl.position.set(wx, .8, wz);
+          tileGroup.add(gl);
+        }
+      }
+    }
+  }
+
+  // add subtle grid lines
+  const gHelper = new THREE.GridHelper(cols * TILE, cols, 0x1a2a40, 0x1a2a40);
+  gHelper.position.y = .01;
+  tileGroup.add(gHelper);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ROBOT
+// ─────────────────────────────────────────────────────────────
+const robotGroup = new THREE.Group();
+scene.add(robotGroup);
+
+// Body
+const bodyMat = new THREE.MeshStandardMaterial({ color: 0x29b6f6, roughness: .35, metalness: .6,
+  emissive: 0x0d47a1, emissiveIntensity: .3 });
+const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), bodyMat);
+bodyMesh.position.y = .7;
+robotGroup.add(bodyMesh);
+
+// Head
+const headMat = new THREE.MeshStandardMaterial({ color: 0xe3f2fd, roughness: .4,
+  emissive: 0x4fc3f7, emissiveIntensity: .1 });
+const headMesh = new THREE.Mesh(new THREE.BoxGeometry(.42, .38, .38), headMat);
+headMesh.position.y = 1.17;
+robotGroup.add(headMesh);
+
+// Eyes (two small glowing cubes)
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 1 });
+[-1,1].forEach(side => {
+  const eye = new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08), eyeMat.clone());
+  eye.position.set(side * .12, 1.2, .19);
+  robotGroup.add(eye);
+});
+
+// Chest glow panel
+const chestGlow = new THREE.MeshStandardMaterial({ color: 0x69f0ae, emissive: 0x69f0ae, emissiveIntensity: .6 });
+const chestPanel = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .06), chestGlow);
+chestPanel.position.set(0, .7, .25);
+robotGroup.add(chestPanel);
+
+// Legs
+const legMat = new THREE.MeshStandardMaterial({ color: 0x0d47a1, roughness: .5, metalness: .5 });
+[-1,1].forEach(side => {
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), legMat.clone());
+  leg.position.set(side * .19, .18, 0);
+  robotGroup.add(leg);
+});
+
+// Body glow point light
+const robotLight = new THREE.PointLight(0x4fc3f7, 0, 2.5);
+robotGroup.add(robotLight);
+
+// Execution trail particles
+const trailGeo   = new THREE.SphereGeometry(.06, 6, 6);
+const trailMat   = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: .7 });
+const trailGroup = new THREE.Group();
+scene.add(trailGroup);
+
+function spawnTrailParticle(pos) {
+  const p = new THREE.Mesh(trailGeo, trailMat.clone());
+  p.position.copy(pos);
+  p.position.y = 0.1;
+  p.userData.life = 1;
+  trailGroup.add(p);
+}
+
+function updateTrail(dt) {
+  for (let i = trailGroup.children.length - 1; i >= 0; i--) {
+    const p = trailGroup.children[i];
+    p.userData.life -= dt * 1.5;
+    p.material.opacity = p.userData.life * .7;
+    p.position.y += dt * .3;
+    if (p.userData.life <= 0) trailGroup.remove(p);
+  }
+}
+
+// Tile pulse plane
+const pulsePlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(TILE - .1, TILE - .1),
+  new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+pulsePlane.rotation.x = -Math.PI / 2;
+pulsePlane.position.y = .02;
+scene.add(pulsePlane);
+
+// Ghost robot (debug mode)
+const ghostMat = new THREE.MeshStandardMaterial({ color: 0xff5252, transparent: true, opacity: .35, wireframe: false });
+const ghostGroup = new THREE.Group();
+const ghostBody = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), ghostMat);
+ghostBody.position.y = .7;
+ghostGroup.add(ghostBody);
+ghostGroup.visible = false;
+scene.add(ghostGroup);
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let currentLevel = 0;
+let robotGX, robotGZ, robotDir;  // grid position + direction (0=+Z,1=+X,2=-Z,3=-X)
+let moveCount = 0;
+let isRunning = false;
+let animQueue = [];
+let animTimer = 0;
+const STEP_DURATION = 0.38; // seconds per step
+
+const DIRS = [
+  [0,  1],  // 0: +Z (south)
+  [1,  0],  // 1: +X (east)
+  [0, -1],  // 2: -Z (north)
+  [-1, 0],  // 3: -X (west)
+];
+
+function gridToWorld(gx, gz, level) {
+  const grid = level.grid;
+  const cols = grid[0].length;
+  const rows = grid.length;
+  return {
+    x: -(cols/2 - .5) * TILE + gx * TILE,
+    z: -(rows/2 - .5) * TILE + gz * TILE,
+  };
+}
+
+function loadLevel(idx) {
+  currentLevel = idx;
+  const level = LEVELS[idx];
+  buildWorld(level);
+
+  robotGX  = level.start[0];
+  robotGZ  = level.start[1];
+  robotDir = level.startDir;
+  moveCount = 0;
+  isRunning = false;
+
+  const wpos = gridToWorld(robotGX, robotGZ, level);
+  robotGroup.position.set(wpos.x, TILE_H, wpos.z);
+  robotGroup.rotation.y = -robotDir * Math.PI / 2;
+  robotLight.intensity = 0;
+
+  // clear trail
+  while (trailGroup.children.length) trailGroup.remove(trailGroup.children[0]);
+  ghostGroup.visible = false;
+  pulsePlane.material.opacity = 0;
+
+  document.getElementById('hudLevel').textContent = idx + 1;
+  document.getElementById('hudMoves').textContent = 0;
+  document.getElementById('statusMsg').textContent = `🗺 ${level.name} — ${level.tip}`;
+
+  // camera soft reset
+  camera.position.set(0, 14, 16);
+  camera.lookAt(0, 0, 0);
+  controls.target.set(0, 0, 0);
+
+  document.querySelectorAll('.lvlBtn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  COMMAND COMPILATION
+// ─────────────────────────────────────────────────────────────
+function compileProgramToSteps(tiles) {
+  const steps = [];
+  for (const t of tiles) {
+    if (t.cmd === 'loop') {
+      // repeat next step twice — here we repeat the last pushed
+      // For simplicity: ×2 multiplies the PREVIOUS step
+      if (steps.length > 0) {
+        steps.push({ ...steps[steps.length - 1] });
+      }
+    } else {
+      steps.push({ cmd: t.cmd, tileEl: t.tileEl });
+    }
+  }
+  return steps;
+}
+
+function buildStepsFromRail() {
+  const tiles = [];
+  document.querySelectorAll('#rail .cmd-tile').forEach(el => {
+    tiles.push({ cmd: el.dataset.cmd, tileEl: el });
+  });
+  return compileProgramToSteps(tiles);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ANIMATION QUEUE EXECUTION
+// ─────────────────────────────────────────────────────────────
+function startX(mx, mz, dir) {
+  // Returns target world position after one move
+  const level = LEVELS[currentLevel];
+  const d = DIRS[dir];
+  const nx = robotGX + d[0];
+  const nz = robotGZ + d[1];
+  return { nx, nz };
+}
+
+function canMoveToCell(gx, gz) {
+  const grid = LEVELS[currentLevel].grid;
+  if (gz < 0 || gz >= grid.length || gx < 0 || gx >= grid[0].length) return false;
+  return grid[gz][gx] === 0;
+}
+
+function runProgram() {
+  if (isRunning) return;
+  const steps = buildStepsFromRail();
+  if (!steps.length) { setStatus("⚠️ Add some blocks first!"); return; }
+
+  isRunning = true;
+  animQueue = steps.slice();
+  animTimer = STEP_DURATION;
+  robotLight.intensity = 2;
+  setStatus("🤖 Running...");
+}
+
+let currentStepIndex = 0;
+let executingTileEl = null;
+let stepPhase = 'start'; // 'start', 'move'
+let fromPos = new THREE.Vector3();
+let toPos   = new THREE.Vector3();
+let moveProgress = 0;
+let stepDir = 0;
+const targetQuat = new THREE.Quaternion();
+const startQuat  = new THREE.Quaternion();
+
+function popNextStep() {
+  if (!animQueue.length) {
+    // Done — no win yet means wrong path
+    finishRun(false, null, "Reached end of code but missed the ⭐ star!", null);
+    return;
+  }
+
+  const step = animQueue.shift();
+  const { cmd, tileEl } = step;
+
+  // Highlight tile
+  if (executingTileEl) executingTileEl.classList.remove('executing');
+  executingTileEl = tileEl;
+  if (tileEl) tileEl.classList.add('executing');
+
+  if (cmd === 'forward' || cmd === 'backward') {
+    const level = LEVELS[currentLevel];
+    const d = DIRS[robotDir];
+    const mult = cmd === 'backward' ? -1 : 1;
+    const nx = robotGX + d[0] * mult;
+    const nz = robotGZ + d[1] * mult;
+
+    if (!canMoveToCell(nx, nz)) {
+      // FAIL
+      triggerDebug(tileEl, `🧱 Oops! There's a wall at (${nx}, ${nz})!<br>The robot tried to walk through a wall.`);
+      return;
+    }
+
+    const wFrom = gridToWorld(robotGX, robotGZ, level);
+    const wTo   = gridToWorld(nx, nz, level);
+    fromPos.set(wFrom.x, TILE_H, wFrom.z);
+    toPos.set(wTo.x,   TILE_H, wTo.z);
+
+    // ghost
+    ghostGroup.position.set(wTo.x, TILE_H, wTo.z);
+    ghostGroup.visible = true;
+
+    // pulse plane
+    pulsePlane.position.set(wTo.x, .02, wTo.z);
+
+    robotGX = nx; robotGZ = nz;
+    stepPhase = 'move';
+    moveProgress = 0;
+    moveCount++;
+    document.getElementById('hudMoves').textContent = moveCount;
+
+    // Check win
+    if (nx === LEVELS[currentLevel].goal[0] && nz === LEVELS[currentLevel].goal[1]) {
+      // schedule win after animation
+      setTimeout(() => {
+        if (executingTileEl) executingTileEl.classList.remove('executing');
+        finishRun(true, null, `Solved in ${moveCount} moves!`, null);
+      }, STEP_DURATION * 1000 + 100);
+      animQueue = [];  // stop after win
+    }
+
+  } else if (cmd === 'left' || cmd === 'right') {
+    robotDir = ((robotDir + (cmd === 'right' ? 1 : 3)) % 4);
+    startQuat.copy(robotGroup.quaternion);
+    targetQuat.setFromEuler(new THREE.Euler(0, -robotDir * Math.PI / 2, 0));
+    stepPhase = 'turn';
+    moveProgress = 0;
+    robotGroup.userData.leanDir = cmd === 'right' ? 1 : -1;
+  }
+}
+
+function tickAnimation(dt) {
+  if (!isRunning) return;
+
+  if (stepPhase === 'idle') {
+    animTimer -= dt;
+    if (animTimer <= 0) {
+      animTimer = STEP_DURATION;
+      popNextStep();
+    }
+    return;
+  }
+
+  moveProgress += dt / STEP_DURATION;
+  const t = Math.min(moveProgress, 1);
+
+  if (stepPhase === 'move') {
+    const y = TILE_H + Math.sin(t * Math.PI) * 0.35; // hop arc
+    robotGroup.position.lerpVectors(fromPos, toPos, t);
+    robotGroup.position.y = y;
+
+    // pulse plane opacity
+    pulsePlane.material.opacity = Math.sin(t * Math.PI) * 0.35;
+
+    // Spawn trail
+    if (Math.random() < .4) spawnTrailParticle(robotGroup.position);
+
+  } else if (stepPhase === 'turn') {
+    robotGroup.quaternion.slerpQuaternions(startQuat, targetQuat, t);
+    // lean
+    const lean = Math.sin(t * Math.PI) * robotGroup.userData.leanDir * 0.22;
+    robotGroup.rotation.z = lean;
+  }
+
+  if (t >= 1) {
+    if (stepPhase === 'move') {
+      robotGroup.position.copy(toPos);
+      ghostGroup.visible = false;
+      pulsePlane.material.opacity = 0;
+    } else if (stepPhase === 'turn') {
+      robotGroup.quaternion.copy(targetQuat);
+      robotGroup.rotation.z = 0;
+    }
+    stepPhase = 'idle';
+    animTimer = 0.06;
+  }
+}
+
+function finishRun(won, tileEl, msg, extraMsg) {
+  isRunning = false;
+  robotLight.intensity = 0;
+  if (executingTileEl) executingTileEl.classList.remove('executing');
+  ghostGroup.visible = false;
+  pulsePlane.material.opacity = 0;
+
+  if (won) {
+    document.getElementById('winMsg').innerHTML = `⭐ ${msg}`;
+    document.getElementById('winOverlay').style.display = 'flex';
+    // firework particles
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => spawnConfettiParticle(), i * 40);
+    }
+    setStatus("🎉 You WIN!");
+  } else {
+    setStatus("❌ " + (msg || "Error!"));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DEBUG MODE
+// ─────────────────────────────────────────────────────────────
+function triggerDebug(tileEl, msg) {
+  isRunning = false;
+  robotLight.intensity = 0;
+  animQueue = [];
+
+  // Flash tile red
+  if (tileEl) {
+    tileEl.classList.remove('executing');
+    tileEl.classList.add('error');
+    setTimeout(() => tileEl.classList.remove('error'), 1400);
+  }
+
+  // Show ghost at failed position
+  ghostGroup.visible = true;
+  ghostGroup.position.copy(robotGroup.position);
+
+  document.getElementById('debugMsg').innerHTML = msg || "Something went wrong!";
+  document.getElementById('debugOverlay').style.display = 'flex';
+  setStatus("🐛 Debug Mode! Fix your code.");
+}
+
+document.getElementById('debugClose').onclick = () => {
+  document.getElementById('debugOverlay').style.display = 'none';
+  ghostGroup.visible = false;
+  loadLevel(currentLevel);
+};
+
+// ─────────────────────────────────────────────────────────────
+//  WIN / NEXT LEVEL
+// ─────────────────────────────────────────────────────────────
+document.getElementById('winNext').onclick = () => {
+  document.getElementById('winOverlay').style.display = 'none';
+  const next = (currentLevel + 1) % LEVELS.length;
+  document.getElementById('rail').innerHTML = '';
+  loadLevel(next);
+};
+
+// ─────────────────────────────────────────────────────────────
+//  CONFETTI PARTICLES
+// ─────────────────────────────────────────────────────────────
+const confettiColors = [0xff5252, 0xffe066, 0x69f0ae, 0x4fc3f7, 0xb388ff, 0xff9800];
+function spawnConfettiParticle() {
+  const geo = new THREE.BoxGeometry(.12, .12, .04);
+  const mat = new THREE.MeshBasicMaterial({ color: confettiColors[Math.floor(Math.random() * confettiColors.length)] });
+  const p = new THREE.Mesh(geo, mat);
+  const wpos = gridToWorld(LEVELS[currentLevel].goal[0], LEVELS[currentLevel].goal[1], LEVELS[currentLevel]);
+  p.position.set(wpos.x + (Math.random()-.5)*2, 1 + Math.random()*2, wpos.z + (Math.random()-.5)*2);
+  p.userData.vel = new THREE.Vector3((Math.random()-.5)*.8, 2+Math.random()*2, (Math.random()-.5)*.8);
+  p.userData.rotV = new THREE.Vector3(Math.random()*4, Math.random()*4, Math.random()*4);
+  p.userData.life = 1;
+  scene.add(p);
+  // auto remove
+  const remove = () => scene.remove(p);
+  setTimeout(remove, 2500);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  GOAL ANIMATION
+// ─────────────────────────────────────────────────────────────
+let goalAngle = 0;
+function animateGoal(dt) {
+  if (!goalMesh) return;
+  goalAngle += dt * 1.5;
+  goalMesh.rotation.y = goalAngle;
+  const s = 1 + Math.sin(goalAngle * 2) * .06;
+  goalMesh.scale.set(s, s, s);
+  goalMesh.material.emissiveIntensity = .4 + Math.sin(goalAngle * 3) * .2;
+}
+
+// Eye blink
+let blinkTimer = 0;
+function animateRobotEyes(dt) {
+  blinkTimer += dt;
+  const eyes = robotGroup.children.filter(c => c.geometry && c.geometry.parameters && c.geometry.parameters.width === .08);
+  if (blinkTimer > 3 && blinkTimer < 3.1) {
+    eyes.forEach(e => e.scale.y = 0.05);
+  } else {
+    eyes.forEach(e => e.scale.y = 1);
+    if (blinkTimer > 3.3) blinkTimer = 0;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CONTROLS UI
+// ─────────────────────────────────────────────────────────────
+function setStatus(msg) { document.getElementById('statusMsg').textContent = msg; }
+
+document.getElementById('runBtn').onclick    = runProgram;
+document.getElementById('resetBtn').onclick  = () => { document.getElementById('winOverlay').style.display='none'; loadLevel(currentLevel); };
+document.getElementById('clearBtn').onclick  = () => document.getElementById('rail').innerHTML = '';
+
+document.querySelectorAll('.lvlBtn').forEach((btn, i) => {
+  btn.onclick = () => { document.getElementById('rail').innerHTML=''; loadLevel(i); };
+});
+
+// ─────────────────────────────────────────────────────────────
+//  DRAG & DROP
+// ─────────────────────────────────────────────────────────────
+const rail = document.getElementById('rail');
+let draggingEl = null;
+let dragSrcCmd = null;
+let isDragFromRail = false;
+
+document.querySelectorAll('.cmd-source').forEach(src => {
+  src.addEventListener('dragstart', e => {
+    dragSrcCmd = src.dataset.cmd;
+    isDragFromRail = false;
+  });
+});
+
+function makeTile(cmd) {
+  const labels = { forward:'⬆ Forward', backward:'⬇ Back', left:'↩ Turn L', right:'↪ Turn R', loop:'🔁 ×2' };
+  const el = document.createElement('div');
+  el.className = 'cmd-tile';
+  el.dataset.cmd = cmd;
+  el.draggable = true;
+  el.innerHTML = `<span>${labels[cmd]}</span><button class="del" title="Remove">✕</button>`;
+  el.querySelector('.del').onclick = (e) => { e.stopPropagation(); el.remove(); };
+  el.addEventListener('dragstart', e => {
+    draggingEl = el;
+    isDragFromRail = true;
+    dragSrcCmd = cmd;
+    setTimeout(() => el.style.opacity = '.3', 0);
+  });
+  el.addEventListener('dragend', () => {
+    el.style.opacity = '1';
+    draggingEl = null;
+  });
+  return el;
+}
+
+rail.addEventListener('dragover', e => { e.preventDefault(); rail.classList.add('drag-over'); });
+rail.addEventListener('dragleave', () => rail.classList.remove('drag-over'));
+rail.addEventListener('drop', e => {
+  e.preventDefault();
+  rail.classList.remove('drag-over');
+  if (isRunning) return;
+  if (isDragFromRail && draggingEl) {
+    // reorder: insert before hovered element
+    const afterEl = getDragAfterElement(rail, e.clientY);
+    if (afterEl == null) rail.appendChild(draggingEl);
+    else rail.insertBefore(draggingEl, afterEl);
+  } else if (dragSrcCmd) {
+    const tile = makeTile(dragSrcCmd);
+    const afterEl = getDragAfterElement(rail, e.clientY);
+    if (afterEl == null) rail.appendChild(tile);
+    else rail.insertBefore(tile, afterEl);
+  }
+});
+
+function getDragAfterElement(container, y) {
+  const els = [...container.querySelectorAll('.cmd-tile:not(.dragging)')];
+  return els.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RESIZE
+// ─────────────────────────────────────────────────────────────
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER LOOP
+// ─────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05);
+
+  controls.update();
+  tickAnimation(dt);
+  updateTrail(dt);
+  animateGoal(dt);
+  animateRobotEyes(dt);
+
+  renderer.render(scene, camera);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────
+loadLevel(0);
+animate();
+</script>
+</body>
+</html>
