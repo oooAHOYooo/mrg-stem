@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMEMAKER 4000 - Professional Game Studio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050505;
+            --bg-panel: #0d1117;
+            --bg-header: #161b22;
+            --accent-primary: #00f2ff; /* Cyber Cyan */
+            --accent-secondary: #7000ff; /* Neon Purple */
+            --accent-tertiary: #ff007b; /* Hot Pink */
+            --accent-success: #00ff88; /* Matrix Green */
+            --text-main: #e6edf3;
+            --text-dim: #8b949e;
+            --border: #30363d;
+            --glow: 0 0 15px rgba(0, 242, 255, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-size: 16px;
+        }
+
+        h1, h2, h3, .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            height: 60px;
+            background: var(--bg-header);
+            border-bottom: 2px solid var(--accent-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+
+        .nav-brand {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: var(--glow);
+        }
+
+        .nav-brand span {
+            color: var(--text-main);
+            font-size: 0.8rem;
+            background: var(--accent-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 242, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-play {
+            background: var(--accent-success);
+            color: #000;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-play:hover {
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            transform: scale(1.05);
+        }
+
+        .btn-play.active {
+            background: var(--accent-tertiary);
+            color: #fff;
+        }
+
+        /* Workspace Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            flex: 1;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .sidebar {
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .right-bar {
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 0.8rem 1rem;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chat Pane */
+        .chat-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chat-history {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 90%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .msg-ai {
+            background: #1c2128;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent-primary);
+            align-self: flex-start;
+        }
+
+        .msg-user {
+            background: var(--accent-secondary);
+            color: #fff;
+            align-self: flex-end;
+            border-radius: 12px 12px 2px 12px;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg-header);
+        }
+
+        .chat-input-area textarea {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            padding: 0.8rem;
+            resize: none;
+            height: 60px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-area textarea:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* Asset Library */
+        .asset-library {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            overflow-y: auto;
+        }
+
+        .asset-card {
+            background: #1c2128;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .asset-card:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 242, 255, 0.05);
+            transform: scale(1.03);
+        }
+
+        .asset-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .asset-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        /* Property Panel */
+        .prop-item {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .prop-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+
+        .prop-value {
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* Viewport */
+        .viewport {
+            position: relative;
+            background: #000;
+            cursor: crosshair;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewport-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .mode-badge {
+            background: rgba(0,0,0,0.7);
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--accent-primary);
+            font-size: 0.8rem;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+            z-index: 5;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+
+        .modal {
+            background: var(--bg-panel);
+            border: 2px solid var(--accent-primary);
+            border-radius: 16px;
+            width: 500px;
+            padding: 2rem;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+        }
+
+        /* Loading */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-deep);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Glassmorphism for panels */
+        .glass {
+            background: rgba(22, 27, 34, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <h2 style="color: var(--accent-primary);">Booting GAMEMAKER 4000...</h2>
+        <p style="color: var(--text-dim); margin-top: 10px;">Initializing Neural Game Engine</p>
+    </div>
+
+    <nav class="top-nav">
+        <div class="nav-brand">
+            🕹️ GAMEMAKER 4000 <span>STUDIO v1.0</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn" onclick="saveGame()">💾 Save</button>
+            <button class="btn" onclick="loadGame()">📂 Open</button>
+            <button class="btn btn-play" id="play-btn">▶️ RUN GAME</button>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <!-- Left Sidebar: AI Consultant & Asset list -->
+        <div class="sidebar">
+            <div class="panel-header">
+                <span>🤖 GAME PRODUCER AI</span>
+                <span style="color: var(--accent-success);">● Active</span>
+            </div>
+            <div class="chat-pane">
+                <div id="chat-history">
+                    <div class="msg msg-ai">
+                        <strong>Producer:</strong> Welcome to the studio! I'm here to help you build the next big hit. What kind of game should we make?
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <textarea id="ai-input" placeholder="Type a request (e.g. 'Make a neon race track')"></textarea>
+                </div>
+            </div>
+
+            <div class="panel-header">
+                <span>📦 ASSET LIBRARY</span>
+            </div>
+            <div class="asset-library">
+                <div class="asset-card" onclick="spawnObject('hero')">
+                    <span class="asset-icon">🦸</span>
+                    <span class="asset-name">HERO (PLAYER)</span>
+                </div>
+                <div class="asset-card" onclick="spawnObject('enemy')">
+                    <span class="asset-icon">👾</span>
+                    <span class="asset-name">VIRUS (ENEMY)</span>
+                </div>
+                <div class="asset-card" onclick="spawnObject('platform')">
+                    <span class="asset-icon">🧱</span>
+                    <span class="asset-name">PLATFORM</span>
+                </div>
+                <div class="asset-card" onclick="spawnObject('coin')">
+                    <span class="asset-icon">💎</span>
+                    <span class="asset-name">DATA CORE</span>
+                </div>
+                <div class="asset-card" onclick="spawnObject('goal')">
+                    <span class="asset-icon">🏁</span>
+                    <span class="asset-name">UP-LINK (GOAL)</span>
+                </div>
+                <div class="asset-card" onclick="spawnObject('light')">
+                    <span class="asset-icon">💡</span>
+                    <span class="asset-name">NEON LIGHT</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: 3D Viewport -->
+        <div class="viewport">
+            <div class="viewport-overlay">
+                <div class="mode-badge" id="mode-badge">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-primary);"></div>
+                    EDIT MODE
+                </div>
+            </div>
+            
+            <div id="canvas-container"></div>
+
+            <div class="controls-hint">
+                <span><strong>WASD</strong> Move Camera</span>
+                <span><strong>LMB</strong> Select / Move</span>
+                <span><strong>RMB</strong> Rotate View</span>
+                <span><strong>DEL</strong> Remove Object</span>
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Properties & Logic -->
+        <div class="right-bar">
+            <div class="panel-header">
+                <span>⚙️ OBJECT PROPERTIES</span>
+            </div>
+            <div id="properties-panel" style="padding: 10px;">
+                <div style="padding: 40px; text-align: center; color: var(--text-dim);">
+                    Select an object to edit its properties
+                </div>
+            </div>
+
+            <div class="panel-header">
+                <span>🧠 LOGIC BLOCKS</span>
+            </div>
+            <div style="padding: 1rem; flex: 1; overflow-y: auto;">
+                <div class="prop-item" style="border: 1px dashed var(--border); border-radius: 8px; background: rgba(0,0,0,0.3);">
+                    <div class="prop-label">Behavior</div>
+                    <select id="logic-select" style="width: 100%; background: #000; color: #fff; border: 1px solid var(--border); padding: 5px; border-radius: 4px;">
+                        <option value="none">Static</option>
+                        <option value="patrol">Patrol (X-axis)</option>
+                        <option value="bounce">Bounce (Y-axis)</option>
+                        <option value="rotate">Constant Spin</option>
+                        <option value="follow">Follow Player</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <button class="btn" style="width: 100%; justify-content: center; background: var(--accent-secondary);" onclick="applyLogic()">Apply Logic</button>
+                </div>
+            </div>
+
+            <div class="panel-header">
+                <span>📊 SYSTEM STATS</span>
+            </div>
+            <div style="padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.8rem; color: var(--text-dim);">Object Count:</span>
+                    <span id="stat-count" style="font-size: 0.8rem; font-weight: bold; color: var(--accent-primary);">0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 0.8rem; color: var(--text-dim);">Engine Load:</span>
+                    <span id="stat-load" style="font-size: 0.8rem; font-weight: bold; color: var(--accent-success);">Optimal</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Required Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+
+    <script>
+        // === ENGINE STATE ===
+        let isPlaying = false;
+        let selectedObject = null;
+        let gameObjects = [];
+        let player = null;
+        let score = 0;
+        let clock = new THREE.Clock();
+
+        // === SCENE SETUP ===
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505);
+        scene.fog = new THREE.Fog(0x050505, 10, 50);
+
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(10, 10, 10);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 1);
+        spotLight.position.set(15, 40, 15);
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        scene.add(spotLight);
+
+        // Ground Grid
+        const grid = new THREE.GridHelper(100, 100, 0x30363d, 0x161b22);
+        scene.add(grid);
+
+        // Controls
+        const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+        orbit.enableDamping = true;
+        orbit.dampingFactor = 0.05;
+
+        const transform = new THREE.TransformControls(camera, renderer.domElement);
+        transform.addEventListener('dragging-changed', (e) => {
+            orbit.enabled = !e.value;
+        });
+        scene.add(transform);
+
+        // Raycaster for selection
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        // === ASSET CREATION ===
+        const geometries = {
+            hero: new THREE.BoxGeometry(1, 1, 1),
+            enemy: new THREE.OctahedronGeometry(0.6),
+            platform: new THREE.BoxGeometry(3, 0.2, 3),
+            coin: new THREE.TorusGeometry(0.3, 0.1, 8, 20),
+            goal: new THREE.CylinderGeometry(0.5, 0.5, 3, 32),
+            light: new THREE.SphereGeometry(0.2, 16, 16)
+        };
+
+        const materials = {
+            hero: new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 0.5 }),
+            enemy: new THREE.MeshStandardMaterial({ color: 0xff007b, emissive: 0xff007b, emissiveIntensity: 0.5 }),
+            platform: new THREE.MeshStandardMaterial({ color: 0x30363d, roughness: 0.1, metalness: 0.8 }),
+            coin: new THREE.MeshStandardMaterial({ color: 0xffe600, emissive: 0xffe600, emissiveIntensity: 0.5 }),
+            goal: new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.2, transparent: true, opacity: 0.6 }),
+            light: new THREE.MeshBasicMaterial({ color: 0xffffff })
+        };
+
+        function spawnObject(type, pos = {x: 0, y: 0.5, z: 0}) {
+            if (isPlaying) return;
+
+            const geo = geometries[type];
+            const mat = materials[type].clone();
+            const mesh = new THREE.Mesh(geo, mat);
+            
+            mesh.position.set(pos.x, pos.y, pos.z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = { 
+                type: type, 
+                logic: 'none', 
+                id: Math.random().toString(36).substr(2, 9),
+                initialPos: mesh.position.clone()
+            };
+
+            scene.add(mesh);
+            gameObjects.push(mesh);
+            selectObject(mesh);
+            updateStats();
+
+            addMessage(`Created a new ${type.toUpperCase()} asset.`, 'ai');
+        }
+
+        function selectObject(obj) {
+            if (isPlaying) return;
+            
+            selectedObject = obj;
+            if (obj) {
+                transform.attach(obj);
+                updatePropertiesUI(obj);
+            } else {
+                transform.detach();
+                document.getElementById('properties-panel').innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--text-dim);">
+                        Select an object to edit its properties
+                    </div>
+                `;
+            }
+        }
+
+        function updatePropertiesUI(obj) {
+            const props = document.getElementById('properties-panel');
+            props.innerHTML = `
+                <div class="prop-item">
+                    <div class="prop-label">Object Type</div>
+                    <div class="prop-value">${obj.userData.type.toUpperCase()}</div>
+                </div>
+                <div class="prop-item">
+                    <div class="prop-label">ID</div>
+                    <div class="prop-value" style="font-size: 0.7rem;">${obj.userData.id}</div>
+                </div>
+                <div class="prop-item">
+                    <div class="prop-label">Position</div>
+                    <div class="prop-value">X: ${obj.position.x.toFixed(2)} Y: ${obj.position.y.toFixed(2)} Z: ${obj.position.z.toFixed(2)}</div>
+                </div>
+                <div class="prop-item">
+                    <div class="prop-label">Logic State</div>
+                    <div class="prop-value" id="current-logic">${obj.userData.logic.toUpperCase()}</div>
+                </div>
+                <div class="prop-item">
+                    <button class="btn" style="width: 100%; justify-content: center; border-color: var(--accent-tertiary); color: var(--accent-tertiary);" onclick="deleteObject()">Delete Asset</button>
+                </div>
+            `;
+            document.getElementById('logic-select').value = obj.userData.logic;
+        }
+
+        function deleteObject() {
+            if (!selectedObject) return;
+            scene.remove(selectedObject);
+            gameObjects = gameObjects.filter(o => o !== selectedObject);
+            selectObject(null);
+            updateStats();
+        }
+
+        function applyLogic() {
+            if (!selectedObject) return;
+            const logic = document.getElementById('logic-select').value;
+            selectedObject.userData.logic = logic;
+            updatePropertiesUI(selectedObject);
+            addMessage(`Applied [${logic.toUpperCase()}] behavior to selection.`, 'ai');
+        }
+
+        function updateStats() {
+            document.getElementById('stat-count').innerText = gameObjects.length;
+        }
+
+        // === GAME LOOP & INPUT ===
+        const keys = {};
+        window.addEventListener('keydown', (e) => { 
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === 'Delete' || e.key === 'Backspace') deleteObject();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+        renderer.domElement.addEventListener('click', (e) => {
+            if (isPlaying) return;
+            
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(gameObjects);
+
+            if (intersects.length > 0) {
+                selectObject(intersects[0].object);
+            } else if (!transform.dragging) {
+                // selectObject(null); // Optional: deselect if clicking void
+            }
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // === PLAY MODE LOGIC ===
+        const playBtn = document.getElementById('play-btn');
+        playBtn.addEventListener('click', togglePlay);
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.body.classList.toggle('playing', isPlaying);
+            
+            if (isPlaying) {
+                playBtn.innerText = '⏹️ STOP SYSTEM';
+                playBtn.classList.add('active');
+                document.getElementById('mode-badge').innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-success); box-shadow: 0 0 10px var(--accent-success);"></div>
+                    RUNTIME ACTIVE
+                `;
+                selectObject(null);
+                
+                // Find player
+                player = gameObjects.find(o => o.userData.type === 'hero');
+                if (!player) {
+                    addMessage("Warning: No HERO found in scene! Spawning emergency avatar.", "ai");
+                    spawnObject('hero', {x: 0, y: 1, z: 0});
+                    player = gameObjects.find(o => o.userData.type === 'hero');
+                }
+                
+                // Store initial states for reset
+                gameObjects.forEach(obj => {
+                    obj.userData.initialPos = obj.position.clone();
+                    obj.userData.initialRot = obj.rotation.clone();
+                });
+
+                orbit.enableDamping = false;
+                orbit.enabled = false; // We use game controls
+            } else {
+                playBtn.innerText = '▶️ RUN GAME';
+                playBtn.classList.remove('active');
+                document.getElementById('mode-badge').innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-primary);"></div>
+                    EDIT MODE
+                `;
+                
+                // Reset objects
+                gameObjects.forEach(obj => {
+                    obj.position.copy(obj.userData.initialPos);
+                    obj.rotation.copy(obj.userData.initialRot);
+                });
+                
+                orbit.enabled = true;
+                orbit.enableDamping = true;
+            }
+        }
+
+        // === AI CHAT HELPERS ===
+        function addMessage(text, sender) {
+            const history = document.getElementById('chat-history');
+            const msg = document.createElement('div');
+            msg.className = `msg msg-${sender}`;
+            msg.innerHTML = `<strong>${sender === 'ai' ? 'Producer' : 'You'}:</strong> ${text}`;
+            history.appendChild(msg);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        const aiInput = document.getElementById('ai-input');
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const text = aiInput.value.trim();
+                if (!text) return;
+                
+                addMessage(text, 'user');
+                aiInput.value = '';
+                
+                // Simple AI logic
+                processAIRequest(text);
+            }
+        });
+
+        function processAIRequest(text) {
+            const low = text.toLowerCase();
+            setTimeout(() => {
+                if (low.includes('platform') || low.includes('floor')) {
+                    for(let i=0; i<3; i++) {
+                        spawnObject('platform', {x: Math.random()*10-5, y: 0.1, z: Math.random()*10-5});
+                    }
+                    addMessage("I've added a few structural platforms to the sector.", "ai");
+                } else if (low.includes('enemy') || low.includes('bad guy')) {
+                    spawnObject('enemy', {x: 5, y: 1, z: 5});
+                    addMessage("Virus entity deployed. Be careful!", "ai");
+                } else if (low.includes('light') || low.includes('neon')) {
+                    scene.background = new THREE.Color(0x0a001a); // Darker purple
+                    addMessage("Atmospheric levels adjusted. Neon mode engaged.", "ai");
+                } else if (low.includes('clear') || low.includes('empty')) {
+                    gameObjects.forEach(o => scene.remove(o));
+                    gameObjects = [];
+                    updateStats();
+                    addMessage("Scene memory wiped. Clean slate ready.", "ai");
+                } else {
+                    addMessage("Request acknowledged. I'm waiting for your creative directive.", "ai");
+                }
+            }, 500);
+        }
+
+        // === ANIMATION LOOP ===
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = performance.now() * 0.001;
+
+            if (isPlaying) {
+                // Game Logic
+                if (player) {
+                    const speed = 0.15;
+                    const moveDir = new THREE.Vector3();
+                    
+                    if (keys['w']) moveDir.z -= 1;
+                    if (keys['s']) moveDir.z += 1;
+                    if (keys['a']) moveDir.x -= 1;
+                    if (keys['d']) moveDir.x += 1;
+                    
+                    moveDir.normalize().multiplyScalar(speed);
+                    player.position.add(moveDir);
+
+                    // Camera follows player
+                    camera.position.lerp(new THREE.Vector3(player.position.x + 8, player.position.y + 8, player.position.z + 8), 0.1);
+                    camera.lookAt(player.position);
+                }
+
+                // Object Logic
+                gameObjects.forEach(obj => {
+                    const logic = obj.userData.logic;
+                    if (logic === 'patrol') {
+                        obj.position.x = obj.userData.initialPos.x + Math.sin(time * 2) * 5;
+                    } else if (logic === 'bounce') {
+                        obj.position.y = obj.userData.initialPos.y + Math.abs(Math.sin(time * 3)) * 2;
+                    } else if (logic === 'rotate') {
+                        obj.rotation.y += 0.05;
+                    } else if (logic === 'follow' && player) {
+                        const dir = player.position.clone().sub(obj.position).normalize();
+                        obj.position.add(dir.multiplyScalar(0.05));
+                    }
+                    
+                    if (obj.userData.type === 'coin') {
+                        obj.rotation.z += 0.05;
+                        obj.position.y = obj.userData.initialPos.y + Math.sin(time * 4) * 0.2;
+                    }
+                });
+
+                // Collisions (Simple distance-based)
+                if (player) {
+                    gameObjects.forEach(obj => {
+                        if (obj === player) return;
+                        const dist = player.position.distanceTo(obj.position);
+                        if (dist < 1.0) {
+                            if (obj.userData.type === 'coin') {
+                                scene.remove(obj);
+                                gameObjects = gameObjects.filter(o => o !== obj);
+                                score++;
+                                // Add popup or sound?
+                            } else if (obj.userData.type === 'enemy') {
+                                togglePlay(); // Reset on death
+                                addMessage("CRITICAL ERROR: Hero unit destroyed by Virus.", "ai");
+                            } else if (obj.userData.type === 'goal') {
+                                addMessage(`SYSTEM BRAVO! Level complete. Score: ${score}`, "ai");
+                                togglePlay();
+                            }
+                        }
+                    });
+                }
+            } else {
+                orbit.update();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Init
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 1500);
+            animate();
+        };
+
+        // Persistence (Local Storage)
+        function saveGame() {
+            const data = gameObjects.map(o => ({
+                type: o.userData.type,
+                pos: { x: o.position.x, y: o.position.y, z: o.position.z },
+                logic: o.userData.logic
+            }));
+            localStorage.setItem('gm4000_save', JSON.stringify(data));
+            addMessage("Game configuration backed up to local storage.", "ai");
+        }
+
+        function loadGame() {
+            const raw = localStorage.getItem('gm4000_save');
+            if (!raw) return;
+            
+            // Clear current
+            gameObjects.forEach(o => scene.remove(o));
+            gameObjects = [];
+            
+            const data = JSON.parse(raw);
+            data.forEach(d => {
+                spawnObject(d.type, d.pos);
+                gameObjects[gameObjects.length-1].userData.logic = d.logic;
+            });
+            
+            updateStats();
+            addMessage("Restored environment from last backup point.", "ai");
+        }
+
+    </script>
+</body>
+</html>

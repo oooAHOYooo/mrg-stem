@@ -2059,6 +2059,7 @@
                     createHitEffect(defender.position, defender.color);
                     screenShake(0.1);
                     updateHealthBars();
+                    if(Math.random() > 0.3) triggerAnimeFlutter('damage');
                 }
             });
         }
@@ -2120,6 +2121,7 @@
                     createHitEffect(defender.position, defender.color);
                     screenShake(0.2);
                     updateHealthBars();
+                    triggerAnimeFlutter(isFinalSmash ? 'special' : 'damage');
                 }
             });
         }
@@ -2469,6 +2471,7 @@
                     break;
             }
 
+            triggerAnimeFlutter('powerup');
             updatePowerupDisplay();
         }
 
@@ -2869,6 +2872,8 @@
             const winText = isKO ? `${winner} Wins by KO!` : `${winner} Wins!`;
             document.getElementById('winner-text').textContent = winText;
 
+            if (isKO) triggerAnimeFlutter('ko');
+
             // Update match score display
             updateMatchScore();
 
@@ -3246,60 +3251,53 @@
 
     <!-- Anime Flutter Script -->
     <script>
-        (function() {
-            const WORDS = ["GOTCHA", "KO", "CRITICAL", "MAX POWER", "PERFECT", "SMASH", "BOOM", "ZAP"];
-            const KANJI = ["勝利", "攻撃", "防御", "爆発", "伝説", "忍者", "ロボ", "究極"];
+        window.triggerAnimeFlutter = function(type) {
+            const WORDS_MAP = {
+                'damage': ["CRITICAL", "SMASH", "BOOM", "GOTCHA", "OOF"],
+                'ko': ["KO", "PERFECT", "FINISH"],
+                'powerup': ["MAX POWER", "ZAP", "LEVEL UP", "BUFF"],
+                'special': ["ULTIMATE", "MEGA", "SUPREME"]
+            };
+            const KANJI_MAP = {
+                'damage': ["攻撃", "爆発", "痛"],
+                'ko': ["勝利", "終"],
+                'powerup': ["究極", "伝説", "力"],
+                'special': ["真諦", "秘技"]
+            };
 
-            function spawn() {
-                const isKanji = Math.random() > 0.5;
-                const text = isKanji ? KANJI[Math.floor(Math.random() * KANJI.length)] : WORDS[Math.floor(Math.random() * WORDS.length)];
-                
-                const el = document.createElement('div');
-                el.className = `anime-flutter ${isKanji ? 'anime-kanji' : 'anime-word'}`;
-                el.innerText = text;
-
-                const x = Math.random() * 80 + 10;
-                const y = Math.random() * 80 + 10;
-                
-                if (!isKanji) {
-                    el.style.left = '50%';
-                    el.style.top = '50%';
-                } else {
-                    el.style.left = x + '%';
-                    el.style.top = y + '%';
-                    el.style.setProperty('--rx', (Math.random() * 40 - 20) + 'px');
-                    el.style.setProperty('--ry', (Math.random() * 40 - 20) + 'px');
-                    el.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
-                    el.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
-                    el.style.setProperty('--ra', (Math.random() * 40 - 20) + 'deg');
-                }
-
-                document.body.appendChild(el);
-                setTimeout(() => el.remove(), 2500);
-            }
-
-            let active = false;
-            let interval;
-
-            function startFlutter() {
-                if (active) return;
-                active = true;
-                interval = setInterval(() => {
-                    if (Math.random() > 0.3) spawn();
-                }, 400);
-
-                setTimeout(() => {
-                    clearInterval(interval);
-                    active = false;
-                }, 10000); // 10 seconds active
-            }
-
-            // Routine: Every 30 seconds
-            setInterval(startFlutter, 30000);
+            const pool = WORDS_MAP[type] || ["SMASH"];
+            const kanjiPool = KANJI_MAP[type] || ["究極"];
             
-            // Start first one after 5 seconds for immediate feedback
-            setTimeout(startFlutter, 5000);
-        })();
+            const isKanji = Math.random() > 0.4;
+            const text = isKanji ? kanjiPool[Math.floor(Math.random() * kanjiPool.length)] : pool[Math.floor(Math.random() * pool.length)];
+            
+            const el = document.createElement('div');
+            el.className = `anime-flutter ${isKanji ? 'anime-kanji' : 'anime-word'}`;
+            el.innerText = text;
+
+            const x = Math.random() * 60 + 20;
+            const y = Math.random() * 60 + 20;
+            
+            if (!isKanji) {
+                el.style.left = '50%';
+                el.style.top = '40%';
+            } else {
+                el.style.left = x + '%';
+                el.style.top = y + '%';
+                el.style.setProperty('--rx', (Math.random() * 40 - 20) + 'px');
+                el.style.setProperty('--ry', (Math.random() * 40 - 20) + 'px');
+                el.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+                el.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+                el.style.setProperty('--ra', (Math.random() * 40 - 20) + 'deg');
+            }
+
+            document.body.appendChild(el);
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            }, 1500);
+        };
     </script>
 </body>
 </html>
