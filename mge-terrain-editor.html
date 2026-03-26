@@ -410,9 +410,9 @@
                 <div class="control-group">
                     <div class="control-label">
                         <span>Brush Intensity</span>
-                        <span id="brush-intensity-label">0.8</span>
+                        <span id="brush-intensity-label">2.5</span>
                     </div>
-                    <input type="range" id="brush-intensity" min="0.1" max="2.0" step="0.1" value="0.8">
+                    <input type="range" id="brush-intensity" min="0.5" max="5.0" step="0.5" value="2.5">
                 </div>
 
                 <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
@@ -465,8 +465,8 @@
     </div>
 
     <div class="controls-hint">
-        BUILD: L-Click Build | R-Drag Rotate | Wheel Zoom | Mid-Drag Pan<br>
-        PLAY: WASD Drive | SPACE Jump | SHIFT Nitro | ESC Unlock
+        BUILD: LMB Raise | Shift+LMB Lower | Flatten Tool | R-Drag Rotate | Wheel Zoom<br>
+        PLAY: WASD Drive | SPACE Jump | SHIFT Boost | ESC Unlock
     </div>
 
     <!-- Scripts -->
@@ -483,7 +483,7 @@
             mode: 'build',
             tool: 'raise',
             brushSize: 15,
-            brushIntensity: 0.8,
+            brushIntensity: 2.5,  // boosted so sculpting is clearly visible
             isMouseDown: false,
             mouseButton: -1,
             carScript: [],
@@ -523,30 +523,63 @@
         scene.add(neonPoint);
 
         // --- TERRAIN GENERATION ---
+        // Build geometry manually in XZ space so Y is always world height.
+        // This avoids the rotateX-bake confusion that broke brush coordinate mapping.
         const terrainSize = 400;
-        const RES = 120;
-        const terrainGeom = new THREE.PlaneBufferGeometry(terrainSize, terrainSize, RES, RES);
-        terrainGeom.rotateX(-Math.PI / 2);
+        const RES = 80; // Slightly lower res for better performance
+        const vCount = (RES + 1) * (RES + 1);
 
-        // Vertex Colors
-        const colors = new Float32Array((RES + 1) * (RES + 1) * 3);
-        const positions = terrainGeom.attributes.position.array;
-        for(let i=0; i<colors.length; i+=3) {
-            colors[i] = 0.2; colors[i+1] = 0.6; colors[i+2] = 0.3; // Grass Base
+        const posArr = new Float32Array(vCount * 3);
+        const colArr = new Float32Array(vCount * 3);
+        const uvArr  = new Float32Array(vCount * 2);
+
+        for (let j = 0; j <= RES; j++) {
+            for (let i = 0; i <= RES; i++) {
+                const vi = j * (RES + 1) + i;
+                posArr[vi * 3 + 0] = (i / RES - 0.5) * terrainSize; // X
+                posArr[vi * 3 + 1] = 0;                               // Y (height)
+                posArr[vi * 3 + 2] = (j / RES - 0.5) * terrainSize; // Z
+                colArr[vi * 3 + 0] = 0.2;
+                colArr[vi * 3 + 1] = 0.6;
+                colArr[vi * 3 + 2] = 0.3;
+                uvArr[vi * 2 + 0] = i / RES;
+                uvArr[vi * 2 + 1] = j / RES;
+            }
         }
-        terrainGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Build triangle index list
+        const idxArr = new Uint32Array(RES * RES * 6);
+        let ii = 0;
+        for (let j = 0; j < RES; j++) {
+            for (let i = 0; i < RES; i++) {
+                const a = j * (RES + 1) + i;
+                const b = a + 1;
+                const c = a + (RES + 1);
+                const d = c + 1;
+                idxArr[ii++] = a; idxArr[ii++] = c; idxArr[ii++] = b;
+                idxArr[ii++] = b; idxArr[ii++] = c; idxArr[ii++] = d;
+            }
+        }
+
+        const terrainGeom = new THREE.BufferGeometry();
+        const posAttr = new THREE.BufferAttribute(posArr, 3);
+        posAttr.usage = THREE.DynamicDrawUsage;
+        terrainGeom.setAttribute('position', posAttr);
+        terrainGeom.setAttribute('color',    new THREE.BufferAttribute(colArr, 3));
+        terrainGeom.setAttribute('uv',       new THREE.BufferAttribute(uvArr,  2));
+        terrainGeom.setIndex(new THREE.BufferAttribute(idxArr, 1));
+        terrainGeom.computeVertexNormals();
 
         const terrainMat = new THREE.MeshStandardMaterial({
             vertexColors: true,
-            roughness: 0.9,
+            roughness: 0.85,
             metalness: 0.05,
-            flatShading: true
+            flatShading: true,
+            side: THREE.FrontSide
         });
 
         const terrain = new THREE.Mesh(terrainGeom, terrainMat);
         terrain.receiveShadow = true;
-        terrain.matrixAutoUpdate = false;
-        terrain.updateMatrix();
         scene.add(terrain);
 
         // Grid
@@ -676,25 +709,27 @@
             if (currentTool === 'lower') mod = -state.brushIntensity;
             if (currentTool === 'raise') mod = state.brushIntensity;
 
-            // Spatial optimization: only iterate over vertices in brush range
+            // Map world coords to grid indices
+            // posArr[vi*3+0] = (i/RES - 0.5)*terrainSize  =>  i = (x/terrainSize + 0.5)*RES
             const step = terrainSize / RES;
-            const gridX = Math.round((center.x + terrainSize/2) / step);
-            const gridZ = Math.round((center.z + terrainSize/2) / step);
-            const radiusInCells = Math.ceil(state.brushSize / step);
+            const gridX = Math.round((center.x / terrainSize + 0.5) * RES);
+            const gridZ = Math.round((center.z / terrainSize + 0.5) * RES);
+            const radiusInCells = Math.ceil(state.brushSize / step) + 1;
 
             let changed = false;
-            
+
             const startX = Math.max(0, gridX - radiusInCells);
-            const endX = Math.min(RES, gridX + radiusInCells);
+            const endX   = Math.min(RES, gridX + radiusInCells);
             const startZ = Math.max(0, gridZ - radiusInCells);
-            const endZ = Math.min(RES, gridZ + radiusInCells);
+            const endZ   = Math.min(RES, gridZ + radiusInCells);
 
             for (let j = startZ; j <= endZ; j++) {
                 for (let i = startX; i <= endX; i++) {
-                    const idx = (j * (RES + 1) + i) * 3;
-                    const vx = pos[idx];
-                    const vy = pos[idx+1];
-                    const vz = pos[idx+2];
+                    const vi  = j * (RES + 1) + i;
+                    const idx = vi * 3;
+                    const vx = pos[idx];     // world X
+                    const vy = pos[idx + 1]; // world Y (height)
+                    const vz = pos[idx + 2]; // world Z
 
                     const dx = vx - center.x;
                     const dz = vz - center.z;
