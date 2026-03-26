@@ -685,9 +685,6 @@
             }
         }
 
-        const keyboard = {};
-        window.addEventListener('keydown', e => keyboard[e.code] = true);
-        window.addEventListener('keyup', e => keyboard[e.code] = false);
 
         function runTool() {
             const pos = terrainGeom.attributes.position.array;
@@ -695,7 +692,7 @@
             const center = state.lastPoint;
             
             // UE5 Style: Shift inverts or triggers alternate tools
-            const isShift = keyboard['ShiftLeft'] || keyboard['ShiftRight'];
+            const isShift = keys['ShiftLeft'] || keys['ShiftRight'];
             
             let mod = state.brushIntensity;
             let currentTool = state.tool;
@@ -864,17 +861,23 @@
         // --- INTERACTION ---
 
         window.addEventListener('mousedown', e => {
+            // Update pointer immediately for raycasting
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
             // Ignore if clicking on UI
             if (e.target.closest('.sidebar') || e.target.closest('.header') || e.target.closest('.footer') || e.target.closest('.mode-selector')) {
                 return;
             }
             
             // Only Left Click (0) for sculpting in Build mode
-            // Right Click (2) is reserved for Camera Rotation
             if (e.button === 0) {
                 state.isMouseDown = true;
                 state.mouseButton = e.button;
-                if(state.mode === 'build') runTool();
+                if(state.mode === 'build') {
+                    updateBrush(); // Sync lastPoint before running tool
+                    runTool();
+                }
             }
         });
 
