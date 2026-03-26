@@ -6,8 +6,8 @@
     <title>Bot Creator Deluxe!</title>
     <!-- Anime/Action style fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Teko:wght@500;700&family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/23.1.3/tween.umd.js"></script>
     
     <style>
         :root {
@@ -484,6 +484,7 @@
     let scene, camera, renderer, clock;
     let pointLight;
     let raycaster, mouse;
+    let playerPos, enemyPos;
     
     // Game State
     let materials = 200;
@@ -493,9 +494,6 @@
     let army = []; // Array of bot groups
     let activeBot = null;
     let battleEnemyBot = null;
-
-    let playerPos = new THREE.Vector3(-3, 0, 0);
-    let enemyPos = new THREE.Vector3(3, 0, 0);
 
     const BOT_SPECS = {
         'CAR': { hp: 100, attack: 15, cost: 50, color: 0x00ffff },
@@ -509,66 +507,79 @@
         isActive: false
     };
 
-    // DOM Elements
-    const matEl = document.getElementById('player-materials');
-    const ptsEl = document.getElementById('player-points');
-    const screenBase = document.getElementById('screen-base');
-    const screenBattle = document.getElementById('screen-battle');
-    const hpFillPlayer = document.getElementById('hp-player');
-    const hpTextPlayer = document.getElementById('hp-text-player');
-    const hpFillEnemy = document.getElementById('hp-enemy');
-    const hpTextEnemy = document.getElementById('hp-text-enemy');
-    const battleMsg = document.getElementById('battle-msg');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const speedLines = document.getElementById('speed-lines');
+    // DOM elements and Listeners will be setup in init()
 
-    // Attach Event Listeners
-    document.getElementById('btn-build-car').addEventListener('click', () => openWizard('CAR'));
-    document.getElementById('btn-build-car').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('CAR'); });
-    document.getElementById('btn-build-brawler').addEventListener('click', () => openWizard('HUMANOID'));
-    document.getElementById('btn-build-brawler').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('HUMANOID'); });
-    document.getElementById('btn-build-hawk').addEventListener('click', () => openWizard('HAWK'));
-    document.getElementById('btn-build-hawk').addEventListener('keydown', (e) => { if(e.key === 'Enter') openWizard('HAWK'); });
-    document.getElementById('btn-start-battle').addEventListener('click', startBattle);
-    document.getElementById('btn-start-battle').addEventListener('keydown', (e) => { if(e.key === 'Enter') startBattle(); });
-    document.getElementById('btn-player-attack').addEventListener('click', playerAttack);
-    document.getElementById('btn-player-attack').addEventListener('keydown', (e) => { if(e.key === 'Enter') playerAttack(); });
-    document.getElementById('btn-return-base').addEventListener('click', returnToBase);
-    document.getElementById('btn-return-base').addEventListener('keydown', (e) => { if(e.key === 'Enter') returnToBase(); });
-    document.getElementById('btn-confirm-build').addEventListener('click', confirmBuild);
-    document.getElementById('btn-confirm-build').addEventListener('keydown', (e) => { if(e.key === 'Enter') confirmBuild(); });
-    document.getElementById('btn-cancel-wizard').addEventListener('click', closeWizard);
-    document.getElementById('btn-cancel-wizard').addEventListener('keydown', (e) => { if(e.key === 'Enter') closeWizard(); });
+    function startApp() {
+        console.log("Initializing Bot Creator Deluxe...");
+        playerPos = new THREE.Vector3(-3, 0, 0);
+        enemyPos = new THREE.Vector3(3, 0, 0);
+        init();
+        animate();
+    }
 
-    document.getElementById('btn-color-1').addEventListener('click', function() { selectColor(0x00ffff, this); });
-    document.getElementById('btn-color-2').addEventListener('click', function() { selectColor(0xff0044, this); });
-    document.getElementById('btn-color-3').addEventListener('click', function() { selectColor(0xffe600, this); });
-    document.getElementById('btn-color-4').addEventListener('click', function() { selectColor(0x39ff14, this); });
-    document.getElementById('btn-color-5').addEventListener('click', function() { selectColor(0xffffff, this); });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        startApp();
+    } else {
+        window.addEventListener('load', startApp);
+    }
 
-    init();
-    animate(0);
+    let matEl, ptsEl, screenBase, screenBattle;
+    let hpFillPlayer, hpTextPlayer, hpFillEnemy, hpTextEnemy;
+    let battleMsg, modalOverlay, speedLines;
 
     function init() {
+        console.log("Initializing Three.js scene...");
+        
+        // Grab elements
+        matEl = document.getElementById('player-materials');
+        ptsEl = document.getElementById('player-points');
+        screenBase = document.getElementById('screen-base');
+        screenBattle = document.getElementById('screen-battle');
+        hpFillPlayer = document.getElementById('hp-player');
+        hpTextPlayer = document.getElementById('hp-text-player');
+        hpFillEnemy = document.getElementById('hp-enemy');
+        hpTextEnemy = document.getElementById('hp-text-enemy');
+        battleMsg = document.getElementById('battle-msg');
+        modalOverlay = document.getElementById('modal-overlay');
+        speedLines = document.getElementById('speed-lines');
+
+        // Setup Listeners with arrow functions to handle deferred global scope
+        document.getElementById('btn-build-car').onclick = () => window.openWizard('CAR');
+        document.getElementById('btn-build-brawler').onclick = () => window.openWizard('HUMANOID');
+        document.getElementById('btn-build-hawk').onclick = () => window.openWizard('HAWK');
+        document.getElementById('btn-start-battle').onclick = () => window.startBattle();
+        document.getElementById('btn-player-attack').onclick = () => window.playerAttack();
+        document.getElementById('btn-return-base').onclick = () => window.returnToBase();
+        document.getElementById('btn-confirm-build').onclick = () => window.confirmBuild();
+        document.getElementById('btn-cancel-wizard').onclick = () => window.closeWizard();
+
+        document.getElementById('btn-color-1').onclick = function() { selectColor(0x00ffff, this); };
+        document.getElementById('btn-color-2').onclick = function() { selectColor(0xff0044, this); };
+        document.getElementById('btn-color-3').onclick = function() { selectColor(0xffe600, this); };
+        document.getElementById('btn-color-4').onclick = function() { selectColor(0x39ff14, this); };
+        document.getElementById('btn-color-5').onclick = function() { selectColor(0xffffff, this); };
+
         // Setup Three.js
         const container = document.getElementById('game-container');
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x111111);
 
-        // Grid helper for cool anime tech floor
+        // Grid helper
         const grid = new THREE.GridHelper(100, 50, 0x00f0ff, 0x222222);
         grid.position.y = -1;
         scene.add(grid);
 
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 15);
+        camera.lookAt(0, 0, -5);
         
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
         pointLight = new THREE.PointLight(0xffffff, 1, 100);
@@ -580,7 +591,6 @@
         scene.add(dirLight);
 
         clock = new THREE.Clock();
-
         raycaster = new THREE.Raycaster();
         mouse = new THREE.Vector2();
 
@@ -590,11 +600,12 @@
         window.addEventListener('pointermove', onPointerMove, false);
 
         // Build a starter bot
-        materials += 50; // temporary boost for first bot
+        materials += 50; 
         buildBot('CAR', true);
         
         setBaseCamera();
         updateHUD();
+        console.log("Ready!");
     }
 
     // --- Bot Generation Logic ---
@@ -719,17 +730,25 @@
         army.push(bot);
         scene.add(bot);
         
-        organizeArmy();
-        
-        // Pick the latest added as active automatically
+        // Pick as active BEFORE organizing
         activeBot = bot;
+        
+        organizeArmy();
         
         // Spawn animation
         bot.scale.set(0,0,0);
-        new TWEEN.Tween(bot.scale)
-            .to({x:1, y:1, z:1}, 500)
-            .easing(TWEEN.Easing.Elastic.Out)
-            .start();
+        if (typeof TWEEN !== 'undefined') {
+            new TWEEN.Tween(bot.scale)
+                .to({x:1, y:1, z:1}, 500)
+                .easing(function(k) {
+                    const s = 1.70158 * 1.525;
+                    if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+                    return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+                })
+                .start();
+        } else {
+            bot.scale.set(1, 1, 1);
+        }
             
         flashColor('var(--neon-blue)');
     };
@@ -779,7 +798,7 @@
                 
                 new TWEEN.Tween(bot.position)
                     .to({x: x, z: z}, 500)
-                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .easing(function(k) { return k * (2 - k); })
                     .start();
                     
                 bot.rotation.y = 0;
@@ -797,7 +816,7 @@
     function setBaseCamera() {
         new TWEEN.Tween(camera.position)
             .to({x: 0, y: 15, z: 15}, 1000)
-            .easing(TWEEN.Easing.Cubic.InOut)
+            .easing(function(k) { return k < 0.5 ? 4*k*k*k : (k-1)*(2*k-2)*(2*k-2)+1; })
             .start();
             
         // Look at center
@@ -868,7 +887,7 @@
         // Camera to battle view
         new TWEEN.Tween(camera.position)
             .to({x: 0, y: 5, z: 12}, 1000)
-            .easing(TWEEN.Easing.Cubic.InOut)
+            .easing(function(k) { return k < 0.5 ? 4*k*k*k : (k-1)*(2*k-2)*(2*k-2)+1; })
             .start();
             
         const target = new THREE.Vector3(0,2,0);
@@ -933,7 +952,7 @@
         new TWEEN.Tween(activeBot.position)
             .to({x: enemyPos.x - 2}, dashTime)
             .yoyo(true).repeat(1)
-            .easing(TWEEN.Easing.Quadratic.Out)
+            .easing(function(k) { return k * (2 - k); })
             .start();
 
         // Screen Shake
@@ -972,7 +991,7 @@
             new TWEEN.Tween(battleEnemyBot.position)
                 .to({x: playerPos.x + 2}, dashTime)
                 .yoyo(true).repeat(1)
-                .easing(TWEEN.Easing.Quadratic.Out)
+                .easing(function(k) { return k * (2 - k); })
                 .start();
 
             // Damage player
@@ -1117,7 +1136,7 @@
                     new TWEEN.Tween(activeBot.position)
                         .to({y: activeBot.position.y + 2}, 200)
                         .yoyo(true).repeat(1)
-                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .easing(function(k) { return k * (2 - k); })
                         .start();
                 }
             }
@@ -1169,7 +1188,7 @@
                 new TWEEN.Tween(activeBot.position)
                     .to({y: activeBot.position.y + 2}, 200)
                     .yoyo(true).repeat(1)
-                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .easing(function(k) { return k * (2 - k); })
                     .start();
             }
         } else if (gameState === 'BATTLE') {
@@ -1187,9 +1206,9 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function animate(time) {
+    function animate() {
         requestAnimationFrame(animate);
-        TWEEN.update(time);
+        TWEEN.update(performance.now());
         
         const t = clock.getElapsedTime();
 

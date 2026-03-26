@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ ROBOT-MON: CYBER MATH BATTLE ⚡</title>
+    <title>⚡ ROBOT-MON: CYBER LOGIC BATTLE ⚡</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -123,15 +123,19 @@
         .slot-row.active { border-color: black; background: #eee; }
         .slot-row.set { border-color: var(--neon-blue); background: #f0fbff; font-weight: bold; }
 
-        #math-pop {
+        #logic-pop {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; border: 12px solid black; padding: 50px; z-index: 500; display: none;
+            background: white; border: 12px solid black; padding: 40px; z-index: 500; display: none;
             text-align: center; box-shadow: 0 0 0 100vmax rgba(0,0,0,0.85); animation: pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 480px;
         }
         @keyframes pop { from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
 
-        #math-q { font-size: 48px; margin-bottom: 25px; }
-        #math-ans { width: 180px; height: 70px; font-size: 38px; text-align: center; border: 6px solid black; outline: none; }
+        #logic-q { font-size: 20px; font-family: 'VT323', monospace; margin-bottom: 20px; text-align: left; background: #eee; padding: 15px; border: 2px solid black; line-height: 1.2; }
+        #logic-options { display: flex; flex-direction: column; gap: 10px; }
+        .logic-btn { background: white; border: 4px solid black; padding: 10px; font-family: inherit; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .logic-btn:hover { background: #eee; transform: translateX(5px); }
+        .logic-btn::before { content: "IF "; font-weight: bold; color: #666; }
 
         /* FX */
         .shake { animation: s-kf 0.3s cubic-bezier(.36,.07,.19,.97) both; }
@@ -196,10 +200,15 @@
             </div>
         </div>
 
-        <div id="math-pop">
-            <div id="math-q">?? + ??</div>
-            <input type="number" id="math-ans">
-            <div style="font-size:10px; margin-top:20px; color:#666;">TYPE ANSWER & PRESS ENTER</div>
+        <div id="logic-pop">
+            <h2 style="font-size:14px; margin-bottom:15px; text-decoration: underline;">CONDITIONAL BYPASS</h2>
+            <div id="logic-q">
+                <!-- Code logic area -->
+            </div>
+            <div id="logic-options">
+                <!-- Dynamic buttons -->
+            </div>
+            <div style="font-size:10px; margin-top:20px; color:#666;">RESOLVE THE CONDITION TO EXECUTE MOVE</div>
         </div>
     </div>
 
@@ -257,7 +266,7 @@
 
         const msgBox = document.getElementById('msg-text');
         const progOverlay = document.getElementById('prog-ui');
-        const mathPop = document.getElementById('math-pop');
+        const logicPop = document.getElementById('logic-pop');
 
         function msgText(t, cb) {
             msgBox.innerText = t;
@@ -279,7 +288,7 @@
         };
 
         window.beginSequence = async () => {
-            if(state.prog.some(p => p === null)) return alert("Full Program Required!");
+            if(state.prog.some(p => p === null)) return alert("Full Sequence Required!");
             closeProg();
             state.busy = true;
 
@@ -287,12 +296,12 @@
                 if(!state.pParty[state.pIdx].live || state.eHp <= 0) break;
                 
                 const move = state.prog[i];
-                const win = await doMath();
+                const win = await doLogicChallenge();
                 
                 if(win) {
                     await executeTurn(true, move);
                 } else {
-                    await msgText("COMPUTE ERROR! Move failed!");
+                    await msgText("LOGIC ERROR! Command failed!");
                     await sleep(1000);
                 }
 
@@ -306,27 +315,58 @@
             msgText(`What will ${state.pParty[state.pIdx].n} do?`);
         };
 
-        async function doMath() {
+        async function doLogicChallenge() {
             return new Promise(res => {
-                const a = Math.floor(Math.random()*12) + 1;
-                const b = Math.floor(Math.random()*12) + 1;
-                const op = Math.random() > 0.5 ? '+' : '-';
-                const ans = op === '+' ? a+b : Math.abs(a-b);
-                
-                document.getElementById('math-q').innerText = `${Math.max(a,b)} ${op} ${Math.min(a,b)} = ?`;
-                mathPop.style.display = 'block';
-                const input = document.getElementById('math-ans');
-                input.value = '';
-                input.focus();
-
-                const handler = (e) => {
-                    if(e.key === 'Enter') {
-                        input.removeEventListener('keydown', handler);
-                        mathPop.style.display = 'none';
-                        res(parseInt(input.value) === ans);
+                const types = [
+                    {
+                        title: "BOOLEAN SENSOR",
+                        code: (val) => `sensor_active = ${val};\nif (sensor_active == true) {\n  result = "PROCEED";\n} else {\n  result = "HALT";\n}`,
+                        options: (val) => ["PROCEED", "HALT"],
+                        correct: (val) => val === true ? 0 : 1
+                    },
+                    {
+                        title: "ENERGY COMPARISON",
+                        code: (val) => `energy_level = ${val};\nif (energy_level > 50) {\n  mode = "HYPER";\n} else {\n  mode = "SAVE";\n}`,
+                        options: (val) => ["HYPER", "SAVE"],
+                        correct: (val) => val > 50 ? 0 : 1
+                    },
+                    {
+                        title: "PATHFINDER SEARCH",
+                        code: (val) => `obj = "${val}";\nif (obj == "WALL") {\n  action = "JUMP";\n} else if (obj == "GAP") {\n  action = "FLY";\n} else {\n  action = "WALK";\n}`,
+                        options: (val) => ["JUMP", "FLY", "WALK"],
+                        correct: (val) => val === "WALL" ? 0 : (val === "GAP" ? 1 : 2)
                     }
-                };
-                input.addEventListener('keydown', handler);
+                ];
+
+                const t = types[Math.floor(Math.random()*types.length)];
+                let mockVal;
+                if(t.title === "BOOLEAN SENSOR") mockVal = Math.random() > 0.5;
+                else if(t.title === "ENERGY COMPARISON") mockVal = Math.floor(Math.random()*100);
+                else mockVal = ["WALL", "GAP", "CLEAR"][Math.floor(Math.random()*3)];
+
+                const qText = t.code(mockVal);
+                const opts = t.options(mockVal);
+                const correctIdx = t.correct(mockVal);
+
+                const pop = document.getElementById('logic-pop');
+                const qBox = document.getElementById('logic-q');
+                const oBox = document.getElementById('logic-options');
+
+                qBox.innerHTML = `<div style="color:#0891b2; font-weight:bold; margin-bottom:10px;">// ${t.title}</div><pre style="margin:0; font-family:monospace; font-size:18px;">${qText}</pre>`;
+                oBox.innerHTML = "";
+                
+                opts.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "logic-btn";
+                    btn.innerText = opt;
+                    btn.onclick = () => {
+                        pop.style.display = 'none';
+                        res(idx === correctIdx);
+                    };
+                    oBox.appendChild(btn);
+                });
+
+                pop.style.display = 'block';
             });
         }
 

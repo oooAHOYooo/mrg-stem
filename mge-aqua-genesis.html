@@ -324,6 +324,75 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* Palette Styles */
+        .palette {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            width: 80px;
+            background: rgba(0, 34, 51, 0.8);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+
+        .palette-item {
+            width: 50px;
+            height: 50px;
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .palette-item:hover {
+            transform: scale(1.1);
+            border-color: var(--accent-primary);
+        }
+
+        .palette-item:active {
+            cursor: grabbing;
+        }
+
+        /* Paint Mode UI */
+        #paint-controls {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid var(--accent-primary);
+            flex-direction: column;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+        }
+
+        .color-dot.active {
+            box-shadow: 0 0 10px white;
+            transform: scale(1.2);
+        }
+
     </style>
 </head>
 <body>
@@ -374,11 +443,12 @@
                     <button class="btn-quick" style="background: #af52de; color: white; font-size: 1.2rem;" onclick="submitColor('purple')">Purple (Star) ⭐</button>
                     <button class="btn-quick" style="background: #ff2d55; color: white; font-size: 1.2rem;" onclick="submitColor('pink')">Pink (Jump) 🦘</button>
                     <button class="btn-quick" style="background: #32ade6; color: black; font-size: 1.2rem;" onclick="submitColor('cyan')">Cyan (Spin) 🌪️</button>
-                    <button class="btn-quick" style="background: #333333; color: white; font-size: 1.2rem;" onclick="submitColor('black')">Black (Clear) 🧹</button>
+                    <button class="btn-quick" style="background: #ffcc00; color: black; font-size: 1.2rem;" onclick="togglePaintMode()" id="btn-paint-toggle">DRAW MODE: OFF 🎨</button>
                     <button class="btn-quick" style="background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff); color: white; font-size: 1.2rem;" onclick="submitColor('random cube')">Random Cube 🎲</button>
                     <button class="btn-quick" style="background: linear-gradient(45deg, #ff00ff, #00ffff); color: black; font-size: 1.2rem;" onclick="submitColor('random sphere')">Random Sphere 🎲</button>
-                    <button class="btn-quick" style="background: var(--bg-dark); color: #ff3b30; border-color: #ff3b30; font-size: 1.2rem;" onclick="submitColor('black')">CLEAR EVERYTHING 🧹</button>
-                    <button class="btn-quick" style="background: var(--accent-warning); color: black; font-size: 1.2rem;" onclick="document.getElementById('tutorial-modal').style.display='flex'">Smash Tutorial 🥊</button>
+                    <button class="btn-quick" style="background: #55acee; color: white; font-size: 1.2rem;" onclick="submitColor('clear')">Tornado Clear 🌪️</button>
+                    <button class="btn-quick" style="background: var(--bg-dark); color: #ff3b30; border-color: #ff3b30; font-size: 1.2rem; grid-column: span 2;" onclick="submitColor('clear')">CLEAR EVERYTHING 🧹</button>
+                    <button class="btn-quick" style="background: var(--accent-warning); color: black; font-size: 1.2rem;" onclick="document.getElementById('tutorial-modal').style.display='flex'">Help? ❓</button>
                 </div>
             </div>
         </div>
@@ -394,13 +464,33 @@
                     </div>
                 </span>
             </div>
-            <div id="canvas-container">
+            <div id="canvas-container" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+                <!-- Palette -->
+                <div class="palette">
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'blue')" title="Add Cube">🟦</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'red')" title="Add Sphere">🔴</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'orange')" title="Add Donut">🍩</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'yellow')" title="Add Pyramid">🔺</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'purple')" title="Add Star">⭐</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'pink')" title="Make Jump">🦘</div>
+                    <div class="palette-item" draggable="true" ondragstart="handleDragStart(event, 'cyan')" title="Make Spin">🌪️</div>
+                </div>
+
                 <!-- Transform Mode Selector -->
-                <div id="transform-controls-ui" style="position: absolute; top: 10px; left: 10px; display: none; flex-direction: column; gap: 8px; z-index: 5;">
+                <div id="transform-controls-ui" style="position: absolute; top: 10px; left: 110px; display: none; flex-direction: column; gap: 8px; z-index: 5;">
                     <button class="btn-quick" id="btn-mode-translate" onclick="setTransformMode('translate')" style="width: 50px; height: 50px; font-size: 1.0rem;">MOVE</button>
                     <button class="btn-quick" id="btn-mode-rotate" onclick="setTransformMode('rotate')" style="width: 50px; height: 50px; font-size: 1.0rem;">TURN</button>
                     <button class="btn-quick" id="btn-mode-scale" onclick="setTransformMode('scale')" style="width: 50px; height: 50px; font-size: 1.0rem;">SIZE</button>
                     <button class="btn-quick" onclick="detachTransform()" style="width: 50px; height: 50px; font-size: 1.5rem; background: #ff3b30;">❌</button>
+                </div>
+
+                <!-- Paint Controls -->
+                <div id="paint-controls">
+                    <div class="color-dot active" style="background: #ff3b30;" onclick="setPaintColor('#ff3b30')"></div>
+                    <div class="color-dot" style="background: #007aff;" onclick="setPaintColor('#007aff')"></div>
+                    <div class="color-dot" style="background: #34c759;" onclick="setPaintColor('#34c759')"></div>
+                    <div class="color-dot" style="background: #ffcc00;" onclick="setPaintColor('#ffcc00')"></div>
+                    <div class="color-dot" style="background: white;" onclick="setPaintColor('#ffffff')"></div>
                 </div>
             </div>
         </div>
@@ -566,12 +656,155 @@
             document.getElementById('transform-controls-ui').style.display = 'none';
         }
 
+        window.detachTransform = detachTransform;
+        window.setTransformMode = setTransformMode;
+
+        // Tornado Class
+        class Tornado {
+            constructor(scene, onComplete) {
+                this.scene = scene;
+                this.onComplete = onComplete;
+                this.group = new THREE.Group();
+                this.scene.add(this.group);
+                this.particles = [];
+                this.startTime = performance.now();
+                this.duration = 1500;
+                
+                const geo = new THREE.SphereGeometry(0.15, 6, 6);
+                for (let i = 0; i < 200; i++) {
+                    const mat = new THREE.MeshBasicMaterial({ 
+                        color: Math.random() > 0.5 ? 0x8ecae6 : 0x219ebc, 
+                        transparent: true, 
+                        opacity: 0.8 
+                    });
+                    const p = new THREE.Mesh(geo, mat);
+                    p.userData = {
+                        radius: Math.random() * 2,
+                        angle: Math.random() * Math.PI * 2,
+                        speed: 0.1 + Math.random() * 0.2,
+                        yOffset: Math.random() * 15,
+                    };
+                    this.group.add(p);
+                    this.particles.push(p);
+                }
+            }
+
+            update() {
+                const elapsed = performance.now() - this.startTime;
+                const progress = elapsed / this.duration;
+                
+                if (progress >= 1) {
+                    this.scene.remove(this.group);
+                    if (this.onComplete) this.onComplete();
+                    return false;
+                }
+
+                this.particles.forEach(p => {
+                    p.userData.angle += p.userData.speed;
+                    const r = (p.userData.radius + p.userData.yOffset * 0.4) * (1 + progress * 8);
+                    p.position.x = Math.cos(p.userData.angle) * r;
+                    p.position.z = Math.sin(p.userData.angle) * r;
+                    p.position.y = p.userData.yOffset - progress * 10;
+                    p.material.opacity = (1 - progress) * 0.8;
+                    p.scale.setScalar(1 + progress * 3);
+                });
+                
+                return true;
+            }
+        }
+
+        let activeTornado = null;
+        let isPaintMode = false;
+        let paintColor = '#ff3b30';
+
+        function togglePaintMode() {
+            isPaintMode = !isPaintMode;
+            document.getElementById('paint-controls').style.display = isPaintMode ? 'flex' : 'none';
+            const btn = document.getElementById('btn-paint-toggle');
+            btn.innerText = isPaintMode ? 'DRAW MODE: ON 🎨' : 'DRAW MODE: OFF 🎨';
+            btn.style.background = isPaintMode ? '#ff3b30' : '#ffcc00';
+            btn.style.color = isPaintMode ? 'white' : 'black';
+            if (isPaintMode) {
+                transformControls.detach();
+                document.getElementById('transform-controls-ui').style.display = 'none';
+                showToast("Draw Mode Active! Click objects to paint! ✨");
+            }
+        }
+
+        function setPaintColor(color) {
+            paintColor = color;
+            document.querySelectorAll('.color-dot').forEach(dot => {
+                const bgColor = dot.style.background;
+                dot.classList.toggle('active', bgColor === color || bgColor.includes(color.toLowerCase()));
+            });
+        }
+
+        function handleDragStart(e, type) {
+            e.dataTransfer.setData('type', type);
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('type');
+            if (!type) return;
+
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            let spawnPos = new THREE.Vector3(0, 0, 0);
+            if (intersects.length > 0) {
+                spawnPos.copy(intersects[0].point);
+            } else {
+                // If dropping on background, project to floor level
+                const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+                raycaster.ray.intersectPlane(plane, spawnPos);
+            }
+
+            submitColor(type);
+            
+            setTimeout(() => {
+                if (animObjects.length > 0) {
+                    const last = animObjects[animObjects.length - 1];
+                    last.position.copy(spawnPos);
+                    if (last.userData.baseY !== undefined) {
+                        last.userData.baseY = spawnPos.y;
+                    }
+                }
+            }, 100);
+        }
+
+        window.handleDragStart = handleDragStart;
+        window.handleDrop = handleDrop;
+        window.togglePaintMode = togglePaintMode;
+        window.setPaintColor = setPaintColor;
+
         renderer.domElement.addEventListener('mousedown', (e) => {
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
             
             raycaster.setFromCamera(mouse, camera);
+            
+            if (isPaintMode) {
+                const targets = animObjects.filter(o => o.isMesh);
+                const intersects = raycaster.intersectObjects(targets);
+                if (intersects.length > 0) {
+                    const intersect = intersects[0];
+                    const paintGeo = new THREE.SphereGeometry(0.15, 8, 8);
+                    const paintMat = new THREE.MeshStandardMaterial({ color: paintColor });
+                    const blob = new THREE.Mesh(paintGeo, paintMat);
+                    blob.position.copy(intersect.point);
+                    // Add a tiny bit of offset along normal to prevent z-fighting
+                    blob.position.add(intersect.face.normal.clone().multiplyScalar(0.05));
+                    intersect.object.add(blob); // Parenting keeps dots attached to moving objects!
+                }
+                return;
+            }
+
             const targets = animObjects.filter(o => o.isMesh);
             const intersects = raycaster.intersectObjects(targets);
             
@@ -579,9 +812,6 @@
                 const selected = intersects[0].object;
                 transformControls.attach(selected);
                 document.getElementById('transform-controls-ui').style.display = 'flex';
-            } else if (transformControls.dragging === false) {
-                // Don't detach if we just clicked the control handles
-                // But Three.js handles handle clicking internally
             }
         });
 
@@ -601,6 +831,12 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            if (activeTornado) {
+                if (!activeTornado.update()) {
+                    activeTornado = null;
+                }
+            }
+
             const time = performance.now() * 0.0015;
             animObjects.forEach(obj => {
                 // Don't animate if this object is being transformed
@@ -869,19 +1105,21 @@
 
             // 9. Clear
             if (lowerCmd.includes('clear') || lowerCmd.includes('reset') || lowerCmd.includes('delete')) {
-                const toRemove = [];
-                scene.traverse((child) => {
-                    if (child.isMesh && child !== gridHelper) {
-                        toRemove.push(child);
-                    }
+                activeTornado = new Tornado(scene, () => {
+                    const toRemove = [];
+                    scene.traverse((child) => {
+                        if (child.isMesh && child !== gridHelper) {
+                            toRemove.push(child);
+                        }
+                    });
+                    toRemove.forEach(child => scene.remove(child));
+                    animObjects = [];
+                    players = [];
+                    objectCount = 0;
+                    updateMeter();
+                    detachTransform();
                 });
-                toRemove.forEach(child => scene.remove(child));
-                animObjects = [];
-                players = [];
-                objectCount = 0;
-                updateMeter();
-                detachTransform();
-                response = "🧹 Sweep sweep! The board is all clean for a new game!<br>";
+                response = "🌪️ WHOOSH! A tiny tornado swept everything away!<br>";
                 somethingHappened = true;
             }
 

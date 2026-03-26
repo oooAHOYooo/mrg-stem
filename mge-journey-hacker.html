@@ -523,7 +523,7 @@
         <div class="screen-panel panel-top">
             <h2 style="font-size: 1.2rem; background: #060; padding: 5px;">CURRENT OBJECTIVE: <span id="current-dir">C:\</span></h2>
             <div class="terminal-text" id="objective-text" style="font-size: 1.1rem; padding: 10px; color: #fff;">
-                PENETRATING C:\ DRIVE... MASH BUTTONS OR TYPE COMMANDS TO ACCESS SUB-FOLDERS.
+                NEON PARADISE TERMINAL ACTIVE. TYPE A COMMAND AND PRESS ENTER TO BEGIN HACKING.
             </div>
         </div>
 
@@ -531,13 +531,13 @@
         <div class="screen-panel panel-center" id="mainframe-center">
             <h2 style="font-size: 1.2rem; text-align: center;">MAINFRAME TERMINAL</h2>
             <div class="scroll-text terminal-text" id="console-output" style="flex: 1; padding: 10px; font-size: 1.1rem;">
-                > SYSTEM INITIALIZED...<br>
-                > WELCOME USER...<br>
-                > START TYPING TO INITIATE HACK...<br>
-                > OR TYPE 'help' FOR COMMANDS<br>
+                > NEON PARADISE OS v2.0 BOOTED...<br>
+                > WELCOME, HACKER...<br>
+                > TYPE A COMMAND AND HIT ENTER TO HACK THE MAINFRAME.<br>
+                > TRY: <span style="color:#ff0">ls</span> | <span style="color:#ff0">hack</span> | <span style="color:#ff0">vibe</span> | <span style="color:#ff0">help</span><br>
             </div>
             <div class="mainframe-input-container" onclick="document.getElementById('terminal-input').focus()">
-                <div class="type-hint">⬇️ CLICK HERE AND MASH KEYS FAST! ⬇️</div>
+                <div class="type-hint">⬇️ TYPE A COMMAND + ENTER ⬇️</div>
                 <span class="blinking-cursor">USER@MAINFRAME:~$ </span>
                 <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" autofocus>
             </div>
@@ -614,7 +614,7 @@
             </div>
         </div>
         <div id="vibe-footer-hint" style="padding: 15px; background: #022; color: #0ff; text-align: center; border-top: 2px solid #0ff; font-size: 1.1rem; font-weight: bold;">
-            MASH BUTTONS FAST TO WRITE CODE! | PRESS ESC TO RETURN TO TERMINAL.
+            🌟 NEON PARADISE CODING ZONE 🌟 | PRESS ANY KEY TO WRITE CODE FAST! | PRESS ESC TO RETURN TO TERMINAL.
         </div>
     </div>
 
@@ -766,15 +766,16 @@
                 document.body.style.filter = '';
                 document.getElementById('intro-screen').style.display = 'none';
                 
-                log('SYSTEM READY. VIBE CODING PROTOCOL LOADED.', '#0ff');
-                log('PRESS [ENTER] TO INITIATE VIBE MODE...', '#ff0');
+                log('NEON PARADISE TERMINAL ONLINE. WELCOME, HACKER!', '#0ff');
+                log('TYPE A COMMAND AND PRESS ENTER TO INTERACT WITH THE MAINFRAME.', '#ff0');
+                log('TRY: ls | hack | vibe | help | cd users | dance', '#0f0');
                 
                 // Set dynamic build number
                 const buildEl = document.getElementById('build-number');
                 const now = new Date();
                 buildEl.innerText = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
 
-                document.getElementById('terminal-input').value = 'vibe';
+                document.getElementById('terminal-input').value = '';
                 document.getElementById('terminal-input').focus();
 
                 // Introduce Vibe-Bit
@@ -1547,31 +1548,28 @@
                 return;
             }
 
-            // SPACE BAR PROGRESSION SYSTEM (Always progress to next)
+            // SPACE BAR: only special-case during math/autoload/vibe timer — otherwise let it type normally
             if (e.key === ' ') {
-                if (document.getElementById('intro-screen').style.display !== 'none' && document.activeElement.id === 'hacker-name-input') {
-                    // Allow normal space in name
-                } else if (!vibeMode && !aiMode && !isAutoLoadingTerminal && document.getElementById('math-bypass').classList.contains('active')) {
+                if (!vibeMode && !aiMode && !isAutoLoadingTerminal && document.getElementById('math-bypass').classList.contains('active')) {
+                    // Space skips math challenge
                     e.preventDefault();
                     skipMath();
                     return;
                 } else if (isAutoLoadingTerminal) {
+                    // Space snaps autoload to end
                     e.preventDefault();
-                    autoLoadIndex = autoLoadTemplate.length; // snap to end
+                    autoLoadIndex = autoLoadTemplate.length;
                     return;
                 } else if (vibeMode && vibeGameTimerInterval && !isMashingPhase) {
+                    // Space skips the vibe game countdown
                     e.preventDefault();
                     if(vibeGameTimerInterval) clearInterval(vibeGameTimerInterval);
                     const tEl = document.getElementById('vibe-game-timer');
                     if(tEl) tEl.remove();
-                    
                     transitionToNextGame();
                     return;
-                } else if (!vibeMode && !isAutoLoadingTerminal && document.getElementById('intro-screen').style.display === 'none') {
-                    e.preventDefault();
-                    processCommand('vibe');
-                    return;
                 }
+                // Otherwise: let space fall through so kids can type "cd users", etc.
             }
 
             // Ignore if typing in hacker name input or math input
@@ -1715,78 +1713,19 @@
                 processCommand(cmd);
                 playBeep(400, 'square', 0.1, 0.1);
             } else if (e.key.length === 1) {
-                // Auto-start Vibe Mode on ANY key press! No more typing 'vibe' and hitting Enter.
-                if (!vibeMode && !isAutoLoadingTerminal) {
-                    e.preventDefault();
-                    processCommand('vibe');
-                    return;
-                }
-
-                // If they mash too many characters before hitting enter, auto refresh
-                if (inputEl.value.length > 120) {
-                    window.location.reload();
-                    return;
-                }
-
-                const now = Date.now();
-                if (now - lastKeyTime < 350) {
-                    if (mashStartTime === 0) mashStartTime = now;
-                } else if (!vibeMode) {
-                    mashStartTime = 0;
-                }
-                lastKeyTime = now;
-
-                if (mashStartTime > 0 && now - mashStartTime > 5000 && !mashingTriggered && !vibeMode && !isAutoLoadingTerminal) {
-                    mashingTriggered = true;
-                    const typeNames = Object.keys(vibeTemplates);
-                    const rType = typeNames[vibeQueueIndex % typeNames.length];
-                    vibeQueueIndex++;
-                    
-                    log(`CRITICAL OVERRIDE: SEQUENTIAL VIBE PROTOCOL ${vibeQueueIndex}...`, "#f0f");
-                    log(`STREAMING [${rType.toUpperCase()}] SOURCE CODE TO TERMINAL...`, "#0ff");
-                    playBeep(1200, 'sawtooth', 0.5, 0.4);
-                    
-                    isAutoLoadingTerminal = true;
-                    autoLoadTemplate = vibeTemplates[rType];
-                    autoLoadIndex = 0;
-                }
-
+                // Neon Paradise: kids must type real commands, not mash random keys
+                // Just play a beep and let them type into the input box
                 keystrokeCount++;
-
-                // Audio SFX on type
                 playBeep(800 + Math.random()*200, 'sine', 0.05, 0.05);
-                
-                // Spawn 3D element every 5 keystrokes
-                if (keystrokeCount % 5 === 0) spawnHackerCube();
 
-                // Change colors on mashing
-                document.body.style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(150%)`;
-                if (window.mashTimeout) clearTimeout(window.mashTimeout);
-                window.mashTimeout = setTimeout(() => {
-                    document.body.style.filter = '';
-                }, 150);
+                // Spawn 3D element every 10 keystrokes for visual feedback
+                if (keystrokeCount % 10 === 0) spawnHackerCube();
 
-                // CSS SFX on type (shake the mainframe)
+                // Subtle neon flicker on each key
                 const mainframe = document.getElementById('mainframe-center');
                 mainframe.classList.remove('shake');
-                void mainframe.offsetWidth; // trigger reflow
+                void mainframe.offsetWidth;
                 mainframe.classList.add('shake');
-
-                // Provide hackertyper button mashing feedback
-                if (keystrokeCount % 2 === 0) {
-                    const chunk = codeSnippet.substring(codeIndex, codeIndex + 15).replace(/\n/g, '<br>');
-                    codeIndex = (codeIndex + 15) % codeSnippet.length;
-                    
-                    const div = document.createElement('div');
-                    div.style.color = '#fff';
-                    div.style.opacity = '0.7';
-                    div.innerHTML = chunk;
-                    consoleEl.appendChild(div);
-                    consoleEl.scrollTop = consoleEl.scrollHeight;
-                    
-                    stats.nodes++;
-                    document.getElementById('nodes-count').innerText = stats.nodes;
-                }
             }
         });
 
@@ -1816,7 +1755,7 @@
                 } else {
                     document.getElementById('vibe-emulator-container').style.display = 'none';
                     document.getElementById('vibe-preview-btn').style.display = 'none';
-                    document.getElementById('vibe-footer-hint').innerText = "MASH BUTTONS FAST TO WRITE CODE! | PRESS ESC TO RETURN TO TERMINAL.";
+                    document.getElementById('vibe-footer-hint').innerText = "🌟 NEON PARADISE CODING ZONE 🌟 | PRESS ANY KEY TO WRITE CODE FAST! | PRESS ESC TO RETURN TO TERMINAL.";
                     
                     startMashingTimer();
                 }
@@ -1893,23 +1832,60 @@
                     log('AI: THINK OF AN ANIMAL, PLACE, OR TOY. TYPE "ready" WHEN YOU HAVE ONE!', '#a0f');
                 }, 1000);
             } else if(cmd === 'help') {
-                log('AVAILABLE COMMANDS:');
-                log('ls - List Files');
-                log('cd [folder] - Change Directory');
-                log('hack - Breach Next Sector');
-                log('vibe - Enter Vibe Coding Editor');
-                log('ai - Talk to the Mainframe AI');
-                log('info - About C: Drive');
-                log('clear - Clear Console');
+                log('━━━━━━━━━━ NEON PARADISE COMMAND LIST ━━━━━━━━━━', '#0ff');
+                log('  ls          - List C:\\ drive files & folders', '#ff0');
+                log('  hack        - Breach the next sector (math challenge!)', '#ff0');
+                log('  vibe        - Enter the Neon Vibe Coding Editor', '#ff0');
+                log('  cd windows  - Navigate to C:\\Windows', '#ff0');
+                log('  cd users    - Navigate to C:\\Users', '#ff0');
+                log('  cd programs - Navigate to C:\\Program Files', '#ff0');
+                log('  cd temp     - Navigate to C:\\Temp', '#ff0');
+                log('  ai          - Talk to the Mainframe AI Mind-Reader', '#ff0');
+                log('  info        - About the C: Drive', '#ff0');
+                log('  dance       - Activate System Dance Mode 💃', '#ff0');
+                log('  lion        - ROARRR! 🦁', '#ff0');
+                log('  clear       - Clear the console', '#ff0');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#0ff');
             } else if(cmd === 'ls') {
-                log('DIRECTORIES:');
-                folders.forEach(f => log(f.name, '#ff0'));
+                log('━━━━ C:\\ DIRECTORY LISTING ━━━━', '#0ff');
+                folders.forEach(f => log('  [DIR] ' + f.name, '#ff0'));
+                log('  [SYS] bootmgr.ini', '#0cf');
+                log('  [SYS] pagefile.sys', '#0cf');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#0ff');
+                log('TIP: Use "cd [folder]" to navigate! e.g. cd users', '#888');
+                spawnHackerCube();
+            } else if(cmd.startsWith('cd ')) {
+                const target = cmd.split(' ').slice(1).join(' ').trim();
+                const dirMap = {
+                    'windows': folders[0], 'c:\\windows': folders[0],
+                    'users': folders[1], 'c:\\users': folders[1],
+                    'program files': folders[2], 'programs': folders[2], 'c:\\program files': folders[2],
+                    'temp': folders[3], 'c:\\temp': folders[3]
+                };
+                const dir = dirMap[target];
+                if (dir) {
+                    log(`> NAVIGATING TO ${dir.name}...`, '#0ff');
+                    log(`  INFO: ${dir.info}`, '#fff');
+                    log(`  \u26a1 HACKER TIP: ${dir.fact}`, '#ff0');
+                    document.getElementById('current-dir').innerText = dir.name;
+                    document.getElementById('objective-text').innerText = 'NOW IN ' + dir.name + ' | ' + dir.fact;
+                    playBeep(600, 'sine', 0.1, 0.15);
+                    spawnHackerCube();
+                    stats.nodes++;
+                    document.getElementById('nodes-count').innerText = stats.nodes;
+                } else {
+                    log('ACCESS DENIED: Directory "' + target + '" not found.', '#f00');
+                    log('TRY: cd windows | cd users | cd programs | cd temp', '#ff0');
+                }
             } else if(cmd === 'hack') {
                 triggerMath();
             } else if(cmd === 'clear') {
                 consoleEl.innerHTML = '';
             } else if(cmd === 'info') {
                 log('THE C: DRIVE IS YOUR MAIN STORAGE HUB.');
+                log('  C:\ is the primary hard drive where Windows is installed.', '#fff');
+                log('  The backslash \\ represents the ROOT of the drive.', '#fff');
+                log('  USE: ls to list files | cd [folder] to navigate', '#ff0');
             } else if(cmd === 'lion') {
                 log('ROARRRRR!!! 🦁', '#f80');
                 playBeep(150, 'sawtooth', 0.8, 0.3);
@@ -1967,8 +1943,11 @@
                 playBeep(400, 'square', 0.1, 0.2);
                 setTimeout(() => playBeep(600, 'square', 0.4, 0.3), 200);
                 startFnFGame();
+            } else if (cmd === '') {
+                // do nothing on empty enter
             } else {
-                log(`UNKNOWN COMMAND: ${cmd}`, '#f00');
+                log(`UNKNOWN COMMAND: "${cmd}"`, '#f00');
+                log('TYPE "help" FOR A LIST OF NEON PARADISE COMMANDS.', '#ff0');
             }
         }
 
@@ -2189,37 +2168,104 @@
             document.getElementById('system-time').innerText = `CONNECTED: ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
         }, 1000);
 
-        // 60-Second Inactivity Matrix Screensaver (Instead of Black Reboot)
+        // 60-Second Inactivity Matrix Screensaver
         let inactivityTimer;
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
+
+        function dismissMatrixScreensaver() {
             const sv = document.getElementById('matrix-screensaver');
             if (sv) {
                 sv.remove();
                 document.getElementById('terminal-input').focus();
+                log('SYSTEM REACTIVATED. WELCOME BACK, HACKER.', '#0ff');
+                resetInactivityTimer();
             }
+        }
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(triggerMatrixScreensaver, 60000);
         }
 
         function triggerMatrixScreensaver() {
             if (!document.getElementById('matrix-screensaver')) {
-                const sv = document.createElement('iframe');
+                // Build the screensaver as an overlay div (not an iframe blocking input)
+                const sv = document.createElement('div');
                 sv.id = 'matrix-screensaver';
                 sv.style.position = 'fixed';
                 sv.style.top = '0';
                 sv.style.left = '0';
                 sv.style.width = '100%';
                 sv.style.height = '100%';
-                sv.style.zIndex = '9999';
-                sv.style.border = 'none';
-                sv.src = window.URL.createObjectURL(new Blob([vibeTemplates.matrix], {type: 'text/html'}));
+                sv.style.zIndex = '9998';
+                sv.style.background = '#000';
+                sv.style.cursor = 'pointer';
+
+                const hint = document.createElement('div');
+                hint.style.position = 'absolute';
+                hint.style.bottom = '60px';
+                hint.style.width = '100%';
+                hint.style.textAlign = 'center';
+                hint.style.color = '#0f0';
+                hint.style.fontFamily = "'Fira Code', monospace";
+                hint.style.fontSize = '1.5rem';
+                hint.style.textShadow = '0 0 10px #0f0';
+                hint.style.zIndex = '9999';
+                hint.style.animation = 'blink 1s step-end infinite';
+                hint.innerText = '[ PRESS SPACEBAR OR ANY KEY TO RESUME ]';
+                sv.appendChild(hint);
+
+                // Matrix canvas inside the overlay
+                const canvas = document.createElement('canvas');
+                canvas.style.display = 'block';
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                sv.appendChild(canvas);
+
+                const ctx = canvas.getContext('2d');
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*'.split('');
+                const fontSize = 16;
+                const columns = Math.floor(canvas.width / fontSize);
+                const drops = Array(columns).fill(1);
+
+                let matrixAnim;
+                function drawMatrix() {
+                    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#0F0';
+                    ctx.font = fontSize + 'px monospace';
+                    for (let i = 0; i < drops.length; i++) {
+                        const text = chars[Math.floor(Math.random() * chars.length)];
+                        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                        drops[i]++;
+                    }
+                }
+                matrixAnim = setInterval(drawMatrix, 33);
+                sv._stopMatrix = () => clearInterval(matrixAnim);
+
+                // Click to dismiss
+                sv.addEventListener('click', dismissMatrixScreensaver);
+
                 document.body.appendChild(sv);
-                
-                log('SYSTEM ENTERED HIBERNATION MODE. MATRIX RAIN ACTIVE.', '#0f0');
+                log('SYSTEM ENTERED HIBERNATION MODE. MATRIX RAIN ACTIVE. PRESS SPACE TO RESUME.', '#0f0');
             }
         }
 
-        document.addEventListener('mousedown', resetInactivityTimer);
+        // Dismiss matrix screensaver with spacebar or any keydown while it is active
+        document.addEventListener('keydown', (e) => {
+            const sv = document.getElementById('matrix-screensaver');
+            if (sv) {
+                e.preventDefault();
+                if (sv._stopMatrix) sv._stopMatrix();
+                dismissMatrixScreensaver();
+                return;
+            }
+        }, true); // capture phase so it fires before other handlers
+
+        document.addEventListener('mousedown', (e) => {
+            const sv = document.getElementById('matrix-screensaver');
+            if (!sv) resetInactivityTimer(); // Only reset timer when screensaver is NOT showing
+        });
         resetInactivityTimer();
     </script>
     <!-- Mobile Controls -->
