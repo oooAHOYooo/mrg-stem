@@ -173,14 +173,15 @@
             <div class="fact-box" id="fact-text">Newton says: Objects in motion stay in motion... unless they hit a gear.</div>
         </div>
 
-        <div id="instructions">SPACEBAR OR CLICK TO JUMP</div>
+        <div id="instructions">SPACEBAR OR CLICK TO JUMP / AGAIN TO SLAM DOWN</div>
     </div>
 
     <script>
         // --- GAME CONFIG ---
         const CONFIG = {
-            gravity: -0.6, // Gravity for parabolic arc
-            jumpForce: 12, // Vertical jump power
+            gravity: -0.15, // Significantly reduced for floaty feel
+            jumpForce: 10, // Increased for better floaty height
+            slamForce: -1.2, // Rapid descent force
             jumpArcForce: 0.08, // Horizontal forward momentum on jump
             baseSpeed: 0.12, // Slower for easier play
             cubeSize: 1,
@@ -349,15 +350,33 @@
 
         function handleInput(e) {
             if(!isStarted || isDead) return;
-            if(e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp') return;
-            jump();
+            if(e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp' && e.code !== 'ArrowDown' && e.code !== 'KeyS') return;
+            
+            // Allow intentional rapid descent with Down Arrow or S
+            if(e.code === 'ArrowDown' || e.code === 'KeyS') {
+                slam();
+                return;
+            }
+
+            // Standard jump or multi-click slam
+            if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
+                jump();
+            } else {
+                slam();
+            }
         }
 
         function jump() {
-            if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
-                velocityY = CONFIG.jumpForce * 0.016 * 15;
-                velocityX = CONFIG.jumpArcForce; // Forward arc momentum
-                targetRotation -= Math.PI / 2;
+            velocityY = CONFIG.jumpForce * 0.12;
+            velocityX = CONFIG.jumpArcForce; // Forward arc momentum
+            targetRotation -= Math.PI / 2;
+        }
+
+        function slam() {
+            if(player.position.y > CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
+                velocityY = CONFIG.slamForce;
+                // Add a little squash effect if possible, or just snappy movement
+                gsap.to(player.scale, { y: 0.7, x: 1.3, duration: 0.1, yoyo: true, repeat: 1 });
             }
         }
 
@@ -423,6 +442,7 @@
         function resetGame() {
             player.position.y = CONFIG.groundY + CONFIG.cubeSize/2;
             player.rotation.z = 0;
+            player.scale.set(1, 1, 1);
             targetRotation = 0;
             velocityY = 0;
             velocityX = 0;
@@ -559,7 +579,10 @@
                 velocityX *= 0.95; // Damping for horizontal momentum
 
                 // Ground Collision
-                if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2) {
+                if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.05) {
+                    if(velocityY < -0.3) {
+                         gsap.to(player.scale, { y: 0.8, x: 1.2, duration: 0.1, yoyo: true, repeat: 1 });
+                    }
                     player.position.y = CONFIG.groundY + CONFIG.cubeSize/2;
                     velocityY = 0;
                     velocityX = 0;
@@ -577,10 +600,14 @@
                     const dy = Math.abs(player.position.y - obj.position.y);
 
                     if(obj.name === "spike") {
-                        if(dx < 0.4 && dy < 0.5) die(); // More forgiving
+                        if(dx < 0.3 && dy < 0.35) die(); // Super forgiving hitbox
                     } else if(obj.name === "block") {
-                        if(dx < 0.7 && dy < 0.4 && player.position.x < obj.position.x) die();
+                        // Forgiving block collision: need to be really hitting the front
+                        if(dx < 0.55 && dy < 0.3 && player.position.x < obj.position.x) die();
+                        
+                        // Interaction for landing on top
                         if(dx < 0.5 && dy < 1.0 && player.position.y > obj.position.y) {
+                            if(velocityY < -0.3) gsap.to(player.scale, { y: 0.8, x: 1.2, duration: 0.1, yoyo: true, repeat: 1 });
                             player.position.y = obj.position.y + 0.8;
                             velocityY = 0;
                             velocityX = 0;

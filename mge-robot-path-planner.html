@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Robot Path Planner ⭐ – MGE STEM Lab</title>
-  <meta name="description" content="Teach sequencing, debugging, and spatial thinking with a 3D robot path planner. Program the robot, watch it execute, and debug failures in real time!">
+  <title>ROBO-PATH CHAOS 🤖💥 – MGE Summer Hub</title>
+  <meta name="description" content="Ultimate 2-player logic showdown! Negotiate a chaotic neon world with your robots.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
   <script type="importmap">
@@ -33,14 +33,21 @@
       --white:    #e8ecff;
       --gray:     #64748b;
     }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    body {
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg);
-      color: var(--white);
-      display: flex;
-      flex-direction: column;
-    }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: radial-gradient(circle at center, #1a2040 0%, #0d0f1a 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Chaos Glow */
+  #canvas-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    box-shadow: inset 0 0 100px rgba(0, 229, 255, 0.15);
+    pointer-events: none; mix-blend-mode: screen;
+  }
 
     /* ── TOP BAR ───────────────────────────────────────── */
     #topbar {
@@ -54,10 +61,14 @@
       flex-shrink: 0;
       z-index: 20;
     }
-    #topbar .logo { font-size: 1.5rem; }
+    #topbar .logo { font-size: 1.8rem; filter: drop-shadow(0 0 10px var(--cyan)); }
     #topbar h1 {
-      font-size: 1.1rem; font-weight: 900; color: var(--cyan);
-      text-shadow: 0 0 12px rgba(0,229,255,.6);
+      font-size: 1.3rem; font-weight: 900; color: #fff;
+      background: linear-gradient(to right, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(0,229,255,.3);
     }
     #topbar .sep { flex: 1; }
     #topbar .hint {
@@ -137,14 +148,34 @@
     .lvlBtn:hover { border-color: var(--cyan); color: var(--cyan); }
     .lvlBtn.active { border-color: var(--cyan); background: rgba(0,229,255,.15); color: var(--cyan); }
 
+    /* 2P Toggle */
+    #modeSwitch {
+      padding: 12px;
+      display: flex; gap: 8px;
+      background: rgba(255,255,255,.05);
+      border-bottom: 2px solid var(--border);
+    }
+    .modeBtn {
+      flex: 1; padding: 10px; border-radius: 12px;
+      border: 2px solid var(--border); background: var(--card);
+      color: var(--gray); font-weight: 800; cursor: pointer;
+      transition: all .3s;
+    }
+    .modeBtn.active {
+      border-color: var(--cyan); color: var(--cyan);
+      background: rgba(0,229,255,.1);
+      box-shadow: 0 0 15px rgba(0,229,255,.2);
+    }
+    .modeBtn.active.p2 { border-color: var(--red); color: var(--red); background: rgba(255,82,82,.1); }
+
     /* Command palette */
     #palette {
-      padding: 10px 12px 4px;
+      padding: 14px 12px 10px;
       border-bottom: 1px solid var(--border);
     }
-    #palette h3 { font-size: .78rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    #palette h3 { font-size: .8rem; font-weight: 900; color: var(--cyan); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
     #palette .tiles {
-      display: flex; flex-wrap: wrap; gap: 6px;
+      display: flex; flex-wrap: wrap; gap: 8px;
     }
     .cmd-source {
       user-select: none;
@@ -332,11 +363,11 @@
 
 <!-- ── TOP BAR ──────────────────────────────────────── -->
 <div id="topbar">
-  <span class="logo">🤖</span>
-  <h1>Robot Path Planner ⭐</h1>
+  <span class="logo">🤖💥</span>
+  <h1>ROBO-PATH CHAOS</h1>
   <div class="sep"></div>
-  <div class="hint">Drag blocks → Press RUN</div>
-  <button id="backBtn" onclick="location.href='mge.html'">← Back to MGE</button>
+  <div class="hint">2-Player Logic Battle! Press RUN when ready.</div>
+  <button id="backBtn" onclick="location.href='index.html'">← Return to Summer Hub</button>
 </div>
 
 <!-- ── MAIN LAYOUT ──────────────────────────────────── -->
@@ -345,29 +376,36 @@
   <!-- 3D VIEWPORT -->
   <div id="canvas-wrap">
     <div id="hud">
-      <div class="hud-chip">⭐ Level: <span id="hudLevel">1</span></div>
-      <div class="hud-chip">✅ Moves: <span id="hudMoves">0</span></div>
+      <div class="hud-chip" id="lvlChip">⭐ Level: <span id="hudLevel">1</span></div>
+      <div class="hud-chip">✅ P1 Moves: <span id="hudMoves1">0</span></div>
+      <div class="hud-chip p2-only" style="display:none; border-color: var(--red); color: var(--red);">⚡ P2 Moves: <span id="hudMoves2">0</span></div>
     </div>
     <div id="debugOverlay">
       <div id="debugBox">
         <div class="bug-icon">🐛</div>
-        <h2>Debug Mode!</h2>
+        <h2>GLITCH DETECTED!</h2>
         <p id="debugMsg">The robot hit a wall and got confused.<br>Fix your code and try again!</p>
-        <button id="debugClose">Got it! Fix Code 🔧</button>
+        <button id="debugClose">Fix Glitch 🔧</button>
       </div>
     </div>
     <div id="winOverlay">
       <div id="winBox">
         <div class="win-icon">🎉</div>
-        <h2>You did it!</h2>
+        <h2 id="winTitle">GOAL REACHED!</h2>
         <p id="winMsg">Your robot reached the star!<br>Amazing sequencing skills!</p>
-        <button id="winNext">Next Level ➡️</button>
+        <button id="winNext">Next Mission ➡️</button>
       </div>
     </div>
   </div>
 
   <!-- RIGHT PANEL -->
   <div id="panel">
+
+    <!-- Mode switch -->
+    <div id="modeSwitch">
+      <button class="modeBtn active" id="mode1P">1 PLAYER</button>
+      <button class="modeBtn" id="mode2P">2 PLAYER</button>
+    </div>
 
     <!-- Level selector -->
     <div id="levelBar">
@@ -377,9 +415,15 @@
       <button class="lvlBtn" data-level="3">⭐ Boss</button>
     </div>
 
+    <!-- Player switcher (only in 2P) -->
+    <div id="pSwitch" style="display:none; padding: 10px 12px 0; display:flex; gap: 8px;">
+      <button class="modeBtn active" id="selP1">P1 (Blue)</button>
+      <button class="modeBtn p2" id="selP2">P2 (Red)</button>
+    </div>
+
     <!-- Command palette -->
     <div id="palette">
-      <h3>🧩 Blocks</h3>
+      <h3>🧩 Logic Blocks</h3>
       <div class="tiles">
         <div class="cmd-source" data-cmd="forward"  draggable="true">⬆ Forward</div>
         <div class="cmd-source" data-cmd="backward" draggable="true">⬇ Back</div>
@@ -391,19 +435,20 @@
 
     <!-- Command rail -->
     <div id="rail-wrap">
-      <h3>📋 Your Program</h3>
+      <h3 id="railTitle">📋 P1 Sequence</h3>
       <div id="rail"></div>
+      <div id="rail2" style="display:none; margin-top: 10px;"></div>
     </div>
 
     <!-- Control buttons -->
     <div id="controls">
-      <button class="ctrl-btn" id="runBtn">▶ Run</button>
-      <button class="ctrl-btn" id="resetBtn">↺ Reset</button>
-      <button class="ctrl-btn" id="clearBtn">🗑 Clear</button>
+      <button class="ctrl-btn" id="runBtn">▶ RUN PROGRAM</button>
+      <button class="ctrl-btn" id="resetBtn">↺ RESET</button>
+      <button class="ctrl-btn" id="clearBtn">🗑 CLEAR</button>
     </div>
 
     <!-- Status message -->
-    <div id="statusMsg">Add blocks, then press RUN!</div>
+    <div id="statusMsg">Drag logic blocks to program your bot!</div>
 
   </div>
 </div>
@@ -602,50 +647,77 @@ function buildWorld(level) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  ROBOT
+//  CHAOS BACKGROUND
 // ─────────────────────────────────────────────────────────────
-const robotGroup = new THREE.Group();
-scene.add(robotGroup);
+const chaosGroup = new THREE.Group();
+scene.add(chaosGroup);
 
-// Body
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0x29b6f6, roughness: .35, metalness: .6,
-  emissive: 0x0d47a1, emissiveIntensity: .3 });
-const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), bodyMat);
-bodyMesh.position.y = .7;
-robotGroup.add(bodyMesh);
+function createChaos() {
+  const geo = new THREE.BoxGeometry(.4, .4, .4);
+  for (let i = 0; i < 40; i++) {
+    const mat = new THREE.MeshStandardMaterial({ 
+      color: Math.random() > 0.5 ? 0x00e5ff : 0xb388ff,
+      transparent: true, opacity: 0.4, wireframe: Math.random() > 0.7
+    });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set((Math.random()-0.5)*40, (Math.random()-0.5)*20, (Math.random()-0.5)*40);
+    m.userData.rot = new THREE.Vector3(Math.random()*0.02, Math.random()*0.02, Math.random()*0.02);
+    chaosGroup.add(m);
+  }
+}
+createChaos();
 
-// Head
-const headMat = new THREE.MeshStandardMaterial({ color: 0xe3f2fd, roughness: .4,
-  emissive: 0x4fc3f7, emissiveIntensity: .1 });
-const headMesh = new THREE.Mesh(new THREE.BoxGeometry(.42, .38, .38), headMat);
-headMesh.position.y = 1.17;
-robotGroup.add(headMesh);
+function updateChaos(dt) {
+  chaosGroup.children.forEach(c => {
+    c.rotation.x += c.userData.rot.x;
+    c.rotation.y += c.userData.rot.y;
+    c.position.y += Math.sin(Date.now()*0.001 + c.position.x)*0.005;
+  });
+}
 
-// Eyes (two small glowing cubes)
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 1 });
-[-1,1].forEach(side => {
-  const eye = new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08), eyeMat.clone());
-  eye.position.set(side * .12, 1.2, .19);
-  robotGroup.add(eye);
-});
+// ─────────────────────────────────────────────────────────────
+//  ROBOT FACTORY
+// ─────────────────────────────────────────────────────────────
+function createRobot(color = 0x29b6f6, emissive = 0x0d47a1) {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: .35, metalness: .6, emissive, emissiveIntensity: .3 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), bodyMat);
+  body.position.y = .7;
+  group.add(body);
 
-// Chest glow panel
-const chestGlow = new THREE.MeshStandardMaterial({ color: 0x69f0ae, emissive: 0x69f0ae, emissiveIntensity: .6 });
-const chestPanel = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .06), chestGlow);
-chestPanel.position.set(0, .7, .25);
-robotGroup.add(chestPanel);
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xe3f2fd, roughness: .4, emissive: color, emissiveIntensity: .1 });
+  const head = new THREE.Mesh(new THREE.BoxGeometry(.42, .38, .38), headMat);
+  head.position.y = 1.17;
+  group.add(head);
 
-// Legs
-const legMat = new THREE.MeshStandardMaterial({ color: 0x0d47a1, roughness: .5, metalness: .5 });
-[-1,1].forEach(side => {
-  const leg = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), legMat.clone());
-  leg.position.set(side * .19, .18, 0);
-  robotGroup.add(leg);
-});
+  [-1,1].forEach(side => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08), new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 1 }));
+    eye.position.set(side * .12, 1.2, .19);
+    group.add(eye);
+  });
 
-// Body glow point light
-const robotLight = new THREE.PointLight(0x4fc3f7, 0, 2.5);
-robotGroup.add(robotLight);
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .06), new THREE.MeshStandardMaterial({ color: 0x69f0ae, emissive: 0x69f0ae, emissiveIntensity: .6 }));
+  chest.position.set(0, .7, .25);
+  group.add(chest);
+
+  [-1,1].forEach(side => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), new THREE.MeshStandardMaterial({ color: emissive, roughness: .5, metalness: .5 }));
+    leg.position.set(side * .19, .18, 0);
+    group.add(leg);
+  });
+
+  const light = new THREE.PointLight(color, 0, 2.5);
+  group.add(light);
+  group.userData.light = light;
+  return group;
+}
+
+const robot1 = createRobot(0x29b6f6, 0x0d47a1); // Blue
+const robot2 = createRobot(0xff5252, 0x880e4f); // Red
+robot2.visible = false;
+scene.add(robot1, robot2);
+
+const robotGroup = robot1; // Legacy support
 
 // Execution trail particles
 const trailGeo   = new THREE.SphereGeometry(.06, 6, 6);
@@ -693,12 +765,13 @@ scene.add(ghostGroup);
 //  STATE
 // ─────────────────────────────────────────────────────────────
 let currentLevel = 0;
-let robotGX, robotGZ, robotDir;  // grid position + direction (0=+Z,1=+X,2=-Z,3=-X)
-let moveCount = 0;
-let isRunning = false;
-let animQueue = [];
-let animTimer = 0;
-const STEP_DURATION = 0.38; // seconds per step
+let is2P = false;
+let activeP = 1;
+
+let p1Data = { gx:0, gz:0, dir:0, moves:0, isRunning:false, queue:[], timer:0, group:robot1, rail:null };
+let p2Data = { gx:0, gz:0, dir:0, moves:0, isRunning:false, queue:[], timer:0, group:robot2, rail:null };
+
+const getActiveData = () => activeP === 1 ? p1Data : p2Data;
 
 const DIRS = [
   [0,  1],  // 0: +Z (south)
@@ -722,16 +795,19 @@ function loadLevel(idx) {
   const level = LEVELS[idx];
   buildWorld(level);
 
-  robotGX  = level.start[0];
-  robotGZ  = level.start[1];
-  robotDir = level.startDir;
-  moveCount = 0;
-  isRunning = false;
-
-  const wpos = gridToWorld(robotGX, robotGZ, level);
-  robotGroup.position.set(wpos.x, TILE_H, wpos.z);
-  robotGroup.rotation.y = -robotDir * Math.PI / 2;
-  robotLight.intensity = 0;
+  [p1Data, p2Data].forEach((p, i) => {
+    p.gx = level.start[0];
+    p.gz = level.start[1];
+    p.dir = level.startDir;
+    p.moves = 0;
+    p.isRunning = false;
+    p.group.visible = i === 0 || is2P;
+    
+    const wpos = gridToWorld(p.gx, p.gz, level);
+    p.group.position.set(wpos.x, TILE_H, wpos.z);
+    p.group.rotation.y = -p.dir * Math.PI / 2;
+    p.group.userData.light.intensity = 0;
+  });
 
   // clear trail
   while (trailGroup.children.length) trailGroup.remove(trailGroup.children[0]);
@@ -739,8 +815,9 @@ function loadLevel(idx) {
   pulsePlane.material.opacity = 0;
 
   document.getElementById('hudLevel').textContent = idx + 1;
-  document.getElementById('hudMoves').textContent = 0;
-  document.getElementById('statusMsg').textContent = `🗺 ${level.name} — ${level.tip}`;
+  document.getElementById('hudMoves1').textContent = 0;
+  document.getElementById('hudMoves2').textContent = 0;
+  document.getElementById('statusMsg').textContent = `🗺 MISSION: ${level.name} — ${level.tip}`;
 
   // camera soft reset
   camera.position.set(0, 14, 16);
@@ -759,8 +836,6 @@ function compileProgramToSteps(tiles) {
   const steps = [];
   for (const t of tiles) {
     if (t.cmd === 'loop') {
-      // repeat next step twice — here we repeat the last pushed
-      // For simplicity: ×2 multiplies the PREVIOUS step
       if (steps.length > 0) {
         steps.push({ ...steps[steps.length - 1] });
       }
@@ -771,9 +846,9 @@ function compileProgramToSteps(tiles) {
   return steps;
 }
 
-function buildStepsFromRail() {
+function buildStepsFromRail(containerId) {
   const tiles = [];
-  document.querySelectorAll('#rail .cmd-tile').forEach(el => {
+  document.querySelectorAll(`#${containerId} .cmd-tile`).forEach(el => {
     tiles.push({ cmd: el.dataset.cmd, tileEl: el });
   });
   return compileProgramToSteps(tiles);
@@ -782,14 +857,7 @@ function buildStepsFromRail() {
 // ─────────────────────────────────────────────────────────────
 //  ANIMATION QUEUE EXECUTION
 // ─────────────────────────────────────────────────────────────
-function startX(mx, mz, dir) {
-  // Returns target world position after one move
-  const level = LEVELS[currentLevel];
-  const d = DIRS[dir];
-  const nx = robotGX + d[0];
-  const nz = robotGZ + d[1];
-  return { nx, nz };
-}
+const STEP_DURATION = 0.42;
 
 function canMoveToCell(gx, gz) {
   const grid = LEVELS[currentLevel].grid;
@@ -797,271 +865,270 @@ function canMoveToCell(gx, gz) {
   return grid[gz][gx] === 0;
 }
 
+let isRunning = false;
+let globalTimer = 0;
+
 function runProgram() {
   if (isRunning) return;
-  const steps = buildStepsFromRail();
-  if (!steps.length) { setStatus("⚠️ Add some blocks first!"); return; }
+  
+  p1Data.queue = buildStepsFromRail('rail');
+  p2Data.queue = is2P ? buildStepsFromRail('rail2') : [];
 
-  isRunning = true;
-  animQueue = steps.slice();
-  animTimer = STEP_DURATION;
-  robotLight.intensity = 2;
-  setStatus("🤖 Running...");
-}
-
-let currentStepIndex = 0;
-let executingTileEl = null;
-let stepPhase = 'start'; // 'start', 'move'
-let fromPos = new THREE.Vector3();
-let toPos   = new THREE.Vector3();
-let moveProgress = 0;
-let stepDir = 0;
-const targetQuat = new THREE.Quaternion();
-const startQuat  = new THREE.Quaternion();
-
-function popNextStep() {
-  if (!animQueue.length) {
-    // Done — no win yet means wrong path
-    finishRun(false, null, "Reached end of code but missed the ⭐ star!", null);
+  if (!p1Data.queue.length && (!is2P || !p2Data.queue.length)) {
+    setStatus("⚠️ Add some blocks first!");
     return;
   }
 
-  const step = animQueue.shift();
+  isRunning = true;
+  globalTimer = STEP_DURATION;
+  
+  [p1Data, p2Data].forEach((p, i) => {
+    p.isRunning = (i === 0) || (is2P && p.queue.length > 0);
+    p.moves = 0;
+    p.group.userData.light.intensity = p.isRunning ? 2 : 0;
+  });
+
+  setStatus("🤖 CHAOS MODE ENGAGED...");
+}
+
+function popPlayerStep(p) {
+  if (!p.queue.length) {
+    p.isRunning = false;
+    p.group.userData.light.intensity = 0;
+    if (p.executingTile) p.executingTile.classList.remove('executing');
+    return;
+  }
+
+  const step = p.queue.shift();
   const { cmd, tileEl } = step;
 
-  // Highlight tile
-  if (executingTileEl) executingTileEl.classList.remove('executing');
-  executingTileEl = tileEl;
+  if (p.executingTile) p.executingTile.classList.remove('executing');
+  p.executingTile = tileEl;
   if (tileEl) tileEl.classList.add('executing');
 
+  p.phase = 'idle';
+  p.moveProgress = 0;
+
   if (cmd === 'forward' || cmd === 'backward') {
-    const level = LEVELS[currentLevel];
-    const d = DIRS[robotDir];
+    const d = DIRS[p.dir];
     const mult = cmd === 'backward' ? -1 : 1;
-    const nx = robotGX + d[0] * mult;
-    const nz = robotGZ + d[1] * mult;
+    const nx = p.gx + d[0] * mult;
+    const nz = p.gz + d[1] * mult;
 
     if (!canMoveToCell(nx, nz)) {
-      // FAIL
-      triggerDebug(tileEl, `🧱 Oops! There's a wall at (${nx}, ${nz})!<br>The robot tried to walk through a wall.`);
+      p.isRunning = false;
+      if (tileEl) {
+        tileEl.classList.add('error');
+        setTimeout(() => tileEl.classList.remove('error'), 1000);
+      }
       return;
     }
 
-    const wFrom = gridToWorld(robotGX, robotGZ, level);
-    const wTo   = gridToWorld(nx, nz, level);
-    fromPos.set(wFrom.x, TILE_H, wFrom.z);
-    toPos.set(wTo.x,   TILE_H, wTo.z);
-
-    // ghost
-    ghostGroup.position.set(wTo.x, TILE_H, wTo.z);
-    ghostGroup.visible = true;
-
-    // pulse plane
-    pulsePlane.position.set(wTo.x, .02, wTo.z);
-
-    robotGX = nx; robotGZ = nz;
-    stepPhase = 'move';
-    moveProgress = 0;
-    moveCount++;
-    document.getElementById('hudMoves').textContent = moveCount;
-
-    // Check win
+    const wFrom = gridToWorld(p.gx, p.gz, LEVELS[currentLevel]);
+    const wTo   = gridToWorld(nx, nz, LEVELS[currentLevel]);
+    p.fromPos = new THREE.Vector3(wFrom.x, TILE_H, wFrom.z);
+    p.toPos   = new THREE.Vector3(wTo.x, TILE_H, wTo.z);
+    
+    p.gx = nx; p.gz = nz;
+    p.phase = 'move';
+    p.moves++;
+    
+    // Check goal
     if (nx === LEVELS[currentLevel].goal[0] && nz === LEVELS[currentLevel].goal[1]) {
-      // schedule win after animation
       setTimeout(() => {
-        if (executingTileEl) executingTileEl.classList.remove('executing');
-        finishRun(true, null, `Solved in ${moveCount} moves!`, null);
-      }, STEP_DURATION * 1000 + 100);
-      animQueue = [];  // stop after win
+        if (!isRunning) return;
+        finishRun(true, p === p1Data ? "P1" : "P2");
+      }, STEP_DURATION * 1000);
     }
 
   } else if (cmd === 'left' || cmd === 'right') {
-    robotDir = ((robotDir + (cmd === 'right' ? 1 : 3)) % 4);
-    startQuat.copy(robotGroup.quaternion);
-    targetQuat.setFromEuler(new THREE.Euler(0, -robotDir * Math.PI / 2, 0));
-    stepPhase = 'turn';
-    moveProgress = 0;
-    robotGroup.userData.leanDir = cmd === 'right' ? 1 : -1;
+    const oldDir = p.dir;
+    p.dir = ((p.dir + (cmd === 'right' ? 1 : 3)) % 4);
+    p.startQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -oldDir * Math.PI / 2, 0));
+    p.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -p.dir * Math.PI / 2, 0));
+    p.phase = 'turn';
+    p.leanDir = cmd === 'right' ? 1 : -1;
   }
 }
 
 function tickAnimation(dt) {
   if (!isRunning) return;
 
-  if (stepPhase === 'idle') {
-    animTimer -= dt;
-    if (animTimer <= 0) {
-      animTimer = STEP_DURATION;
-      popNextStep();
+  globalTimer -= dt;
+  if (globalTimer <= 0) {
+    globalTimer = STEP_DURATION;
+    [p1Data, p2Data].forEach(p => { if (p.isRunning) popPlayerStep(p); });
+    
+    // update moves hud
+    document.getElementById('hudMoves1').textContent = p1Data.moves;
+    document.getElementById('hudMoves2').textContent = p2Data.moves;
+
+    // stop if both done
+    if (!p1Data.isRunning && !p2Data.isRunning) {
+      setTimeout(() => { if (isRunning) finishRun(false); }, 500);
     }
-    return;
   }
 
-  moveProgress += dt / STEP_DURATION;
-  const t = Math.min(moveProgress, 1);
+  const t = 1 - (globalTimer / STEP_DURATION);
+  const ease = t * (2 - t); // simple ease out
 
-  if (stepPhase === 'move') {
-    const y = TILE_H + Math.sin(t * Math.PI) * 0.35; // hop arc
-    robotGroup.position.lerpVectors(fromPos, toPos, t);
-    robotGroup.position.y = y;
+  [p1Data, p2Data].forEach(p => {
+    if (!p.isRunning || !p.phase) return;
 
-    // pulse plane opacity
-    pulsePlane.material.opacity = Math.sin(t * Math.PI) * 0.35;
-
-    // Spawn trail
-    if (Math.random() < .4) spawnTrailParticle(robotGroup.position);
-
-  } else if (stepPhase === 'turn') {
-    robotGroup.quaternion.slerpQuaternions(startQuat, targetQuat, t);
-    // lean
-    const lean = Math.sin(t * Math.PI) * robotGroup.userData.leanDir * 0.22;
-    robotGroup.rotation.z = lean;
-  }
-
-  if (t >= 1) {
-    if (stepPhase === 'move') {
-      robotGroup.position.copy(toPos);
-      ghostGroup.visible = false;
-      pulsePlane.material.opacity = 0;
-    } else if (stepPhase === 'turn') {
-      robotGroup.quaternion.copy(targetQuat);
-      robotGroup.rotation.z = 0;
+    if (p.phase === 'move') {
+      const hop = Math.sin(t * Math.PI) * 0.4;
+      p.group.position.lerpVectors(p.fromPos, p.toPos, t);
+      p.group.position.y = TILE_H + hop;
+      if (Math.random() < 0.3) spawnTrailParticle(p.group.position);
+    } else if (p.phase === 'turn') {
+      p.group.quaternion.slerpQuaternions(p.startQuat, p.targetQuat, t);
+      p.group.rotation.z = Math.sin(t * Math.PI) * p.leanDir * 0.25;
     }
-    stepPhase = 'idle';
-    animTimer = 0.06;
-  }
+  });
 }
 
-function finishRun(won, tileEl, msg, extraMsg) {
+function finishRun(won, winner = null) {
   isRunning = false;
-  robotLight.intensity = 0;
-  if (executingTileEl) executingTileEl.classList.remove('executing');
-  ghostGroup.visible = false;
-  pulsePlane.material.opacity = 0;
+  [p1Data, p2Data].forEach(p => {
+    p.isRunning = false;
+    p.group.userData.light.intensity = 0;
+    if (p.executingTile) p.executingTile.classList.remove('executing');
+  });
 
   if (won) {
-    document.getElementById('winMsg').innerHTML = `⭐ ${msg}`;
+    document.getElementById('winTitle').textContent = is2P ? `${winner} WINS!` : "MISSION COMPLETE!";
+    document.getElementById('winMsg').innerHTML = is2P ? `Robot ${winner} reached the star first!` : "Your robot reached the goal! Logic master!";
     document.getElementById('winOverlay').style.display = 'flex';
-    // firework particles
-    for (let i = 0; i < 40; i++) {
-      setTimeout(() => spawnConfettiParticle(), i * 40);
-    }
-    setStatus("🎉 You WIN!");
+    for (let i = 0; i < 50; i++) setTimeout(spawnConfettiParticle, i * 30);
+    setStatus("🎉 CHAMPION DATA DETECTED!");
   } else {
-    setStatus("❌ " + (msg || "Error!"));
+    setStatus("❌ Sequence incomplete. Try again!");
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  DEBUG MODE
-// ─────────────────────────────────────────────────────────────
-function triggerDebug(tileEl, msg) {
-  isRunning = false;
-  robotLight.intensity = 0;
-  animQueue = [];
-
-  // Flash tile red
-  if (tileEl) {
-    tileEl.classList.remove('executing');
-    tileEl.classList.add('error');
-    setTimeout(() => tileEl.classList.remove('error'), 1400);
-  }
-
-  // Show ghost at failed position
-  ghostGroup.visible = true;
-  ghostGroup.position.copy(robotGroup.position);
-
-  document.getElementById('debugMsg').innerHTML = msg || "Something went wrong!";
-  document.getElementById('debugOverlay').style.display = 'flex';
-  setStatus("🐛 Debug Mode! Fix your code.");
-}
-
-document.getElementById('debugClose').onclick = () => {
-  document.getElementById('debugOverlay').style.display = 'none';
-  ghostGroup.visible = false;
-  loadLevel(currentLevel);
-};
-
-// ─────────────────────────────────────────────────────────────
-//  WIN / NEXT LEVEL
-// ─────────────────────────────────────────────────────────────
-document.getElementById('winNext').onclick = () => {
-  document.getElementById('winOverlay').style.display = 'none';
-  const next = (currentLevel + 1) % LEVELS.length;
-  document.getElementById('rail').innerHTML = '';
-  loadLevel(next);
-};
-
-// ─────────────────────────────────────────────────────────────
-//  CONFETTI PARTICLES
-// ─────────────────────────────────────────────────────────────
-const confettiColors = [0xff5252, 0xffe066, 0x69f0ae, 0x4fc3f7, 0xb388ff, 0xff9800];
-function spawnConfettiParticle() {
-  const geo = new THREE.BoxGeometry(.12, .12, .04);
-  const mat = new THREE.MeshBasicMaterial({ color: confettiColors[Math.floor(Math.random() * confettiColors.length)] });
-  const p = new THREE.Mesh(geo, mat);
-  const wpos = gridToWorld(LEVELS[currentLevel].goal[0], LEVELS[currentLevel].goal[1], LEVELS[currentLevel]);
-  p.position.set(wpos.x + (Math.random()-.5)*2, 1 + Math.random()*2, wpos.z + (Math.random()-.5)*2);
-  p.userData.vel = new THREE.Vector3((Math.random()-.5)*.8, 2+Math.random()*2, (Math.random()-.5)*.8);
-  p.userData.rotV = new THREE.Vector3(Math.random()*4, Math.random()*4, Math.random()*4);
-  p.userData.life = 1;
-  scene.add(p);
-  // auto remove
-  const remove = () => scene.remove(p);
-  setTimeout(remove, 2500);
-}
-
-// ─────────────────────────────────────────────────────────────
-//  GOAL ANIMATION
+//  GOAL & ROBOT ANIM
 // ─────────────────────────────────────────────────────────────
 let goalAngle = 0;
 function animateGoal(dt) {
   if (!goalMesh) return;
-  goalAngle += dt * 1.5;
+  goalAngle += dt * 2;
   goalMesh.rotation.y = goalAngle;
-  const s = 1 + Math.sin(goalAngle * 2) * .06;
+  const s = 1 + Math.sin(goalAngle * 4) * .1;
   goalMesh.scale.set(s, s, s);
-  goalMesh.material.emissiveIntensity = .4 + Math.sin(goalAngle * 3) * .2;
 }
 
-// Eye blink
-let blinkTimer = 0;
-function animateRobotEyes(dt) {
-  blinkTimer += dt;
-  const eyes = robotGroup.children.filter(c => c.geometry && c.geometry.parameters && c.geometry.parameters.width === .08);
-  if (blinkTimer > 3 && blinkTimer < 3.1) {
-    eyes.forEach(e => e.scale.y = 0.05);
-  } else {
-    eyes.forEach(e => e.scale.y = 1);
-    if (blinkTimer > 3.3) blinkTimer = 0;
-  }
+function animateEyes(dt) {
+  const t = Date.now() * 0.001;
+  [robot1, robot2].forEach(r => {
+    const eyes = r.children.filter(c => c.geometry && c.geometry.type === 'BoxGeometry' && c.position.y > 1.1);
+    const blink = Math.sin(t * 5) > 0.98;
+    eyes.forEach(e => e.scale.y = blink ? 0.1 : 1);
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CONTROLS UI
+//  UI HANDLERS
 // ─────────────────────────────────────────────────────────────
 function setStatus(msg) { document.getElementById('statusMsg').textContent = msg; }
 
-document.getElementById('runBtn').onclick    = runProgram;
-document.getElementById('resetBtn').onclick  = () => { document.getElementById('winOverlay').style.display='none'; loadLevel(currentLevel); };
-document.getElementById('clearBtn').onclick  = () => document.getElementById('rail').innerHTML = '';
+// Mode switching
+document.getElementById('mode1P').onclick = () => {
+  is2P = false;
+  document.getElementById('mode1P').classList.add('active');
+  document.getElementById('mode2P').classList.remove('active');
+  document.getElementById('pSwitch').style.display = 'none';
+  document.querySelectorAll('.p2-only').forEach(el => el.style.display = 'none');
+  document.getElementById('rail2').style.display = 'none';
+  document.getElementById('railTitle').textContent = "📋 Sequence";
+  loadLevel(currentLevel);
+};
+
+document.getElementById('mode2P').onclick = () => {
+  is2P = true;
+  document.getElementById('mode2P').classList.add('active');
+  document.getElementById('mode1P').classList.remove('active');
+  document.getElementById('pSwitch').style.display = 'flex';
+  document.querySelectorAll('.p2-only').forEach(el => el.style.display = 'block');
+  document.getElementById('rail2').style.display = (activeP === 2) ? 'flex' : 'none';
+  document.getElementById('railTitle').textContent = `📋 P${activeP} Sequence`;
+  loadLevel(currentLevel);
+};
+
+document.getElementById('selP1').onclick = () => {
+  activeP = 1;
+  document.getElementById('selP1').classList.add('active');
+  document.getElementById('selP2').classList.remove('active');
+  document.getElementById('rail').style.display = 'flex';
+  document.getElementById('rail2').style.display = 'none';
+  document.getElementById('railTitle').textContent = "📋 P1 Sequence";
+};
+
+document.getElementById('selP2').onclick = () => {
+  activeP = 2;
+  document.getElementById('selP2').classList.add('active');
+  document.getElementById('selP1').classList.remove('active');
+  document.getElementById('rail').style.display = 'none';
+  document.getElementById('rail2').style.display = 'flex';
+  document.getElementById('railTitle').textContent = "📋 P2 Sequence";
+};
+
+document.getElementById('runBtn').onclick = runProgram;
+document.getElementById('resetBtn').onclick = () => { 
+  document.getElementById('winOverlay').style.display='none'; 
+  loadLevel(currentLevel); 
+};
+document.getElementById('clearBtn').onclick = () => {
+  const r = activeP === 1 ? document.getElementById('rail') : document.getElementById('rail2');
+  r.innerHTML = '';
+};
+document.getElementById('debugClose').onclick = () => {
+  document.getElementById('debugOverlay').style.display = 'none';
+  loadLevel(currentLevel);
+};
+document.getElementById('winNext').onclick = () => {
+  document.getElementById('winOverlay').style.display = 'none';
+  loadLevel((currentLevel + 1) % LEVELS.length);
+};
 
 document.querySelectorAll('.lvlBtn').forEach((btn, i) => {
-  btn.onclick = () => { document.getElementById('rail').innerHTML=''; loadLevel(i); };
+  btn.onclick = () => { 
+    document.getElementById('rail').innerHTML=''; 
+    document.getElementById('rail2').innerHTML=''; 
+    loadLevel(i); 
+  };
 });
 
 // ─────────────────────────────────────────────────────────────
-//  DRAG & DROP
+//  DRAG & DROP (updated for target rail)
 // ─────────────────────────────────────────────────────────────
-const rail = document.getElementById('rail');
+const rail1 = document.getElementById('rail');
+const rail2 = document.getElementById('rail2');
 let draggingEl = null;
 let dragSrcCmd = null;
-let isDragFromRail = false;
 
 document.querySelectorAll('.cmd-source').forEach(src => {
-  src.addEventListener('dragstart', e => {
-    dragSrcCmd = src.dataset.cmd;
-    isDragFromRail = false;
+  src.addEventListener('dragstart', e => { dragSrcCmd = src.dataset.cmd; draggingEl = null; });
+});
+
+[rail1, rail2].forEach(r => {
+  r.addEventListener('dragover', e => { e.preventDefault(); r.classList.add('drag-over'); });
+  r.addEventListener('dragleave', () => r.classList.remove('drag-over'));
+  r.addEventListener('drop', e => {
+    e.preventDefault();
+    r.classList.remove('drag-over');
+    if (isRunning) return;
+    
+    if (draggingEl) { // reorder
+      const afterEl = getDragAfterElement(r, e.clientY);
+      if (afterEl == null) r.appendChild(draggingEl);
+      else r.insertBefore(draggingEl, afterEl);
+    } else if (dragSrcCmd) { // new tile
+      const tile = makeTile(dragSrcCmd);
+      const afterEl = getDragAfterElement(r, e.clientY);
+      if (afterEl == null) r.appendChild(tile);
+      else r.insertBefore(tile, afterEl);
+    }
   });
 });
 
@@ -1071,39 +1138,15 @@ function makeTile(cmd) {
   el.className = 'cmd-tile';
   el.dataset.cmd = cmd;
   el.draggable = true;
-  el.innerHTML = `<span>${labels[cmd]}</span><button class="del" title="Remove">✕</button>`;
+  el.innerHTML = `<span>${labels[cmd]}</span><button class="del">✕</button>`;
   el.querySelector('.del').onclick = (e) => { e.stopPropagation(); el.remove(); };
   el.addEventListener('dragstart', e => {
     draggingEl = el;
-    isDragFromRail = true;
-    dragSrcCmd = cmd;
     setTimeout(() => el.style.opacity = '.3', 0);
   });
-  el.addEventListener('dragend', () => {
-    el.style.opacity = '1';
-    draggingEl = null;
-  });
+  el.addEventListener('dragend', () => { el.style.opacity = '1'; draggingEl = null; });
   return el;
 }
-
-rail.addEventListener('dragover', e => { e.preventDefault(); rail.classList.add('drag-over'); });
-rail.addEventListener('dragleave', () => rail.classList.remove('drag-over'));
-rail.addEventListener('drop', e => {
-  e.preventDefault();
-  rail.classList.remove('drag-over');
-  if (isRunning) return;
-  if (isDragFromRail && draggingEl) {
-    // reorder: insert before hovered element
-    const afterEl = getDragAfterElement(rail, e.clientY);
-    if (afterEl == null) rail.appendChild(draggingEl);
-    else rail.insertBefore(draggingEl, afterEl);
-  } else if (dragSrcCmd) {
-    const tile = makeTile(dragSrcCmd);
-    const afterEl = getDragAfterElement(rail, e.clientY);
-    if (afterEl == null) rail.appendChild(tile);
-    else rail.insertBefore(tile, afterEl);
-  }
-});
 
 function getDragAfterElement(container, y) {
   const els = [...container.querySelectorAll('.cmd-tile:not(.dragging)')];
@@ -1115,9 +1158,7 @@ function getDragAfterElement(container, y) {
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  RESIZE
-// ─────────────────────────────────────────────────────────────
+// Resize & Animate
 function resize() {
   const w = wrap.clientWidth, h = wrap.clientHeight;
   renderer.setSize(w, h);
@@ -1127,26 +1168,19 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ─────────────────────────────────────────────────────────────
-//  RENDER LOOP
-// ─────────────────────────────────────────────────────────────
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), .05);
-
+  const dt = Math.min(clock.getDelta(), 0.1);
   controls.update();
   tickAnimation(dt);
   updateTrail(dt);
+  updateChaos(dt);
   animateGoal(dt);
-  animateRobotEyes(dt);
-
+  animateEyes(dt);
   renderer.render(scene, camera);
 }
 
-// ─────────────────────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────────────────────
 loadLevel(0);
 animate();
 </script>
