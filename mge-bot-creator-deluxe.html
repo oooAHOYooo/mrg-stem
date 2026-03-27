@@ -573,6 +573,12 @@
     let pointLight;
     let raycaster, mouse;
     let playerPos, enemyPos;
+    let cameraTarget = new THREE.Vector3(0, 2, 0);
+    let shakeIntensity = 0;
+    let impactZoom = 0;
+    let hitStopTimer = 0;
+
+
     
     // Game State
     let materials = 200;
@@ -980,14 +986,13 @@
         
         showBattleMessage(isVersus ? "VERSUS START!!" : "BATTLE START!!", 1000);
 
-        // Camera to battle view
+        // Camera to battle view (Initial snap, then animate will follow)
         new TWEEN.Tween(camera.position)
-            .to({x: 0, y: 5, z: 12}, 1000)
-            .easing(function(k) { return k < 0.5 ? 4*k*k*k : (k-1)*(2*k-2)*(2*k-2)+1; })
+            .to({x: 0, y: 6, z: 14}, 800)
+            .easing(TWEEN.Easing.Quadratic.Out)
             .start();
             
-        const target = new THREE.Vector3(0,2,0);
-        camera.lookAt(target);
+        cameraTarget.set(0, 2, 0);
 
         // Hide attack button for versus
         document.getElementById('btn-player-attack').style.display = isVersus ? 'none' : 'block';
@@ -1118,13 +1123,13 @@
             .easing(function(k) { return k * (2 - k); })
             .start();
 
-        // Screen Shake
-        const startCamX = camera.position.x;
-        new TWEEN.Tween(camera.position)
-            .to({x: startCamX + (Math.random()-0.5)*0.5}, 50)
-            .yoyo(true).repeat(3)
-            .onComplete(() => { camera.position.x = 0; })
-            .start();
+        // Screen Shake & Hit Impact
+        shakeIntensity = (type === 'HEAVY') ? 1.0 : 0.4;
+        if (type === 'HEAVY') impactZoom = 3.0;
+
+        // Smash Hit-Stop Effect (Pause briefly)
+        hitStopTimer = (type === 'HEAVY') ? 10 : 5; // frames to skip
+
 
         // Damage calculation
         const baseAtk = isP1 ? battleStats.pAttack : battleStats.eAttack;
@@ -1142,6 +1147,13 @@
         if (isP1) battleStats.eHp -= dmg;
         else battleStats.pHp -= dmg;
         
+        // Smash Flash
+        if (type === 'HEAVY') {
+            flashColor('white', 0.2);
+            speedLines.style.opacity = '1';
+            setTimeout(() => { if (gameState === 'BATTLE') speedLines.style.opacity = '1'; }, 100);
+        }
+
         const sp = getScreenPos(target.position);
         createDamageText(sp.x + (Math.random()*50-25), sp.y - 100, isCrit ? `${dmg} CRIT!` : dmg);
 
@@ -1220,13 +1232,18 @@
             showBattleMessage("VICTORY!!", null);
             
             // Explode enemy setup
+            shakeIntensity = 1.5;
+            impactZoom = 6.0; // Zoom in for the killshot!
+            
             new TWEEN.Tween(battleEnemyBot.scale)
-                .to({x: 1.5, y: 1.5, z: 1.5}, 200)
+                .to({x: 0, y: 0, z: 0}, 800)
+                .easing(TWEEN.Easing.Back.In)
                 .onComplete(() => {
                     scene.remove(battleEnemyBot);
                     battleEnemyBot = null;
                 })
                 .start();
+
 
             setTimeout(() => {
                 const earnedMat = 30 + Math.floor(Math.random() * 40);
@@ -1417,8 +1434,54 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function updateBattleCamera() {
+        if (!activeBot || !battleEnemyBot || gameState !== 'BATTLE') return;
+
+        // Smash/Street Fighter style: Follow the midpoint
+        const midpoint = new THREE.Vector3()
+            .addVectors(activeBot.position, battleEnemyBot.position)
+            .multiplyScalar(0.5);
+        
+        // Calculate distance for zooming
+        const dist = activeBot.position.distanceTo(battleEnemyBot.position);
+        
+        // Target position based on midpoint and distance
+        // Closer = Lower/Zoomed In, Farther = Higher/Zoomed Out
+        const idealZ = Math.max(9, Math.min(22, dist + 6 - impactZoom));
+        const idealY = Math.max(3, dist * 0.3 + 2.5);
+        
+        const targetPos = new THREE.Vector3(midpoint.x, idealY, idealZ);
+        
+        // Smoothly lerp camera position
+        camera.position.lerp(targetPos, 0.08);
+        
+        // Target lookAt (Midpoint between bots)
+        const lookTarget = midpoint.clone().add(new THREE.Vector3(0, 2, 0));
+        cameraTarget.lerp(lookTarget, 0.1);
+        camera.lookAt(cameraTarget);
+        
+        // Decay impact effects
+        if (impactZoom > 0) impactZoom *= 0.9;
+        
+        // Apply Screen Shake
+        if (shakeIntensity > 0) {
+            camera.position.x += (Math.random() - 0.5) * shakeIntensity;
+            camera.position.y += (Math.random() - 0.5) * shakeIntensity;
+            shakeIntensity *= 0.85;
+            if (shakeIntensity < 0.01) shakeIntensity = 0;
+        }
+    }
+
     function animate() {
         requestAnimationFrame(animate);
+        
+        // Smash Hit Stop logic - freeze moving parts but KEEP RENDERING
+        if (hitStopTimer > 0) {
+            hitStopTimer--;
+            renderer.render(scene, camera);
+            return;
+        }
+
         TWEEN.update(performance.now());
         
         const t = clock.getElapsedTime();
@@ -1438,6 +1501,11 @@
         });
         if (battleEnemyBot) {
             battleEnemyBot.position.y = (battleEnemyBot.userData.startY || 0) + Math.sin(t * 3 + (battleEnemyBot.userData.bobOffset || 0)) * 0.2;
+        }
+
+        // Update Dynamic Camera in Battle
+        if (gameState === 'BATTLE') {
+            updateBattleCamera();
         }
 
         renderer.render(scene, camera);
