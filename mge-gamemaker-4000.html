@@ -433,21 +433,49 @@
     <main class="main-container">
         <!-- Left Sidebar: AI Consultant & Asset list -->
         <div class="sidebar">
-            <div class="panel-header">
-                <span>🤖 GAME PRODUCER AI</span>
-                <span style="color: var(--accent-success);">● Active</span>
+            <!-- Guided Progress -->
+            <div id="guided-progress" style="padding: 1rem; border-bottom: 1px solid var(--border); background: rgba(0, 242, 255, 0.05);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.7rem; font-weight: bold; color: var(--accent-primary);">
+                    <span>GUIDED CREATION</span>
+                    <span id="phase-step">PHASE 1/3</span>
+                </div>
+                <div style="height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
+                    <div id="progress-bar" style="width: 33%; height: 100%; background: var(--accent-primary); transition: width 0.5s ease;"></div>
+                </div>
+                <div id="phase-instruction" style="margin-top: 0.8rem; font-size: 0.85rem; color: #fff;">
+                    🏗️ <strong>Step 1:</strong> Build your world environment with platforms and lights!
+                </div>
+                <button id="next-phase-btn" class="btn" style="width: 100%; margin-top: 1rem; background: var(--accent-success); color: #000; justify-content: center;" onclick="nextPhase()">
+                    NEXT: SELECT GAME TYPE ➡️
+                </button>
             </div>
-            <div class="chat-pane">
+
+            <div class="chat-pane" id="chat-container">
                 <div id="chat-history">
                     <div class="msg msg-ai">
-                        <strong>Producer:</strong> Welcome to the studio! I'm here to help you build the next big hit. What kind of game should we make?
+                        <strong>Producer:</strong> Phase 1: <strong>World Building</strong>. Start by placing platforms and environment assets!
                     </div>
                 </div>
                 <div class="chat-input-area">
-                    <textarea id="ai-input" placeholder="Try: 'Create a red fast hero for player 2' or 'Start 2-player wizard'"></textarea>
+                    <textarea id="ai-input" placeholder="Ask for: 'Giant tower' or 'Lava floor'"></textarea>
                 </div>
-                <div style="padding: 0 1rem 1rem 1rem;">
-                    <button class="btn" style="width: 100%; background: var(--accent-tertiary); font-size: 0.8rem;" onclick="startWizard()">✨ 2-PLAYER WIZARD</button>
+            </div>
+
+            <!-- Game Type Selector (Hidden initially) -->
+            <div id="game-type-selector" style="display: none; padding: 1rem; border-bottom: 1px solid var(--border);">
+                <div class="panel-header" style="background: none; border: none; padding: 0 0 10px 0;">SELECT GENRE</div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;">
+                    <button class="btn" onclick="setGameType('battle')">⚔️ BATTLE MODE (2-Players)</button>
+                    <button class="btn" onclick="setGameType('race')">🏁 SPEED RACE (Timed)</button>
+                    <button class="btn" onclick="setGameType('mge')">🎮 MGE ADVENTURE (Quest)</button>
+                </div>
+            </div>
+
+            <!-- Customization Panel (Hidden initially) -->
+            <div id="customize-panel" style="display: none; padding: 1.5rem; background: rgba(112, 0, 255, 0.05);">
+                <h3 style="font-size: 0.9rem; color: var(--accent-secondary); margin-bottom: 1rem;">CUSTOMIZE GAMEPLAY</h3>
+                <div id="custom-options" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Injected via JS -->
                 </div>
             </div>
 
@@ -563,6 +591,8 @@
         let player1 = null;
         let player2 = null;
         let wizardStep = 0;
+        let guidedPhase = 1; // 1: World, 2: Type, 3: Customize
+        let gameType = null; // 'battle', 'race', 'mge'
         let score = 0;
         let clock = new THREE.Clock();
 
@@ -912,33 +942,93 @@
             }, 500);
         }
 
-        function startWizard() {
-            wizardStep = 1;
-            addMessage("Initializing 2-PLAYER WIZARD protocol. 🛠️", "ai");
-            setTimeout(() => {
-                addMessage("Step 1: Spawning Player 1. Controls: WASD.", "ai");
-                spawnObject('hero', {x: -2, y: 1, z: 0}, { color: 0x00f2ff, playerID: 1, logic: 'p1', name: "Player 1" });
+        // === GUIDED CREATION SYSTEM ===
+        function nextPhase() {
+            if (guidedPhase === 1) {
+                guidedPhase = 2;
+                document.getElementById('progress-bar').style.width = '66%';
+                document.getElementById('phase-step').innerText = 'PHASE 2/3';
+                document.getElementById('phase-instruction').innerHTML = '🎯 <strong>Step 2:</strong> What kind of game are we making?';
+                document.getElementById('next-phase-btn').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'none';
+                document.getElementById('game-type-selector').style.display = 'block';
                 
-                setTimeout(() => {
-                    addMessage("Step 2: Spawning Player 2. Controls: Arrow Keys.", "ai");
-                    spawnObject('hero', {x: 2, y: 1, z: 0}, { color: 0xff007b, playerID: 2, logic: 'p2', name: "Player 2" });
-                    
-                    setTimeout(() => {
-                        addMessage("Step 3: Creating the arena platforms.", "ai");
-                        for(let i=0; i<3; i++) {
-                            spawnObject('platform', {x: i*4-4, y: 0.1, z: 0});
-                        }
-                        
-                        setTimeout(() => {
-                            addMessage("Step 4: Adding Data Cores (Coins) and the End-Goal.", "ai");
-                            spawnObject('coin', {x: 0, y: 1, z: 4});
-                            spawnObject('goal', {x: 0, y: 1, z: 8});
-                            
-                            addMessage("2-Player environment ready! Press RUN GAME to test with a friend.", "ai");
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
-            }, 1000);
+                addMessage("Excellent world foundation! Now, click a game type below to define the rules of engagement.", "ai");
+            } else if (guidedPhase === 2) {
+                // This is triggered by setGameType
+            } else if (guidedPhase === 3) {
+                // Finalize or play
+                togglePlay();
+            }
+        }
+
+        function setGameType(type) {
+            gameType = type;
+            guidedPhase = 3;
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('phase-step').innerText = 'PHASE 3/3';
+            document.getElementById('game-type-selector').style.display = 'none';
+            document.getElementById('customize-panel').style.display = 'block';
+            document.getElementById('next-phase-btn').style.display = 'flex';
+            document.getElementById('next-phase-btn').innerText = '🚀 READY: LAUNCH GAME';
+            
+            let typeLabel = type.toUpperCase();
+            document.getElementById('phase-instruction').innerHTML = `✨ <strong>Step 3:</strong> Customizing your <strong>${typeLabel}</strong> experience!`;
+            
+            const options = document.getElementById('custom-options');
+            options.innerHTML = '';
+            
+            if (type === 'battle') {
+                addMessage("Battle Mode initialized. Let's add our combatants!", "ai");
+                options.innerHTML = `
+                    <button class="btn" style="border-color: var(--accent-primary);" onclick="spawnHero(1)">➕ ADD PLAYER 1 (Blue)</button>
+                    <button class="btn" style="border-color: var(--accent-tertiary);" onclick="spawnHero(2)">➕ ADD PLAYER 2 (Pink)</button>
+                    <button class="btn" onclick="spawnObject('enemy', {x: 5, y: 1, z: 5})">👾 ADD VIRUS BOT</button>
+                    <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 1rem;">Win by: Defeating all Virus bots or the other player!</div>
+                `;
+            } else if (type === 'race') {
+                addMessage("Race Mode selected. We need a starting line and a finish line!", "ai");
+                options.innerHTML = `
+                    <button class="btn" onclick="spawnHero(1)">👤 ADD RACER</button>
+                    <button class="btn" onclick="spawnObject('goal', {x: 0, y: 1, z: 20})">🏁 PLACE FINISH LINE</button>
+                    <button class="btn" onclick="spawnObject('coin', {x: 0, y: 1, z: 10})">💎 ADD SPEED BOOST (CORE)</button>
+                    <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 1rem;">Objective: Reach the Finish Line in record time!</div>
+                `;
+            } else if (type === 'mge') {
+                addMessage("MGE Quest mode confirmed. Build an adventure!", "ai");
+                options.innerHTML = `
+                    <button class="btn" onclick="spawnHero(1)">🦸 ADD HERO</button>
+                    <button class="btn" onclick="spawnObject('coin', {x: 0, y: 1, z: 5})">💎 ADD COLLECTIBLE</button>
+                    <button class="btn" onclick="spawnObject('goal', {x: 10, y: 1, z: 10})">🏁 ADD EXIT PORTAL</button>
+                    <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 1rem;">Objective: Collect all Cores and reach the Portal!</div>
+                `;
+            }
+        }
+
+        function spawnHero(playerID) {
+            const props = {
+                playerID: playerID,
+                logic: playerID === 2 ? 'p2' : 'p1',
+                color: playerID === 2 ? 0xff007b : 0x00f2ff,
+                name: `Player ${playerID}`
+            };
+            spawnObject('hero', {x: playerID === 2 ? 2 : -2, y: 1, z: 0}, props);
+        }
+
+        function startWizard() {
+            // Reset to guided flow
+            guidedPhase = 1;
+            gameType = null;
+            document.getElementById('progress-bar').style.width = '33%';
+            document.getElementById('phase-step').innerText = 'PHASE 1/3';
+            document.getElementById('phase-instruction').innerHTML = '🏗️ <strong>Step 1:</strong> Build your world environment with platforms and lights!';
+            document.getElementById('next-phase-btn').style.display = 'flex';
+            document.getElementById('next-phase-btn').innerText = 'NEXT: SELECT GAME TYPE ➡️';
+            document.getElementById('chat-container').style.display = 'flex';
+            document.getElementById('game-type-selector').style.display = 'none';
+            document.getElementById('customize-panel').style.display = 'none';
+            
+            addMessage("Guided Protocol Restarted. Let's build something amazing!", "ai");
         }
 
         // === ANIMATION LOOP ===
