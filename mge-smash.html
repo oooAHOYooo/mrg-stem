@@ -929,15 +929,15 @@
                 <div style="color: #ffeb3b; font-weight: 800; margin-bottom: 5px; text-transform: uppercase;">🔥 STEM Combos:</div>
                 <div class="control-item">
                     <span class="control-key" style="background: #4caf50;">Jump + ATK</span>
-                    <span>Backflip Smash</span>
+                    <span>Back/Front Flip Smash</span>
+                </div>
+                <div class="control-item">
+                    <span class="control-key" style="background: #e91e63;">Move + ATK</span>
+                    <span>Sideflip Side Smash</span>
                 </div>
                 <div class="control-item">
                     <span class="control-key" style="background: #f44336;">Air-High + ATK</span>
                     <span>Meteor Slam Down</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-key" style="background: #2196f3;">Top Screen</span>
-                    <span>Ceiling Rocket Bounce</span>
                 </div>
             </div>
         </div>
@@ -1259,7 +1259,8 @@
                 hasShield: false,
                 attackAnimation: 0,
                 specialAnimation: 0,
-                backflipAnimation: 0
+                backflipAnimation: 0,
+                flipType: 'back'
             },
             p2: {
                 percentage: 0,
@@ -1281,7 +1282,8 @@
                 hasShield: false,
                 attackAnimation: 0,
                 specialAnimation: 0,
-                backflipAnimation: 0
+                backflipAnimation: 0,
+                flipType: 'back'
             },
             p3: {
                 percentage: 0,
@@ -1303,6 +1305,8 @@
                 hasShield: false,
                 attackAnimation: 0,
                 specialAnimation: 0,
+                backflipAnimation: 0,
+                flipType: 'back',
                 isRobot: true
             }
         };
@@ -1928,13 +1932,29 @@
             // Attack
             if (controls.attack && player.attackCooldown <= 0) {
                 if (!player.onGround) {
-                    player.backflipAnimation = 20; // Start backflip
-                    performBackflipAttack(playerKey);
+                    // Air Attack - Front or Back flip
+                    const relativeVel = player.velocity.x * player.facing;
+                    if (relativeVel > 2) {
+                        player.flipType = 'front';
+                    } else {
+                        player.flipType = 'back';
+                    }
+                    player.backflipAnimation = 20; 
+                    performBackflipAttack(playerKey, player.flipType);
                     player.attackCooldown = ATTACK_COOLDOWN * 1.2;
                 } else {
-                    player.attackAnimation = 15; // Animation frames
-                    performAttack(playerKey);
-                    player.attackCooldown = ATTACK_COOLDOWN;
+                    // Grounded Attack
+                    if (Math.abs(player.velocity.x) > 4) {
+                        // Sideflip side smash (Dash attack)
+                        player.flipType = 'side';
+                        player.backflipAnimation = 20;
+                        performBackflipAttack(playerKey, 'side');
+                        player.attackCooldown = ATTACK_COOLDOWN * 1.5;
+                    } else {
+                        player.attackAnimation = 15; // Animation frames
+                        performAttack(playerKey);
+                        player.attackCooldown = ATTACK_COOLDOWN;
+                    }
                 }
             }
 
@@ -2044,12 +2064,19 @@
                 player.specialAnimation--;
             }
 
-            // Backflip animation overhaul
+            // Backflip / Frontflip / Sideflip animation overhaul
             if (player.backflipAnimation > 0) {
                 player.backflipAnimation--;
                 const progress = 1 - (player.backflipAnimation / 20);
-                // Rotate full 360 degrees
-                playerMesh.rotation.x = Math.PI * 2 * progress;
+                
+                if (player.flipType === 'side') {
+                    // Side rotation on Z axis
+                    playerMesh.rotation.z = Math.PI * 2 * progress * -player.facing;
+                } else {
+                    // Front or Back rotation on X axis
+                    const direction = player.flipType === 'back' ? 1 : -1;
+                    playerMesh.rotation.x = Math.PI * 2 * progress * direction;
+                }
                 
                 // Also tuck arms
                 if (leftArm && rightArm) {
@@ -2059,6 +2086,7 @@
                 
                 if (player.backflipAnimation === 0) {
                     playerMesh.rotation.x = 0;
+                    playerMesh.rotation.z = 0;
                     if (leftArm && rightArm) {
                         leftArm.rotation.x = 0;
                         rightArm.rotation.x = 0;
@@ -2074,7 +2102,7 @@
             }
         }
 
-        function performBackflipAttack(attackerKey) {
+        function performBackflipAttack(attackerKey, flipType) {
             const attacker = players[attackerKey];
             if (attacker.isDead) return;
 
@@ -2089,25 +2117,34 @@
                 const distance = Math.abs(attacker.position.x - defender.position.x);
                 const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
 
-                if (distance < ATTACK_RANGE * 1.3 && verticalDistance < 2.5) {
-                    const damage = (ATTACK_DAMAGE + 4) * attacker.damageMultiplier;
+                if (distance < ATTACK_RANGE * 1.5 && verticalDistance < 3) {
+                    const damage = (ATTACK_DAMAGE + 6) * attacker.damageMultiplier;
                     defender.percentage += damage;
-                    const knockbackStrength = (KNOCKBACK_BASE * 1.5) + (defender.percentage * KNOCKBACK_SCALING);
+                    const knockbackStrength = (KNOCKBACK_BASE * 1.8) + (defender.percentage * KNOCKBACK_SCALING);
                     const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
                     
-                    // Specific "slam down" knockback for backflip combos if close to ceiling
-                    if (attacker.position.y > 10) {
-                        defender.velocity.y = -knockbackStrength * 12; // Slam them down!
+                    // Meteor Smash or Side Blast
+                    if (flipType === 'side') {
+                        // Side Smash - heavy horizontal knockback
+                        defender.velocity.x += knockbackDir * knockbackStrength * 16;
+                        defender.velocity.y += knockbackStrength * 2;
+                    } else if (attacker.position.y > 10 && flipType === 'back') {
+                        // Meteor slam if backflip near ceiling
+                        defender.velocity.y = -knockbackStrength * 14; 
                     } else {
                         defender.velocity.x += knockbackDir * knockbackStrength * 10;
-                        defender.velocity.y += knockbackStrength * 6;
+                        defender.velocity.y += knockbackStrength * 8;
                     }
                     
                     defender.invulnerable = INVULNERABLE_TIME;
                     createHitEffect(defender.position, defender.color);
-                    screenShake(0.2);
+                    screenShake(0.3);
                     updateHealthBars();
-                    showCombo(attackerKey, 1, "BACKFLIP!");
+                    
+                    let label = "BACKFLIP!";
+                    if(flipType === 'front') label = "FRONTFLIP!";
+                    if(flipType === 'side') label = "SIDE SMASH!";
+                    showCombo(attackerKey, 1, label);
                 }
             });
         }
@@ -3121,6 +3158,10 @@
             players.p2.attackAnimation = 0;
             players.p1.specialAnimation = 0;
             players.p2.specialAnimation = 0;
+            players.p1.backflipAnimation = 0;
+            players.p2.backflipAnimation = 0;
+            players.p1.flipType = 'back';
+            players.p2.flipType = 'back';
             
             // Reset P3
             players.p3.percentage = 0;
