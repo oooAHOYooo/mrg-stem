@@ -495,6 +495,34 @@
         </div>
     </div>
 
+    <!-- Playtest Player Choice -->
+    <div id="playtest-choice" style="position:absolute; inset:0; background: rgba(0,0,0,0.70); backdrop-filter: blur(10px); display:none; z-index: 260; pointer-events:auto;">
+        <div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width: min(680px, 92vw); background: rgba(0,0,0,0.78); border:1px solid rgba(255,255,255,0.14); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,0.65); padding: 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom: 10px;">
+                <div>
+                    <div style="font-weight: 950; letter-spacing: 1px; color: var(--mge-gold);">▶ PLAYTEST: CHOOSE PLAYER</div>
+                    <div style="font-size:0.9rem; color: rgba(255,255,255,0.65);">Car = ramps + speed · Skater = tricks (E/R/F) + airtime</div>
+                </div>
+                <button class="mode-btn" id="choice-cancel" style="background: rgba(255,71,87,0.18); color: white; border: 1px solid rgba(255,71,87,0.45);">CANCEL</button>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <button class="tool-btn" id="choice-car" style="pointer-events:auto; text-align:left;">
+                    <span style="font-size:2rem;">🏎️</span>
+                    <span style="font-weight:900; font-size:1.05rem;">Car</span>
+                    <span style="font-size:0.85rem; color: rgba(255,255,255,0.65);">WASD drive · SPACE jump · SHIFT boost</span>
+                </button>
+                <button class="tool-btn" id="choice-skate" style="pointer-events:auto; text-align:left;">
+                    <span style="font-size:2rem;">🛹</span>
+                    <span style="font-weight:900; font-size:1.05rem;">Skater</span>
+                    <span style="font-size:0.85rem; color: rgba(255,255,255,0.65);">WASD ride · SPACE ollie · E/R/F tricks</span>
+                </button>
+            </div>
+            <div style="margin-top: 12px; font-size:0.8rem; color: rgba(255,255,255,0.5);">
+                You can switch later with the <b>PLAYER</b> button during playtest.
+            </div>
+        </div>
+    </div>
+
     <div class="controls-hint">
         BUILD: LMB Raise | Shift+LMB Lower | Flatten Tool | R-Drag Rotate | Wheel Zoom<br>
         PLAY: WASD Drive | SPACE Jump | SHIFT Boost | ESC Unlock
@@ -1335,7 +1363,21 @@
             grassSys.instanceMatrix.needsUpdate = true;
         };
 
+        let pendingStart = false;
+        function showPlaytestChoice(open) {
+            const overlay = document.getElementById('playtest-choice');
+            if (!overlay) return;
+            overlay.style.display = open ? 'block' : 'none';
+        }
+
         function startPlay() {
+            // Ask every time you playtest (unless already in the middle of choice flow)
+            if (!pendingStart) {
+                pendingStart = true;
+                showPlaytestChoice(true);
+                return;
+            }
+
             state.isPlaying = true;
             state.mode = 'play';
             document.getElementById('build-sidebar').style.display = 'none';
@@ -1357,6 +1399,8 @@
             else skater.position.set(0, 10, 0);
             orbit.enabled = false;
             brushRing.visible = false;
+            showPlaytestChoice(false);
+            pendingStart = false;
             document.body.requestPointerLock();
             if(state.carScript.length > 0) executeScript();
         }
@@ -1377,6 +1421,8 @@
             orbit.enabled = true;
             document.exitPointerLock();
             showShop(false);
+            showPlaytestChoice(false);
+            pendingStart = false;
             saveNow();
         }
 
@@ -1455,6 +1501,14 @@
         document.getElementById('toggle-player').onclick = () => {
             setPlayerType(state.playerType === 'car' ? 'skate' : 'car');
         };
+
+        // Playtest choice hooks
+        document.getElementById('choice-cancel').onclick = () => cancelPlay();
+        document.getElementById('playtest-choice').addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'playtest-choice') cancelPlay();
+        });
+        document.getElementById('choice-car').onclick = () => { setPlayerType('car'); startPlay(); };
+        document.getElementById('choice-skate').onclick = () => { setPlayerType('skate'); startPlay(); };
 
         window.onresize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
