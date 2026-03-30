@@ -220,7 +220,7 @@
     const cellSize = Math.floor(canvas.width / map.w);
 
     // Background
-    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillStyle = '#F0F0F0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Grid tiles
@@ -230,11 +230,11 @@
         const py = y * cellSize;
         const key = `${x},${y}`;
         const isWall = map.walls.has(key);
-        let fill = 'rgba(167,139,250,0.08)';
-        let stroke = 'rgba(167,139,250,0.12)';
+        let fill = 'white';
+        let stroke = '#E0E0E0';
         if (isWall) {
-          fill = 'rgba(17, 24, 39, 0.9)';
-          stroke = 'rgba(148,163,184,0.2)';
+          fill = '#4C97FF'; /* Scratch Blue */
+          stroke = '#3B82F6';
         }
         ctx.fillStyle = fill;
         ctx.fillRect(px, py, cellSize, cellSize);
@@ -285,13 +285,13 @@
       const px = actor.x * cellSize;
       const py = actor.y * cellSize;
       // Body
-      ctx.fillStyle = 'rgba(167,139,250,0.95)';
+      ctx.fillStyle = '#FFAB19'; /* Scratch Orange */
       ctx.fillRect(px + 8, py + 8, cellSize - 16, cellSize - 16);
       // Face direction
-      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.strokeRect(px + 7, py + 7, cellSize - 14, cellSize - 14);
-      ctx.fillStyle = '#0f111a';
+      ctx.fillStyle = 'white';
       ctx.font = `${Math.floor(cellSize * 0.55)}px Inter, system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -408,6 +408,8 @@
       const btn = document.createElement('button');
       btn.className = 'bc-block-btn';
       btn.type = 'button';
+      if (item.type === 'move' || item.type === 'turn') btn.style.background = '#4C97FF';
+      if (item.type === 'repeat') btn.style.background = '#FFAB19';
       btn.innerHTML = `<span style="font-size:1.15rem">${item.emoji}</span><span>${item.label}</span>`;
       btn.addEventListener('click', () => onPaletteAdd(item));
       elPalette.appendChild(btn);
@@ -437,10 +439,10 @@
   }
 
   function blockTypeColor(b) {
-    if (b.type === 'move') return { border: 'rgba(52,211,153,0.6)', bg: 'rgba(52,211,153,0.12)' };
-    if (b.type === 'turn') return { border: 'rgba(147,197,253,0.65)', bg: 'rgba(59,130,246,0.12)' };
-    if (b.type === 'repeat') return { border: 'rgba(167,139,250,0.75)', bg: 'rgba(167,139,250,0.12)' };
-    return { border: 'rgba(255,255,255,0.2)', bg: 'rgba(255,255,255,0.03)' };
+    if (b.type === 'move') return { border: 'rgba(0,0,0,0.15)', bg: '#4C97FF' };
+    if (b.type === 'turn') return { border: 'rgba(0,0,0,0.15)', bg: '#4C97FF' };
+    if (b.type === 'repeat') return { border: 'rgba(0,0,0,0.15)', bg: '#FFAB19' };
+    return { border: 'rgba(0,0,0,0.1)', bg: '#9966FF' };
   }
 
   function renderBlock(b, ctxInfo) {
@@ -546,20 +548,27 @@
       addRow.style.marginTop = '0.7rem';
 
       const dec = document.createElement('button');
-      dec.className = 'bc-btn';
+      dec.className = 'bc-icon-btn';
       dec.type = 'button';
       dec.textContent = '-';
-      dec.style.padding = '0.4rem 0.7rem';
       dec.addEventListener('click', () => {
         b.count = Math.max(0, (Number(b.count) || 0) - 1);
         renderScript();
       });
 
+      const countDisplay = document.createElement('span');
+      countDisplay.style.background = 'white';
+      countDisplay.style.color = '#333';
+      countDisplay.style.padding = '0.2rem 0.6rem';
+      countDisplay.style.borderRadius = '10px';
+      countDisplay.style.fontSize = '0.75rem';
+      countDisplay.style.fontWeight = '700';
+      countDisplay.textContent = b.count;
+
       const inc = document.createElement('button');
-      inc.className = 'bc-btn';
+      inc.className = 'bc-icon-btn';
       inc.type = 'button';
       inc.textContent = '+';
-      inc.style.padding = '0.4rem 0.7rem';
       inc.addEventListener('click', () => {
         b.count = Math.min(20, (Number(b.count) || 0) + 1);
         renderScript();
@@ -568,7 +577,10 @@
       const addMove = document.createElement('button');
       addMove.className = 'bc-btn';
       addMove.type = 'button';
-      addMove.textContent = '⬆️ Add Move';
+      addMove.textContent = '+Move';
+      addMove.style.background = '#4C97FF';
+      addMove.style.fontSize = '10px';
+      addMove.style.padding = '2px 6px';
       addMove.addEventListener('click', () => {
         b.children = b.children || [];
         b.children.push(makeMoveBlock());
@@ -578,7 +590,10 @@
       const addTurnLeft = document.createElement('button');
       addTurnLeft.className = 'bc-btn';
       addTurnLeft.type = 'button';
-      addTurnLeft.textContent = '↩️ Add Turn Left';
+      addTurnLeft.textContent = '+Left';
+      addTurnLeft.style.background = '#4C97FF';
+      addTurnLeft.style.fontSize = '10px';
+      addTurnLeft.style.padding = '2px 6px';
       addTurnLeft.addEventListener('click', () => {
         b.children = b.children || [];
         b.children.push(makeTurnBlock('left'));
@@ -588,7 +603,10 @@
       const addTurnRight = document.createElement('button');
       addTurnRight.className = 'bc-btn';
       addTurnRight.type = 'button';
-      addTurnRight.textContent = '↪️ Add Turn Right';
+      addTurnRight.textContent = '+Right';
+      addTurnRight.style.background = '#4C97FF';
+      addTurnRight.style.fontSize = '10px';
+      addTurnRight.style.padding = '2px 6px';
       addTurnRight.addEventListener('click', () => {
         b.children = b.children || [];
         b.children.push(makeTurnBlock('right'));
@@ -596,6 +614,7 @@
       });
 
       addRow.appendChild(dec);
+      addRow.appendChild(countDisplay);
       addRow.appendChild(inc);
       addRow.appendChild(addMove);
       addRow.appendChild(addTurnLeft);

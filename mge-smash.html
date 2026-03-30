@@ -1251,7 +1251,8 @@
                 damageMultiplier: 1,
                 hasShield: false,
                 attackAnimation: 0,
-                specialAnimation: 0
+                specialAnimation: 0,
+                backflipAnimation: 0
             },
             p2: {
                 percentage: 0,
@@ -1272,7 +1273,8 @@
                 damageMultiplier: 1,
                 hasShield: false,
                 attackAnimation: 0,
-                specialAnimation: 0
+                specialAnimation: 0,
+                backflipAnimation: 0
             },
             p3: {
                 percentage: 0,
@@ -1310,6 +1312,7 @@
         const PLATFORM_LEFT = -10;
         const PLATFORM_RIGHT = 10;
         const PLATFORM_TOP = 1;
+        const CEILING_Y = 15; // NEW: Interaction ceiling
         const DEATH_Y = -5;  // Fall off screen
         const DEATH_X = 15;  // Too far left/right
         const KNOCKBACK_BASE = 0.15;  // Base knockback multiplier
@@ -1429,6 +1432,20 @@
             bottomDeathZone.position.set(0, -3, 0);
             bottomDeathZone.rotation.x = Math.PI / 2;
             scene.add(bottomDeathZone);
+
+            // Ceiling Indicator (Visual only)
+            const ceilingGeo = new THREE.PlaneGeometry(40, 20);
+            const ceilingMat = new THREE.MeshBasicMaterial({
+                color: 0x9c27b0,
+                transparent: true,
+                opacity: 0.1,
+                side: THREE.DoubleSide,
+                wireframe: true
+            });
+            const ceilingVis = new THREE.Mesh(ceilingGeo, ceilingMat);
+            ceilingVis.position.set(0, CEILING_Y, 0);
+            ceilingVis.rotation.x = Math.PI / 2;
+            scene.add(ceilingVis);
 
             // Create players
             createPlayer(1);
@@ -1812,6 +1829,15 @@
             player.position.x += player.velocity.x * 0.016;
             player.position.y += player.velocity.y * 0.016;
 
+            // Ceiling collision (Rocket back down)
+            if (player.position.y > CEILING_Y) {
+                player.position.y = CEILING_Y;
+                player.velocity.y = -Math.abs(player.velocity.y) * 1.5 - 10; // Rocket down!
+                createCeilingEffect(player.position, player.color);
+                screenShake(0.3);
+                if(Math.random() > 0.5) triggerAnimeFlutter('damage');
+            }
+
             // Ground collision
             let grounded = false;
 
@@ -1894,9 +1920,15 @@
 
             // Attack
             if (controls.attack && player.attackCooldown <= 0) {
-                player.attackAnimation = 15; // Animation frames
-                performAttack(playerKey);
-                player.attackCooldown = ATTACK_COOLDOWN;
+                if (!player.onGround) {
+                    player.backflipAnimation = 20; // Start backflip
+                    performBackflipAttack(playerKey);
+                    player.attackCooldown = ATTACK_COOLDOWN * 1.2;
+                } else {
+                    player.attackAnimation = 15; // Animation frames
+                    performAttack(playerKey);
+                    player.attackCooldown = ATTACK_COOLDOWN;
+                }
             }
 
             // Special attack
@@ -2005,13 +2037,91 @@
                 player.specialAnimation--;
             }
 
+            // Backflip animation overhaul
+            if (player.backflipAnimation > 0) {
+                player.backflipAnimation--;
+                const progress = 1 - (player.backflipAnimation / 20);
+                // Rotate full 360 degrees
+                playerMesh.rotation.x = Math.PI * 2 * progress;
+                
+                // Also tuck arms
+                if (leftArm && rightArm) {
+                    leftArm.rotation.x = -Math.PI * 0.5;
+                    rightArm.rotation.x = -Math.PI * 0.5;
+                }
+                
+                if (player.backflipAnimation === 0) {
+                    playerMesh.rotation.x = 0;
+                    if (leftArm && rightArm) {
+                        leftArm.rotation.x = 0;
+                        rightArm.rotation.x = 0;
+                    }
+                }
+            }
+
             // Robot special effect (Constant glow when moving)
             if (player.isRobot) {
                 const group = playerMesh;
-                const tip = group.getObjectByProperty('type', 'Mesh'); // Finding any mesh to animate
                 // Just keep robot feeling "active"
                 group.position.y += Math.sin(Date.now() * 0.01) * 0.005;
             }
+        }
+
+        function performBackflipAttack(attackerKey) {
+            const attacker = players[attackerKey];
+            if (attacker.isDead) return;
+
+            createBackflipEffect(attacker.position, attacker.color);
+
+            // Backflip has slightly larger range and more knockback
+            Object.keys(players).forEach(defenderKey => {
+                if (defenderKey === attackerKey) return;
+                const defender = players[defenderKey];
+                if (defender.invulnerable > 0 || defender.isDead) return;
+
+                const distance = Math.abs(attacker.position.x - defender.position.x);
+                const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
+
+                if (distance < ATTACK_RANGE * 1.3 && verticalDistance < 2.5) {
+                    const damage = (ATTACK_DAMAGE + 4) * attacker.damageMultiplier;
+                    defender.percentage += damage;
+                    const knockbackStrength = (KNOCKBACK_BASE * 1.5) + (defender.percentage * KNOCKBACK_SCALING);
+                    const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
+                    
+                    // Specific "slam down" knockback for backflip combos if close to ceiling
+                    if (attacker.position.y > 10) {
+                        defender.velocity.y = -knockbackStrength * 12; // Slam them down!
+                    } else {
+                        defender.velocity.x += knockbackDir * knockbackStrength * 10;
+                        defender.velocity.y += knockbackStrength * 6;
+                    }
+                    
+                    defender.invulnerable = INVULNERABLE_TIME;
+                    createHitEffect(defender.position, defender.color);
+                    screenShake(0.2);
+                    updateHealthBars();
+                    showCombo(attackerKey, 1, "BACKFLIP!");
+                }
+            });
+        }
+
+        function createBackflipEffect(position, color) {
+            const geometry = new THREE.TorusGeometry(1.2, 0.1, 16, 100);
+            const material = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5 });
+            const ring = new THREE.Mesh(geometry, material);
+            ring.position.set(position.x, position.y + 0.5, position.z);
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+            
+            let scale = 0.5;
+            const anim = () => {
+                scale += 0.1;
+                ring.scale.set(scale, scale, 1);
+                material.opacity -= 0.05;
+                if (material.opacity > 0) requestAnimationFrame(anim);
+                else scene.remove(ring);
+            };
+            anim();
         }
 
         function performAttack(attackerKey) {
@@ -2240,6 +2350,46 @@
                 }
             };
             flashAnimate();
+        }
+
+        function createCeilingEffect(position, color) {
+            // Impact wave at ceiling
+            const geometry = new THREE.RingGeometry(0.5, 3, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+            const wave = new THREE.Mesh(geometry, material);
+            wave.position.set(position.x, CEILING_Y, position.z);
+            wave.rotation.x = Math.PI / 2;
+            scene.add(wave);
+
+            let scale = 0.1;
+            const animateWave = () => {
+                scale += 0.2;
+                wave.scale.set(scale, scale, scale);
+                material.opacity -= 0.04;
+                if (material.opacity > 0) requestAnimationFrame(animateWave);
+                else scene.remove(wave);
+            };
+            animateWave();
+
+            // Downward sparks
+            for (let i = 0; i < 10; i++) {
+                const particle = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.2, 0.5, 0.2),
+                    new THREE.MeshBasicMaterial({ color: color })
+                );
+                particle.position.set(position.x + (Math.random()-0.5)*2, CEILING_Y, position.z);
+                scene.add(particle);
+                
+                const vel = { x: (Math.random()-0.5)*0.2, y: -0.2 - Math.random()*0.3 };
+                const animP = () => {
+                    particle.position.x += vel.x;
+                    particle.position.y += vel.y;
+                    particle.material.opacity -= 0.05;
+                    if (particle.material.opacity > 0) requestAnimationFrame(animP);
+                    else scene.remove(particle);
+                };
+                animP();
+            }
         }
 
         function createSpecialEffect(position) {
@@ -2655,9 +2805,9 @@
             }
         }
 
-        function showCombo(playerKey, count) {
+        function showCombo(playerKey, count, label) {
             const comboDisplay = document.getElementById('combo-display');
-            comboDisplay.textContent = `${count}x COMBO!`;
+            comboDisplay.textContent = label ? label : `${count}x COMBO!`;
             comboDisplay.style.color = playerKey === 'p1' ? '#ff6b6b' : '#4ecdc4';
             comboDisplay.classList.add('show');
 

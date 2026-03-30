@@ -36,7 +36,7 @@
 <body>
     <a href="index.html" class="btn-hub wood-panel">◂ Return to Summer Hub</a>
     <div id="crosshair"></div>
-    <div id="instruction-text">Defeat Bosses and solve puzzles to capture them!</div>
+    <div id="instruction-text">Bounce higher and higher to reach Space and find the Floating Castle!</div>
     <div id="ui" class="wood-panel">
         <h3>Ranger's Journal</h3>
         <p style="font-size: 16px; border-bottom: 2px solid rgba(0,0,0,0.5); padding-bottom: 10px; margin-bottom: 15px;">Captures: <span id="score" style="color: #dfc27d; font-weight:900; font-size: 22px;">0</span></p>
@@ -60,12 +60,12 @@
     
     <div id="instructions">
         <h1 class="fantasy-text" style="font-size: 64px;">AERO RANGERS</h1>
-        <h2 style="color: #dfc27d; font-size: 16px; letter-spacing: 12px; margin-bottom: 40px; text-transform: uppercase;">Balloon Extractors Edition</h2>
+        <h2 style="color: #dfc27d; font-size: 16px; letter-spacing: 12px; margin-bottom: 40px; text-transform: uppercase;">Cosmic Bound Edition</h2>
         
         <div class="wood-panel" style="padding: 40px 50px; text-align: center; max-width: 600px;">
             <p style="font-size: 16px; color: #f5f5dc; margin-bottom: 30px; line-height: 1.8; text-shadow: 1px 1px 1px #000;">
-                Use your Balloon Magic to make ANYTHING float into the sky!<br>
-                Shoot balloons at enemies, trees, rocks, or your own crates to experiment with flight. Gather materials, build towers, and launch the floating sky-islands!
+                Reach for the stars! Bounce on crates and pads to climb into Space.<br>
+                Find the legendary Floating Castle in the cosmos and use its trampoline to fly even higher! Create your own path with magic balloons.
             </p>
             <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; color: #dfc27d; font-size: 13px; font-weight: bold;">
                 <span style="background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 4px; border: 1px solid #3b2f2f;">[WASD] MOVE</span>
@@ -130,8 +130,24 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(colors.sky); 
-            scene.fog = new THREE.FogExp2(colors.sky, 0.004);
+            scene.background = new THREE.Color(0x87ceeb); 
+            scene.fog = new THREE.FogExp2(0x87ceeb, 0.002);
+
+            const stars = new THREE.Group();
+            const starGeo = new THREE.SphereGeometry(0.5, 8, 8);
+            const starMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+            for(let i=0; i<2000; i++) {
+                const star = new THREE.Mesh(starGeo, starMat);
+                star.position.set(
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random()) * 2000 + 500,
+                    (Math.random() - 0.5) * 2000
+                );
+                stars.add(star);
+            }
+            stars.visible = false;
+            scene.add(stars);
+            scene.userData.stars = stars;
 
             const w = window.innerWidth || 1024;
             const h = window.innerHeight || 768;
@@ -197,7 +213,7 @@
             scene.add(camera);
 
             // Vast Grass Ground
-            const planeGeo = new THREE.PlaneGeometry(800, 800);
+            const planeGeo = new THREE.PlaneGeometry(2000, 2000);
             const planeMat = new THREE.MeshStandardMaterial({ color: colors.grass, roughness: 1.0, metalness: 0.0 });
             const plane = new THREE.Mesh(planeGeo, planeMat);
             plane.rotation.x = -Math.PI / 2;
@@ -217,7 +233,7 @@
             const leafGeo = new THREE.DodecahedronGeometry(8);
             const leafMat = new THREE.MeshStandardMaterial({ color: colors.leaf, roughness: 0.8 });
             
-            for ( let i = 0; i < 50; i ++ ) {
+            for ( let i = 0; i < 80; i ++ ) {
                 // Trees
                 const tree = new THREE.Group();
                 const trunk = new THREE.Mesh( trunkGeo, trunkMat );
@@ -227,8 +243,8 @@
                 leaves.position.y = 16;
                 tree.add(leaves);
                 
-                tree.position.x = Math.floor( Math.random() * 40 - 20 ) * 10;
-                tree.position.z = Math.floor( Math.random() * 40 - 20 ) * 10;
+                tree.position.x = (Math.random() - 0.5) * 1200;
+                tree.position.z = (Math.random() - 0.5) * 1200;
                 tree.userData = { isEnvironment: true, capturing: false };
                 scene.add( tree );
                 interactiveObjects.push(tree);
@@ -241,38 +257,30 @@
                 interactiveObjects.push(rock);
             }
 
-            // Archery Targets
-            for(let i=0; i<15; i++) {
-                const trgGrp = new THREE.Group();
-                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 10), new THREE.MeshStandardMaterial({color: colors.darkWood}));
-                post.position.y = 5;
-                trgGrp.add(post);
-                
-                const bMat1 = new THREE.MeshBasicMaterial({color: 0xffffff});
-                const bMat2 = new THREE.MeshBasicMaterial({color: 0xff0000});
-                const boardGroup = new THREE.Group();
-                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 0.5, 16), bMat1));
-                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.6, 16), bMat2));
-                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.7, 16), bMat1));
-                boardGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.8, 16), bMat2));
-                
-                boardGroup.rotation.x = Math.PI/2;
-                boardGroup.position.set(0, 8, 1);
-                trgGrp.add(boardGroup);
-                
-                trgGrp.position.set((Math.random()-0.5)*300, 0, (Math.random()-0.5)*300);
-                trgGrp.rotation.y = Math.random() * Math.PI * 2;
-                trgGrp.userData = { isEnvironment: true, capturing: false, isTarget: true, board: boardGroup };
-                scene.add(trgGrp);
-                interactiveObjects.push(trgGrp);
+            // Sky Islands (More terrain)
+            for (let i = 0; i < 25; i++) {
+                const height = 100 + Math.random() * 800;
+                const island = createSkyIsland(
+                    (Math.random() - 0.5) * 1000,
+                    height,
+                    (Math.random() - 0.5) * 1000,
+                    20 + Math.random() * 30
+                );
+                scene.add(island);
+                interactiveObjects.push(island);
             }
 
-            // Spawn Enemies
-            for(let i=0; i<30; i++) spawnEnemy();
+            // THE FLOATING CASTLE (In Space)
+            const castle = createFloatingCastle(0, 1500, 0);
+            scene.add(castle);
+            interactiveObjects.push(castle);
+
+            // Enemies cleared (previously 30) - keep only a few for testing or none
+            // for(let i=0; i<30; i++) spawnEnemy(); 
             
-            // Spawn Bosses
-            spawnBoss('Troll', -80, -80);
-            spawnBoss('Dragon', 80, 80);
+            // Bosses cleared
+            // spawnBoss('Troll', -80, -80);
+            // spawnBoss('Dragon', 80, 80);
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true }); 
@@ -336,6 +344,66 @@
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseDown);
             window.addEventListener('resize', onWindowResize);
+        }
+
+        function createSkyIsland(x, y, z, size) {
+            const group = new THREE.Group();
+            const geo = new THREE.DodecahedronGeometry(size, 0);
+            const mat = new THREE.MeshStandardMaterial({color: 0x664422, roughness: 1});
+            const base = new THREE.Mesh(geo, mat);
+            base.scale.y = 0.5;
+            group.add(base);
+
+            const grassMat = new THREE.MeshStandardMaterial({color: 0x44aa44});
+            const top = new THREE.Mesh(new THREE.CylinderGeometry(size, size*0.8, 2, 8), grassMat);
+            top.position.y = size * 0.2;
+            group.add(top);
+
+            group.position.set(x, y, z);
+            group.userData = { isEnvironment: true, capturing: false, name: 'SkyIsland' };
+            return group;
+        }
+
+        function createFloatingCastle(x, y, z) {
+            const castle = new THREE.Group();
+            
+            // Floor (The Trampoline)
+            const floorGeo = new THREE.CylinderGeometry(100, 100, 10, 32);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x4444ff,
+                emissive: 0x111166,
+                metalness: 0.9,
+                roughness: 0.1
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            castle.add(floor);
+
+            // Glowing circle in middle
+            const coreGeo = new THREE.CylinderGeometry(40, 40, 11, 32);
+            const coreMat = new THREE.MeshBasicMaterial({color: 0x88ffff});
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            castle.add(core);
+            castle.userData.core = core;
+
+            // Pillars
+            for(let i=0; i<8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const pillar = new THREE.Group();
+                const pBase = new THREE.Mesh(new THREE.BoxGeometry(15, 60, 15), new THREE.MeshStandardMaterial({color: 0xdddddd}));
+                pBase.position.y = 30;
+                pillar.add(pBase);
+                
+                const pCap = new THREE.Mesh(new THREE.ConeGeometry(12, 20, 4), new THREE.MeshStandardMaterial({color: 0xffaa00}));
+                pCap.position.y = 70;
+                pillar.add(pCap);
+
+                pillar.position.set(Math.cos(angle) * 85, 0, Math.sin(angle) * 85);
+                castle.add(pillar);
+            }
+
+            castle.position.set(x, y, z);
+            castle.userData = { isEnvironment: true, capturing: false, name: 'SpaceTrampoline' };
+            return castle;
         }
 
         function spawnEnemy() {
@@ -786,10 +854,16 @@
                         
                         // Bounce mechanics!
                         if (activePlatform && activePlatform.userData.name === 'BouncePad') {
-                            playerVelocityY = 120; // BOING!
+                            playerVelocityY = 240; // Double the fun
                             camera.position.y += 2; // Detach
+                        } else if (activePlatform && activePlatform.userData.name === 'SpaceTrampoline') {
+                            playerVelocityY = 600; // SUPER COSMIC BOING!
+                            camera.position.y += 2;
+                        } else if (activePlatform && activePlatform.userData.name === 'Crate') {
+                            playerVelocityY = 140; // Small bounce for building!
+                            camera.position.y += 2;
                         } else if (moveUp) { // Normal Jump
-                            playerVelocityY = 50;
+                            playerVelocityY = 60;
                         }
                     }
                 }
@@ -811,11 +885,28 @@
                     if (moveDown) activePlatform.position.y -= speed * 2.0; 
                 }
                 
+                // Space Transition
+                const height = camera.position.y;
+                if (height > 100) {
+                    const alpha = Math.min(1, (height - 200) / 800);
+                    const skyColor = new THREE.Color(0x87ceeb);
+                    const spaceColor = new THREE.Color(0x050510);
+                    scene.background.lerpColors(skyColor, spaceColor, alpha);
+                    scene.fog.color.copy(scene.background);
+                    
+                    if (height > 600) {
+                        scene.userData.stars.visible = true;
+                        scene.userData.stars.position.y = height - 1000; // keep stars around us
+                    } else {
+                        scene.userData.stars.visible = false;
+                    }
+                }
+
                 // Boundaries
-                if (camera.position.x < -380) camera.position.x = -380;
-                if (camera.position.x > 380) camera.position.x = 380;
-                if (camera.position.z < -380) camera.position.z = -380;
-                if (camera.position.z > 380) camera.position.z = 380;
+                if (camera.position.x < -1000) camera.position.x = -1000;
+                if (camera.position.x > 1000) camera.position.x = 1000;
+                if (camera.position.z < -1000) camera.position.z = -1000;
+                if (camera.position.z > 1000) camera.position.z = 1000;
             }
 
             checkCollisions();
@@ -840,9 +931,11 @@
                 }
             }
 
-            // Environment items floating & falling (Anchors)
-            interactiveObjects.forEach((e, index) => {
-                if (e.userData.spinSpeed) {
+                interactiveObjects.forEach((e, index) => {
+                    if (e.userData.name === 'SpaceTrampoline') {
+                        e.userData.core.material.color.setHSL((time * 0.0002) % 1, 1, 0.7);
+                    }
+                    if (e.userData.spinSpeed) {
                     e.userData.board.rotation.y += e.userData.spinSpeed * delta;
                     e.userData.spinSpeed *= 0.95;
                 }
