@@ -465,6 +465,36 @@
         <div style="font-size: 0.8rem; color: #aaa;">UNITS / SEC</div>
     </div>
 
+    <!-- Wallet + Shop -->
+    <div class="car-hud" id="wallet-hud" style="right: 40px; bottom: 200px; padding: 16px 18px; display:none; gap:8px;">
+        <div style="font-size: 0.8rem; color: #aaa;">CURRENCY</div>
+        <div style="font-size: 1.4rem; font-weight: 900; color: var(--mge-gold); text-shadow: 0 0 12px rgba(255,165,2,0.6);">
+            🪙 <span id="currency-display">0</span>
+        </div>
+        <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15);">SHOP</button>
+        <button class="mode-btn" id="toggle-player" style="background: rgba(30,144,255,0.15); color: white; border:1px solid rgba(30,144,255,0.4);">PLAYER: CAR</button>
+        <div style="font-size:0.7rem; color: rgba(255,255,255,0.45); text-align:center;">
+            Earn 🪙 from airtime + speed
+        </div>
+    </div>
+
+    <div id="shop-overlay" style="position:absolute; inset:0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); display:none; z-index: 250; pointer-events:auto;">
+        <div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width: min(720px, 92vw); max-height: min(560px, 80vh); overflow:auto; background: rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 25px 70px rgba(0,0,0,0.6); padding: 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+                <div>
+                    <div style="font-weight:900; letter-spacing:1px; color: var(--mge-gold);">🏁 CAR SHOP</div>
+                    <div style="font-size:0.85rem; color: rgba(255,255,255,0.55);">Buy cars with airtime+speed currency. Equip any owned car.</div>
+                </div>
+                <button class="mode-btn" id="close-shop" style="background: rgba(255,71,87,0.18); color: white; border: 1px solid rgba(255,71,87,0.45);">CLOSE</button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-bottom:12px;">
+                <div style="font-weight:800;">Balance: 🪙 <span id="shop-balance">0</span></div>
+                <div style="font-size:0.8rem; color: rgba(255,255,255,0.6);">Tip: build ramps in BUILD mode, then test in PLAY mode.</div>
+            </div>
+            <div id="shop-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
+        </div>
+    </div>
+
     <div class="controls-hint">
         BUILD: LMB Raise | Shift+LMB Lower | Flatten Tool | R-Drag Rotate | Wheel Zoom<br>
         PLAY: WASD Drive | SPACE Jump | SHIFT Boost | ESC Unlock
@@ -489,7 +519,26 @@
             mouseButton: -1,
             carScript: [],
             isPlaying: false,
-            lastPoint: new THREE.Vector3()
+            lastPoint: new THREE.Vector3(),
+
+            // Player + economy
+            playerType: 'car', // 'car' | 'skate'
+            currency: 0,
+            ownedCars: new Set(),
+            equippedCarId: 'starter',
+
+            // Airtime + speed earnings
+            isAirborne: false,
+            airTimeSec: 0,
+            lastGroundY: 0,
+            lastEarnAt: 0,
+
+            // Skate trick state
+            skateFlipSpin: 0,
+            skateBackflip: 0,
+            skateYawSpin: 0,
+            lastTrickAt: 0,
+            trickTextUntil: 0
         };
 
         // --- THREE.JS INITIALIZATION ---
@@ -654,6 +703,32 @@
         car.visible = false;
         scene.add(car);
 
+        // --- SKATEBOARDER MODEL (simple) ---
+        const skater = new THREE.Group();
+        const boardGroup = new THREE.Group(); // rotates for tricks
+        const deck = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(1.0, 0.12, 2.6),
+            new THREE.MeshStandardMaterial({ color: 0x1e90ff, metalness: 0.2, roughness: 0.35 })
+        );
+        deck.castShadow = true;
+        deck.position.y = 0.18;
+        boardGroup.add(deck);
+        const sWheelGeom = new THREE.CylinderBufferGeometry(0.14, 0.14, 0.55, 12);
+        sWheelGeom.rotateZ(Math.PI / 2);
+        const sWheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+        const sw1 = new THREE.Mesh(sWheelGeom, sWheelMat); sw1.position.set(0, 0.12, 0.9); boardGroup.add(sw1);
+        const sw2 = new THREE.Mesh(sWheelGeom, sWheelMat); sw2.position.set(0, 0.12, -0.9); boardGroup.add(sw2);
+        skater.add(boardGroup);
+        const rider = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.28, 0.9, 8, 16),
+            new THREE.MeshStandardMaterial({ color: 0xffa502, roughness: 0.4 })
+        );
+        rider.castShadow = true;
+        rider.position.y = 1.05;
+        skater.add(rider);
+        skater.visible = false;
+        scene.add(skater);
+
         // --- CAMERA CONTROLS ---
         const orbit = new THREE.OrbitControls(camera, renderer.domElement);
         orbit.enableDamping = true;
@@ -800,12 +875,169 @@
         let carYaw = 0;
         const keys = {};
 
+        // --- ECONOMY + SHOP ---
+        const STORAGE_KEY = 'mge_terrain_editor_save_v1';
+        const carCatalog = [
+            { id: 'starter', name: 'Starter Buggy', price: 0, color: 0xff4757, accel: 6.0, boostAccel: 15.0, turn: 1.8, grip: 0.98 },
+            { id: 'rocket',  name: 'Rocket RC',      price: 250, color: 0x7bed9f, accel: 7.8, boostAccel: 19.0, turn: 1.6, grip: 0.985 },
+            { id: 'drifter', name: 'Neon Drifter',   price: 400, color: 0x1e90ff, accel: 6.8, boostAccel: 16.5, turn: 2.35, grip: 0.965 },
+            { id: 'tank',    name: 'Mini Tank',      price: 600, color: 0x888888, accel: 5.6, boostAccel: 14.0, turn: 1.35, grip: 0.99 }
+        ];
+
+        function loadSave() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (typeof data.currency === 'number') state.currency = Math.max(0, Math.floor(data.currency));
+                if (Array.isArray(data.ownedCars)) state.ownedCars = new Set(data.ownedCars);
+                if (typeof data.equippedCarId === 'string') state.equippedCarId = data.equippedCarId;
+                if (!state.ownedCars.has('starter')) state.ownedCars.add('starter');
+                if (!carCatalog.some(c => c.id === state.equippedCarId)) state.equippedCarId = 'starter';
+            } catch (_) {
+                // ignore corrupted saves
+            }
+        }
+        function saveNow() {
+            const data = {
+                currency: Math.max(0, Math.floor(state.currency)),
+                ownedCars: Array.from(state.ownedCars),
+                equippedCarId: state.equippedCarId
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        function addCurrency(amount) {
+            if (!Number.isFinite(amount) || amount <= 0) return;
+            state.currency = Math.floor(state.currency + amount);
+            updateWalletUI();
+        }
+        function updateWalletUI() {
+            const el = document.getElementById('currency-display');
+            const sb = document.getElementById('shop-balance');
+            if (el) el.innerText = String(Math.floor(state.currency));
+            if (sb) sb.innerText = String(Math.floor(state.currency));
+        }
+        function getEquippedCar() {
+            return carCatalog.find(c => c.id === state.equippedCarId) || carCatalog[0];
+        }
+        function applyCarAppearance() {
+            const cfg = getEquippedCar();
+            bodyMesh.material.color.setHex(cfg.color);
+        }
+
+        function renderShop() {
+            const list = document.getElementById('shop-list');
+            if (!list) return;
+            list.innerHTML = '';
+            const bal = Math.floor(state.currency);
+            carCatalog.forEach(cfg => {
+                const owned = state.ownedCars.has(cfg.id);
+                const equipped = state.equippedCarId === cfg.id;
+                const canBuy = !owned && bal >= cfg.price;
+                const card = document.createElement('div');
+                card.style.background = 'rgba(255,255,255,0.06)';
+                card.style.border = '1px solid rgba(255,255,255,0.10)';
+                card.style.borderRadius = '16px';
+                card.style.padding = '12px';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.gap = '10px';
+
+                const badge = document.createElement('div');
+                badge.style.display = 'flex';
+                badge.style.alignItems = 'center';
+                badge.style.justifyContent = 'space-between';
+                badge.innerHTML = `<div style="font-weight:900;">${cfg.name}</div><div style="font-weight:800; color: var(--mge-gold);">🪙 ${cfg.price}</div>`;
+                card.appendChild(badge);
+
+                const preview = document.createElement('div');
+                preview.style.height = '38px';
+                preview.style.borderRadius = '12px';
+                preview.style.background = `linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)), #${cfg.color.toString(16).padStart(6,'0')}`;
+                preview.style.border = '1px solid rgba(0,0,0,0.25)';
+                card.appendChild(preview);
+
+                const stats = document.createElement('div');
+                stats.style.fontSize = '0.8rem';
+                stats.style.color = 'rgba(255,255,255,0.65)';
+                stats.innerHTML =
+                    `Accel: <b>${cfg.accel.toFixed(1)}</b> · Boost: <b>${cfg.boostAccel.toFixed(1)}</b><br>` +
+                    `Turn: <b>${cfg.turn.toFixed(2)}</b> · Grip: <b>${cfg.grip.toFixed(3)}</b>`;
+                card.appendChild(stats);
+
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.gap = '8px';
+
+                const btn = document.createElement('button');
+                btn.className = 'mode-btn';
+                btn.style.flex = '1';
+                btn.style.background = owned ? (equipped ? 'rgba(123,237,159,0.20)' : 'rgba(30,144,255,0.18)') : (canBuy ? 'rgba(123,237,159,0.20)' : 'rgba(255,255,255,0.06)');
+                btn.style.border = owned ? '1px solid rgba(255,255,255,0.18)' : (canBuy ? '1px solid rgba(123,237,159,0.40)' : '1px solid rgba(255,255,255,0.10)');
+                btn.style.color = 'white';
+
+                if (equipped) btn.innerText = 'EQUIPPED';
+                else if (owned) btn.innerText = 'EQUIP';
+                else btn.innerText = canBuy ? 'BUY' : 'NEED MORE 🪙';
+
+                btn.onclick = () => {
+                    if (equipped) return;
+                    if (owned) {
+                        state.equippedCarId = cfg.id;
+                        applyCarAppearance();
+                        saveNow();
+                        renderShop();
+                        return;
+                    }
+                    if (state.currency >= cfg.price) {
+                        state.currency -= cfg.price;
+                        state.ownedCars.add(cfg.id);
+                        state.equippedCarId = cfg.id;
+                        applyCarAppearance();
+                        saveNow();
+                        updateWalletUI();
+                        renderShop();
+                    }
+                };
+                actions.appendChild(btn);
+                card.appendChild(actions);
+
+                list.appendChild(card);
+            });
+        }
+
+        function showShop(open) {
+            const overlay = document.getElementById('shop-overlay');
+            if (!overlay) return;
+            overlay.style.display = open ? 'block' : 'none';
+            updateWalletUI();
+            if (open) renderShop();
+        }
+
+        function setPlayerType(t) {
+            state.playerType = (t === 'skate') ? 'skate' : 'car';
+            const btn = document.getElementById('toggle-player');
+            if (btn) btn.innerText = `PLAYER: ${state.playerType === 'car' ? 'CAR' : 'SKATER'}`;
+            // visibility
+            car.visible = state.isPlaying && state.playerType === 'car';
+            skater.visible = state.isPlaying && state.playerType === 'skate';
+        }
+
+        function showTrickText(text) {
+            const notif = document.getElementById('notification');
+            if (!notif) return;
+            notif.innerText = text;
+            notif.style.opacity = 1;
+            state.trickTextUntil = performance.now() + 900;
+        }
+
         function moveCar(delta) {
             if(!state.isPlaying) return;
 
-            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 15 : 6; // Much slower
-            const friction = 0.98;
-            const turnSpeed = 1.8; // Slower turn
+            const cfg = getEquippedCar();
+            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? cfg.boostAccel : cfg.accel;
+            const friction = cfg.grip;
+            const turnSpeed = cfg.turn;
             const grav = 50;
 
             if(keys['KeyA']) carYaw += turnSpeed * delta;
@@ -847,6 +1079,9 @@
             const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
             document.getElementById('speed-display').innerText = spd.toString().padStart(2, '0');
 
+            // Currency earning: speed + airtime
+            earnCurrencyFromMotion(delta, spd, car.position.y, groundY);
+
             // Chase Cam
             const camTarget = car.position.clone().add(new THREE.Vector3(0, 8, -18).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw));
             camera.position.lerp(camTarget, 0.1);
@@ -854,6 +1089,151 @@
             
             // Wheel Spin
             wheels.forEach(w => w.rotation.x += spd * delta);
+        }
+
+        function moveSkater(delta) {
+            if(!state.isPlaying) return;
+
+            // Skate "feel" (simple, similar to skaterGame but adapted to terrain ground)
+            const pushAccel = 7.5;
+            const maxSpeed = 22;
+            const friction = 0.94;
+            const turnSpeed = 2.4;
+            const grav = 50;
+
+            // yaw control
+            if(keys['KeyA']) carYaw += turnSpeed * delta;
+            if(keys['KeyD']) carYaw -= turnSpeed * delta;
+
+            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw);
+            if(keys['KeyW']) carVel.add(fwd.clone().multiplyScalar(pushAccel * delta));
+            if(keys['KeyS']) carVel.sub(fwd.clone().multiplyScalar(pushAccel * delta * 0.55));
+
+            // cap speed
+            const planar = new THREE.Vector2(carVel.x, carVel.z);
+            if (planar.length() > maxSpeed) {
+                planar.setLength(maxSpeed);
+                carVel.x = planar.x;
+                carVel.z = planar.y;
+            }
+
+            carVel.x *= friction;
+            carVel.z *= friction;
+
+            skater.position.x += carVel.x * delta * 8;
+            skater.position.z += carVel.z * delta * 8;
+
+            // boundaries
+            const bound = terrainSize / 2 - 5;
+            if (skater.position.x > bound) { skater.position.x = bound; carVel.x = 0; }
+            if (skater.position.x < -bound) { skater.position.x = -bound; carVel.x = 0; }
+            if (skater.position.z > bound) { skater.position.z = bound; carVel.z = 0; }
+            if (skater.position.z < -bound) { skater.position.z = -bound; carVel.z = 0; }
+
+            skater.position.y += carVel.y * delta;
+
+            const groundY = findGround(skater.position.x, skater.position.z);
+            const onGround = skater.position.y < groundY + 0.45;
+            if(onGround) {
+                skater.position.y = groundY + 0.45;
+                if(carVel.y < 0) carVel.y = 0;
+            } else {
+                carVel.y -= grav * delta;
+            }
+
+            // Jump (ollie)
+            if(keys['Space'] && onGround) {
+                carVel.y = 20;
+            }
+
+            // Tricks (only in air; small cooldown)
+            const now = performance.now();
+            const canTrick = !onGround && (now - state.lastTrickAt) > 220;
+            if (canTrick) {
+                if (keys['KeyE']) { // kickflip
+                    state.skateFlipSpin += Math.PI * 2;
+                    state.lastTrickAt = now;
+                    showTrickText('KICKFLIP!');
+                } else if (keys['KeyR']) { // backflip
+                    state.skateBackflip += Math.PI * 2;
+                    state.lastTrickAt = now;
+                    showTrickText('BACKFLIP!');
+                } else if (keys['KeyF']) { // 360 flip
+                    state.skateFlipSpin += Math.PI * 2;
+                    state.skateYawSpin += Math.PI * 2;
+                    state.lastTrickAt = now;
+                    showTrickText('360 FLIP!');
+                }
+            }
+
+            // Apply trick rotations smoothly
+            const spinRate = Math.PI * 7 * delta;
+            if (state.skateFlipSpin !== 0) {
+                const step = THREE.MathUtils.clamp(state.skateFlipSpin, -spinRate, spinRate);
+                boardGroup.rotation.z += step;
+                state.skateFlipSpin -= step;
+            }
+            if (state.skateBackflip !== 0) {
+                const step = THREE.MathUtils.clamp(state.skateBackflip, -spinRate, spinRate);
+                skater.rotation.x += step * 0.65;
+                state.skateBackflip -= step;
+            } else {
+                skater.rotation.x = THREE.MathUtils.lerp(skater.rotation.x, 0, 0.12);
+            }
+            if (state.skateYawSpin !== 0) {
+                const step = THREE.MathUtils.clamp(state.skateYawSpin, -spinRate, spinRate);
+                boardGroup.rotation.y += step;
+                state.skateYawSpin -= step;
+            } else {
+                boardGroup.rotation.y = THREE.MathUtils.lerp(boardGroup.rotation.y, 0, 0.12);
+            }
+
+            skater.rotation.y = carYaw;
+
+            // Speed UI
+            const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
+            document.getElementById('speed-display').innerText = spd.toString().padStart(2, '0');
+
+            earnCurrencyFromMotion(delta, spd, skater.position.y, groundY);
+
+            // Chase cam
+            const camTarget = skater.position.clone().add(new THREE.Vector3(0, 10, -20).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw));
+            camera.position.lerp(camTarget, 0.1);
+            camera.lookAt(skater.position.clone().add(new THREE.Vector3(0,1.2,0)));
+        }
+
+        function earnCurrencyFromMotion(delta, speedUi, y, groundY) {
+            // Speed currency: pay per second when moving fast (ramps help keep speed)
+            const speed = speedUi; // already scaled for UI
+            const speedThreshold = 14;
+            const speedRate = 0.18; // coins/sec at threshold; scales with speed
+            if (speed > speedThreshold) {
+                addCurrency((speed - speedThreshold) * speedRate * delta);
+            }
+
+            // Airtime: count when above ground by a small margin, payout on landing
+            const airborne = y > groundY + 0.75;
+            if (airborne) {
+                state.airTimeSec += delta;
+            }
+            if (state.isAirborne && !airborne) {
+                // landed: payout
+                const air = state.airTimeSec;
+                if (air > 0.18) {
+                    const airPay = Math.min(80, air * 14); // cap per jump
+                    addCurrency(airPay);
+                }
+                state.airTimeSec = 0;
+                saveNow();
+            }
+            state.isAirborne = airborne;
+
+            // occasionally persist during play
+            state.lastEarnAt += delta;
+            if (state.lastEarnAt > 3.0) {
+                state.lastEarnAt = 0;
+                saveNow();
+            }
         }
 
         function findGround(x, z) {
@@ -957,9 +1337,18 @@
             document.getElementById('start-game').style.display = 'none';
             document.getElementById('stop-game').style.display = 'flex';
             document.getElementById('car-hud').style.display = 'flex';
+            document.getElementById('wallet-hud').style.display = 'flex';
             document.getElementById('crosshair').style.display = 'block';
-            car.visible = true;
             car.position.set(0, 10, 0);
+            skater.position.set(0, 10, 0);
+            carVel.set(0, 0, 0);
+            carYaw = 0;
+            state.airTimeSec = 0;
+            state.isAirborne = false;
+            state.lastEarnAt = 0;
+            setPlayerType(state.playerType);
+            if (state.playerType === 'car') car.position.set(0, 10, 0);
+            else skater.position.set(0, 10, 0);
             orbit.enabled = false;
             brushRing.visible = false;
             document.body.requestPointerLock();
@@ -975,10 +1364,14 @@
             document.getElementById('start-game').style.display = 'flex';
             document.getElementById('stop-game').style.display = 'none';
             document.getElementById('car-hud').style.display = 'none';
+            document.getElementById('wallet-hud').style.display = 'none';
             document.getElementById('crosshair').style.display = 'none';
             car.visible = false;
+            skater.visible = false;
             orbit.enabled = true;
             document.exitPointerLock();
+            showShop(false);
+            saveNow();
         }
 
         document.getElementById('start-game').onclick = startPlay;
@@ -1026,7 +1419,15 @@
         function loop() {
             requestAnimationFrame(loop);
             const delta = clock.getDelta();
-            if(state.mode === 'play') moveCar(delta);
+            if(state.mode === 'play') {
+                if (state.playerType === 'car') moveCar(delta);
+                else moveSkater(delta);
+                if (state.trickTextUntil && performance.now() > state.trickTextUntil) {
+                    const notif = document.getElementById('notification');
+                    if (notif) notif.style.opacity = 0;
+                    state.trickTextUntil = 0;
+                }
+            }
             else {
                 updateBrush();
                 if(state.isMouseDown) runTool();
@@ -1035,6 +1436,19 @@
             renderer.render(scene, camera);
         }
         loop();
+
+        // Init save + UI hooks
+        loadSave();
+        applyCarAppearance();
+        updateWalletUI();
+        document.getElementById('open-shop').onclick = () => showShop(true);
+        document.getElementById('close-shop').onclick = () => showShop(false);
+        document.getElementById('shop-overlay').addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'shop-overlay') showShop(false);
+        });
+        document.getElementById('toggle-player').onclick = () => {
+            setPlayerType(state.playerType === 'car' ? 'skate' : 'car');
+        };
 
         window.onresize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
