@@ -864,15 +864,15 @@
                         
                         // Bounce mechanics!
                         if (activePlatform && activePlatform.userData.name === 'BouncePad') {
-                            playerVelocityY = 240; // Double the fun
-                            camera.position.y += 2; // Detach
+                            playerVelocityY = 240;
+                            camera.position.y += 2;
                         } else if (activePlatform && activePlatform.userData.name === 'SpaceTrampoline') {
-                            playerVelocityY = 600; // SUPER COSMIC BOING!
+                            playerVelocityY = 600;
                             camera.position.y += 2;
                         } else if (activePlatform && activePlatform.userData.name === 'Crate') {
-                            playerVelocityY = 140; // Small bounce for building!
+                            playerVelocityY = 140;
                             camera.position.y += 2;
-                        } else if (moveUp) { // Normal Jump
+                        } else if (moveUp) {
                             playerVelocityY = 60;
                         }
                     }
@@ -895,31 +895,32 @@
                     if (moveDown) activePlatform.position.y -= speed * 2.0; 
                 }
                 
-                // Space Transition
-                const height = camera.position.y;
-                if (height > 100) {
-                    const alpha = Math.max(0, Math.min(1, (height - 200) / 800));
-                    scene.background.lerpColors(scene.userData.skyColor, scene.userData.spaceColor, alpha);
-                    scene.fog.color.copy(scene.background);
-                    scene.fog.density = 0.002 * (1 - alpha); // Fade out fog in space
-                    
-                    if (height > 600) {
-                        scene.userData.stars.visible = true;
-                        scene.userData.stars.position.set(camera.position.x, height - 1000, camera.position.z); 
-                    } else {
-                        scene.userData.stars.visible = false;
-                    }
-                } else {
-                    scene.fog.density = 0.002;
-                    scene.background.set(0x87ceeb);
-                    scene.fog.color.set(0x87ceeb);
-                }
-
                 // Boundaries
                 if (camera.position.x < -1000) camera.position.x = -1000;
                 if (camera.position.x > 1000) camera.position.x = 1000;
                 if (camera.position.z < -1000) camera.position.z = -1000;
                 if (camera.position.z > 1000) camera.position.z = 1000;
+            }
+
+            // Sky / Space Transition — runs EVERY frame regardless of pointer lock
+            const height = camera.position.y;
+            if (height > 100) {
+                const alpha = Math.max(0, Math.min(1, (height - 200) / 800));
+                scene.background.lerpColors(scene.userData.skyColor, scene.userData.spaceColor, alpha);
+                scene.fog.color.copy(scene.background);
+                scene.fog.density = 0.002 * (1 - alpha * 0.95);
+                
+                if (height > 600) {
+                    scene.userData.stars.visible = true;
+                    scene.userData.stars.position.set(camera.position.x, height - 1000, camera.position.z); 
+                } else {
+                    scene.userData.stars.visible = false;
+                }
+            } else {
+                scene.background.set(0x87ceeb);
+                scene.fog.color.set(0x87ceeb);
+                scene.fog.density = 0.002;
+                scene.userData.stars.visible = false;
             }
 
             checkCollisions();
@@ -944,38 +945,37 @@
                 }
             }
 
-                interactiveObjects.forEach((e, index) => {
-                    // Update bounds if moving
-                    if (e.userData.capturing || e.userData.fallVelocity) {
-                        e.userData.bounds.setFromObject(e);
-                    }
-                    
-                    if (e.userData.name === 'SpaceTrampoline') {
-                        e.userData.core.material.color.setHSL((time * 0.0002) % 1, 1, 0.7);
-                    }
-                    if (e.userData.spinSpeed) {
-                        e.userData.board.rotation.y += e.userData.spinSpeed * delta;
-                        e.userData.spinSpeed *= 0.95;
-                    }
+            // Environment items floating & falling
+            interactiveObjects.forEach((e, index) => {
+                if (e.userData.capturing || (e.userData.fallVelocity && e.position.y > 2)) {
+                    if (e.userData.bounds) e.userData.bounds.setFromObject(e);
+                }
+                
+                if (e.userData.name === 'SpaceTrampoline') {
+                    e.userData.core.material.color.setHSL((time * 0.0002) % 1, 1, 0.7);
+                }
+                if (e.userData.spinSpeed) {
+                    e.userData.board.rotation.y += e.userData.spinSpeed * delta;
+                    e.userData.spinSpeed *= 0.95;
+                }
 
-                    if (e.userData.capturing) {
-                        e.position.y += delta * 15;
-                        e.rotation.y += delta * 0.5;
-                        if (e.position.y > 2000) { // Higher limit for space
-                            scene.remove(e);
-                            interactiveObjects.splice(index, 1);
-                        }
-                    } else {
-                        // Fall physics if it's an anchor or a popped balloon object higher than ground
-                        if (e.position.y > 2) {
-                            e.position.y -= (e.userData.fallVelocity || 50) * delta;
-                            if (e.position.y < 2) {
-                                e.position.y = 2;
-                                e.userData.bounds.setFromObject(e); // final update
-                            }
+                if (e.userData.capturing) {
+                    e.position.y += delta * 15;
+                    e.rotation.y += delta * 0.5;
+                    if (e.position.y > 2000) {
+                        scene.remove(e);
+                        interactiveObjects.splice(index, 1);
+                    }
+                } else {
+                    if (e.position.y > 2) {
+                        e.position.y -= (e.userData.fallVelocity || 50) * delta;
+                        if (e.position.y < 2) {
+                            e.position.y = 2;
+                            if (e.userData.bounds) e.userData.bounds.setFromObject(e);
                         }
                     }
-                });
+                }
+            });
 
             // Enemies shifting & Floating
             enemies.forEach((e, index) => {

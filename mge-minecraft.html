@@ -177,6 +177,25 @@
             background: url("https://mrg-stem.netlify.app/static/imgs/mrg-stem-hd.png") center/cover no-repeat;
             opacity: 0.15; z-index: -1; pointer-events: none;
         }
+        #day-clock {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.55); border-radius: 30px;
+            padding: 6px 20px; color: white; font-weight: 800; font-size: 14px;
+            z-index: 100; display: flex; align-items: center; gap: 10px;
+            border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            transition: border-color 0.5s;
+        }
+        #day-clock-icon { font-size: 18px; transition: all 0.5s; }
+        #day-clock-label { letter-spacing: 1px; }
+        #day-progress-bar {
+            width: 100px; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;
+        }
+        #day-progress-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #fbbf24, #f97316);
+            transition: width 0.5s linear, background 2s;
+        }
     </style>
     <!-- Import map for Three.js -->
     <script type="importmap">
@@ -188,8 +207,13 @@
         }
     </script>
 </head>
-<body style="background-color: #87CEEB;">
+<body style="background-color: #87CEEB; transition: background-color 3s;">
     <div id="bg-image"></div>
+    <div id="day-clock">
+        <span id="day-clock-icon">☀️</span>
+        <span id="day-clock-label">DAY</span>
+        <div id="day-progress-bar"><div id="day-progress-fill" style="width:50%"></div></div>
+    </div>
     <a href="mge.html" class="back-btn">⬅️ Back to Dashboard</a>
     
     <div id="boss-health-container">
@@ -349,12 +373,136 @@
         dirLight.shadow.mapSize.height = 2048;
         scene.add( dirLight );
 
+        // Sun
+        const sunGeo = new THREE.SphereGeometry(25, 32, 32);
+        const sunMat = new THREE.MeshBasicMaterial({color: 0xfff176});
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        sun.position.set(300, 250, -300);
+        scene.add(sun);
+
+        // Sun glow sprite
+        const sunGlowGeo = new THREE.SphereGeometry(38, 32, 32);
+        const sunGlowMat = new THREE.MeshBasicMaterial({color: 0xffd54f, transparent: true, opacity: 0.25});
+        const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
+        sun.add(sunGlow);
+
         // Moon
-        const moonGeo = new THREE.SphereGeometry(30, 32, 32);
-        const moonMat = new THREE.MeshBasicMaterial({color: 0xffffee});
+        const moonGeo = new THREE.SphereGeometry(20, 32, 32);
+        const moonMat = new THREE.MeshBasicMaterial({color: 0xe0e8ff});
         const moon = new THREE.Mesh(moonGeo, moonMat);
-        moon.position.set(-100, 200, -200);
+        moon.position.set(-300, -200, -300);
         scene.add(moon);
+
+        // Stars group (visible at night)
+        const starsGroup = new THREE.Group();
+        scene.add(starsGroup);
+        const starGeo = new THREE.SphereGeometry(1.5, 6, 6);
+        const starMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+        for(let s=0; s<200; s++) {
+            const star = new THREE.Mesh(starGeo, starMat.clone());
+            const phi = Math.acos(2 * Math.random() - 1);
+            const theta = 2 * Math.PI * Math.random();
+            const r = 450;
+            star.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                Math.abs(r * Math.cos(phi)) * 0.5 + 50,
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+            star.material.opacity = 0;
+            star.material.transparent = true;
+            starsGroup.add(star);
+        }
+
+        // ========== DAY / NIGHT CYCLE SYSTEM ==========
+        // One full day = 120 seconds (day 60s, dusk/dawn 10s each, night 40s)
+        const DAY_CYCLE_DURATION = 120; // seconds
+        // Background palettes: [sky color, fog color, label, icon, fillGradient, borderColor]
+        const skyPhases = [
+            { t: 0.00, sky: '#87CEEB', fog: 0x87CEEB, label: 'MORNING',   icon: '🌅', fill: 'linear-gradient(90deg,#fde68a,#fb923c)', border: 'rgba(251,146,60,0.7)',  sunAlt: 0.3,  moonAlt: -0.5, ambI: 0.5,  dirI: 0.6,  hemiG: '#777', time: 'dawn' },
+            { t: 0.15, sky: '#56b4de', fog: 0x56b4de, label: 'DAY',        icon: '☀️', fill: 'linear-gradient(90deg,#fbbf24,#f97316)', border: 'rgba(251,191,36,0.7)',  sunAlt: 0.7,  moonAlt: -0.8, ambI: 0.9,  dirI: 1.0,  hemiG: '#444', time: 'day' },
+            { t: 0.50, sky: '#3a8fbf', fog: 0x3a8fbf, label: 'AFTERNOON',  icon: '🌤', fill: 'linear-gradient(90deg,#f59e0b,#ef4444)', border: 'rgba(245,158,11,0.6)',  sunAlt: 0.6,  moonAlt: -0.6, ambI: 0.7,  dirI: 0.85, hemiG: '#555', time: 'day' },
+            { t: 0.65, sky: '#e8855a', fog: 0xe8855a, label: 'SUNSET',      icon: '🌇', fill: 'linear-gradient(90deg,#f97316,#dc2626)', border: 'rgba(249,115,22,0.8)',  sunAlt: 0.05, moonAlt: 0.1,  ambI: 0.35, dirI: 0.4,  hemiG: '#663322', time: 'dusk' },
+            { t: 0.75, sky: '#1a1a2e', fog: 0x1a1a2e, label: 'NIGHT',       icon: '🌙', fill: 'linear-gradient(90deg,#6366f1,#1e1b4b)', border: 'rgba(99,102,241,0.7)',  sunAlt: -0.8, moonAlt: 0.55, ambI: 0.15, dirI: 0.1,  hemiG: '#112233', time: 'night' },
+            { t: 0.90, sky: '#0f172a', fog: 0x0f172a, label: 'MIDNIGHT',   icon: '⭐', fill: 'linear-gradient(90deg,#1e1b4b,#312e81)', border: 'rgba(79,70,229,0.5)',   sunAlt: -0.9, moonAlt: 0.75, ambI: 0.08, dirI: 0.05, hemiG: '#0a1122', time: 'night' }
+        ];
+
+        let dayTime = 0; // 0.0 to 1.0 normalized
+        let lastBgSwitch = 0;
+        const BG_SWITCH_INTERVAL = 30; // seconds
+
+        function lerpColor(hexA, hexB, t) {
+            // Simple linear interpolation of two CSS hex/named colors
+            const ca = new THREE.Color(hexA);
+            const cb = new THREE.Color(hexB);
+            ca.lerp(cb, t);
+            return ca;
+        }
+
+        function getCurrentPhase(t) {
+            for(let i = skyPhases.length - 1; i >= 0; i--) {
+                if(t >= skyPhases[i].t) return { a: skyPhases[i], b: skyPhases[(i+1) % skyPhases.length], frac: (t - skyPhases[i].t) / ((skyPhases[(i+1) % skyPhases.length].t || 1.0) - skyPhases[i].t) };
+            }
+            return { a: skyPhases[0], b: skyPhases[1], frac: 0 };
+        }
+
+        function updateDayNight(elapsedSec) {
+            dayTime = (elapsedSec % DAY_CYCLE_DURATION) / DAY_CYCLE_DURATION;
+
+            const { a, b, frac } = getCurrentPhase(dayTime);
+            const safeT = Math.min(Math.max(frac, 0), 1);
+
+            // Background color
+            const skyC = lerpColor(a.sky, b.sky, safeT);
+            const skyHex = '#' + skyC.getHexString();
+            document.body.style.backgroundColor = skyHex;
+
+            // Fog
+            const fogC = new THREE.Color(a.fog).lerp(new THREE.Color(b.fog), safeT);
+            if(scene.fog) { scene.fog.color.copy(fogC); }
+
+            // Sun arc (rises in east, sets in west)
+            const sunAngle = dayTime * Math.PI * 2 - Math.PI / 2;
+            const sunR = 400;
+            sun.position.set(
+                Math.cos(sunAngle) * sunR,
+                Math.sin(sunAngle) * sunR * 0.8 + 50,
+                -200
+            );
+
+            // Moon follows opposite arc
+            moon.position.set(
+                Math.cos(sunAngle + Math.PI) * sunR,
+                Math.sin(sunAngle + Math.PI) * sunR * 0.8 + 50,
+                -200
+            );
+
+            // Lighting
+            const ambInt = a.ambI + (b.ambI - a.ambI) * safeT;
+            const dirInt = a.dirI + (b.dirI - a.dirI) * safeT;
+            hemiLight.intensity = ambInt;
+            dirLight.intensity = dirInt;
+            dirLight.position.copy(sun.position);
+
+            // Stars opacity (visible at night)
+            const isNight = a.time === 'night' || b.time === 'night';
+            const starOpacity = a.time === 'night' ? (b.time === 'night' ? 1 : 1 - safeT) : (b.time === 'night' ? safeT : 0);
+            if(a.time === 'dusk') { }
+            starsGroup.children.forEach(s => { s.material.opacity = Math.max(0, Math.min(1, starOpacity)); });
+
+            // UI clock
+            const clockIcon = document.getElementById('day-clock-icon');
+            const clockLabel = document.getElementById('day-clock-label');
+            const progressFill = document.getElementById('day-progress-fill');
+            const clockEl = document.getElementById('day-clock');
+            if(clockIcon) clockIcon.textContent = a.icon;
+            if(clockLabel) clockLabel.textContent = a.label;
+            if(progressFill) {
+                progressFill.style.width = (dayTime * 100).toFixed(1) + '%';
+                progressFill.style.background = a.fill;
+            }
+            if(clockEl) clockEl.style.borderColor = a.border;
+        }
+        // ========== END DAY / NIGHT CYCLE ==========
 
         // Objects (voxels)
         const objects = [];
@@ -2477,6 +2625,9 @@
                     }
                 }
             }
+
+            // Day/Night cycle update
+            updateDayNight(time / 1000);
 
             prevTime = time;
 
