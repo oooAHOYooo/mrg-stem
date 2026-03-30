@@ -426,25 +426,8 @@
                 </div>
             </div>
 
-            <!-- Right Sidebar: Block Programming -->
-            <div class="sidebar" id="code-sidebar">
-                <h2>RC Car Program</h2>
-                <p style="font-size:0.75rem; color:#888;">Add commands to the script for auto-execution.</p>
-                <div class="block-list">
-                    <button class="block move" onclick="addToScript('forward')">Move Forward <span>10</span></button>
-                    <button class="block move" onclick="addToScript('backward')">Move Backward <span>10</span></button>
-                    <button class="block turn" onclick="addToScript('left')">Turn Left <span>90°</span></button>
-                    <button class="block turn" onclick="addToScript('right')">Turn Right <span>90°</span></button>
-                    <button class="block action" onclick="addToScript('nitro')">Nitro Boost! ⚡</button>
-                    <button class="block action" onclick="addToScript('jump')">Jump 🚀</button>
-                </div>
-                
-                <h2 style="margin-top:10px;">Script Area</h2>
-                <div class="script-area" id="script-container">
-                    <!-- Script blocks go here -->
-                </div>
-                <button class="block" onclick="clearScript()" style="justify-content:center; color:#ff4757; border-color:#ff4757">Clear Script</button>
-            </div>
+            <!-- Right Sidebar removed: RC Car Program (no longer used) -->
+            <div class="sidebar" id="code-sidebar" style="display:none;"></div>
         </div>
 
         <div class="footer">
@@ -471,7 +454,7 @@
         <div style="font-size: 1.4rem; font-weight: 900; color: var(--mge-gold); text-shadow: 0 0 12px rgba(255,165,2,0.6);">
             🪙 <span id="currency-display">0</span>
         </div>
-        <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15);">SHOP</button>
+        <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15); pointer-events:auto;">SHOP</button>
         <button class="mode-btn" id="toggle-player" style="background: rgba(30,144,255,0.15); color: white; border:1px solid rgba(30,144,255,0.4);">PLAYER: CAR</button>
         <div style="font-size:0.7rem; color: rgba(255,255,255,0.45); text-align:center;">
             Earn 🪙 from airtime + speed
@@ -523,10 +506,10 @@
         </div>
     </div>
 
-    <div class="controls-hint">
-        BUILD: LMB Raise | Shift+LMB Lower | Flatten Tool | R-Drag Rotate | Wheel Zoom<br>
-        PLAY: WASD Drive | SPACE Jump | SHIFT Boost | ESC Unlock
-    </div>
+        <div class="controls-hint">
+        BUILD: LMB Raise | Shift+LMB Lower | Flatten | R-Drag Rotate | Wheel Zoom<br>
+        PLAY: WASD Move | SPACE Jump/Ollie | ESC Unlock Pointer
+        </div>
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -545,7 +528,6 @@
             brushIntensity: 1.8,  // Less powerful by default for better control
             isMouseDown: false,
             mouseButton: -1,
-            carScript: [],
             isPlaying: false,
             lastPoint: new THREE.Vector3(),
 
@@ -566,7 +548,12 @@
             skateBackflip: 0,
             skateYawSpin: 0,
             lastTrickAt: 0,
-            trickTextUntil: 0
+            trickTextUntil: 0,
+
+            // 60s airtime bonus challenge
+            minuteTimer: 0,
+            minuteAirAccum: 0,
+            minuteBonusGiven: false
         };
 
         // --- THREE.JS INITIALIZATION ---
@@ -1249,6 +1236,8 @@
             const airborne = y > groundY + 0.75;
             if (airborne) {
                 state.airTimeSec += delta;
+                // 60s challenge: accumulate airtime while timer active
+                if (state.minuteTimer > 0) state.minuteAirAccum += delta;
             }
             if (state.isAirborne && !airborne) {
                 // landed: payout
@@ -1394,6 +1383,9 @@
             state.airTimeSec = 0;
             state.isAirborne = false;
             state.lastEarnAt = 0;
+            state.minuteTimer = 60;
+            state.minuteAirAccum = 0;
+            state.minuteBonusGiven = false;
             setPlayerType(state.playerType);
             if (state.playerType === 'car') car.position.set(0, 10, 0);
             else skater.position.set(0, 10, 0);
@@ -1402,7 +1394,6 @@
             showPlaytestChoice(false);
             pendingStart = false;
             document.body.requestPointerLock();
-            if(state.carScript.length > 0) executeScript();
         }
 
         function cancelPlay() {
@@ -1474,6 +1465,18 @@
             if(state.mode === 'play') {
                 if (state.playerType === 'car') moveCar(delta);
                 else moveSkater(delta);
+                // 60s challenge timer
+                if (state.minuteTimer > 0) {
+                    state.minuteTimer = Math.max(0, state.minuteTimer - delta);
+                    const targetAir = 4.0; // seconds of airtime under 1 minute
+                    if (!state.minuteBonusGiven && state.minuteAirAccum >= targetAir && state.minuteTimer > 0) {
+                        addCurrency(200);
+                        const n = document.getElementById('notification');
+                        if (n) { n.innerText = `Airtime Challenge! +200`; n.style.opacity = 1; setTimeout(()=>{ n.style.opacity = 0; }, 1200); }
+                        state.minuteBonusGiven = true;
+                        saveNow();
+                    }
+                }
                 if (state.trickTextUntil && performance.now() > state.trickTextUntil) {
                     const notif = document.getElementById('notification');
                     if (notif) notif.style.opacity = 0;
