@@ -251,8 +251,8 @@
         }
 
         #reference-layer { opacity: 0.3; pointer-events: none; }
-        #construction-layer { opacity: 0.6; }
-        #final-layer { opacity: 1.0; }
+        #construction-layer { opacity: 0.6; z-index: 1; }
+        #final-layer { opacity: 1.0; z-index: 2; pointer-events: none; }
 
         /* Floating 3D Ref */
         #three-ref {
@@ -471,7 +471,7 @@
                     <button class="btn" id="undo-btn">↩ Undo</button>
                     <button class="btn" id="clear-btn">🗑️ Clear</button>
                     <div style="width: 1px; height: 24px; background: var(--glass-border);"></div>
-                    <div class="color-well" style="background: var(--accent-primary);" data-color="rgba(124, 77, 255, 0.5)"></div>
+                    <div class="color-well" style="background: var(--accent-primary);" data-color="rgba(124, 77, 255, 0.8)"></div>
                     <div class="color-well" style="background: #ffffff;" data-color="#ffffff"></div>
                     <div class="color-well" style="background: #000000;" data-color="#333333"></div>
                 </div>
@@ -532,8 +532,8 @@
         // --- State Management ---
         let currentStep = 1;
         let isDrawing = false;
-        let brushColor = 'rgba(124, 77, 255, 0.5)';
-        let brushSize = 3;
+        let brushColor = 'rgba(124, 77, 255, 0.8)';
+        let brushSize = 5;
         let undoStack = [];
         
         const prompts = [
@@ -684,15 +684,30 @@
         }
 
         // --- Drawing Logic ---
-        const canvas = document.getElementById('construction-layer');
-        const ctx = canvas.getContext('2d');
-        const layers = document.getElementById('drawing-layers');
+        let canvas, ctx, finalCanvas, finalCtx;
+
+        function initCanvases() {
+            canvas = document.getElementById('construction-layer');
+            ctx = canvas.getContext('2d');
+            finalCanvas = document.getElementById('final-layer');
+            finalCtx = finalCanvas.getContext('2d');
+        }
 
         function resizeCanvas() {
+            const layers = document.getElementById('drawing-layers');
+            if (!layers || !canvas) return;
+            
             canvas.width = layers.offsetWidth;
             canvas.height = layers.offsetHeight;
-            document.getElementById('final-layer').width = layers.offsetWidth;
-            document.getElementById('final-layer').height = layers.offsetHeight;
+            finalCanvas.width = layers.offsetWidth;
+            finalCanvas.height = layers.offsetHeight;
+            
+            // Re-draw if we have undo stack (simple way to keep state on resize)
+            if(undoStack.length > 0) {
+                const img = new Image();
+                img.src = undoStack[undoStack.length - 1];
+                img.onload = () => ctx.drawImage(img, 0, 0);
+            }
         }
 
         function setupDrawing() {
@@ -725,8 +740,18 @@
             canvas.addEventListener('mousemove', doDraw);
             window.addEventListener('mouseup', endDraw);
             
-            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); });
-            canvas.addEventListener('touchmove', (e) => { e.preventDefault(); doDraw(e.touches[0]); });
+            canvas.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                startDraw(touch); 
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => { 
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                doDraw(touch); 
+            }, { passive: false });
+
             canvas.addEventListener('touchend', endDraw);
         }
 
@@ -787,8 +812,11 @@
             overlay.style.animation = 'none';
             setTimeout(() => overlay.style.animation = '', 10);
 
-            // Change brush color for new layer/step
-            if(currentStep === 4) brushColor = '#ffffff'; // Final details
+            // Final polish: Switch to Final Layer for Step 4
+            if(currentStep === 4) {
+                brushColor = '#ffffff'; // Final skin/details
+                brushSize = 3; // Thinner for detail
+            }
         }
 
         // --- UI Events ---
@@ -809,6 +837,7 @@
 
         // --- Init ---
         window.onload = () => {
+            initCanvases();
             initThree();
             resizeCanvas();
             setupDrawing();
