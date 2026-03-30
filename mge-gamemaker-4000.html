@@ -408,6 +408,97 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-dim);
         }
+        /* Terminal Overlay */
+        .terminal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            padding: 40px;
+            box-sizing: border-box;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .terminal-window {
+            width: 90%;
+            height: 85%;
+            background: #000;
+            border: 4px solid var(--accent-success);
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            height: 40px;
+            background: var(--accent-success);
+            color: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .terminal-close {
+            background: #000;
+            color: var(--accent-success);
+            border: 1px solid #000;
+            padding: 2px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .terminal-close:hover {
+            background: #ff007b;
+            color: #fff;
+        }
+
+        .terminal-content {
+            flex: 1;
+            position: relative;
+        }
+
+        /* CRT Effect */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            ),
+            linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.06),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Asset Categories */
+        .asset-card.category-world { border-left: 4px solid var(--accent-primary); }
+        .asset-card.category-enemy { border-left: 4px solid var(--accent-tertiary); }
+        .asset-card.category-player { border-left: 4px solid var(--accent-secondary); }
+        .asset-card.category-goal { border-left: 4px solid var(--accent-success); }
 
     </style>
 </head>
@@ -421,12 +512,12 @@
 
     <nav class="top-nav">
         <div class="nav-brand">
-            🕹️ GAMEMAKER 4000 <span>STUDIO v1.0</span>
+            🕹️ GAMEMAKER 4000 <span>KIDS EDITION</span>
         </div>
         <div class="nav-actions">
-            <button class="btn" onclick="saveGame()">💾 Save</button>
-            <button class="btn" onclick="loadGame()">📂 Open</button>
-            <button class="btn btn-play" id="play-btn">▶️ RUN GAME</button>
+            <button class="btn" onclick="saveGame()">💾 Save My Game</button>
+            <button class="btn" onclick="loadGame()">📂 Open My Game</button>
+            <button class="btn btn-play" id="play-btn">🚀 START MISSION</button>
         </div>
     </nav>
 
@@ -434,26 +525,26 @@
         <!-- Left Sidebar: AI Consultant & Asset list -->
         <div class="sidebar">
             <!-- Guided Progress -->
-            <div id="guided-progress" style="padding: 1rem; border-bottom: 1px solid var(--border); background: rgba(0, 242, 255, 0.05);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.7rem; font-weight: bold; color: var(--accent-primary);">
-                    <span>GUIDED CREATION</span>
-                    <span id="phase-step">PHASE 1/3</span>
+            <div id="guided-progress" style="padding: 1.2rem; border-bottom: 2px solid var(--border); background: rgba(0, 242, 255, 0.05);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.8rem; font-weight: 800; color: var(--accent-primary);">
+                    <span>CREATION PROGRESS</span>
+                    <span id="phase-step">STEP 1/3</span>
                 </div>
-                <div style="height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
-                    <div id="progress-bar" style="width: 33%; height: 100%; background: var(--accent-primary); transition: width 0.5s ease;"></div>
+                <div style="height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; border: 1px solid #444;">
+                    <div id="progress-bar" style="width: 33%; height: 100%; background: var(--accent-primary); box-shadow: 0 0 10px var(--accent-primary); transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
                 </div>
-                <div id="phase-instruction" style="margin-top: 0.8rem; font-size: 0.85rem; color: #fff;">
-                    🏗️ <strong>Step 1:</strong> Build your world environment with platforms and lights!
+                <div id="phase-instruction" style="margin-top: 1rem; font-size: 0.95rem; color: #fff; line-height: 1.4;">
+                    🏗️ <strong>Step 1:</strong> Build your world! Add platforms and lights.
                 </div>
-                <button id="next-phase-btn" class="btn" style="width: 100%; margin-top: 1rem; background: var(--accent-success); color: #000; justify-content: center;" onclick="nextPhase()">
-                    NEXT: SELECT GAME TYPE ➡️
+                <button id="next-phase-btn" class="btn" style="width: 100%; margin-top: 1.2rem; background: var(--accent-success); color: #000; justify-content: center; height: 45px; font-size: 1rem; font-family: 'Orbitron';" onclick="nextPhase()">
+                    GO TO STEP 2 ➡️
                 </button>
             </div>
 
             <div class="chat-pane" id="chat-container">
                 <div id="chat-history">
                     <div class="msg msg-ai">
-                        <strong>Producer:</strong> Phase 1: <strong>World Building</strong>. Start by placing platforms and environment assets!
+                        <strong>Producer:</strong> Welcome to Mission HQ! 🚀 Step 1 is building your world. Click the bricks and lights to start!
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -480,32 +571,32 @@
             </div>
 
             <div class="panel-header">
-                <span>📦 ASSET LIBRARY</span>
+                <span>📦 STUFF TO ADD</span>
             </div>
             <div class="asset-library">
-                <div class="asset-card" onclick="spawnObject('hero')">
+                <div class="asset-card category-player" onclick="spawnObject('hero')">
                     <span class="asset-icon">🦸</span>
-                    <span class="asset-name">HERO (PLAYER)</span>
+                    <span class="asset-name">HERO UNIT</span>
                 </div>
-                <div class="asset-card" onclick="spawnObject('enemy')">
+                <div class="asset-card category-enemy" onclick="spawnObject('enemy')">
                     <span class="asset-icon">👾</span>
-                    <span class="asset-name">VIRUS (ENEMY)</span>
+                    <span class="asset-name">VIRUS BOT</span>
                 </div>
-                <div class="asset-card" onclick="spawnObject('platform')">
+                <div class="asset-card category-world" onclick="spawnObject('platform')">
                     <span class="asset-icon">🧱</span>
                     <span class="asset-name">PLATFORM</span>
                 </div>
-                <div class="asset-card" onclick="spawnObject('coin')">
+                <div class="asset-card category-world" onclick="spawnObject('coin')">
                     <span class="asset-icon">💎</span>
                     <span class="asset-name">DATA CORE</span>
                 </div>
-                <div class="asset-card" onclick="spawnObject('goal')">
+                <div class="asset-card category-goal" onclick="spawnObject('goal')">
                     <span class="asset-icon">🏁</span>
-                    <span class="asset-name">UP-LINK (GOAL)</span>
+                    <span class="asset-name">MISSION EXIT</span>
                 </div>
-                <div class="asset-card" onclick="spawnObject('light')">
+                <div class="asset-card category-world" onclick="spawnObject('light')">
                     <span class="asset-icon">💡</span>
-                    <span class="asset-name">NEON LIGHT</span>
+                    <span class="asset-name">GLOW LIGHT</span>
                 </div>
             </div>
         </div>
@@ -577,6 +668,26 @@
             </div>
         </div>
     </main>
+    
+    <!-- Terminal Overlay for Kids -->
+    <div class="terminal-overlay" id="terminal-overlay" style="display: none;">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>🚀 MISSION CONTROL: SIMULATION ACTIVE</span>
+                <button class="terminal-close" onclick="togglePlay()">STOP MISSION [X]</button>
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                <div class="scanlines"></div>
+                <div id="game-canvas-container" style="width: 100%; height: 100%;"></div>
+            </div>
+            <div style="background: #000; padding: 10px; border-top: 2px solid var(--accent-success); display: flex; gap: 20px; font-family: 'Orbitron'; font-size: 0.7rem; color: var(--accent-success);">
+                <span>STATUS: RUNNING</span>
+                <span>PLAYER: CONNECTED</span>
+                <span id="terminal-score">SCORE: 0</span>
+                <span style="margin-left: auto;">PRESS [X] TO RETURN TO HQ</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Required Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -790,9 +901,10 @@
 
         // Window resize
         window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
+            const currentContainer = isPlaying ? document.getElementById('game-canvas-container') : container;
+            camera.aspect = currentContainer.clientWidth / currentContainer.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setSize(currentContainer.clientWidth, currentContainer.clientHeight);
         });
 
         // === PLAY MODE LOGIC ===
@@ -803,14 +915,19 @@
             isPlaying = !isPlaying;
             document.body.classList.toggle('playing', isPlaying);
             
+            const terminal = document.getElementById('terminal-overlay');
+            const gameContainer = document.getElementById('game-canvas-container');
+            
             if (isPlaying) {
-                playBtn.innerText = '⏹️ STOP SYSTEM';
+                terminal.style.display = 'flex';
+                gameContainer.appendChild(renderer.domElement);
+                
+                playBtn.innerHTML = '⏹️ STOP MISSION';
                 playBtn.classList.add('active');
-                document.getElementById('mode-badge').innerHTML = `
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-success); box-shadow: 0 0 10px var(--accent-success);"></div>
-                    RUNTIME ACTIVE
-                `;
+                
                 selectObject(null);
+                score = 0;
+                document.getElementById('terminal-score').innerText = `SCORE: 0`;
                 
                 // Find players
                 player1 = gameObjects.find(o => o.userData.logic === 'p1');
@@ -827,27 +944,39 @@
                     obj.userData.initialPos = obj.position.clone();
                     obj.userData.initialRot = obj.rotation.clone();
                 });
+                
+                // Resize for terminal
+                camera.aspect = gameContainer.clientWidth / gameContainer.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
 
                 orbit.enableDamping = false;
                 orbit.enabled = false; 
             } else {
-                playBtn.innerText = '▶️ RUN GAME';
+                terminal.style.display = 'none';
+                container.appendChild(renderer.domElement);
+                
+                playBtn.innerHTML = '🚀 START MISSION';
                 playBtn.classList.remove('active');
-                document.getElementById('mode-badge').innerHTML = `
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-primary);"></div>
-                    EDIT MODE
-                `;
                 
                 // Reset objects
                 gameObjects.forEach(obj => {
                     obj.position.copy(obj.userData.initialPos);
                     obj.rotation.copy(obj.userData.initialRot);
+                    
+                    // Simple Restoration Check
+                    if (obj.userData.type === 'coin' && !scene.children.includes(obj)) {
+                        scene.add(obj);
+                    }
                 });
                 
-                // Clear runtime players
+                // Reset for editor
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+
                 player1 = null;
                 player2 = null;
-
                 orbit.enabled = true;
                 orbit.enableDamping = true;
             }
@@ -1112,11 +1241,12 @@
                                 scene.remove(obj);
                                 gameObjects = gameObjects.filter(o => o !== obj);
                                 score++;
+                                document.getElementById('terminal-score').innerText = `SCORE: ${score}`;
                             } else if (obj.userData.type === 'enemy') {
+                                addMessage(`MISSION FAILURE: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'} unit lost to Virus.`, "ai");
                                 togglePlay(); 
-                                addMessage(`SYSTEM FAILURE: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'} unit lost to Virus.`, "ai");
                             } else if (obj.userData.type === 'goal') {
-                                addMessage(`PROTOCOL COMPLETE! Winner: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'}! Score: ${score}`, "ai");
+                                addMessage(`MISSION ACCOMPLISHED! Winner: ${p.userData.playerID === 1 ? 'Player 1' : 'Player 2'}! Final Score: ${score}`, "ai");
                                 togglePlay();
                             }
                         }
