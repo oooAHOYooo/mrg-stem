@@ -397,6 +397,10 @@
                         <span>📏</span>
                         <span>Flatten</span>
                     </div>
+                    <div class="tool-btn" data-tool="ramp">
+                        <span>🧱</span>
+                        <span>Ramp</span>
+                    </div>
                 </div>
 
                 <div class="control-group">
@@ -448,6 +452,23 @@
         <div style="font-size: 0.8rem; color: #aaa;">UNITS / SEC</div>
     </div>
 
+    <!-- Challenge HUD -->
+    <div class="car-hud" id="challenge-hud" style="left: 40px; right: auto; bottom: 40px; padding: 16px 18px; display:none; gap:10px; width: min(320px, 40vw);">
+        <div style="font-size:0.8rem; color:#aaa;">⚡ 60s Airtime Challenge</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div style="font-weight:900; color: var(--mge-accent); text-shadow: 0 0 14px rgba(123,237,159,0.5);">
+                Air: <span id="challenge-air">0.0</span>s / <span id="challenge-target">4.0</span>s
+            </div>
+            <div style="font-weight:900; color: rgba(255,255,255,0.7);">
+                ⏱ <span id="challenge-time">60</span>s
+            </div>
+        </div>
+        <div style="height:10px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow:hidden; border: 1px solid rgba(255,255,255,0.12);">
+            <div id="challenge-bar" style="height:100%; width:0%; background: linear-gradient(90deg, rgba(123,237,159,0.9), rgba(30,144,255,0.9));"></div>
+        </div>
+        <div id="challenge-done" style="display:none; font-size:0.75rem; color: var(--mge-gold); font-weight:900;">BONUS CLAIMED ✅</div>
+    </div>
+
     <!-- Wallet + Shop -->
     <div class="car-hud" id="wallet-hud" style="right: 40px; bottom: 200px; padding: 16px 18px; display:none; gap:8px;">
         <div style="font-size: 0.8rem; color: #aaa;">CURRENCY</div>
@@ -455,6 +476,7 @@
             🪙 <span id="currency-display">0</span>
         </div>
         <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15); pointer-events:auto;">SHOP</button>
+        <button class="mode-btn" id="respawn" style="background: rgba(255,165,2,0.12); color: white; border:1px solid rgba(255,165,2,0.35); pointer-events:auto;">RESPAWN</button>
         <button class="mode-btn" id="toggle-player" style="background: rgba(30,144,255,0.15); color: white; border:1px solid rgba(30,144,255,0.4);">PLAYER: CAR</button>
         <div style="font-size:0.7rem; color: rgba(255,255,255,0.45); text-align:center;">
             Earn 🪙 from airtime + speed
@@ -553,7 +575,16 @@
             // 60s airtime bonus challenge
             minuteTimer: 0,
             minuteAirAccum: 0,
-            minuteBonusGiven: false
+            minuteBonusGiven: false,
+
+            // combo + cosmetics
+            landingCombo: 0,
+            lastLandingAt: 0,
+            equippedTrail: 'none',
+            equippedHorn: 'none',
+            equippedGlow: 'none',
+            trailPoints: [],
+            lastTrailAt: 0
         };
 
         // --- THREE.JS INITIALIZATION ---
@@ -783,6 +814,12 @@
 
 
         function runTool() {
+            // One-click ramp stamp tool (places a premade ramp at the brush point)
+            if (state.tool === 'ramp') {
+                stampRampAt(state.lastPoint);
+                return;
+            }
+
             const pos = terrainGeom.attributes.position.array;
             const cols = terrainGeom.attributes.color.array;
             const center = state.lastPoint;
@@ -916,18 +953,89 @@
             if (earn > 0) addCurrency(earn);
         }
 
+        function stampRampAt(center) {
+            const pos = terrainGeom.attributes.position.array;
+            const step = terrainSize / RES;
+            const gridX = Math.round((center.x / terrainSize + 0.5) * RES);
+            const gridZ = Math.round((center.z / terrainSize + 0.5) * RES);
+
+            // Ramp dimensions in world units
+            const rampWidth = Math.max(10, state.brushSize * 1.2);
+            const rampLength = Math.max(18, state.brushSize * 2.2);
+            const rampHeight = Math.max(6, state.brushIntensity * 6);
+
+            const halfW = rampWidth / 2;
+            const halfL = rampLength / 2;
+
+            const radiusInCellsX = Math.ceil(halfW / step) + 2;
+            const radiusInCellsZ = Math.ceil(halfL / step) + 2;
+
+            const startX = Math.max(0, gridX - radiusInCellsX);
+            const endX   = Math.min(RES, gridX + radiusInCellsX);
+            const startZ = Math.max(0, gridZ - radiusInCellsZ);
+            const endZ   = Math.min(RES, gridZ + radiusInCellsZ);
+
+            let changed = false;
+            let changedVerts = 0;
+
+            // Ramp faces forward (+Z) as a simple linear slope from back to front.
+            for (let j = startZ; j <= endZ; j++) {
+                for (let i = startX; i <= endX; i++) {
+                    const vi = j * (RES + 1) + i;
+                    const idx = vi * 3;
+                    const vx = pos[idx];
+                    const vz = pos[idx + 2];
+
+                    const dx = vx - center.x;
+                    const dz = vz - center.z;
+                    if (Math.abs(dx) > halfW || Math.abs(dz) > halfL) continue;
+
+                    // normalized along length: back (-halfL) -> front (+halfL)
+                    const t = (dz + halfL) / (rampLength);
+                    const targetY = center.y + THREE.MathUtils.clamp(t, 0, 1) * rampHeight;
+
+                    // soften edges
+                    const edgeFalloff = 1 - Math.max(Math.abs(dx) / halfW, Math.abs(dz) / halfL);
+                    const alpha = THREE.MathUtils.clamp(edgeFalloff, 0, 1) * 0.55;
+
+                    pos[idx + 1] = THREE.MathUtils.lerp(pos[idx + 1], targetY, alpha);
+                    changed = true;
+                    changedVerts++;
+                }
+            }
+
+            if (changed) {
+                terrainGeom.attributes.position.needsUpdate = true;
+                terrainGeom.computeVertexNormals();
+                terrainGeom.computeBoundingSphere();
+                terrainGeom.computeBoundingBox();
+                // reward stamps a little (build-mode grind)
+                addCurrency(Math.min(8, changedVerts * 0.003));
+            }
+        }
+
         // --- CAR ENGINE ---
         let carVel = new THREE.Vector3();
         let carYaw = 0;
         const keys = {};
 
         // --- ECONOMY + SHOP ---
-        const STORAGE_KEY = 'mge_terrain_editor_save_v1';
+        const STORAGE_KEY = 'mge_terrain_editor_save_v2';
+        const DAILY_KEY = 'mge_terrain_editor_daily_v1';
         const carCatalog = [
             { id: 'starter', name: 'Starter Buggy', price: 0, color: 0xff4757, accel: 6.0, boostAccel: 15.0, turn: 1.8, grip: 0.98 },
             { id: 'rocket',  name: 'Rocket RC',      price: 250, color: 0x7bed9f, accel: 7.8, boostAccel: 19.0, turn: 1.6, grip: 0.985 },
             { id: 'drifter', name: 'Neon Drifter',   price: 400, color: 0x1e90ff, accel: 6.8, boostAccel: 16.5, turn: 2.35, grip: 0.965 },
             { id: 'tank',    name: 'Mini Tank',      price: 600, color: 0x888888, accel: 5.6, boostAccel: 14.0, turn: 1.35, grip: 0.99 }
+        ];
+
+        const cosmeticCatalog = [
+            { id: 'trail_neon', type: 'trail', name: 'Neon Trail', price: 120 },
+            { id: 'trail_fire', type: 'trail', name: 'Fire Trail', price: 220 },
+            { id: 'horn_beep', type: 'horn', name: 'Beep Horn', price: 60 },
+            { id: 'horn_air', type: 'horn', name: 'Air Horn', price: 180 },
+            { id: 'glow_blue', type: 'glow', name: 'Blue Underglow', price: 140 },
+            { id: 'glow_green', type: 'glow', name: 'Green Underglow', price: 140 }
         ];
 
         function loadSave() {
@@ -938,6 +1046,10 @@
                 if (typeof data.currency === 'number') state.currency = Math.max(0, Math.floor(data.currency));
                 if (Array.isArray(data.ownedCars)) state.ownedCars = new Set(data.ownedCars);
                 if (typeof data.equippedCarId === 'string') state.equippedCarId = data.equippedCarId;
+                if (Array.isArray(data.ownedCosmetics)) state.ownedCosmetics = new Set(data.ownedCosmetics);
+                if (typeof data.equippedTrail === 'string') state.equippedTrail = data.equippedTrail;
+                if (typeof data.equippedHorn === 'string') state.equippedHorn = data.equippedHorn;
+                if (typeof data.equippedGlow === 'string') state.equippedGlow = data.equippedGlow;
                 if (!state.ownedCars.has('starter')) state.ownedCars.add('starter');
                 if (!carCatalog.some(c => c.id === state.equippedCarId)) state.equippedCarId = 'starter';
             } catch (_) {
@@ -948,7 +1060,11 @@
             const data = {
                 currency: Math.max(0, Math.floor(state.currency)),
                 ownedCars: Array.from(state.ownedCars),
-                equippedCarId: state.equippedCarId
+                equippedCarId: state.equippedCarId,
+                ownedCosmetics: Array.from(state.ownedCosmetics || []),
+                equippedTrail: state.equippedTrail,
+                equippedHorn: state.equippedHorn,
+                equippedGlow: state.equippedGlow
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
@@ -971,11 +1087,133 @@
             bodyMesh.material.color.setHex(cfg.color);
         }
 
+        function ensureCosmetics() {
+            if (!state.ownedCosmetics) state.ownedCosmetics = new Set();
+            if (!state.equippedTrail) state.equippedTrail = 'none';
+            if (!state.equippedHorn) state.equippedHorn = 'none';
+            if (!state.equippedGlow) state.equippedGlow = 'none';
+        }
+
+        function todayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function getDailyState() {
+            try {
+                const raw = localStorage.getItem(DAILY_KEY);
+                if (!raw) return { day: todayKey(), firstLanding: false };
+                const data = JSON.parse(raw);
+                if (!data || data.day !== todayKey()) return { day: todayKey(), firstLanding: false };
+                return { day: data.day, firstLanding: !!data.firstLanding };
+            } catch (_) {
+                return { day: todayKey(), firstLanding: false };
+            }
+        }
+
+        function setDailyState(next) {
+            localStorage.setItem(DAILY_KEY, JSON.stringify(next));
+        }
+
+        function maybeDailyFirstLandingBonus() {
+            const ds = getDailyState();
+            if (ds.firstLanding) return;
+            addCurrency(75);
+            ds.firstLanding = true;
+            setDailyState(ds);
+            showTrickText('DAILY BONUS! +75 🪙');
+            saveNow();
+        }
+
+        function maybeFirstPurchaseBonus() {
+            // Session bonus: first purchase only (not persisted beyond refresh)
+            if (state._firstPurchaseBonusGiven) return;
+            state._firstPurchaseBonusGiven = true;
+            addCurrency(40);
+            showTrickText('FIRST BUY BONUS! +40 🪙');
+        }
+
+        function playHorn() {
+            if (!state.equippedHorn || state.equippedHorn === 'none') return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'square';
+                const freq = (state.equippedHorn === 'horn_air') ? 180 : 520;
+                o.frequency.value = freq;
+                g.gain.value = 0.06;
+                o.connect(g); g.connect(ctx.destination);
+                o.start();
+                setTimeout(() => { o.stop(); ctx.close(); }, (state.equippedHorn === 'horn_air') ? 220 : 120);
+            } catch (_) {}
+        }
+
+        // Underglow lights
+        const underglowCar = new THREE.PointLight(0x1e90ff, 0, 18);
+        const underglowSkater = new THREE.PointLight(0x1e90ff, 0, 16);
+        scene.add(underglowCar);
+        scene.add(underglowSkater);
+
+        function updateUnderglow() {
+            const glow = state.equippedGlow || 'none';
+            const color =
+                glow === 'glow_green' ? 0x7bed9f :
+                glow === 'glow_blue' ? 0x1e90ff :
+                0x1e90ff;
+            const intensity = (glow === 'none') ? 0 : 1.25;
+
+            underglowCar.color.setHex(color);
+            underglowSkater.color.setHex(color);
+            underglowCar.intensity = intensity;
+            underglowSkater.intensity = intensity;
+        }
+
+        // Trail renderer (simple points)
+        const trailMax = 220;
+        const trailGeom = new THREE.BufferGeometry();
+        const trailPos = new Float32Array(trailMax * 3);
+        trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+        const trailMat = new THREE.PointsMaterial({ size: 0.35, color: 0x7bed9f, transparent: true, opacity: 0.7 });
+        const trailPoints = new THREE.Points(trailGeom, trailMat);
+        trailPoints.frustumCulled = false;
+        trailPoints.visible = false;
+        scene.add(trailPoints);
+
+        function updateTrail(delta) {
+            const trail = state.equippedTrail || 'none';
+            const enabled = trail !== 'none' && state.isPlaying;
+            trailPoints.visible = enabled;
+            if (!enabled) return;
+
+            // color by type
+            const col = (trail === 'trail_fire') ? 0xff6b2d : 0x7bed9f;
+            trailMat.color.setHex(col);
+            trailMat.opacity = (trail === 'trail_fire') ? 0.85 : 0.70;
+
+            const now = performance.now();
+            const rateMs = 55;
+            if (now - state.lastTrailAt < rateMs) return;
+            state.lastTrailAt = now;
+
+            const p = (state.playerType === 'car') ? car.position : skater.position;
+            state.trailPoints.push(p.x, p.y + 0.15, p.z);
+            while (state.trailPoints.length > trailMax * 3) state.trailPoints.splice(0, 3);
+
+            // write into buffer
+            trailPos.fill(0);
+            const start = Math.max(0, state.trailPoints.length - trailMax * 3);
+            const slice = state.trailPoints.slice(start);
+            for (let i = 0; i < slice.length; i++) trailPos[i] = slice[i];
+            trailGeom.attributes.position.needsUpdate = true;
+        }
+
         function renderShop() {
             const list = document.getElementById('shop-list');
             if (!list) return;
             list.innerHTML = '';
             const bal = Math.floor(state.currency);
+            ensureCosmetics();
             carCatalog.forEach(cfg => {
                 const owned = state.ownedCars.has(cfg.id);
                 const equipped = state.equippedCarId === cfg.id;
@@ -1050,6 +1288,71 @@
 
                 list.appendChild(card);
             });
+
+            // Cosmetics section
+            const header = document.createElement('div');
+            header.style.gridColumn = '1 / -1';
+            header.style.marginTop = '8px';
+            header.style.paddingTop = '10px';
+            header.style.borderTop = '1px solid rgba(255,255,255,0.10)';
+            header.innerHTML = `<div style="font-weight:900; color: rgba(255,255,255,0.85);">✨ COSMETICS</div><div style="font-size:0.85rem; color: rgba(255,255,255,0.55);">Earn 🪙 and customize your ride.</div>`;
+            list.appendChild(header);
+
+            cosmeticCatalog.forEach(item => {
+                const owned = state.ownedCosmetics.has(item.id);
+                const equipped =
+                    (item.type === 'trail' && state.equippedTrail === item.id) ||
+                    (item.type === 'horn' && state.equippedHorn === item.id) ||
+                    (item.type === 'glow' && state.equippedGlow === item.id);
+                const canBuy = !owned && bal >= item.price;
+
+                const card = document.createElement('div');
+                card.style.background = 'rgba(255,255,255,0.06)';
+                card.style.border = '1px solid rgba(255,255,255,0.10)';
+                card.style.borderRadius = '16px';
+                card.style.padding = '12px';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.gap = '10px';
+
+                const badge = document.createElement('div');
+                badge.style.display = 'flex';
+                badge.style.alignItems = 'center';
+                badge.style.justifyContent = 'space-between';
+                badge.innerHTML = `<div style="font-weight:900;">${item.name}</div><div style="font-weight:800; color: var(--mge-gold);">🪙 ${item.price}</div>`;
+                card.appendChild(badge);
+
+                const stats = document.createElement('div');
+                stats.style.fontSize = '0.8rem';
+                stats.style.color = 'rgba(255,255,255,0.65)';
+                stats.innerHTML = `Type: <b>${item.type.toUpperCase()}</b>`;
+                card.appendChild(stats);
+
+                const btn = document.createElement('button');
+                btn.className = 'mode-btn';
+                btn.style.background = owned ? (equipped ? 'rgba(123,237,159,0.20)' : 'rgba(30,144,255,0.18)') : (canBuy ? 'rgba(123,237,159,0.20)' : 'rgba(255,255,255,0.06)');
+                btn.style.border = owned ? '1px solid rgba(255,255,255,0.18)' : (canBuy ? '1px solid rgba(123,237,159,0.40)' : '1px solid rgba(255,255,255,0.10)');
+                btn.style.color = 'white';
+                btn.innerText = equipped ? 'EQUIPPED' : (owned ? 'EQUIP' : (canBuy ? 'BUY' : 'NEED MORE 🪙'));
+                btn.onclick = () => {
+                    if (equipped) return;
+                    if (!owned) {
+                        if (state.currency < item.price) return;
+                        state.currency -= item.price;
+                        state.ownedCosmetics.add(item.id);
+                        // session bonus: first purchase
+                        maybeFirstPurchaseBonus();
+                    }
+                    if (item.type === 'trail') state.equippedTrail = item.id;
+                    if (item.type === 'horn') state.equippedHorn = item.id;
+                    if (item.type === 'glow') state.equippedGlow = item.id;
+                    saveNow();
+                    updateWalletUI();
+                    renderShop();
+                };
+                card.appendChild(btn);
+                list.appendChild(card);
+            });
         }
 
         function showShop(open) {
@@ -1075,6 +1378,21 @@
             notif.innerText = text;
             notif.style.opacity = 1;
             state.trickTextUntil = performance.now() + 900;
+        }
+
+        function updateChallengeHUD() {
+            const airEl = document.getElementById('challenge-air');
+            const timeEl = document.getElementById('challenge-time');
+            const bar = document.getElementById('challenge-bar');
+            const done = document.getElementById('challenge-done');
+            if (!airEl || !timeEl || !bar || !done) return;
+
+            const targetAir = 4.0;
+            airEl.innerText = state.minuteAirAccum.toFixed(1);
+            timeEl.innerText = String(Math.ceil(state.minuteTimer));
+            const pct = Math.min(100, (state.minuteAirAccum / targetAir) * 100);
+            bar.style.width = `${pct}%`;
+            done.style.display = state.minuteBonusGiven ? 'block' : 'none';
         }
 
         function moveCar(delta) {
@@ -1120,6 +1438,8 @@
             }
 
             car.rotation.y = carYaw;
+            underglowCar.position.copy(car.position).add(new THREE.Vector3(0, -0.1, 0));
+            underglowSkater.position.set(0, -9999, 0);
             
             // Speed UI
             const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
@@ -1235,6 +1555,8 @@
             }
 
             skater.rotation.y = carYaw;
+            underglowSkater.position.copy(skater.position).add(new THREE.Vector3(0, -0.05, 0));
+            underglowCar.position.set(0, -9999, 0);
 
             // Speed UI
             const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
@@ -1268,8 +1590,23 @@
                 // landed: payout
                 const air = state.airTimeSec;
                 if (air > 0.18) {
-                    const airPay = Math.min(80, air * 14); // cap per jump
+                    // landing combo: reward consecutive clean landings
+                    const now = performance.now();
+                    const comboWindowMs = 3200;
+                    const isCombo = state.lastLandingAt && (now - state.lastLandingAt) < comboWindowMs;
+                    state.landingCombo = isCombo ? Math.min(10, state.landingCombo + 1) : 0;
+                    state.lastLandingAt = now;
+
+                    const basePay = Math.min(80, air * 14); // cap per jump
+                    const mult = 1 + state.landingCombo * 0.12;
+                    const airPay = basePay * mult;
                     addCurrency(airPay);
+                    if (state.landingCombo >= 1) {
+                        showTrickText(`COMBO x${state.landingCombo+1}! +${Math.floor(airPay)}`);
+                    }
+
+                    // daily bonus check
+                    maybeDailyFirstLandingBonus();
                 }
                 state.airTimeSec = 0;
                 saveNow();
@@ -1337,6 +1674,7 @@
         window.addEventListener('keydown', e => { 
             keys[e.code] = true; 
             if(e.code === 'Escape') cancelPlay();
+            if (e.code === 'KeyH') playHorn();
         });
 
         window.addEventListener('keyup', e => keys[e.code] = false);
@@ -1400,6 +1738,7 @@
             document.getElementById('stop-game').style.display = 'flex';
             document.getElementById('car-hud').style.display = 'flex';
             document.getElementById('wallet-hud').style.display = 'flex';
+            document.getElementById('challenge-hud').style.display = 'flex';
             document.getElementById('crosshair').style.display = 'block';
             car.position.set(0, 10, 0);
             skater.position.set(0, 10, 0);
@@ -1411,6 +1750,8 @@
             state.minuteTimer = 60;
             state.minuteAirAccum = 0;
             state.minuteBonusGiven = false;
+            state.landingCombo = 0;
+            state.lastLandingAt = 0;
             setPlayerType(state.playerType);
             if (state.playerType === 'car') car.position.set(0, 10, 0);
             else skater.position.set(0, 10, 0);
@@ -1431,6 +1772,7 @@
             document.getElementById('stop-game').style.display = 'none';
             document.getElementById('car-hud').style.display = 'none';
             document.getElementById('wallet-hud').style.display = 'none';
+            document.getElementById('challenge-hud').style.display = 'none';
             document.getElementById('crosshair').style.display = 'none';
             car.visible = false;
             skater.visible = false;
@@ -1446,6 +1788,24 @@
         document.getElementById('stop-game').onclick = cancelPlay;
         document.getElementById('btn-mode-play').onclick = startPlay;
         document.getElementById('btn-mode-build').onclick = cancelPlay;
+
+        function respawnPlayer() {
+            if (!state.isPlaying) return;
+            if (state.playerType === 'car') {
+                car.position.set(0, 10, 0);
+                car.rotation.set(0, 0, 0);
+            } else {
+                skater.position.set(0, 10, 0);
+                skater.rotation.set(0, 0, 0);
+                boardGroup.rotation.set(0, 0, 0);
+            }
+            carVel.set(0, 0, 0);
+            carYaw = 0;
+            state.airTimeSec = 0;
+            state.isAirborne = false;
+            state.trailPoints.length = 0;
+            showTrickText('RESPAWNED');
+        }
 
         // Scripting
         function addToScript(t) {
@@ -1502,6 +1862,10 @@
                         saveNow();
                     }
                 }
+                // Challenge HUD update
+                updateChallengeHUD();
+                updateUnderglow();
+                updateTrail(delta);
                 if (state.trickTextUntil && performance.now() > state.trickTextUntil) {
                     const notif = document.getElementById('notification');
                     if (notif) notif.style.opacity = 0;
@@ -1519,6 +1883,7 @@
 
         // Init save + UI hooks
         loadSave();
+        ensureCosmetics();
         applyCarAppearance();
         updateWalletUI();
         document.getElementById('open-shop').onclick = () => showShop(true);
@@ -1529,6 +1894,7 @@
         document.getElementById('toggle-player').onclick = () => {
             setPlayerType(state.playerType === 'car' ? 'skate' : 'car');
         };
+        document.getElementById('respawn').onclick = respawnPlayer;
 
         // Playtest choice hooks
         document.getElementById('choice-cancel').onclick = () => cancelPlay();
