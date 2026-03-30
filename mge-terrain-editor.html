@@ -719,13 +719,19 @@
         const sw1 = new THREE.Mesh(sWheelGeom, sWheelMat); sw1.position.set(0, 0.12, 0.9); boardGroup.add(sw1);
         const sw2 = new THREE.Mesh(sWheelGeom, sWheelMat); sw2.position.set(0, 0.12, -0.9); boardGroup.add(sw2);
         skater.add(boardGroup);
-        const rider = new THREE.Mesh(
-            new THREE.CapsuleGeometry(0.28, 0.9, 8, 16),
-            new THREE.MeshStandardMaterial({ color: 0xffa502, roughness: 0.4 })
-        );
-        rider.castShadow = true;
-        rider.position.y = 1.05;
-        skater.add(rider);
+        // NOTE: Three r128 doesn't ship `THREE.CapsuleGeometry` in core, so build a simple rider from primitives.
+        const riderMat = new THREE.MeshStandardMaterial({ color: 0xffa502, roughness: 0.4 });
+        const riderGroup = new THREE.Group();
+        const torso = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.26, 0.30, 0.9, 12), riderMat);
+        torso.castShadow = true;
+        torso.position.y = 0.85;
+        riderGroup.add(torso);
+        const head = new THREE.Mesh(new THREE.SphereBufferGeometry(0.22, 14, 14), riderMat);
+        head.castShadow = true;
+        head.position.y = 1.45;
+        riderGroup.add(head);
+        riderGroup.position.y = 0.0;
+        skater.add(riderGroup);
         skater.visible = false;
         scene.add(skater);
 
