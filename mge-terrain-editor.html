@@ -863,35 +863,47 @@
         }
 
         // --- INTERACTION ---
+        // Attach events to the CANVAS directly so OrbitControls doesn't swallow them.
+        const canvas = renderer.domElement;
 
-        window.addEventListener('mousedown', e => {
-            // Update pointer immediately for raycasting
-            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            
-            // Ignore if clicking on UI
-            if (e.target.closest('.sidebar') || e.target.closest('.header') || e.target.closest('.footer') || e.target.closest('.mode-selector')) {
-                return;
-            }
-            
-            // Only Left Click (0) for sculpting in Build mode
+        function getPointer(e) {
+            const rect = canvas.getBoundingClientRect();
+            pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+            pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+        }
+
+        function isOverUI(e) {
+            return !!e.target.closest('.sidebar, .header, .footer, .mode-selector');
+        }
+
+        canvas.addEventListener('pointerdown', e => {
+            if (isOverUI(e) || state.mode !== 'build') return;
+            if (e.button !== 0) return; // Only left-click sculpts
+            e.preventDefault();
+            getPointer(e);
+            state.isMouseDown = true;
+            // Force orbit NOT to handle this left-click
+            orbit.enabled = false;
+            updateBrush();
+            if (state.lastPoint.lengthSq() > 0 || true) runTool();
+        });
+
+        canvas.addEventListener('pointermove', e => {
+            getPointer(e);
+        });
+
+        window.addEventListener('pointerup', e => {
             if (e.button === 0) {
-                state.isMouseDown = true;
-                state.mouseButton = e.button;
-                if(state.mode === 'build') {
-                    updateBrush(); // Sync lastPoint before running tool
-                    runTool();
-                }
+                state.isMouseDown = false;
+                if (state.mode === 'build') orbit.enabled = true;
             }
         });
 
-        window.addEventListener('mouseup', () => {
-            state.isMouseDown = false;
-        });
-
-        window.addEventListener('mousemove', e => {
-            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        // Right-click: let OrbitControls handle rotation
+        canvas.addEventListener('pointerdown', e => {
+            if (e.button === 2 && state.mode === 'build') {
+                orbit.enabled = true;
+            }
         });
 
         window.addEventListener('keydown', e => { 
@@ -957,6 +969,7 @@
         function cancelPlay() {
             state.isPlaying = false;
             state.mode = 'build';
+            state.isMouseDown = false;
             document.getElementById('build-sidebar').style.display = 'flex';
             document.getElementById('code-sidebar').style.display = 'flex';
             document.getElementById('start-game').style.display = 'flex';
