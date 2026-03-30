@@ -465,7 +465,7 @@
         <div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width: min(720px, 92vw); max-height: min(560px, 80vh); overflow:auto; background: rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 25px 70px rgba(0,0,0,0.6); padding: 18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
                 <div>
-                    <div style="font-weight:900; letter-spacing:1px; color: var(--mge-gold);">🏁 CAR SHOP</div>
+            <div style="font-weight:900; letter-spacing:1px; color: var(--mge-gold);">🏁 CAR SHOP (GARAGE)</div>
                     <div style="font-size:0.85rem; color: rgba(255,255,255,0.55);">Buy cars with airtime+speed currency. Equip any owned car.</div>
                 </div>
                 <button class="mode-btn" id="close-shop" style="background: rgba(255,71,87,0.18); color: white; border: 1px solid rgba(255,71,87,0.45);">CLOSE</button>
@@ -810,6 +810,9 @@
             const radiusInCells = Math.ceil(state.brushSize / step) + 1;
 
             let changed = false;
+            let changedVerts = 0;
+            let paintedVerts = 0;
+            let grassPlaced = 0;
 
             const startX = Math.max(0, gridX - radiusInCells);
             const endX   = Math.min(RES, gridX + radiusInCells);
@@ -837,11 +840,13 @@
                         if (currentTool === 'raise' || currentTool === 'lower') {
                             pos[idx+1] += mod * effort * 1.5; // Back to moderate speed
                             changed = true;
+                            changedVerts++;
                         } 
                         else if (currentTool === 'mountains') {
                             const noise = (Math.sin(vx * 0.2) * Math.cos(vz * 0.2)) * 2;
                             pos[idx+1] += (mod * 5 + noise) * effort * 0.5;
                             changed = true;
+                            changedVerts++;
                         }
                         else if (currentTool === 'smooth') {
                             // Real Laplacian smooth: average Neighbors
@@ -858,9 +863,11 @@
                             const avg = sum / count;
                             pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], avg, 0.2 * falloff);
                             changed = true;
+                            changedVerts++;
                         }
                         else if (currentTool === 'grass' && Math.random() < 0.2) {
                             placeGrassAt(new THREE.Vector3(vx, vy, vz));
+                            grassPlaced++;
                         }
                         else if (currentTool === 'paint') {
                             // Multi-layer painting feel
@@ -872,10 +879,12 @@
                             cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], rockCol[1], lerpVal);
                             cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], rockCol[2], lerpVal);
                             terrainGeom.attributes.color.needsUpdate = true;
+                            paintedVerts++;
                         }
                         else if (currentTool === 'flatten') {
                             pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], center.y, effort * (state.brushIntensity * 0.5));
                             changed = true;
+                            changedVerts++;
                         }
                     }
                 }
@@ -889,6 +898,22 @@
                 terrainGeom.computeBoundingSphere(); // CRITICAL for raycasting update
                 terrainGeom.computeBoundingBox();    // CRITICAL for raycasting update
             }
+
+            // Rewards for building/editing (so students earn currency even while sculpting)
+            // Anti-spam: cap earnings per call.
+            const earnCap = 3.0;
+            let earn = 0;
+            if (changedVerts > 0) {
+                // reward sculpting/smoothing/flattening/mountains
+                earn += Math.min(earnCap, changedVerts * 0.002);
+            }
+            if (paintedVerts > 0) {
+                earn += Math.min(earnCap, paintedVerts * 0.0012);
+            }
+            if (grassPlaced > 0) {
+                earn += Math.min(earnCap, grassPlaced * 0.03);
+            }
+            if (earn > 0) addCurrency(earn);
         }
 
         // --- CAR ENGINE ---
