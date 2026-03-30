@@ -148,10 +148,14 @@
             stars.visible = false;
             scene.add(stars);
             scene.userData.stars = stars;
+            
+            // Pre-allocate colors for lerp
+            scene.userData.skyColor = new THREE.Color(0x87ceeb);
+            scene.userData.spaceColor = new THREE.Color(0x050510);
 
             const w = window.innerWidth || 1024;
             const h = window.innerHeight || 768;
-            camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 10000);
             camera.rotation.order = 'YXZ'; 
             camera.position.y = 10;
 
@@ -246,6 +250,7 @@
                 tree.position.x = (Math.random() - 0.5) * 1200;
                 tree.position.z = (Math.random() - 0.5) * 1200;
                 tree.userData = { isEnvironment: true, capturing: false };
+                tree.userData.bounds = new THREE.Box3().setFromObject(tree);
                 scene.add( tree );
                 interactiveObjects.push(tree);
                 
@@ -253,6 +258,7 @@
                 const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(Math.random()*3 + 1), new THREE.MeshStandardMaterial({color: colors.stone, roughness: 0.9}));
                 rock.position.set(tree.position.x + Math.random()*10 - 5, 1, tree.position.z + Math.random()*10 - 5);
                 rock.userData = { isEnvironment: true, capturing: false };
+                rock.userData.bounds = new THREE.Box3().setFromObject(rock);
                 scene.add(rock);
                 interactiveObjects.push(rock);
             }
@@ -267,12 +273,14 @@
                     20 + Math.random() * 30
                 );
                 scene.add(island);
+                island.userData.bounds = new THREE.Box3().setFromObject(island);
                 interactiveObjects.push(island);
             }
 
             // THE FLOATING CASTLE (In Space)
             const castle = createFloatingCastle(0, 1500, 0);
             scene.add(castle);
+            castle.userData.bounds = new THREE.Box3().setFromObject(castle);
             interactiveObjects.push(castle);
 
             // Enemies cleared (previously 30) - keep only a few for testing or none
@@ -658,6 +666,7 @@
             const obj = new THREE.Mesh(geo, mat);
             obj.position.copy(pos);
             obj.userData = { isEnvironment: true, capturing: false, name: name, fallVelocity: fallSpeed };
+            obj.userData.bounds = new THREE.Box3().setFromObject(obj);
             scene.add(obj);
             pushableBlocks.push(obj);
             interactiveObjects.push(obj);
@@ -826,7 +835,8 @@
                 let activePlatform = null;
                 
                 interactiveObjects.forEach(obj => {
-                    const box = new THREE.Box3().setFromObject(obj);
+                    const box = obj.userData.bounds;
+                    if (!box) return;
                     if (camera.position.x >= box.min.x - 1.5 && camera.position.x <= box.max.x + 1.5 &&
                         camera.position.z >= box.min.z - 1.5 && camera.position.z <= box.max.z + 1.5) {
                         if (camera.position.y >= box.max.y) {
@@ -888,18 +898,21 @@
                 // Space Transition
                 const height = camera.position.y;
                 if (height > 100) {
-                    const alpha = Math.min(1, (height - 200) / 800);
-                    const skyColor = new THREE.Color(0x87ceeb);
-                    const spaceColor = new THREE.Color(0x050510);
-                    scene.background.lerpColors(skyColor, spaceColor, alpha);
+                    const alpha = Math.max(0, Math.min(1, (height - 200) / 800));
+                    scene.background.lerpColors(scene.userData.skyColor, scene.userData.spaceColor, alpha);
                     scene.fog.color.copy(scene.background);
+                    scene.fog.density = 0.002 * (1 - alpha); // Fade out fog in space
                     
                     if (height > 600) {
                         scene.userData.stars.visible = true;
-                        scene.userData.stars.position.y = height - 1000; // keep stars around us
+                        scene.userData.stars.position.set(camera.position.x, height - 1000, camera.position.z); 
                     } else {
                         scene.userData.stars.visible = false;
                     }
+                } else {
+                    scene.fog.density = 0.002;
+                    scene.background.set(0x87ceeb);
+                    scene.fog.color.set(0x87ceeb);
                 }
 
                 // Boundaries
@@ -932,29 +945,37 @@
             }
 
                 interactiveObjects.forEach((e, index) => {
+                    // Update bounds if moving
+                    if (e.userData.capturing || e.userData.fallVelocity) {
+                        e.userData.bounds.setFromObject(e);
+                    }
+                    
                     if (e.userData.name === 'SpaceTrampoline') {
                         e.userData.core.material.color.setHSL((time * 0.0002) % 1, 1, 0.7);
                     }
                     if (e.userData.spinSpeed) {
-                    e.userData.board.rotation.y += e.userData.spinSpeed * delta;
-                    e.userData.spinSpeed *= 0.95;
-                }
+                        e.userData.board.rotation.y += e.userData.spinSpeed * delta;
+                        e.userData.spinSpeed *= 0.95;
+                    }
 
-                if (e.userData.capturing) {
-                    e.position.y += delta * 15;
-                    e.rotation.y += delta * 0.5;
-                    if (e.position.y > 600) {
-                        scene.remove(e);
-                        interactiveObjects.splice(index, 1);
+                    if (e.userData.capturing) {
+                        e.position.y += delta * 15;
+                        e.rotation.y += delta * 0.5;
+                        if (e.position.y > 2000) { // Higher limit for space
+                            scene.remove(e);
+                            interactiveObjects.splice(index, 1);
+                        }
+                    } else {
+                        // Fall physics if it's an anchor or a popped balloon object higher than ground
+                        if (e.position.y > 2) {
+                            e.position.y -= (e.userData.fallVelocity || 50) * delta;
+                            if (e.position.y < 2) {
+                                e.position.y = 2;
+                                e.userData.bounds.setFromObject(e); // final update
+                            }
+                        }
                     }
-                } else {
-                    // Fall physics if it's an anchor or a popped balloon object higher than ground
-                    if (e.position.y > 2) {
-                        e.position.y -= (e.userData.fallVelocity || 50) * delta;
-                        if (e.position.y < 2) e.position.y = 2; // Floor collision
-                    }
-                }
-            });
+                });
 
             // Enemies shifting & Floating
             enemies.forEach((e, index) => {
