@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE - FPS Striker | Mr. Gonzalez STEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mge-primary: #ff4757;
+            --mge-secondary: #2f3542;
+            --mge-accent: #7bed9f;
+            --mge-gold: #ffa502;
+            --mge-blue: #1e90ff;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.7);
+            --neon-glow: 0 0 15px var(--mge-primary);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0c0c14;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .mge-badge {
+            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--neon-glow);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .mode-selector {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 5px;
+            border-radius: 15px;
+            display: flex;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: var(--mge-blue);
+            color: white;
+            box-shadow: 0 0 10px var(--mge-blue);
+        }
+
+        /* --- SIDEBARS --- */
+        .workspace {
+            display: flex;
+            justify-content: space-between;
+            height: 70%;
+            margin: 20px 0;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .sidebar h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--mge-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 10px;
+            border-radius: 16px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tool-btn.active {
+            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
+            border-color: var(--mge-primary);
+            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .tool-btn span:first-child {
+            font-size: 1.8rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--mge-primary);
+            cursor: pointer;
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .big-btn {
+            padding: 18px 45px;
+            border-radius: 24px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .run-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .run-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); transform: translateY(-5px) scale(1.05); }
+
+        .stop-btn { background: linear-gradient(135deg, #ff4757, #c0392b); color: white; display: none; }
+        .stop-btn:hover { transform: translateY(-5px) scale(1.05); }
+
+        /* --- GAME HUD --- */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            z-index: 200;
+        }
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        #crosshair::before { width: 2px; height: 100%; left: 14px; top: 0; }
+        #crosshair::after { height: 2px; width: 100%; top: 14px; left: 0; }
+
+        .game-hud {
+            position: absolute;
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        #timer-hud {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            align-items: center;
+        }
+
+        #score-hud {
+            bottom: 40px;
+            right: 40px;
+            align-items: flex-end;
+        }
+
+        .big-text {
+            font-size: 3rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .timer-val { color: var(--mge-primary); text-shadow: 0 0 15px var(--mge-primary); }
+        .score-val { color: var(--mge-accent); text-shadow: 0 0 15px var(--mge-accent); }
+
+        .hud-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #notification {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-dark);
+            padding: 15px 40px;
+            border-radius: 40px;
+            border: 2px solid var(--mge-primary);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            font-weight: 800;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 300;
+        }
+
+        #muzzle-flash {
+            position: absolute;
+            bottom: 0;
+            right: 15%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,200,50,0.8) 0%, transparent 70%);
+            display: none;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* --- CONTROLS HINT --- */
+        .controls-hint {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            padding: 8px 25px;
+            border-radius: 20px;
+            z-index: 50;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+    <div id="muzzle-flash"></div>
+
+    <div id="ui-root">
+        <div class="header">
+            <div class="mge-badge">FPS STRIKER</div>
+            <div class="mode-selector">
+                <button class="mode-btn active" id="btn-mode-build">BUILD</button>
+                <button class="mode-btn" id="btn-mode-play">PLAY</button>
+            </div>
+            <div style="width: 150px; display: flex; justify-content: flex-end;">
+                 <a href="mge.html" style="color:white; text-decoration:none; background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:10px; font-size:0.8rem">🏠 HUB</a>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="sidebar" id="build-sidebar">
+                <h2>Level Editor</h2>
+                <div class="tool-grid">
+                    <div class="tool-btn active" data-tool="raise">
+                        <span>🏔️</span>
+                        <span>Raise</span>
+                    </div>
+                    <div class="tool-btn" data-tool="lower">
+                        <span>🕳️</span>
+                        <span>Lower</span>
+                    </div>
+                    <div class="tool-btn" data-tool="target">
+                        <span>🎯</span>
+                        <span>Target</span>
+                    </div>
+                    <div class="tool-btn" data-tool="smooth">
+                        <span>✨</span>
+                        <span>Smooth</span>
+                    </div>
+                    <div class="tool-btn" data-tool="grass">
+                        <span>🌿</span>
+                        <span>Grass</span>
+                    </div>
+                    <div class="tool-btn" data-tool="paint">
+                        <span>🎨</span>
+                        <span>Paint</span>
+                    </div>
+                    <div class="tool-btn" data-tool="flatten">
+                        <span>📏</span>
+                        <span>Flatten</span>
+                    </div>
+                    <div class="tool-btn" data-tool="delete">
+                        <span>🗑️</span>
+                        <span>Delete</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Brush Size</span>
+                        <span id="brush-size-label">20</span>
+                    </div>
+                    <input type="range" id="brush-size" min="5" max="50" value="20">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Sculpt Speed</span>
+                        <span id="brush-intensity-label">2.0</span>
+                    </div>
+                    <input type="range" id="brush-intensity" min="0.5" max="10.0" step="0.5" value="2.0">
+                </div>
+
+                <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <strong style="color:var(--mge-gold)">BUILD TIPS:</strong><br>
+                    1. Use <b>TARGET</b> to place enemies.<br>
+                    2. Use <b>RAISE</b> to create sniper hills.<br>
+                    3. Delete targets with the <b>DELETE</b> tool.
+                </div>
+
+                <div style="margin-top:auto">
+                    <button class="mode-btn" id="reset-world" style="width:100%; border:1px solid var(--mge-primary); color: var(--mge-primary);">Clear Level</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="big-btn run-btn" id="start-game">
+                <span>▶</span> ENTER ARENA
+            </button>
+            <button class="big-btn stop-btn" id="stop-game">
+                <span>⏹</span> EXIT ARENA
+            </button>
+        </div>
+    </div>
+
+    <!-- Gameplay HUD -->
+    <div id="notification"></div>
+
+    <div class="game-hud" id="timer-hud">
+        <div class="hud-label">Time Remaining</div>
+        <div class="big-text timer-val" id="timer-display">00:00</div>
+    </div>
+
+    <div class="game-hud" id="score-hud">
+        <div class="hud-label">Targets Destroyed</div>
+        <div class="big-text score-val" id="score-display">0</div>
+        <div id="targets-remaining" style="font-size:0.8rem; color:#888;">0 REMAINING</div>
+    </div>
+
+    <div class="controls-hint" id="controls-hint">
+        BUILD: LMB Sculpt | Shift+LMB Invert | RMB Rotate | Wheel Zoom<br>
+        PLAY: WASD Move | LMB Shoot | Space Jump | ESC Unlock
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+
+    <script>
+        /**
+         * MGE FPS Striker
+         * A first-person target shooter with terrain editing.
+         */
+
+        const state = {
+            mode: 'build',
+            tool: 'raise',
+            brushSize: 20,
+            brushIntensity: 2.0,
+            isMouseDown: false,
+            isPlaying: false,
+            lastPoint: new THREE.Vector3(),
+            score: 0,
+            timer: 60,
+            targets: [],
+            cameraShake: 0,
+            weaponRecoil: 0,
+            isJumping: false,
+            velocity: new THREE.Vector3(),
+            canShoot: true
+        };
+
+        // --- THREE.JS SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0c0c14);
+        scene.fog = new THREE.FogExp2(0x0c0c14, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Lights
+        const ambient = new THREE.AmbientLight(0x4040ff, 0.4);
+        scene.add(ambient);
+
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+        sun.position.set(50, 100, 50);
+        sun.castShadow = true;
+        sun.shadow.mapSize.width = 2048;
+        sun.shadow.mapSize.height = 2048;
+        sun.shadow.camera.left = -200;
+        sun.shadow.camera.right = 200;
+        sun.shadow.camera.top = 200;
+        sun.shadow.camera.bottom = -200;
+        scene.add(sun);
+
+        // --- TERRAIN ---
+        const terrainSize = 300;
+        const RES = 60;
+        const terrainGeom = new THREE.PlaneBufferGeometry(terrainSize, terrainSize, RES, RES);
+        terrainGeom.rotateX(-Math.PI / 2);
+        
+        const terrainMat = new THREE.MeshStandardMaterial({
+            color: 0x333333,
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true,
+            vertexColors: true
+        });
+
+        const terrain = new THREE.Mesh(terrainGeom, terrainMat);
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+
+        // Add colors to vertices
+        const colors = new Float32Array(terrainGeom.attributes.position.count * 3);
+        for(let i=0; i<colors.length; i+=3) {
+            colors[i] = 0.2; colors[i+1] = 0.2; colors[i+2] = 0.25;
+        }
+        terrainGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Brush Ring
+        const ringGeom = new THREE.RingBufferGeometry(0.9, 1.0, 32);
+        ringGeom.rotateX(-Math.PI / 2);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.6 });
+        const brushRing = new THREE.Mesh(ringGeom, ringMat);
+        scene.add(brushRing);
+
+        // --- CONTROLS ---
+        const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+        orbit.enableDamping = true;
+        orbit.mouseButtons = {
+            LEFT: null,
+            MIDDLE: THREE.MOUSE.PAN,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+        camera.position.set(100, 100, 100);
+        orbit.update();
+
+        const fpControls = new THREE.PointerLockControls(camera, document.body);
+        scene.add(fpControls.getObject());
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        // --- MODELS ---
+        
+        // Target model template
+        const targetGeom = new THREE.SphereBufferGeometry(2, 8, 8);
+        const targetMat = new THREE.MeshStandardMaterial({ 
+            color: 0xff4757, 
+            emissive: 0xff0000, 
+            emissiveIntensity: 0.5,
+            wireframe: false 
+        });
+
+        function createTarget(pos) {
+            const group = new THREE.Group();
+            
+            const sphere = new THREE.Mesh(targetGeom, targetMat.clone());
+            sphere.castShadow = true;
+            group.add(sphere);
+
+            // Ring around sphere
+            const rGeom = new THREE.TorusBufferGeometry(2.5, 0.2, 8, 24);
+            const rMat = new THREE.MeshStandardMaterial({ color: 0xffa502, emissive: 0xffa502, emissiveIntensity: 0.5 });
+            const ring = new THREE.Mesh(rGeom, rMat);
+            ring.rotation.x = Math.PI / 2;
+            group.add(ring);
+
+            group.position.copy(pos);
+            group.position.y += 3; // Hover slightly
+            group.userData.isTarget = true;
+            group.userData.hp = 1;
+            
+            scene.add(group);
+            state.targets.push(group);
+            updateScoreUI();
+        }
+
+        // Weapon (Simple block for First Person)
+        const weapon = new THREE.Group();
+        const gunBody = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(0.5, 0.5, 2.5),
+            new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 })
+        );
+        gunBody.position.set(0.6, -0.6, -1.5);
+        weapon.add(gunBody);
+
+        const barrel = new THREE.Mesh(
+            new THREE.CylinderBufferGeometry(0.15, 0.15, 1, 8),
+            new THREE.MeshStandardMaterial({ color: 0x444444 })
+        );
+        barrel.rotation.x = Math.PI / 2;
+        barrel.position.set(0.6, -0.5, -3);
+        weapon.add(barrel);
+
+        camera.add(weapon);
+
+        // --- INTERACTION ---
+        const canvas = renderer.domElement;
+        const keys = {};
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Escape' && state.isPlaying) stopGame();
+            if (e.code === 'Space' && state.isPlaying && !state.isJumping) {
+                state.velocity.y = 15;
+                state.isJumping = true;
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        canvas.addEventListener('pointermove', e => {
+            const rect = canvas.getBoundingClientRect();
+            pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        });
+
+        canvas.addEventListener('pointerdown', e => {
+            if (state.mode === 'build') {
+                if (e.button === 0 && !e.target.closest('.sidebar, .header, .footer')) {
+                    state.isMouseDown = true;
+                    orbit.enabled = false;
+                    runTool();
+                }
+            } else if (state.mode === 'play') {
+                if (e.button === 0) shoot();
+            }
+        });
+
+        window.addEventListener('pointerup', () => {
+            state.isMouseDown = false;
+            if (state.mode === 'build') orbit.enabled = true;
+        });
+
+        // --- TOOLS ---
+        function runTool() {
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObject(terrain);
+            if (hits.length === 0) return;
+
+            const point = hits[0].point;
+            state.lastPoint.copy(point);
+
+            if (state.tool === 'target') {
+                if (state.isMouseDown) {
+                    createTarget(point);
+                    state.isMouseDown = false; // Single click
+                }
+                return;
+            }
+
+            if (state.tool === 'delete') {
+                const targetHits = raycaster.intersectObjects(state.targets, true);
+                if (targetHits.length > 0) {
+                    let obj = targetHits[0].object;
+                    while (obj.parent && !obj.userData.isTarget) obj = obj.parent;
+                    deleteTarget(obj);
+                    state.isMouseDown = false;
+                }
+                return;
+            }
+
+            // Sculpting logic
+            const pos = terrainGeom.attributes.position.array;
+            const cols = terrainGeom.attributes.color.array;
+            const isShift = keys['ShiftLeft'] || keys['ShiftRight'];
+            
+            let force = state.brushIntensity;
+            if (isShift) force *= -1;
+            if (state.tool === 'lower') force = -Math.abs(force);
+            if (state.tool === 'raise') force = Math.abs(force);
+
+            let changed = false;
+
+            for (let i = 0; i < pos.length; i += 3) {
+                const dx = pos[i] - point.x;
+                const dz = pos[i+2] - point.z;
+                const distSq = dx*dx + dz*dz;
+                const rSq = state.brushSize * state.brushSize;
+
+                if (distSq < rSq) {
+                    const dist = Math.sqrt(distSq);
+                    const falloff = 1 - (dist / state.brushSize);
+                    const power = falloff * falloff;
+
+                    if (state.tool === 'raise' || state.tool === 'lower') {
+                        pos[i+1] += force * power * 0.5;
+                        changed = true;
+                    } else if (state.tool === 'smooth') {
+                        // Very simple smooth (harder without direct neighbor access in Flat array, but can be done)
+                        // For now just lerp to a local average height? 
+                    } else if (state.tool === 'flatten') {
+                        pos[i+1] = THREE.MathUtils.lerp(pos[i+1], point.y, power * 0.1);
+                        changed = true;
+                    } else if (state.tool === 'paint') {
+                        const idx = i;
+                        cols[idx] = THREE.MathUtils.lerp(cols[idx], 0.4, power * 0.1);
+                        cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], 0.35, power * 0.1);
+                        cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], 0.3, power * 0.1);
+                        terrainGeom.attributes.color.needsUpdate = true;
+                    }
+                }
+            }
+
+            if (changed) {
+                terrainGeom.attributes.position.needsUpdate = true;
+                terrainGeom.computeVertexNormals();
+            }
+        }
+
+        function deleteTarget(obj) {
+            scene.remove(obj);
+            state.targets = state.targets.filter(t => t !== obj);
+            updateScoreUI();
+        }
+
+        // --- GAMEPLAY ---
+        function startGame() {
+            if (state.targets.length === 0) {
+                showNotif("PLACE SOME TARGETS FIRST!");
+                return;
+            }
+            state.mode = 'play';
+            state.isPlaying = true;
+            state.score = 0;
+            state.timer = 60;
+            state.velocity.set(0,0,0);
+            
+            document.getElementById('btn-mode-play').classList.add('active');
+            document.getElementById('btn-mode-build').classList.remove('active');
+            document.getElementById('build-sidebar').style.display = 'none';
+            document.getElementById('start-game').style.display = 'none';
+            document.getElementById('stop-game').style.display = 'flex';
+            document.getElementById('timer-hud').style.display = 'flex';
+            document.getElementById('score-hud').style.display = 'flex';
+            document.getElementById('crosshair').style.display = 'block';
+
+            fpControls.lock();
+            updateScoreUI();
+            
+            // Spawn at center, slightly up
+            fpControls.getObject().position.set(0, 50, 0);
+            
+            showNotif("ARENA START!");
+        }
+
+        function stopGame() {
+            state.mode = 'build';
+            state.isPlaying = false;
+            
+            document.getElementById('btn-mode-build').classList.add('active');
+            document.getElementById('btn-mode-play').classList.remove('active');
+            document.getElementById('build-sidebar').style.display = 'flex';
+            document.getElementById('start-game').style.display = 'flex';
+            document.getElementById('stop-game').style.display = 'none';
+            document.getElementById('timer-hud').style.display = 'none';
+            document.getElementById('score-hud').style.display = 'none';
+            document.getElementById('crosshair').style.display = 'none';
+
+            fpControls.unlock();
+            orbit.enabled = true;
+            
+            // Make all targets visible again for build mode
+            state.targets.forEach(t => t.visible = true);
+        }
+
+        function shoot() {
+            if (!state.canShoot) return;
+            state.canShoot = false;
+            
+            // FX
+            state.weaponRecoil = 0.2;
+            const flash = document.getElementById('muzzle-flash');
+            flash.style.display = 'block';
+            setTimeout(() => flash.style.display = 'none', 50);
+
+            // Audio (Simple synth Beep)
+            playShootSound();
+
+            // Raycast
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const hits = raycaster.intersectObjects(state.targets, true);
+            
+            if (hits.length > 0) {
+                let hitObj = hits[0].object;
+                while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
+                
+                if (hitObj.visible) {
+                    hitObj.visible = false;
+                    state.score++;
+                    updateScoreUI();
+                    state.cameraShake = 0.5;
+                    playHitSound();
+                }
+            }
+
+            setTimeout(() => state.canShoot = true, 200);
+        }
+
+        function updateScoreUI() {
+            const scoreVal = document.getElementById('score-display');
+            const remainingVal = document.getElementById('targets-remaining');
+            if (scoreVal) scoreVal.innerText = state.score;
+            
+            if (remainingVal) {
+                const total = state.targets.length;
+                const hit = state.score;
+                remainingVal.innerText = `${total - hit} REMAINING`;
+                
+                if (total > 0 && hit === total && state.isPlaying) {
+                    showNotif("ALL TARGETS CLEAR!");
+                }
+            }
+        }
+
+        function showNotif(text) {
+            const el = document.getElementById('notification');
+            el.innerText = text;
+            el.style.opacity = 1;
+            el.style.transform = 'translateX(-50%) scale(1.2)';
+            setTimeout(() => {
+                el.style.opacity = 0;
+                el.style.transform = 'translateX(-50%) scale(1.0)';
+            }, 2000);
+        }
+
+        function playShootSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const obj = ctx.createOscillator();
+                const gain = ctx.createGain();
+                obj.type = 'square';
+                obj.frequency.setValueAtTime(400, ctx.currentTime);
+                obj.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                obj.connect(gain);
+                gain.connect(ctx.destination);
+                obj.start();
+                obj.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function playHitSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const obj = ctx.createOscillator();
+                const gain = ctx.createGain();
+                obj.type = 'sine';
+                obj.frequency.setValueAtTime(800, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                obj.connect(gain);
+                gain.connect(ctx.destination);
+                obj.start();
+                obj.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
+
+        // --- LOOP ---
+        const clock = new THREE.Clock();
+        function loop() {
+            requestAnimationFrame(loop);
+            const delta = clock.getDelta();
+
+            if (state.isPlaying) {
+                // Movement
+                const speed = 40;
+                const moveDirection = new THREE.Vector3();
+                if (keys['KeyW']) moveDirection.z -= 1;
+                if (keys['KeyS']) moveDirection.z += 1;
+                if (keys['KeyA']) moveDirection.x -= 1;
+                if (keys['KeyD']) moveDirection.x += 1;
+                moveDirection.normalize();
+
+                fpControls.moveRight(moveDirection.x * speed * delta);
+                fpControls.moveForward(-moveDirection.z * speed * delta);
+
+                // Gravity & Floor
+                state.velocity.y -= 40 * delta;
+                const playerPos = fpControls.getObject().position;
+                playerPos.y += state.velocity.y * delta;
+
+                // Find terrain height
+                raycaster.set(new THREE.Vector3(playerPos.x, 1000, playerPos.z), new THREE.Vector3(0, -1, 0));
+                const hits = raycaster.intersectObject(terrain);
+                const groundY = (hits.length > 0 ? hits[0].point.y : 0) + 5; // Eye height = 5
+
+                if (playerPos.y < groundY) {
+                    playerPos.y = groundY;
+                    state.velocity.y = 0;
+                    state.isJumping = false;
+                }
+
+                // Shake & Recoil
+                if (state.cameraShake > 0) {
+                    camera.position.x += (Math.random() - 0.5) * state.cameraShake;
+                    camera.position.y += (Math.random() - 0.5) * state.cameraShake;
+                    state.cameraShake *= 0.9;
+                }
+                if (state.weaponRecoil > 0) {
+                    weapon.position.z = state.weaponRecoil * 2;
+                    weapon.rotation.x = -state.weaponRecoil * 0.5;
+                    state.weaponRecoil *= 0.8;
+                } else {
+                    weapon.position.z = 0;
+                    weapon.rotation.x = 0;
+                }
+
+                // Timer
+                state.timer -= delta;
+                if (state.timer <= 0) {
+                    state.timer = 0;
+                    if (state.isPlaying) {
+                        showNotif("TIME EXPIRED!");
+                        setTimeout(stopGame, 2000);
+                        state.isPlaying = false;
+                    }
+                }
+                const mins = Math.floor(state.timer / 60);
+                const secs = Math.floor(state.timer % 60);
+                document.getElementById('timer-display').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+
+                // Target Animations
+                state.targets.forEach((t, i) => {
+                    if (t.visible) {
+                        t.rotation.y += delta * 2;
+                        t.position.y += Math.sin(Date.now() * 0.003 + i) * 0.05;
+                    }
+                });
+
+            } else {
+                orbit.update();
+                updateBrush();
+                if (state.isMouseDown) runTool();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function updateBrush() {
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObject(terrain);
+            if (hits.length > 0) {
+                brushRing.visible = true;
+                brushRing.position.copy(hits[0].point);
+                brushRing.position.y += 0.5;
+                brushRing.scale.setScalar(state.brushSize);
+            } else {
+                brushRing.visible = false;
+            }
+        }
+
+        // --- UI EVENTS ---
+        document.getElementById('start-game').onclick = startGame;
+        document.getElementById('stop-game').onclick = stopGame;
+        document.getElementById('btn-mode-play').onclick = startGame;
+        document.getElementById('btn-mode-build').onclick = stopGame;
+
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.tool = btn.dataset.tool;
+            };
+        });
+
+        document.getElementById('brush-size').oninput = e => {
+            state.brushSize = parseInt(e.target.value);
+            document.getElementById('brush-size-label').innerText = state.brushSize;
+        };
+
+        document.getElementById('brush-intensity').oninput = e => {
+            state.brushIntensity = parseFloat(e.target.value);
+            document.getElementById('brush-intensity-label').innerText = state.brushIntensity.toFixed(1);
+        };
+
+        document.getElementById('reset-world').onclick = () => {
+            if (!confirm("Are you sure? This will wipe your level!")) return;
+            // Clear terrain
+            const pos = terrainGeom.attributes.position.array;
+            for(let i=0; i<pos.length; i+=3) pos[i+1] = 0;
+            terrainGeom.attributes.position.needsUpdate = true;
+            terrainGeom.computeVertexNormals();
+            // Clear targets
+            state.targets.forEach(t => scene.remove(t));
+            state.targets = [];
+            state.score = 0;
+            updateScoreUI();
+        };
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        // Initialize and Start
+        loop();
+        showNotif("WELCOME TO FPS STRIKER");
+
+    </script>
+</body>
+</html>

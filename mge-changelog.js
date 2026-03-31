@@ -11,6 +11,21 @@
 const mgeChangelog = [
     {
         date: '2026-03-31',
+        title: 'New Game: FPS Striker!',
+        gameId: 'fps-striker',
+        icon: '🎯',
+        description: 'The first-ever MGE Arena Builder is here!',
+        updates: [
+            'Sculpt custom terrain for your battle arena',
+            'Place and delete floating targets in Build Mode',
+            'Full First-Person Shooter (FPS) gameplay',
+            'Intense timer challenge to clear the arena',
+            'Premium muzzle flash and hit effects'
+        ],
+        category: 'major'
+    },
+    {
+        date: '2026-03-31',
         title: 'Robo-Path Chaos Update',
         gameId: 'robot-path-planner',
         icon: '🤖',
