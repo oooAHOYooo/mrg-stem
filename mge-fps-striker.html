@@ -483,19 +483,27 @@
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         // Lights
-        const ambient = new THREE.AmbientLight(0x4040ff, 0.4);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambient);
 
-        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-        sun.position.set(50, 100, 50);
+        const hemi = new THREE.HemisphereLight(0x4040ff, 0x000000, 0.8);
+        scene.add(hemi);
+
+        const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+        sun.position.set(50, 150, 50);
         sun.castShadow = true;
         sun.shadow.mapSize.width = 2048;
         sun.shadow.mapSize.height = 2048;
-        sun.shadow.camera.left = -200;
-        sun.shadow.camera.right = 200;
-        sun.shadow.camera.top = 200;
-        sun.shadow.camera.bottom = -200;
+        sun.shadow.camera.left = -250;
+        sun.shadow.camera.right = 250;
+        sun.shadow.camera.top = 250;
+        sun.shadow.camera.bottom = -250;
         scene.add(sun);
+
+        // Player Light (Flashlight)
+        const playerLight = new THREE.PointLight(0xffffff, 0, 40);
+        camera.add(playerLight);
+        scene.add(camera); // Ensure camera (with light) is in scene
 
         // --- TERRAIN ---
         const terrainSize = 300;
@@ -515,10 +523,10 @@
         terrain.receiveShadow = true;
         scene.add(terrain);
 
-        // Add colors to vertices
+        // Add colors to vertices (Brighter than before)
         const colors = new Float32Array(terrainGeom.attributes.position.count * 3);
         for(let i=0; i<colors.length; i+=3) {
-            colors[i] = 0.2; colors[i+1] = 0.2; colors[i+2] = 0.25;
+            colors[i] = 0.4; colors[i+1] = 0.4; colors[i+2] = 0.45;
         }
         terrainGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
@@ -553,7 +561,7 @@
         const targetMat = new THREE.MeshStandardMaterial({ 
             color: 0xff4757, 
             emissive: 0xff0000, 
-            emissiveIntensity: 0.5,
+            emissiveIntensity: 1.5,
             wireframe: false 
         });
 
@@ -747,11 +755,13 @@
             fpControls.getObject().position.set(0, 50, 0);
             
             showNotif("ARENA START!");
+            playerLight.intensity = 1.2;
         }
 
         function stopGame() {
             state.mode = 'build';
             state.isPlaying = false;
+            playerLight.intensity = 0;
             
             document.getElementById('btn-mode-build').classList.add('active');
             document.getElementById('btn-mode-play').classList.remove('active');
