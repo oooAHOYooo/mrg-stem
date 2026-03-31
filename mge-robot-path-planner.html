@@ -357,6 +357,74 @@
     /* scrollbar */
     #rail-wrap::-webkit-scrollbar { width: 5px; }
     #rail-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+
+    /* Level Editor Modal */
+    #editorModal {
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,.7); align-items: center; justify-content: center;
+    }
+    #editorModal.active { display: flex; }
+    #editorBox {
+      background: var(--panel); border: 2px solid var(--cyan);
+      border-radius: 16px; padding: 20px; max-width: 600px; width: 90%;
+      max-height: 90vh; overflow-y: auto;
+    }
+    #editorBox h2 { color: var(--cyan); margin-bottom: 15px; font-size: 1.3rem; }
+    #editorBox h3 { color: var(--white); margin: 15px 0 10px; font-size: 1rem; }
+    .editor-section { margin-bottom: 20px; }
+    #gridEditor {
+      display: grid; grid-template-columns: repeat(8, 1fr);
+      gap: 4px; margin: 15px 0;
+      background: rgba(0,0,0,.3); padding: 10px; border-radius: 8px;
+    }
+    .grid-cell {
+      aspect-ratio: 1; border: 2px solid var(--border);
+      background: var(--card); cursor: pointer; border-radius: 4px;
+      transition: all .2s; font-size: .7rem; display: flex;
+      align-items: center; justify-content: center; user-select: none;
+    }
+    .grid-cell:hover { border-color: var(--cyan); }
+    .grid-cell.wall { background: #0a1428; border-color: #1a3a5a; }
+    .grid-cell.start { background: var(--blue); color: #000; font-weight: bold; }
+    .grid-cell.goal { background: var(--yellow); color: #000; font-weight: bold; }
+    .grid-cell.mode-indicator {
+      position: fixed; top: 10px; right: 10px; background: rgba(0,229,255,.2);
+      border: 1px solid var(--cyan); color: var(--cyan); padding: 6px 12px;
+      border-radius: 6px; font-size: .8rem; z-index: 1000;
+    }
+    .editor-controls {
+      display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0;
+    }
+    .editor-btn {
+      flex: 1; min-width: 100px; padding: 10px; border-radius: 8px;
+      border: 2px solid var(--border); background: var(--card);
+      color: var(--white); font-weight: 700; cursor: pointer;
+      transition: all .2s;
+    }
+    .editor-btn:hover { border-color: var(--cyan); }
+    .editor-btn.active { border-color: var(--cyan); background: rgba(0,229,255,.15); }
+    .editor-btn.success { border-color: var(--green); color: var(--green); }
+    .editor-tools {
+      display: flex; gap: 8px; margin: 15px 0;
+    }
+    .tool-btn {
+      flex: 1; padding: 8px; background: var(--card); border: 2px solid var(--border);
+      border-radius: 6px; color: var(--white); font-weight: 600; cursor: pointer;
+      transition: all .2s;
+    }
+    .tool-btn:hover, .tool-btn.active { border-color: var(--cyan); background: rgba(0,229,255,.15); }
+    #editorInputs { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+    #editorInputs input {
+      flex: 1; min-width: 120px; padding: 8px 12px; background: var(--card);
+      border: 1px solid var(--border); border-radius: 6px; color: var(--white);
+      font-family: inherit;
+    }
+    #shareCode {
+      width: 100%; padding: 10px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--cyan); font-family: monospace; font-size: .85rem;
+      cursor: pointer; text-align: center;
+    }
+    #shareCode:hover { background: rgba(0,229,255,.1); }
   </style>
 </head>
 <body>
@@ -396,6 +464,51 @@
         <button id="winNext">Next Mission ➡️</button>
       </div>
     </div>
+
+    <!-- Level Editor Modal -->
+    <div id="editorModal">
+      <div id="editorBox">
+        <h2>✏️ Create Your Own Level</h2>
+
+        <div class="editor-section">
+          <h3>Click to paint your maze:</h3>
+          <div class="editor-tools">
+            <button class="tool-btn active" data-tool="floor">🟩 Floor</button>
+            <button class="tool-btn" data-tool="wall">⬛ Wall</button>
+            <button class="tool-btn" data-tool="start">🟦 Start</button>
+            <button class="tool-btn" data-tool="goal">⭐ Goal</button>
+          </div>
+          <div id="gridEditor"></div>
+        </div>
+
+        <div class="editor-section">
+          <h3>Level Name:</h3>
+          <input type="text" id="levelName" placeholder="My Awesome Level" maxlength="30" value="My Custom Level">
+        </div>
+
+        <div class="editor-section">
+          <h3>Start Direction:</h3>
+          <div class="editor-controls">
+            <select id="startDir" style="flex: 1; padding: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--white); font-family: inherit;">
+              <option value="0">🔽 Down (+Z)</option>
+              <option value="1">🔸 Right (+X)</option>
+              <option value="2">🔼 Up (-Z)</option>
+              <option value="3">◀️ Left (-X)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="editor-controls">
+          <button class="editor-btn success" id="saveCustomLevel">💾 Save & Play</button>
+          <button class="editor-btn" id="shareCustomLevel">🔗 Share Code</button>
+          <button class="editor-btn" id="closeEditor">❌ Cancel</button>
+        </div>
+
+        <div id="shareCode" style="display:none; margin-top: 15px;">
+          Click to copy share code
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- RIGHT PANEL -->
@@ -411,8 +524,14 @@
     <div id="levelBar">
       <button class="lvlBtn active" data-level="0">⬜ L1</button>
       <button class="lvlBtn" data-level="1">🟦 L2</button>
-      <button class="lvlBtn" data-level="2">🟥 L3</button>
-      <button class="lvlBtn" data-level="3">⭐ Boss</button>
+      <button class="lvlBtn" data-level="2">🟩 L3</button>
+      <button class="lvlBtn" data-level="3">🟪 L4</button>
+      <button class="lvlBtn" data-level="4">🟨 L5</button>
+      <button class="lvlBtn" data-level="5">🟧 L6</button>
+      <button class="lvlBtn" data-level="6">🔶 L7</button>
+      <button class="lvlBtn" data-level="7">🔸 L8</button>
+      <button class="lvlBtn" data-level="8">⭐ Boss</button>
+      <button class="lvlBtn" id="createLevelBtn" style="flex: 1; min-width: 80px;">✏️ Create</button>
     </div>
 
     <!-- Player switcher (only in 2P) -->
@@ -466,14 +585,14 @@ const LEVELS = [
     grid: [
       [1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,0,1],
-      [1,0,1,0,0,1,0,1],
-      [1,0,1,0,0,1,0,1],
-      [1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1],
     ],
-    start: [1,1], startDir: 0,  // dir: 0=+Z, 1=+X, 2=-Z, 3=-X
+    start: [1,1], startDir: 0,
     goal:  [1,6],
     tip: "Forward 5 times!"
   },
@@ -481,49 +600,129 @@ const LEVELS = [
     name: "Right Turn",
     grid: [
       [1,1,1,1,1,1,1,1],
-      [1,0,1,1,1,1,1,1],
-      [1,0,1,1,1,1,1,1],
-      [1,0,1,1,1,1,1,1],
       [1,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,0,1],
       [1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1],
     ],
-    start: [1,1], startDir: 2,
-    goal:  [6,6],
+    start: [1,1], startDir: 0,
+    goal:  [1,4],
     tip: "Forward 3, Turn Right, Forward 2!"
   },
   {
-    name: "Maze Run",
+    name: "S-Curve",
     grid: [
       [1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,1],
-      [1,1,1,0,1,0,1,1],
-      [1,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,0,1],
       [1,0,0,0,0,1,0,1],
       [1,1,1,1,0,1,0,1],
+      [1,1,1,1,0,0,0,1],
+      [1,0,0,0,0,1,1,1],
+      [1,0,1,1,1,1,0,0],
+      [1,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1],
     ],
-    start: [1,1], startDir: 0,
-    goal:  [6,6],
-    tip: "Follow the path carefully!"
+    start: [1,1], startDir: 1,
+    goal:  [5,5],
+    tip: "Navigate the serpentine path!"
   },
   {
-    name: "Boss: The Star",
+    name: "Spiral Maze",
     grid: [
       [1,1,1,1,1,1,1,1],
-      [1,0,0,1,0,0,0,1],
-      [1,0,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,1],
-      [1,1,1,0,1,0,1,1],
-      [1,0,0,0,1,0,0,1],
       [1,0,1,1,1,1,0,1],
+      [1,0,1,0,0,1,0,1],
+      [1,0,1,0,1,1,0,1],
+      [1,0,0,0,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 1,
+    goal:  [6,5],
+    tip: "Spiral inward then escape outward!"
+  },
+  {
+    name: "Cross Corridors",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,1,0,0,0,0,1],
+      [1,0,1,0,1,1,1,1],
+      [1,0,0,0,1,1,1,1],
+      [1,1,1,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 1,
+    goal:  [6,6],
+    tip: "Cross paths strategically!"
+  },
+  {
+    name: "Double Descent",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,1,1,1,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,1,1,0,0,0,1],
+      [1,0,0,0,0,1,1,1],
+      [1,1,1,0,1,1,0,0],
+      [1,1,1,0,1,1,1,1],
       [1,1,1,1,1,1,1,1],
     ],
     start: [1,1], startDir: 0,
+    goal:  [6,5],
+    tip: "Zigzag your way through!"
+  },
+  {
+    name: "Twisted Path",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,1],
+      [1,1,1,1,0,1,1,1],
+      [1,1,1,1,0,0,0,1],
+      [1,0,0,0,0,1,1,1],
+      [1,0,1,1,1,1,0,0],
+      [1,0,0,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 1,
+    goal:  [6,5],
+    tip: "Think ahead — plan your turns carefully!"
+  },
+  {
+    name: "The Gauntlet",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,1,0,1,0,0,1],
+      [1,0,1,0,1,0,1,1],
+      [1,0,0,0,0,0,1,1],
+      [1,0,1,1,0,1,0,1],
+      [1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 1,
     goal:  [6,6],
-    tip: "Think before you code — this one needs a plan!"
+    tip: "Weave through the obstacles!"
+  },
+  {
+    name: "Boss: The Labyrinth",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,1],
+      [1,0,1,0,1,0,1,1],
+      [1,0,1,0,0,0,1,1],
+      [1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 1,
+    goal:  [6,6],
+    tip: "Ultimate challenge — master all directions!"
   }
 ];
 
@@ -1180,6 +1379,145 @@ function animate() {
   animateEyes(dt);
   renderer.render(scene, camera);
 }
+
+// ─────────────────────────────────────────────────────────────
+//  LEVEL EDITOR
+// ─────────────────────────────────────────────────────────────
+let customLevels = JSON.parse(localStorage.getItem('roboPathCustomLevels')) || [];
+let editorTool = 'floor';
+let editorGrid = Array(8).fill().map(() => Array(8).fill(0));
+let editorStart = [1, 1];
+let editorGoal = [6, 6];
+let editorStartDir = 0;
+
+function initLevelEditor() {
+  const modal = document.getElementById('editorModal');
+  const createBtn = document.getElementById('createLevelBtn');
+  const closeBtn = document.getElementById('closeEditor');
+  const saveBtn = document.getElementById('saveCustomLevel');
+  const shareBtn = document.getElementById('shareCustomLevel');
+
+  createBtn.onclick = () => {
+    editorGrid = Array(8).fill().map(() => Array(8).fill(0));
+    for (let i = 0; i < 8; i++) editorGrid[0][i] = editorGrid[7][i] = editorGrid[i][0] = editorGrid[i][7] = 1;
+    editorStart = [1, 1];
+    editorGoal = [6, 6];
+    editorStartDir = 0;
+    document.getElementById('levelName').value = 'My Custom Level';
+    document.getElementById('startDir').value = '0';
+    renderGridEditor();
+    modal.classList.add('active');
+  };
+
+  closeBtn.onclick = () => modal.classList.remove('active');
+
+  saveBtn.onclick = saveCustomLevel;
+  shareBtn.onclick = shareCustomLevel;
+
+  // Tool selection
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      editorTool = btn.dataset.tool;
+    };
+  });
+
+  // Load from URL if shared
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('level')) {
+    try {
+      const levelData = JSON.parse(atob(params.get('level')));
+      if (levelData.grid && levelData.grid.length === 8) {
+        LEVELS.push(levelData);
+        currentLevel = LEVELS.length - 1;
+      }
+    } catch (e) { console.log('Invalid shared level'); }
+  }
+}
+
+function renderGridEditor() {
+  const container = document.getElementById('gridEditor');
+  container.innerHTML = '';
+  for (let z = 0; z < 8; z++) {
+    for (let x = 0; x < 8; x++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+
+      let className = '';
+      if (editorStart[0] === x && editorStart[1] === z) className = 'start';
+      else if (editorGoal[0] === x && editorGoal[1] === z) className = 'goal';
+      else if (editorGrid[z][x] === 1) className = 'wall';
+
+      if (className) cell.classList.add(className);
+
+      const label = className === 'start' ? 'S' : className === 'goal' ? 'G' : '';
+      cell.textContent = label;
+
+      cell.onclick = () => {
+        if (editorTool === 'floor') editorGrid[z][x] = 0;
+        else if (editorTool === 'wall') editorGrid[z][x] = 1;
+        else if (editorTool === 'start') editorStart = [x, z];
+        else if (editorTool === 'goal') editorGoal = [x, z];
+        renderGridEditor();
+      };
+
+      container.appendChild(cell);
+    }
+  }
+}
+
+function saveCustomLevel() {
+  const name = document.getElementById('levelName').value || 'Custom Level';
+  const startDir = parseInt(document.getElementById('startDir').value);
+
+  const level = {
+    name: name,
+    grid: editorGrid.map(row => [...row]),
+    start: [...editorStart],
+    startDir: startDir,
+    goal: [...editorGoal],
+    tip: "Your custom challenge awaits!"
+  };
+
+  customLevels.push(level);
+  localStorage.setItem('roboPathCustomLevels', JSON.stringify(customLevels));
+  LEVELS.push(level);
+
+  currentLevel = LEVELS.length - 1;
+  loadLevel(currentLevel);
+  document.getElementById('editorModal').classList.remove('active');
+  setStatus('🎉 Custom level created! Your robot awaits!');
+}
+
+function shareCustomLevel() {
+  const name = document.getElementById('levelName').value || 'Custom Level';
+  const startDir = parseInt(document.getElementById('startDir').value);
+
+  const level = {
+    name: name,
+    grid: editorGrid.map(row => [...row]),
+    start: [...editorStart],
+    startDir: startDir,
+    goal: [...editorGoal],
+    tip: "A custom challenge!"
+  };
+
+  const encoded = btoa(JSON.stringify(level));
+  const shareUrl = window.location.origin + window.location.pathname + '?level=' + encoded;
+
+  const shareDiv = document.getElementById('shareCode');
+  shareDiv.textContent = shareUrl;
+  shareDiv.style.display = 'block';
+
+  shareDiv.onclick = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setStatus('✅ Share link copied!');
+    });
+  };
+}
+
+initLevelEditor();
 
 loadLevel(0);
 animate();
