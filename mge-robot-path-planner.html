@@ -545,9 +545,9 @@
       <h3>🧩 Logic Blocks</h3>
       <div class="tiles">
         <div class="cmd-source" data-cmd="forward"  draggable="true">⬆ Forward</div>
-        <div class="cmd-source" data-cmd="backward" draggable="true">⬇ Back</div>
-        <div class="cmd-source" data-cmd="left"     draggable="true">↩ Turn L</div>
-        <div class="cmd-source" data-cmd="right"    draggable="true">↪ Turn R</div>
+        <div class="cmd-source" data-cmd="backward" draggable="true">⬇ Back Step</div>
+        <div class="cmd-source" data-cmd="left"     draggable="true">⬅ Turn & Go L</div>
+        <div class="cmd-source" data-cmd="right"    draggable="true">➡ Turn & Go R</div>
         <div class="cmd-source" data-cmd="loop"     draggable="true">🔁 ×2</div>
       </div>
     </div>
@@ -1108,7 +1108,40 @@ function popPlayerStep(p) {
   p.phase = 'idle';
   p.moveProgress = 0;
 
-  if (cmd === 'forward' || cmd === 'backward') {
+  const level = LEVELS[currentLevel];
+  const oldDir = p.dir;
+
+  if (cmd === 'left' || cmd === 'right') {
+    // Turn AND Move in new direction
+    p.dir = (p.dir + (cmd === 'right' ? 3 : 1)) % 4; // Right is +3 (-90 deg), Left is +1 (+90 deg)
+    p.startQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -oldDir * Math.PI / 2, 0));
+    p.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -p.dir * Math.PI / 2, 0));
+    p.leanDir = cmd === 'right' ? 1 : -1;
+    
+    // Calculate new position
+    const d = DIRS[p.dir];
+    const nx = p.gx + d[0];
+    const nz = p.gz + d[1];
+
+    if (!canMoveToCell(nx, nz)) {
+      p.isRunning = false;
+      if (tileEl) {
+        tileEl.classList.add('error');
+        setTimeout(() => tileEl.classList.remove('error'), 1000);
+      }
+      return;
+    }
+
+    const wFrom = gridToWorld(p.gx, p.gz, level);
+    const wTo   = gridToWorld(nx, nz, level);
+    p.fromPos = new THREE.Vector3(wFrom.x, TILE_H, wFrom.z);
+    p.toPos   = new THREE.Vector3(wTo.x, TILE_H, wTo.z);
+    
+    p.gx = nx; p.gz = nz;
+    p.phase = 'move_and_turn';
+    p.moves++;
+
+  } else if (cmd === 'forward' || cmd === 'backward') {
     const d = DIRS[p.dir];
     const mult = cmd === 'backward' ? -1 : 1;
     const nx = p.gx + d[0] * mult;
@@ -1123,30 +1156,22 @@ function popPlayerStep(p) {
       return;
     }
 
-    const wFrom = gridToWorld(p.gx, p.gz, LEVELS[currentLevel]);
-    const wTo   = gridToWorld(nx, nz, LEVELS[currentLevel]);
+    const wFrom = gridToWorld(p.gx, p.gz, level);
+    const wTo   = gridToWorld(nx, nz, level);
     p.fromPos = new THREE.Vector3(wFrom.x, TILE_H, wFrom.z);
     p.toPos   = new THREE.Vector3(wTo.x, TILE_H, wTo.z);
     
     p.gx = nx; p.gz = nz;
     p.phase = 'move';
     p.moves++;
-    
-    // Check goal
-    if (nx === LEVELS[currentLevel].goal[0] && nz === LEVELS[currentLevel].goal[1]) {
-      setTimeout(() => {
-        if (!isRunning) return;
-        finishRun(true, p === p1Data ? "P1" : "P2");
-      }, STEP_DURATION * 1000);
-    }
+  }
 
-  } else if (cmd === 'left' || cmd === 'right') {
-    const oldDir = p.dir;
-    p.dir = ((p.dir + (cmd === 'right' ? 1 : 3)) % 4);
-    p.startQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -oldDir * Math.PI / 2, 0));
-    p.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -p.dir * Math.PI / 2, 0));
-    p.phase = 'turn';
-    p.leanDir = cmd === 'right' ? 1 : -1;
+  // Check goal
+  if (p.gx === level.goal[0] && p.gz === level.goal[1]) {
+    setTimeout(() => {
+      if (!isRunning) return;
+      finishRun(true, p === p1Data ? "P1" : "P2");
+    }, STEP_DURATION * 1000);
   }
 }
 
@@ -1182,6 +1207,13 @@ function tickAnimation(dt) {
     } else if (p.phase === 'turn') {
       p.group.quaternion.slerpQuaternions(p.startQuat, p.targetQuat, t);
       p.group.rotation.z = Math.sin(t * Math.PI) * p.leanDir * 0.25;
+    } else if (p.phase === 'move_and_turn') {
+      const hop = Math.sin(t * Math.PI) * 0.4;
+      p.group.position.lerpVectors(p.fromPos, p.toPos, t);
+      p.group.position.y = TILE_H + hop;
+      p.group.quaternion.slerpQuaternions(p.startQuat, p.targetQuat, t);
+      p.group.rotation.z = Math.sin(t * Math.PI) * p.leanDir * 0.25;
+      if (Math.random() < 0.3) spawnTrailParticle(p.group.position);
     }
   });
 }
@@ -1332,7 +1364,7 @@ document.querySelectorAll('.cmd-source').forEach(src => {
 });
 
 function makeTile(cmd) {
-  const labels = { forward:'⬆ Forward', backward:'⬇ Back', left:'↩ Turn L', right:'↪ Turn R', loop:'🔁 ×2' };
+  const labels = { forward:'⬆ Forward', backward:'⬇ Back Step', left:'⬅ Turn/Go L', right:'➡ Turn/Go R', loop:'🔁 ×2' };
   const el = document.createElement('div');
   el.className = 'cmd-tile';
   el.dataset.cmd = cmd;
