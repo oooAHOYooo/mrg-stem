@@ -233,8 +233,8 @@
 <script>
     // --- Setup Scene ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050510); // Very dark blue/black
-    scene.fog = new THREE.FogExp2(0x050510, 0.002);
+    scene.background = new THREE.Color(0x050510); 
+    scene.fog = new THREE.FogExp2(0x050510, 0.0005); // Reduced density so sky isn't hidden
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -276,8 +276,7 @@
         
         // 1. Sky Sphere (Low poly gradient)
         const skyGeom = new THREE.IcosahedronGeometry(1000, 3);
-        // Invert geometry so it's visible from inside
-        skyGeom.scale(-1, -1, -1);
+        // We only need BackSide OR scale(-1), not both.
         
         const skyMat = new THREE.MeshBasicMaterial({
             side: THREE.BackSide,
@@ -349,10 +348,16 @@
         
         const starVertices = [];
         for (let i = 0; i < 5000; i++) {
-            const x = (Math.random() - 0.5) * 2000;
-            const y = Math.random() * 1000 + 100;
-            const z = (Math.random() - 0.5) * 2000;
-            starVertices.push(x, y, z);
+            // Spherical distribution for better star map
+            const phi = Math.acos(-1 + (2 * i) / 5000);
+            const theta = Math.sqrt(5000 * Math.PI) * phi;
+            
+            const x = 950 * Math.cos(theta) * Math.sin(phi);
+            const y = 950 * Math.sin(theta) * Math.sin(phi);
+            const z = 950 * Math.cos(phi);
+            
+            // Push only the upper hemisphere or all? Let's do all around for 360 look.
+            starVertices.push(x, Math.abs(y), z); // keep above horizon for most stars
         }
         
         starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
@@ -981,9 +986,9 @@
             0
         );
 
-        // Directional Light follows Sun, but fades out at night
+        // Shift angle so PI/2 is peak midday
+        const dayIntensity = Math.max(0, Math.sin(sunAngle - Math.PI/2));
         dirLight.position.copy(sunMesh.position);
-        const dayIntensity = Math.max(0, Math.sin(sunAngle));
         dirLight.intensity = dayIntensity * 1.5;
         ambientLight.intensity = 0.2 + dayIntensity * 0.4;
 
