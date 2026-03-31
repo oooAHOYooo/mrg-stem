@@ -268,6 +268,80 @@
     const hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.5 );
     scene.add(hemiLight);
 
+    // --- Lowpoly Skymap Elements ---
+    let skySphere, sunMesh, moonMesh, cloudGroup;
+
+    function createSkyMap() {
+        const skyGroup = new THREE.Group();
+        
+        // 1. Sky Sphere (Low poly gradient)
+        const skyGeom = new THREE.IcosahedronGeometry(1000, 3);
+        // Invert geometry so it's visible from inside
+        skyGeom.scale(-1, -1, -1);
+        
+        const skyMat = new THREE.MeshBasicMaterial({
+            side: THREE.BackSide,
+            vertexColors: true,
+            fog: false
+        });
+        
+        // Add vertex colors for gradient
+        const colors = [];
+        const positions = skyGeom.attributes.position.array;
+        for (let i = 0; i < positions.length; i += 3) {
+            const y = positions[i + 1] / 1000; // normalized Y
+            const color = new THREE.Color();
+            // Default midday colors: deep blue top, light blue bottom
+            color.lerpColors(new THREE.Color(0x87CEEB), new THREE.Color(0x000033), (y + 1) / 2);
+            colors.push(color.r, color.g, color.b);
+        }
+        skyGeom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        
+        skySphere = new THREE.Mesh(skyGeom, skyMat);
+        skyGroup.add(skySphere);
+
+        // 2. Sun (Low poly glowing sphere)
+        const sunGeom = new THREE.IcosahedronGeometry(40, 2);
+        const sunMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        sunMesh = new THREE.Mesh(sunGeom, sunMat);
+        skyGroup.add(sunMesh);
+
+        // 3. Moon (Low poly cratered look-alike icosphere)
+        const moonGeom = new THREE.IcosahedronGeometry(25, 1);
+        const moonMat = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+        moonMesh = new THREE.Mesh(moonGeom, moonMat);
+        skyGroup.add(moonMesh);
+
+        // 4. Lowpoly Clouds
+        cloudGroup = new THREE.Group();
+        const cloudColors = [0xffffff, 0xeeeeee, 0xdddddd];
+        for (let i = 0; i < 20; i++) {
+            const cloud = new THREE.Group();
+            const numBlobs = 3 + Math.floor(Math.random() * 4);
+            const cloudColor = cloudColors[Math.floor(Math.random() * cloudColors.length)];
+            
+            for (let j = 0; j < numBlobs; j++) {
+                const blobGeom = new THREE.IcosahedronGeometry(10 + Math.random() * 10, 0);
+                const blobMat = new THREE.MeshLambertMaterial({ color: cloudColor, flatShading: true });
+                const blob = new THREE.Mesh(blobGeom, blobMat);
+                blob.position.set(j * 10, Math.random() * 5, Math.random() * 5);
+                cloud.add(blob);
+            }
+            
+            cloud.position.set(
+                (Math.random() - 0.5) * 1200,
+                200 + Math.random() * 300,
+                (Math.random() - 0.5) * 1200
+            );
+            cloud.userData.speed = 0.5 + Math.random();
+            cloudGroup.add(cloud);
+        }
+        skyGroup.add(cloudGroup);
+
+        scene.add(skyGroup);
+    }
+    createSkyMap();
+
     // --- Stars & Nebulas ---
     function createStars() {
         const starGeometry = new THREE.BufferGeometry();
@@ -894,23 +968,74 @@
 
         // Calculate cycle values
         const sunAngle = timeOfDay * Math.PI * 2;
-        dirLight.position.set(
-            Math.cos(sunAngle) * 200,
-            Math.sin(sunAngle) * 200,
-            100
+        
+        // Position Sun and Moon
+        sunMesh.position.set(
+            Math.cos(sunAngle) * 800,
+            Math.sin(sunAngle) * 800,
+            0
+        );
+        moonMesh.position.set(
+            Math.cos(sunAngle + Math.PI) * 800,
+            Math.sin(sunAngle + Math.PI) * 800,
+            0
         );
 
+        // Directional Light follows Sun, but fades out at night
+        dirLight.position.copy(sunMesh.position);
         const dayIntensity = Math.max(0, Math.sin(sunAngle));
-        scene.background.lerpColors(new THREE.Color(0x050510), new THREE.Color(0x87CEEB), dayIntensity);
-        scene.fog.color.copy(scene.background);
         dirLight.intensity = dayIntensity * 1.5;
-        ambientLight.intensity = 0.2 + dayIntensity * 0.5;
+        ambientLight.intensity = 0.2 + dayIntensity * 0.4;
+
+        // Update Sky Sphere Colors
+        const colors = skySphere.geometry.attributes.color;
+        const positions = skySphere.geometry.attributes.position.array;
+        const nightColorZenith = new THREE.Color(0x050510);
+        const nightColorHorizon = new THREE.Color(0x1a1a2e);
+        const dayColorZenith = new THREE.Color(0x004488);
+        const dayColorHorizon = new THREE.Color(0x87CEEB);
+        const sunsetColorZenith = new THREE.Color(0x442266);
+        const sunsetColorHorizon = new THREE.Color(0xff7744);
+
+        let targetZenith, targetHorizon;
+        if (dayIntensity > 0.5) {
+            targetZenith = dayColorZenith;
+            targetHorizon = dayColorHorizon;
+        } else if (dayIntensity > 0) {
+            const factor = dayIntensity * 2;
+            targetZenith = sunsetColorZenith.clone().lerp(dayColorZenith, factor);
+            targetHorizon = sunsetColorHorizon.clone().lerp(dayColorHorizon, factor);
+        } else {
+            targetZenith = nightColorZenith;
+            targetHorizon = nightColorHorizon;
+        }
+
+        for (let i = 0; i < positions.length; i += 3) {
+            const y = positions[i + 1] / 1000;
+            const color = new THREE.Color();
+            color.lerpColors(targetHorizon, targetZenith, (y + 1) / 2);
+            colors.array[i] = color.r;
+            colors.array[i+1] = color.g;
+            colors.array[i+2] = color.b;
+        }
+        colors.needsUpdate = true;
+
+        // Sync background and fog
+        const topColor = targetZenith.clone().lerp(targetHorizon, 0.5);
+        scene.background.copy(topColor);
+        scene.fog.color.copy(targetHorizon);
         
         // Stars fade in at night
         starsInstance.material.opacity = 1 - dayIntensity;
         
         // Nebulas rotate slowly
         nebulasInstance.rotation.y += delta * 0.05;
+
+        // Animate Clouds
+        cloudGroup.children.forEach(cloud => {
+            cloud.position.x += cloud.userData.speed * delta * 10;
+            if (cloud.position.x > 700) cloud.position.x = -700;
+        });
     }
 
     function animate() {
