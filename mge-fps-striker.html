@@ -272,28 +272,33 @@
         .score-val { color: var(--mge-accent); text-shadow: 0 0 15px var(--mge-accent); }
 
         .hud-label {
-            font-size: 0.8rem;
-            color: #aaa;
+            font-size: 1rem;
+            color: var(--mge-gold);
             text-transform: uppercase;
             letter-spacing: 2px;
+            font-weight: 800;
         }
 
         #notification {
             position: absolute;
-            top: 150px;
+            top: 25%;
             left: 50%;
-            transform: translateX(-50%);
-            background: var(--glass-dark);
-            padding: 15px 40px;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            padding: 25px 60px;
             border-radius: 40px;
             border: 2px solid var(--mge-primary);
             opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
-            font-weight: 800;
-            font-size: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 300;
+            font-weight: 950;
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 71, 87, 0.8);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 500;
+            text-align: center;
         }
 
         #muzzle-flash {
@@ -309,18 +314,56 @@
         }
 
         /* --- CONTROLS HINT --- */
-        .controls-hint {
+        #controls-hint {
             position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
-            text-align: center;
-            background: rgba(0,0,0,0.4);
-            padding: 8px 25px;
-            border-radius: 20px;
-            z-index: 50;
+            top: 100px;
+            right: 20px;
+            width: 220px;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px) saturate(180%);
+            padding: 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .hint-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--mge-gold);
+            font-size: 0.75rem;
+        }
+
+        .sidebar, .game-hud {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(28px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.02);
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -432,14 +475,30 @@
     </div>
 
     <div class="game-hud" id="score-hud">
-        <div class="hud-label">Targets Destroyed</div>
-        <div class="big-text score-val" id="score-display">0</div>
-        <div id="targets-remaining" style="font-size:0.8rem; color:#888;">0 REMAINING</div>
+        <div class="hud-label">⭐ TARGETS SMASHED ⭐</div>
+        <div class="big-text score-val" id="score-display" style="text-align:center;">0</div>
+        <div id="targets-remaining" style="font-size:1.1rem; color:#fff; font-weight:800; text-align:center;">GET 'EM ALL!</div>
     </div>
 
-    <div class="controls-hint" id="controls-hint">
-        BUILD: LMB Sculpt | Shift+LMB Invert | RMB Rotate | Wheel Zoom<br>
-        PLAY: WASD Move | LMB Shoot | Space Jump | ESC Unlock
+    <div id="controls-hint">
+        <div style="font-weight:900; color:var(--mge-gold); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:5px;">MISSION GUIDE</div>
+        <div class="hint-item">
+            <span class="key-badge">WASD</span>
+            <span>Move Around</span>
+        </div>
+        <div class="hint-item">
+            <span class="key-badge">LMB</span>
+            <span>Fire Orb</span>
+        </div>
+        <div class="hint-item">
+            <span class="key-badge">SPACE</span>
+            <span>Jump High</span>
+        </div>
+        <div class="hint-item">
+            <span class="key-badge">ESC</span>
+            <span>Unlock Mouse</span>
+        </div>
+        <div style="font-size: 0.7rem; color: #888; margin-top: 5px;">Build Mode: Use tools to sculpt and place targets!</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -467,7 +526,8 @@
             weaponRecoil: 0,
             isJumping: false,
             velocity: new THREE.Vector3(),
-            canShoot: true
+            canShoot: true,
+            projectiles: []
         };
 
         // --- THREE.JS SETUP ---
@@ -589,22 +649,32 @@
             updateScoreUI();
         }
 
-        // Weapon (Simple block for First Person)
+        // Weapon (Magic Pulse Orb)
         const weapon = new THREE.Group();
-        const gunBody = new THREE.Mesh(
-            new THREE.BoxBufferGeometry(0.5, 0.5, 2.5),
-            new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 })
+        const pulseOrb = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(0.5, 24, 24),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x00f2ff, 
+                emissive: 0x00f2ff, 
+                emissiveIntensity: 2.0,
+                transparent: true,
+                opacity: 0.8
+            })
         );
-        gunBody.position.set(0.6, -0.6, -1.5);
-        weapon.add(gunBody);
+        pulseOrb.position.set(0.8, -0.6, -1.2);
+        weapon.add(pulseOrb);
 
-        const barrel = new THREE.Mesh(
-            new THREE.CylinderBufferGeometry(0.15, 0.15, 1, 8),
-            new THREE.MeshStandardMaterial({ color: 0x444444 })
+        const orbCore = new THREE.Mesh(
+            new THREE.IcosahedronBufferGeometry(0.3, 0),
+            new THREE.MeshStandardMaterial({ color: 0xffffff, wireframe: true })
         );
-        barrel.rotation.x = Math.PI / 2;
-        barrel.position.set(0.6, -0.5, -3);
-        weapon.add(barrel);
+        pulseOrb.add(orbCore);
+
+        const orbRing = new THREE.Mesh(
+            new THREE.TorusBufferGeometry(0.65, 0.05, 12, 32),
+            new THREE.MeshStandardMaterial({ color: 0x7bed9f, emissive: 0x7bed9f, emissiveIntensity: 1.0 })
+        );
+        pulseOrb.add(orbRing);
 
         camera.add(weapon);
 
@@ -792,7 +862,19 @@
             // Audio (Simple synth Beep)
             playShootSound();
 
-            // Raycast
+            // Visual Projectile
+            const p = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(0.2, 12, 12),
+                new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 2 })
+            );
+            p.position.copy(camera.position);
+            const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+            p.userData.dir = dir;
+            p.userData.life = 2.0;
+            scene.add(p);
+            state.projectiles.push(p);
+
+            // Raycast (keep for instant hit feel)
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
             const hits = raycaster.intersectObjects(state.targets, true);
             
@@ -801,11 +883,14 @@
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
                 if (hitObj.visible) {
-                    hitObj.visible = false;
-                    state.score++;
-                    updateScoreUI();
-                    state.cameraShake = 0.5;
-                    playHitSound();
+                    setTimeout(() => { // Slight delay to match projectile travel (simulated)
+                        if (!hitObj.visible) return; // already hit?
+                        hitObj.visible = false;
+                        state.score++;
+                        updateScoreUI();
+                        state.cameraShake = 0.5;
+                        playHitSound();
+                    }, 50);
                 }
             }
 
@@ -823,7 +908,9 @@
                 remainingVal.innerText = `${total - hit} REMAINING`;
                 
                 if (total > 0 && hit === total && state.isPlaying) {
-                    showNotif("ALL TARGETS CLEAR!");
+                    showNotif("🏆 ARENA CLEARED! 🏆");
+                    playHitSound(); // One last victory chime
+                    setTimeout(stopGame, 3000);
                 }
             }
         }
@@ -913,13 +1000,21 @@
                     camera.position.y += (Math.random() - 0.5) * state.cameraShake;
                     state.cameraShake *= 0.9;
                 }
-                if (state.weaponRecoil > 0) {
-                    weapon.position.z = state.weaponRecoil * 2;
-                    weapon.rotation.x = -state.weaponRecoil * 0.5;
-                    state.weaponRecoil *= 0.8;
-                } else {
-                    weapon.position.z = 0;
-                    weapon.rotation.x = 0;
+                // Orb Animation
+                pulseOrb.rotation.y += delta * 3;
+                orbCore.rotation.x -= delta * 5;
+                orbRing.rotation.z += delta * 2;
+                pulseOrb.position.y = -0.6 + Math.sin(Date.now() * 0.005) * 0.05;
+
+                // Projectiles
+                for (let i = state.projectiles.length - 1; i >= 0; i--) {
+                    const p = state.projectiles[i];
+                    p.position.add(p.userData.dir.clone().multiplyScalar(100 * delta));
+                    p.userData.life -= delta;
+                    if (p.userData.life <= 0) {
+                        scene.remove(p);
+                        state.projectiles.splice(i, 1);
+                    }
                 }
 
                 // Timer
