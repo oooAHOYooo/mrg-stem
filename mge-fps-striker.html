@@ -527,7 +527,9 @@
             isJumping: false,
             velocity: new THREE.Vector3(),
             canShoot: true,
-            projectiles: []
+            projectiles: [],
+            beams: [],
+            particles: []
         };
 
         // --- THREE.JS SETUP ---
@@ -675,6 +677,12 @@
             new THREE.MeshStandardMaterial({ color: 0x7bed9f, emissive: 0x7bed9f, emissiveIntensity: 1.0 })
         );
         pulseOrb.add(orbRing);
+
+        const orbAura = new THREE.Mesh(
+            new THREE.SphereBufferGeometry(0.8, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.1, wireframe: true })
+        );
+        pulseOrb.add(orbAura);
 
         camera.add(weapon);
 
@@ -852,49 +860,86 @@
         function shoot() {
             if (!state.canShoot) return;
             state.canShoot = false;
+            setTimeout(() => state.canShoot = true, 150);
             
             // FX
-            state.weaponRecoil = 0.2;
             const flash = document.getElementById('muzzle-flash');
             flash.style.display = 'block';
             setTimeout(() => flash.style.display = 'none', 50);
 
-            // Audio (Simple synth Beep)
+            // Audio
             playShootSound();
 
-            // Visual Projectile
-            const p = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(0.2, 12, 12),
-                new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00f2ff, emissiveIntensity: 2 })
+            // Laser Beam Visual
+            const beamGeo = new THREE.CylinderBufferGeometry(0.1, 0.1, 1, 8);
+            beamGeo.rotateX(Math.PI / 2);
+            const beam = new THREE.Mesh(
+                beamGeo,
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
             );
-            p.position.copy(camera.position);
-            const dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-            p.userData.dir = dir;
-            p.userData.life = 2.0;
-            scene.add(p);
-            state.projectiles.push(p);
-
-            // Raycast (keep for instant hit feel)
-            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-            const hits = raycaster.intersectObjects(state.targets, true);
             
-            if (hits.length > 0) {
-                let hitObj = hits[0].object;
+            // Beam outer glow
+            const beamGlow = new THREE.Mesh(
+                new THREE.CylinderBufferGeometry(0.2, 0.2, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.5 })
+            );
+            beamGlow.rotation.x = Math.PI / 2;
+            beam.add(beamGlow);
+
+            const startPos = new THREE.Vector3().setFromMatrixPosition(pulseOrb.matrixWorld);
+            const endPos = new THREE.Vector3();
+            
+            raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+            const terrainHits = raycaster.intersectObject(terrain);
+            const targetHits = raycaster.intersectObjects(state.targets, true);
+            
+            if (targetHits.length > 0) {
+                endPos.copy(targetHits[0].point);
+                let hitObj = targetHits[0].object;
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
                 if (hitObj.visible) {
-                    setTimeout(() => { // Slight delay to match projectile travel (simulated)
-                        if (!hitObj.visible) return; // already hit?
-                        hitObj.visible = false;
-                        state.score++;
-                        updateScoreUI();
-                        state.cameraShake = 0.5;
-                        playHitSound();
-                    }, 50);
+                    hitObj.visible = false;
+                    state.score++;
+                    updateScoreUI();
+                    state.cameraShake = 0.5;
+                    playHitSound();
+                    spawnImpactFX(endPos);
                 }
+            } else if (terrainHits.length > 0) {
+                endPos.copy(terrainHits[0].point);
+                spawnImpactFX(endPos, true);
+            } else {
+                endPos.copy(camera.position).add(new THREE.Vector3(0,0,-100).applyQuaternion(camera.quaternion));
             }
 
-            setTimeout(() => state.canShoot = true, 200);
+            const dist = startPos.distanceTo(endPos);
+            beam.scale.z = dist;
+            beam.position.copy(startPos).lerp(endPos, 0.5);
+            beam.lookAt(endPos);
+            beam.userData.life = 0.2;
+            scene.add(beam);
+            state.beams.push(beam);
+        }
+
+        function spawnImpactFX(pos, isTerrain = false) {
+            const count = isTerrain ? 5 : 15;
+            const color = isTerrain ? 0xffa502 : 0x00f2ff;
+            for(let i=0; i<count; i++) {
+                const p = new THREE.Mesh(
+                    new THREE.BoxBufferGeometry(0.2, 0.2, 0.2),
+                    new THREE.MeshBasicMaterial({ color: color })
+                );
+                p.position.copy(pos);
+                p.userData.vel = new THREE.Vector3(
+                    (Math.random()-0.5)*10,
+                    (Math.random()-0.5)*10,
+                    (Math.random()-0.5)*10
+                );
+                p.userData.life = 0.5 + Math.random()*0.5;
+                scene.add(p);
+                state.particles.push(p);
+            }
         }
 
         function updateScoreUI() {
@@ -1006,14 +1051,28 @@
                 orbRing.rotation.z += delta * 2;
                 pulseOrb.position.y = -0.6 + Math.sin(Date.now() * 0.005) * 0.05;
 
-                // Projectiles
-                for (let i = state.projectiles.length - 1; i >= 0; i--) {
-                    const p = state.projectiles[i];
-                    p.position.add(p.userData.dir.clone().multiplyScalar(100 * delta));
+                // Laser Beams
+                for (let i = state.beams.length - 1; i >= 0; i--) {
+                    const b = state.beams[i];
+                    b.userData.life -= delta;
+                    b.material.opacity = b.userData.life * 5;
+                    b.children[0].material.opacity = b.userData.life * 2.5;
+                    if (b.userData.life <= 0) {
+                        scene.remove(b);
+                        state.beams.splice(i, 1);
+                    }
+                }
+
+                // Particles
+                for (let i = state.particles.length - 1; i >= 0; i--) {
+                    const p = state.particles[i];
+                    p.position.add(p.userData.vel.clone().multiplyScalar(delta));
+                    p.userData.vel.y -= 9.8 * delta; // gravity
                     p.userData.life -= delta;
+                    p.scale.setScalar(p.userData.life);
                     if (p.userData.life <= 0) {
                         scene.remove(p);
-                        state.projectiles.splice(i, 1);
+                        state.particles.splice(i, 1);
                     }
                 }
 
