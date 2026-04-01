@@ -761,9 +761,14 @@
                     runTool();
                 }
             } else if (state.mode === 'play') {
-                if (e.button === 0) shoot();
+                if (e.button === 0 || e.button === 2) {
+                    e.preventDefault();
+                    shoot();
+                }
             }
         });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
 
         window.addEventListener('pointerup', () => {
             state.isMouseDown = false;
@@ -935,18 +940,16 @@
             glow.frustumCulled = false;
             beam.add(glow);
 
-            const startPos = new THREE.Vector3();
-            pulseOrb.updateMatrixWorld(true);
-            startPos.setFromMatrixPosition(pulseOrb.matrixWorld);
-            
-            const endPos = new THREE.Vector3();
+            // Robust Position Calculation
+            const beamStart = camera.localToWorld(new THREE.Vector3(0.4, -0.3, -0.6));
+            const beamEnd = new THREE.Vector3();
             
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
             const terrainHits = raycaster.intersectObject(terrain);
             const targetHits = raycaster.intersectObjects(state.targets, true);
             
             if (targetHits.length > 0) {
-                endPos.copy(targetHits[0].point);
+                beamEnd.copy(targetHits[0].point);
                 let hitObj = targetHits[0].object;
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
@@ -954,27 +957,38 @@
                     hitObj.visible = false;
                     state.score++;
                     updateScoreUI();
-                    state.cameraShake = 1.5; // Bigger shake!
+                    state.cameraShake = 1.0;
                     playHitSound();
-                    spawnImpactFX(endPos);
-                    spawnHitBlast(endPos);
+                    spawnImpactFX(beamEnd);
+                    spawnHitBlast(beamEnd);
                 }
             } else if (terrainHits.length > 0) {
-                endPos.copy(terrainHits[0].point);
-                spawnImpactFX(endPos, true);
-                spawnHitBlast(endPos, true);
+                beamEnd.copy(terrainHits[0].point);
+                spawnImpactFX(beamEnd, true);
+                spawnHitBlast(beamEnd, true);
             } else {
-                endPos.copy(camera.position).add(new THREE.Vector3(0,0,-300).applyQuaternion(camera.quaternion));
+                beamEnd.copy(camera.position).add(new THREE.Vector3(0,0,-200).applyQuaternion(camera.quaternion));
             }
 
-            const dist = startPos.distanceTo(endPos);
+            const dist = beamStart.distanceTo(beamEnd);
             beam.scale.z = (dist > 0) ? dist : 0.1;
-            beam.position.copy(startPos).lerp(endPos, 0.5);
-            beam.lookAt(endPos);
+            beam.position.copy(beamStart).lerp(beamEnd, 0.5);
+            beam.lookAt(beamEnd);
             
-            beam.userData.life = 0.8; // Long life to be sure it's seen
+            beam.userData.life = 0.8;
             scene.add(beam);
             state.beams.push(beam);
+
+            // Plasma Fireball (Slow travel for 100% visibility)
+            const fireball = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(1.5, 12, 12),
+                new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.8, depthTest: false })
+            );
+            fireball.position.copy(beamStart);
+            fireball.userData.dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+            fireball.userData.life = 2.0;
+            scene.add(fireball);
+            state.particles.push(fireball);
 
             // Muzzle Spark
             const spark = new THREE.Mesh(
@@ -1143,13 +1157,20 @@
                     }
                 }
 
-                // Particles
+                // Particles & Fireballs
                 for (let i = state.particles.length - 1; i >= 0; i--) {
                     const p = state.particles[i];
-                    p.position.add(p.userData.vel.clone().multiplyScalar(delta));
-                    p.userData.vel.y -= 9.8 * delta; // gravity
+                    if (p.userData.dir) {
+                        p.position.add(p.userData.dir.clone().multiplyScalar(40 * delta)); // Slower fireball
+                        p.rotation.y += delta * 5;
+                    } else if (p.userData.vel) {
+                        p.position.add(p.userData.vel.clone().multiplyScalar(delta));
+                        p.userData.vel.y -= 9.8 * delta;
+                    }
+                    
                     p.userData.life -= delta;
-                    p.scale.setScalar(p.userData.life);
+                    if (!p.userData.dir) p.scale.setScalar(p.userData.life); // Only scale small particles
+                    
                     if (p.userData.life <= 0) {
                         scene.remove(p);
                         state.particles.splice(i, 1);
