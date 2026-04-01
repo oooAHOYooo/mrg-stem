@@ -10,6 +10,21 @@
 
 const mgeChangelog = [
     {
+        date: '2026-04-01',
+        title: 'New Game: Easter Egg Hunt!',
+        gameId: 'easter-hunt',
+        icon: '🐰',
+        description: 'A magical low-poly forest adventure is here!',
+        updates: [
+            'Play as a cute low-poly rabbit with a basket',
+            'Find all 12 hidden eggs in under 60 seconds',
+            'Explore a randomly generated 3D spring forest',
+            'Beautiful pastel aesthetics and particle effects',
+            'Smooth third-person hopping mechanics'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-03-31',
         title: 'New Game: FPS Striker!',
         gameId: 'fps-striker',
