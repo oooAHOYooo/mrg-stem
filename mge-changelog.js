@@ -11,6 +11,21 @@
 const mgeChangelog = [
     {
         date: '2026-04-01',
+        title: 'New Game: Sonic Speed!',
+        gameId: 'sonic-speed',
+        icon: '🦔',
+        description: 'Gotta go fast with the new 3D Sonic-style adventure!',
+        updates: [
+            'Collect 1000 rings to transform into Super Sonic',
+            'Defeat the robotic drone boss (Eggman Jr.)',
+            'Acceleration-based high-speed physics system',
+            'Unique grandfather clock environmental obstacles',
+            'Dynamic gold-trail effects and speed boosters'
+        ],
+        category: 'major'
+    },
+    {
+        date: '2026-04-01',
         title: 'New Game: Easter Egg Hunt!',
         gameId: 'easter-hunt',
         icon: '🐰',
