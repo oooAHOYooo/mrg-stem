@@ -268,7 +268,7 @@
 
     <div id="start-screen">
         <h1 style="font-size: 4rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--mge-blue);">SONIC SPEED</h1>
-        <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Collect 1000 rings to go SUPER!</p>
+        <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Collect 500 rings to go SUPER!</p>
         <button class="start-btn" id="start-btn">GO FAST!</button>
     </div>
 
@@ -307,21 +307,21 @@
     <script>
         // --- GAME CONFIG & STATE ---
         const CONFIG = {
-            PLAYER_ACCEL: 0.02,
-            PLAYER_MAX_SPEED: 0.8,
-            PLAYER_BOOST_MAX: 1.5,
-            SUPER_ACCEL: 0.05,
-            SUPER_MAX_SPEED: 2.2,
-            SUPER_BOOST_MAX: 3.5,
-            DRAG: 0.96,
+            PLAYER_ACCEL: 0.04,
+            PLAYER_MAX_SPEED: 1.0,
+            PLAYER_BOOST_MAX: 2.0,
+            SUPER_ACCEL: 0.08,
+            SUPER_MAX_SPEED: 3.0,
+            SUPER_BOOST_MAX: 4.5,
+            DRAG: 0.97,
             GRAVITY: -0.015,
-            JUMP_FORCE: 0.35,
-            RINGS_FOR_SUPER: 1000,
-            RING_ROT_SPEED: 0.05,
-            CLOCK_COUNT: 40,
-            RING_COUNT: 200,
+            JUMP_FORCE: 0.4,
+            RINGS_FOR_SUPER: 500,
+            RING_ROT_SPEED: 0.08,
+            CLOCK_COUNT: 30,
+            RING_COUNT: 300,
             TERRAIN_SIZE: 1000,
-            BOSS_SPEED: 0.05
+            BOSS_SPEED: 0.04
         };
 
         const state = {
@@ -345,7 +345,7 @@
             boss: {
                 mesh: null,
                 target: new THREE.Vector3(),
-                hp: 10,
+                hp: 5,
                 active: true
             }
         };
@@ -688,7 +688,7 @@
                 ring.rotation.y += CONFIG.RING_ROT_SPEED * dt;
                 
                 const dist = ring.position.distanceTo(state.pos);
-                if(dist < 2) {
+                if(dist < 5) {
                     collectRing(ring, idx);
                 }
             });

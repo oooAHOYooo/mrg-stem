@@ -221,8 +221,9 @@
             TOTAL_EGGS: 12,
             TIME_LIMIT: 60,
             FOREST_SIZE: 60,
-            RABBIT_SPEED: 12,
+            RABBIT_SPEED: 10,
             EGG_COLORS: [0xfadbd8, 0xd1f2eb, 0xd6eaf8, 0xebdef0, 0xf9e79f, 0xf5cba7],
+            EGG_COLLECTION_DIST: 2.5,
             TEXTURES: {
                 GRASS: 0xa2d149,
                 DIRT: 0x8b5a2b,
@@ -239,7 +240,7 @@
         let timeLeft = CONFIG.TIME_LIMIT;
         let keys = {};
         let jumpVelocity = 0;
-        const gravity = -30;
+        const gravity = -20;
 
         // --- INITIALIZATION ---
         function init() {
@@ -410,7 +411,7 @@
 
         // --- EGGS ---
         function spawnEggs() {
-            const eggGeo = new THREE.SphereGeometry(0.3, 8, 8);
+            const eggGeo = new THREE.SphereGeometry(0.5, 8, 8); // Bigger eggs for easier finding
             eggGeo.scale(1, 1.3, 1);
 
             for (let i = 0; i < CONFIG.TOTAL_EGGS; i++) {
@@ -418,7 +419,7 @@
                 const eggMat = new THREE.MeshStandardMaterial({ 
                     color: color,
                     emissive: color,
-                    emissiveIntensity: 0.2
+                    emissiveIntensity: 0.4
                 });
                 const egg = new THREE.Mesh(eggGeo, eggMat);
                 
@@ -429,9 +430,14 @@
                 
                 egg.position.x = anchor.position.x + Math.cos(offsetAngle) * offsetDist;
                 egg.position.z = anchor.position.z + Math.sin(offsetAngle) * offsetDist;
-                egg.position.y = 0.3;
+                egg.position.y = 0.5;
                 egg.rotation.set(Math.random(), Math.random(), Math.random());
                 egg.castShadow = true;
+
+                // Add a little glow light
+                const light = new THREE.PointLight(color, 1, 3);
+                light.position.y = 1;
+                egg.add(light);
 
                 scene.add(egg);
                 eggs.push(egg);
@@ -497,36 +503,49 @@
                 }
             });
 
-            // Camera follow
+            // Third person follow logic
             const targetPos = new THREE.Vector3().copy(rabbit.position);
-            const camOffset = new THREE.Vector3(0, 8, 12).applyQuaternion(rabbit.quaternion);
-            camera.position.lerp(targetPos.add(camOffset), 0.1);
+            const cameraPivotHeight = 6;
+            const cameraDistance = 14;
+            
+            const optimalCameraPos = new THREE.Vector3(0, cameraPivotHeight, cameraDistance);
+            optimalCameraPos.applyQuaternion(rabbit.quaternion);
+            optimalCameraPos.add(rabbit.position);
+            
+            camera.position.lerp(optimalCameraPos, 0.08); // Smooth lerp
             camera.lookAt(rabbit.position.x, rabbit.position.y + 1, rabbit.position.z);
 
             renderer.render(scene, camera);
         }
 
         function updateRabbitPhysics(delta) {
-            // Movement
-            const moveX = (keys['KeyD'] || keys['ArrowRight'] ? -1 : 0) + (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
-            const moveZ = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) + (keys['KeyS'] || keys['ArrowDown'] ? -1 : 0);
+            // Movement (Input processing)
+            const inputX = (keys['KeyD'] || keys['ArrowRight'] ? -1 : 0) + (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0);
+            const inputZ = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) + (keys['KeyS'] || keys['ArrowDown'] ? -1 : 0);
 
-            if (moveX !== 0 || moveZ !== 0) {
-                const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
+            if (inputX !== 0 || inputZ !== 0) {
+                // Determine direction based on camera (Third Person Logic)
+                const moveVec = new THREE.Vector3(inputX, 0, inputZ).normalize();
+                
                 const angle = Math.atan2(moveVec.x, moveVec.z);
                 
-                // Smooth rotation
+                // Smoothly rotate rabbit towards movement direction
                 const targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-                rabbit.quaternion.slerp(targetQuaternion, 0.15);
+                rabbit.quaternion.slerp(targetQuaternion, 0.1);
 
                 const speed = CONFIG.RABBIT_SPEED * delta;
-                rabbit.position.x += moveVec.x * speed;
-                rabbit.position.z += moveVec.z * speed;
+                
+                // Move in the robot's current local forward direction
+                const directionForward = new THREE.Vector3(0, 0, 1).applyQuaternion(rabbit.quaternion);
+                rabbit.position.addScaledVector(directionForward, speed);
 
                 // Bunny hop visual
                 if (rabbit.position.y <= 0.01) {
-                    rabbit.children[0].position.y = 0.6 + Math.abs(Math.sin(Date.now() * 0.01)) * 0.2;
+                    rabbit.children[0].position.y = 0.6 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.2;
                 }
+            } else {
+                // If not moving, reset body position to neutral
+                rabbit.children[0].position.y = 0.6;
             }
 
             // Jump logic
@@ -553,7 +572,7 @@
             eggs.forEach((egg, index) => {
                 if (egg.visible) {
                     const dist = rabbit.position.distanceTo(egg.position);
-                    if (dist < 1.5) {
+                    if (dist < CONFIG.EGG_COLLECTION_DIST) {
                         egg.visible = false;
                         eggsCollected++;
                         
