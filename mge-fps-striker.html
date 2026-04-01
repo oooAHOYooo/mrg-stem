@@ -753,6 +753,14 @@
             pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
         });
 
+        window.addEventListener('mousedown', e => {
+            if (state.mode === 'play' && state.isPlaying) {
+                if (e.button === 0 || e.button === 2) {
+                    shoot();
+                }
+            }
+        });
+
         canvas.addEventListener('pointerdown', e => {
             if (state.mode === 'build') {
                 if (e.button === 0 && !e.target.closest('.sidebar, .header, .footer')) {
@@ -760,14 +768,8 @@
                     orbit.enabled = false;
                     runTool();
                 }
-            } else if (state.mode === 'play') {
-                if (e.button === 0 || e.button === 2) {
-                    e.preventDefault();
-                    shoot();
-                }
             }
         });
-
         canvas.addEventListener('contextmenu', e => e.preventDefault());
 
         window.addEventListener('pointerup', () => {
@@ -924,23 +926,14 @@
             // Audio
             playShootSound();
 
-            // Hyper-Laser (Ultra Thick & Bright)
+            // Snap-Laser (Short, Thin Zap)
             const beam = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(1.0, 1.0, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 1, depthTest: false })
+                new THREE.CylinderBufferGeometry(0.1, 0.1, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 1, depthTest: false })
             );
             beam.geometry.rotateX(Math.PI / 2);
             beam.frustumCulled = false;
             
-            const glow = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(2.0, 2.0, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.7, depthTest: false })
-            );
-            glow.geometry.rotateX(Math.PI / 2);
-            glow.frustumCulled = false;
-            beam.add(glow);
-
-            // Robust Position Calculation
             const beamStart = camera.localToWorld(new THREE.Vector3(0.4, -0.3, -0.6));
             const beamEnd = new THREE.Vector3();
             
@@ -957,15 +950,13 @@
                     hitObj.visible = false;
                     state.score++;
                     updateScoreUI();
-                    state.cameraShake = 1.0;
+                    state.cameraShake = 0.5;
                     playHitSound();
                     spawnImpactFX(beamEnd);
-                    spawnHitBlast(beamEnd);
                 }
             } else if (terrainHits.length > 0) {
                 beamEnd.copy(terrainHits[0].point);
                 spawnImpactFX(beamEnd, true);
-                spawnHitBlast(beamEnd, true);
             } else {
                 beamEnd.copy(camera.position).add(new THREE.Vector3(0,0,-200).applyQuaternion(camera.quaternion));
             }
@@ -975,33 +966,33 @@
             beam.position.copy(beamStart).lerp(beamEnd, 0.5);
             beam.lookAt(beamEnd);
             
-            beam.userData.life = 0.8;
+            beam.userData.life = 0.1; // Short zap
             scene.add(beam);
             state.beams.push(beam);
 
-            // Plasma Fireball (Slow travel for 100% visibility)
+            // Energy Pulse Fireball (Fast & Snappy)
             const fireball = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(1.5, 12, 12),
-                new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.8, depthTest: false })
+                new THREE.SphereBufferGeometry(0.5, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.9, depthTest: false })
             );
             fireball.position.copy(beamStart);
             fireball.userData.dir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-            fireball.userData.life = 2.0;
+            fireball.userData.life = 1.5;
             scene.add(fireball);
             state.particles.push(fireball);
 
-            // Muzzle Spark
+            // Muzzle Flash Spark
             const spark = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(2.5, 8, 8),
-                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthTest: false })
+                new THREE.SphereBufferGeometry(1.5, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, depthTest: false })
             );
             spark.position.copy(beamStart);
-            spark.userData.life = 0.2;
+            spark.userData.life = 0.05;
             scene.add(spark);
             state.particles.push(spark);
 
-            pulseOrb.scale.setScalar(2.0);
-            setTimeout(() => pulseOrb.scale.setScalar(1.0), 100);
+            pulseOrb.scale.setScalar(1.5);
+            setTimeout(() => pulseOrb.scale.setScalar(1.0), 50);
         }
 
         function spawnHitBlast(pos, isTerrain = false) {
@@ -1161,7 +1152,7 @@
                 for (let i = state.particles.length - 1; i >= 0; i--) {
                     const p = state.particles[i];
                     if (p.userData.dir) {
-                        p.position.add(p.userData.dir.clone().multiplyScalar(40 * delta)); // Slower fireball
+                        p.position.add(p.userData.dir.clone().multiplyScalar(120 * delta)); // Faster pulse
                         p.rotation.y += delta * 5;
                     } else if (p.userData.vel) {
                         p.position.add(p.userData.vel.clone().multiplyScalar(delta));
