@@ -919,32 +919,34 @@
             // Audio
             playShootSound();
 
-            // Laser Beam Visual
-            const beamGeo = new THREE.CylinderBufferGeometry(0.1, 0.1, 1, 8);
-            beamGeo.rotateX(Math.PI / 2);
+            // Laser Beam Visual (Make it BIG)
             const beam = new THREE.Mesh(
-                beamGeo,
+                new THREE.CylinderBufferGeometry(0.3, 0.3, 1, 8),
                 new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
             );
+            beam.geometry.rotateX(Math.PI / 2);
+            beam.frustumCulled = false;
             
-            // Beam outer glow
-            const beamGlow = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0.4, 0.4, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.8 })
+            // Neon Glow Layer
+            const glow = new THREE.Mesh(
+                new THREE.CylinderBufferGeometry(0.8, 0.8, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.6 })
             );
-            beamGlow.rotation.x = Math.PI / 2;
-            beam.add(beamGlow);
+            glow.geometry.rotateX(Math.PI / 2);
+            glow.frustumCulled = false;
+            beam.add(glow);
 
             pulseOrb.updateMatrixWorld(true);
-            const startPos = new THREE.Vector3().setFromMatrixPosition(pulseOrb.matrixWorld);
-            const endPos = new THREE.Vector3();
+            const startPos = new THREE.Vector4(0,0,0,1).applyMatrix4(pulseOrb.matrixWorld);
+            const beamStart = new THREE.Vector3(startPos.x, startPos.y, startPos.z);
+            const beamEnd = new THREE.Vector3();
             
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
             const terrainHits = raycaster.intersectObject(terrain);
             const targetHits = raycaster.intersectObjects(state.targets, true);
             
             if (targetHits.length > 0) {
-                endPos.copy(targetHits[0].point);
+                beamEnd.copy(targetHits[0].point);
                 let hitObj = targetHits[0].object;
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
@@ -952,24 +954,52 @@
                     hitObj.visible = false;
                     state.score++;
                     updateScoreUI();
-                    state.cameraShake = 0.5;
+                    state.cameraShake = 0.8;
                     playHitSound();
-                    spawnImpactFX(endPos);
+                    spawnImpactFX(beamEnd);
+                    spawnHitBlast(beamEnd);
                 }
             } else if (terrainHits.length > 0) {
-                endPos.copy(terrainHits[0].point);
-                spawnImpactFX(endPos, true);
+                beamEnd.copy(terrainHits[0].point);
+                spawnImpactFX(beamEnd, true);
+                spawnHitBlast(beamEnd, true);
             } else {
-                endPos.copy(camera.position).add(new THREE.Vector3(0,0,-100).applyQuaternion(camera.quaternion));
+                beamEnd.copy(camera.position).add(new THREE.Vector3(0,0,-150).applyQuaternion(camera.quaternion));
             }
 
-            const dist = startPos.distanceTo(endPos);
+            const dist = beamStart.distanceTo(beamEnd);
             beam.scale.z = dist;
-            beam.position.copy(startPos).lerp(endPos, 0.5);
-            beam.lookAt(endPos);
-            beam.userData.life = 0.5;
+            beam.position.copy(beamStart).lerp(beamEnd, 0.5);
+            beam.lookAt(beamEnd);
+            
+            beam.userData.life = 0.4;
             scene.add(beam);
             state.beams.push(beam);
+
+            // Satisfaction FX: Pulse the orb
+            pulseOrb.scale.setScalar(1.8);
+            setTimeout(() => pulseOrb.scale.setScalar(1.0), 100);
+
+            // Muzzle Spark at Orb
+            const spark = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(1.5, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+            );
+            spark.position.copy(beamStart);
+            spark.userData.life = 0.1;
+            scene.add(spark);
+            state.particles.push(spark);
+        }
+
+        function spawnHitBlast(pos, isTerrain = false) {
+            const blast = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(2, 16, 16),
+                new THREE.MeshBasicMaterial({ color: isTerrain ? 0xffa502 : 0x00f2ff, transparent: true, opacity: 0.8 })
+            );
+            blast.position.copy(pos);
+            blast.userData.life = 0.3;
+            scene.add(blast);
+            state.particles.push(blast); // Reuse particle loop
         }
 
         function spawnImpactFX(pos, isTerrain = false) {
