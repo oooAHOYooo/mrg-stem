@@ -1055,16 +1055,24 @@
             }, 2000);
         }
 
+        // --- AUDIO ---
+        let audioCtx = null;
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
         function playShootSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioCtx();
                 const obj = ctx.createOscillator();
                 const gain = ctx.createGain();
                 obj.type = 'square';
                 obj.frequency.setValueAtTime(400, ctx.currentTime);
                 obj.frequency.exponentialRampToValueAtTime(10, ctx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
                 obj.connect(gain);
                 gain.connect(ctx.destination);
                 obj.start();
@@ -1074,13 +1082,13 @@
 
         function playHitSound() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioCtx();
                 const obj = ctx.createOscillator();
                 const gain = ctx.createGain();
                 obj.type = 'sine';
                 obj.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
                 obj.connect(gain);
                 gain.connect(ctx.destination);
                 obj.start();
