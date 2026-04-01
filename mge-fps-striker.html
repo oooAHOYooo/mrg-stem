@@ -929,12 +929,13 @@
             
             // Beam outer glow
             const beamGlow = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0.2, 0.2, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.5 })
+                new THREE.CylinderBufferGeometry(0.4, 0.4, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.8 })
             );
             beamGlow.rotation.x = Math.PI / 2;
             beam.add(beamGlow);
 
+            pulseOrb.updateMatrixWorld(true);
             const startPos = new THREE.Vector3().setFromMatrixPosition(pulseOrb.matrixWorld);
             const endPos = new THREE.Vector3();
             
@@ -966,7 +967,7 @@
             beam.scale.z = dist;
             beam.position.copy(startPos).lerp(endPos, 0.5);
             beam.lookAt(endPos);
-            beam.userData.life = 0.2;
+            beam.userData.life = 0.5;
             scene.add(beam);
             state.beams.push(beam);
         }
@@ -1104,8 +1105,8 @@
                 for (let i = state.beams.length - 1; i >= 0; i--) {
                     const b = state.beams[i];
                     b.userData.life -= delta;
-                    b.material.opacity = b.userData.life * 5;
-                    b.children[0].material.opacity = b.userData.life * 2.5;
+                    b.material.opacity = Math.min(1, b.userData.life * 4);
+                    b.children[0].material.opacity = Math.min(0.8, b.userData.life * 2);
                     if (b.userData.life <= 0) {
                         scene.remove(b);
                         state.beams.splice(i, 1);
