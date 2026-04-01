@@ -139,6 +139,11 @@
             margin-bottom: 10px;
         }
 
+        .outliner-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff !important;
+        }
+
     </style>
 </head>
 <body>
@@ -156,8 +161,7 @@
     <div class="panel" id="build-controls">
         <p><strong>Left Click & Drag:</strong> Raise Terrain</p>
         <p><strong>Right Click & Drag:</strong> Lower Terrain</p>
-        <p><strong>Middle Click (Scroll Wheel):</strong> Rotate Camera</p>
-        <p><strong>Scroll:</strong> Zoom Camera</p>
+        <p><strong>Middle Click (Scroll):</strong> Rotate Camera</p>
         
         <div class="control-group">
             <div class="control-label">
@@ -175,10 +179,26 @@
             <input type="range" id="brush-strength" min="0.1" max="5" value="1.0" step="0.1">
         </div>
     </div>
+
+    <!-- World Outliner (UE5 Style) -->
+    <div id="world-outliner" style="position: absolute; top: 20px; right: 20px; width: 220px; pointer-events: auto;">
+        <div class="panel" style="background: rgba(15, 15, 15, 0.9); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">World Outliner</div>
+            <div class="outliner-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #ccc; margin-bottom: 6px; cursor: pointer;">
+                <span style="color: #666;">▼</span> <span>Scene Root</span>
+            </div>
+            <div style="padding-left: 15px;">
+                <div class="outliner-item" style="color: #bb86fc; font-size: 13px; margin-bottom: 4px;">📂 Terrain_Geometry</div>
+                <div class="outliner-item" style="color: #03dac6; font-size: 13px; margin-bottom: 4px;">📡 Sky_System_BP</div>
+                <div class="outliner-item" style="color: #ffd700; font-size: 13px; margin-bottom: 4px;">🔆 DirectionalLight</div>
+                <div class="outliner-item" style="color: #ffffff; font-size: 13px; margin-bottom: 4px;">🚗 FlyingCar_Player</div>
+            </div>
+        </div>
+    </div>
     
     <div class="panel" id="drive-controls" style="display: none;">
         <p><strong>Mouse:</strong> Look Around</p>
-        <p><strong>W A S D:</strong> Move Car</p>
+        <p><strong>W A S D / Arrows:</strong> Move Car</p>
         <p><strong>SPACE:</strong> Fly Up</p>
         <p><strong>SHIFT:</strong> Fly Down</p>
         <p><em>Press ESC to free mouse</em></p>
@@ -408,19 +428,47 @@
 
     // Terrain material
     const terrainMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x3b82f6, // Nice blueish cyber-terrain initially, or maybe green
-        roughness: 0.7,
-        metalness: 0.2,
-        flatShading: true, // Gives low-poly cool stylized look
+        vertexColors: true,
+        roughness: 0.8,
+        metalness: 0.1,
+        flatShading: true,
         side: THREE.FrontSide
     });
-    // Let's use vertex colors for cooler look later, but standard is fine for now
-    terrainMaterial.color.setHex(0x16a085); // Emerald green
     
     const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.receiveShadow = true;
     terrain.castShadow = true;
     scene.add(terrain);
+
+    // Initialize Terrain Colors
+    function initTerrainColors() {
+        const count = terrainGeometry.attributes.position.count;
+        terrainGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+        updateAllTerrainColors();
+    }
+
+    function updateAllTerrainColors() {
+        const positions = terrainGeometry.attributes.position.array;
+        const colors = terrainGeometry.attributes.color.array;
+        for (let i = 0; i < positions.length; i += 3) {
+            const h = positions[i + 1];
+            const color = getTerrainColorForHeight(h);
+            colors[i] = color.r;
+            colors[i + 1] = color.g;
+            colors[i + 2] = color.b;
+        }
+        terrainGeometry.attributes.color.needsUpdate = true;
+    }
+
+    function getTerrainColorForHeight(h) {
+        const c = new THREE.Color();
+        if (h < 5) c.setHex(0x16a085); // Emerald Green (Plain)
+        else if (h < 15) c.setHex(0x27ae60); // Darker Green (Hill)
+        else if (h < 30) c.setHex(0x95a5a6); // Gray (Slate/Mountain)
+        else c.setHex(0xecf0f1); // White (Snow peak)
+        return c;
+    }
+    initTerrainColors();
 
     // Grid helper overlay
     const gridHelper = new THREE.GridHelper(terrainSize, terrainSegments, 0xffffff, 0xffffff);
@@ -429,15 +477,18 @@
     gridHelper.position.y = 0.05; // Slightly above ground
     scene.add(gridHelper);
 
-    // Brush Indicator (ring)
-    const brushGeometry = new THREE.RingGeometry(0.8, 1, 32);
-    brushGeometry.rotateX(-Math.PI / 2);
-    const brushMaterial = new THREE.MeshBasicMaterial({ 
+    // Brush Indicator (Liquid Glass / UE5 Style)
+    const brushGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.4, 32);
+    const brushMaterial = new THREE.MeshPhysicalMaterial({ 
         color: 0x03dac6, 
         transparent: true, 
-        opacity: 0.8, 
-        side: THREE.DoubleSide,
-        depthTest: false
+        opacity: 0.6, 
+        metalness: 0.1,
+        roughness: 0.05,
+        transmission: 0.9,
+        thickness: 0.5,
+        ior: 1.4,
+        flatShading: true
     });
     const brushMesh = new THREE.Mesh(brushGeometry, brushMaterial);
     scene.add(brushMesh);
@@ -750,10 +801,10 @@
     window.addEventListener('keydown', (e) => {
         if (mode === 'drive') {
             switch(e.code) {
-                case 'KeyW': keys.w = true; break;
-                case 'KeyA': keys.a = true; break;
-                case 'KeyS': keys.s = true; break;
-                case 'KeyD': keys.d = true; break;
+                case 'KeyW': case 'ArrowUp': keys.w = true; break;
+                case 'KeyA': case 'ArrowLeft': keys.a = true; break;
+                case 'KeyS': case 'ArrowDown': keys.s = true; break;
+                case 'KeyD': case 'ArrowRight': keys.d = true; break;
                 case 'Space': keys.space = true; e.preventDefault(); break;
                 case 'ShiftLeft':
                 case 'ShiftRight': keys.shift = true; e.preventDefault(); break;
@@ -764,10 +815,10 @@
     window.addEventListener('keyup', (e) => {
         if (mode === 'drive') {
             switch(e.code) {
-                case 'KeyW': keys.w = false; break;
-                case 'KeyA': keys.a = false; break;
-                case 'KeyS': keys.s = false; break;
-                case 'KeyD': keys.d = false; break;
+                case 'KeyW': case 'ArrowUp': keys.w = false; break;
+                case 'KeyA': case 'ArrowLeft': keys.a = false; break;
+                case 'KeyS': case 'ArrowDown': keys.s = false; break;
+                case 'KeyD': case 'ArrowRight': keys.d = false; break;
                 case 'Space': keys.space = false; break;
                 case 'ShiftLeft':
                 case 'ShiftRight': keys.shift = false; break;
@@ -903,22 +954,23 @@
             if (verticesChanged) {
                 terrainGeometry.attributes.position.needsUpdate = true;
                 terrainGeometry.computeVertexNormals();
+                updateAllTerrainColors(); // Update vertex colors based on new heights
                 
                 // ADD TOKENS for sculpting!
                 tokens += 1;
                 document.getElementById('token-count').innerText = tokens;
-
-                // Visual Feedback: Sparkle at the point
+                
+                // Visual Feedback: Sparkle
                 const sparkle = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.5, 4, 4),
-                    new THREE.MeshBasicMaterial({ color: 0xffffff })
+                    new THREE.IcosahedronGeometry(0.8, 0),
+                    new THREE.MeshBasicMaterial({ color: 0x03dac6, transparent: true, opacity: 0.8 })
                 );
                 sparkle.position.copy(point);
                 scene.add(sparkle);
                 
-                // Simple animation to fade/scale out sparkle
                 const removeSparkle = () => {
                     sparkle.scale.multiplyScalar(0.9);
+                    sparkle.rotation.y += 0.2;
                     sparkle.position.y += 0.1;
                     if (sparkle.scale.x < 0.1) {
                         scene.remove(sparkle);
@@ -1052,6 +1104,13 @@
 
         if (mode === 'build') {
             updateBrushIndicator();
+            // Pulse the glass brush
+            if (brushMesh.visible) {
+                const clockElapsed = clock.getElapsedTime();
+                brushMesh.scale.x += Math.sin(clockElapsed * 5) * 0.05;
+                brushMesh.scale.z += Math.sin(clockElapsed * 5) * 0.05;
+                brushMesh.rotation.y += 0.02;
+            }
         } else if (mode === 'drive') {
             handleCarPhysics(delta);
         }
