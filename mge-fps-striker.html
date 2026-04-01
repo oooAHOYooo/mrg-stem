@@ -919,34 +919,34 @@
             // Audio
             playShootSound();
 
-            // Laser Beam Visual (Make it BIG)
+            // Hyper-Laser (Ultra Thick & Bright)
             const beam = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0.3, 0.3, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
+                new THREE.CylinderBufferGeometry(1.0, 1.0, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 1, depthTest: false })
             );
             beam.geometry.rotateX(Math.PI / 2);
             beam.frustumCulled = false;
             
-            // Neon Glow Layer
             const glow = new THREE.Mesh(
-                new THREE.CylinderBufferGeometry(0.8, 0.8, 1, 8),
-                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.6 })
+                new THREE.CylinderBufferGeometry(2.0, 2.0, 1, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00f2ff, transparent: true, opacity: 0.7, depthTest: false })
             );
             glow.geometry.rotateX(Math.PI / 2);
             glow.frustumCulled = false;
             beam.add(glow);
 
+            const startPos = new THREE.Vector3();
             pulseOrb.updateMatrixWorld(true);
-            const startPos = new THREE.Vector4(0,0,0,1).applyMatrix4(pulseOrb.matrixWorld);
-            const beamStart = new THREE.Vector3(startPos.x, startPos.y, startPos.z);
-            const beamEnd = new THREE.Vector3();
+            startPos.setFromMatrixPosition(pulseOrb.matrixWorld);
+            
+            const endPos = new THREE.Vector3();
             
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
             const terrainHits = raycaster.intersectObject(terrain);
             const targetHits = raycaster.intersectObjects(state.targets, true);
             
             if (targetHits.length > 0) {
-                beamEnd.copy(targetHits[0].point);
+                endPos.copy(targetHits[0].point);
                 let hitObj = targetHits[0].object;
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
@@ -954,41 +954,40 @@
                     hitObj.visible = false;
                     state.score++;
                     updateScoreUI();
-                    state.cameraShake = 0.8;
+                    state.cameraShake = 1.5; // Bigger shake!
                     playHitSound();
-                    spawnImpactFX(beamEnd);
-                    spawnHitBlast(beamEnd);
+                    spawnImpactFX(endPos);
+                    spawnHitBlast(endPos);
                 }
             } else if (terrainHits.length > 0) {
-                beamEnd.copy(terrainHits[0].point);
-                spawnImpactFX(beamEnd, true);
-                spawnHitBlast(beamEnd, true);
+                endPos.copy(terrainHits[0].point);
+                spawnImpactFX(endPos, true);
+                spawnHitBlast(endPos, true);
             } else {
-                beamEnd.copy(camera.position).add(new THREE.Vector3(0,0,-150).applyQuaternion(camera.quaternion));
+                endPos.copy(camera.position).add(new THREE.Vector3(0,0,-300).applyQuaternion(camera.quaternion));
             }
 
-            const dist = beamStart.distanceTo(beamEnd);
-            beam.scale.z = dist;
-            beam.position.copy(beamStart).lerp(beamEnd, 0.5);
-            beam.lookAt(beamEnd);
+            const dist = startPos.distanceTo(endPos);
+            beam.scale.z = (dist > 0) ? dist : 0.1;
+            beam.position.copy(startPos).lerp(endPos, 0.5);
+            beam.lookAt(endPos);
             
-            beam.userData.life = 0.4;
+            beam.userData.life = 0.8; // Long life to be sure it's seen
             scene.add(beam);
             state.beams.push(beam);
 
-            // Satisfaction FX: Pulse the orb
-            pulseOrb.scale.setScalar(1.8);
-            setTimeout(() => pulseOrb.scale.setScalar(1.0), 100);
-
-            // Muzzle Spark at Orb
+            // Muzzle Spark
             const spark = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(1.5, 8, 8),
-                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+                new THREE.SphereBufferGeometry(2.5, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthTest: false })
             );
             spark.position.copy(beamStart);
-            spark.userData.life = 0.1;
+            spark.userData.life = 0.2;
             scene.add(spark);
             state.particles.push(spark);
+
+            pulseOrb.scale.setScalar(2.0);
+            setTimeout(() => pulseOrb.scale.setScalar(1.0), 100);
         }
 
         function spawnHitBlast(pos, isTerrain = false) {
@@ -1086,9 +1085,10 @@
 
         // --- LOOP ---
         const clock = new THREE.Clock();
-        function loop() {
-            requestAnimationFrame(loop);
-            const delta = clock.getDelta();
+        function animate() {
+            requestAnimationFrame(animate);
+            let delta = clock.getDelta();
+            if (delta > 0.1) delta = 0.1; // Safeguard for frame spikes
 
             if (state.isPlaying) {
                 // Movement
@@ -1175,7 +1175,7 @@
                     }
                 }
                 const mins = Math.floor(state.timer / 60);
-                const secs = Math.floor(state.timer % 60);
+                const secs = Math.floor(Math.max(0, state.timer % 60));
                 document.getElementById('timer-display').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
 
                 // Target Animations
@@ -1253,8 +1253,8 @@
         };
 
         // Initialize and Start
-        loop();
-        showNotif("WELCOME TO FPS STRIKER");
+        animate();
+        showNotif("READY FOR MISSION!");
 
     </script>
 </body>
