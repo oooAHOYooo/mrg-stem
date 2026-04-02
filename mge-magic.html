@@ -34,7 +34,7 @@
     </style>
 </head>
 <body>
-    <a href="index.html" class="btn-hub wood-panel">◂ Return to Summer Hub</a>
+    <a href="mge.html" class="btn-hub wood-panel">◂ Return to Summer Hub</a>
     <div id="crosshair"></div>
     <div id="instruction-text">Bounce higher and higher to reach Space and find the Floating Castle!</div>
     <div id="ui" class="wood-panel">
@@ -129,6 +129,11 @@
         const typeColors = [colors.magicFire, colors.magicWater, colors.magicSun];
 
         function init() {
+            console.log("Initializing Magic Realm...");
+            try {
+                if (typeof THREE === 'undefined') {
+                    throw new Error("Three.js not loaded! Please check your internet connection.");
+                }
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb); 
             scene.fog = new THREE.FogExp2(0x87ceeb, 0.002);
@@ -290,11 +295,17 @@
             // spawnBoss('Troll', -80, -80);
             // spawnBoss('Dragon', 80, 80);
 
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true }); 
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio || 1);
-            document.body.appendChild(renderer.domElement);
+                // Renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); 
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio || 1);
+                renderer.domElement.id = 'game-canvas';
+                renderer.domElement.style.position = 'absolute';
+                renderer.domElement.style.top = '0';
+                renderer.domElement.style.left = '0';
+                renderer.domElement.style.zIndex = '1'; // Behind UI (z-index 50+)
+                document.body.appendChild(renderer.domElement);
+                console.log("Renderer initialized and appended.");
 
             // Controls
             const instructions = document.getElementById('instructions');
@@ -351,7 +362,17 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
             document.addEventListener('mousedown', onMouseDown);
-            window.addEventListener('resize', onWindowResize);
+                window.addEventListener('resize', onWindowResize);
+                console.log("Init complete! Entering main loop.");
+            } catch (err) {
+                console.error("CRITICAL ERROR during init:", err);
+                const info = document.createElement('div');
+                info.style.position = 'fixed'; info.style.top = '50%'; info.style.left = '50%';
+                info.style.transform = 'translate(-50%, -50%)'; info.style.background = 'red';
+                info.style.padding = '20px'; info.style.zIndex = '1000';
+                info.innerText = "COULD NOT START GAME: " + err.message;
+                document.body.appendChild(info);
+            }
         }
 
         function createSkyIsland(x, y, z, size) {

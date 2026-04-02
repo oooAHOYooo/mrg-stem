@@ -689,12 +689,57 @@
             objects.push(topLeaf);
         };
 
-        for(let i=0; i<15; i++) {
-            const tx = Math.floor(Math.random() * 80 - 40) * 5;
-            const tz = Math.floor(Math.random() * 80 - 40) * 5;
-            if (tz < -20 && tx > -40 && tx < 40) continue; // avoid boss area
-            createTree(tx, tz);
+        for(let i=0; i<30; i++) {
+            const tx = Math.floor(Math.random() * 120 - 60) * 5;
+            const tz = Math.floor(Math.random() * 120 - 60) * 5;
+            if (tz < -20 && tx > -40 && tx < 40) continue; 
+            
+            // Random tree variants
+            const type = Math.random();
+            if (type < 0.2) {
+                // Tall Pine
+                const pineMat = new THREE.MeshLambertMaterial({color: 0x064e3b});
+                for(let y=0; y<6; y++) {
+                    const trunk = new THREE.Mesh(boxGeometry, woodMat);
+                    trunk.position.set(tx, y*5 + 2.5, tz);
+                    scene.add(trunk); objects.push(trunk);
+                }
+                for(let y=2; y<8; y++) {
+                    const r = 8 - y;
+                    const leaf = new THREE.Mesh(new THREE.ConeGeometry(r*2, 6, 4), pineMat);
+                    leaf.position.set(tx, y*5 + 2.5, tz);
+                    scene.add(leaf); objects.push(leaf);
+                }
+            } else {
+                createTree(tx, tz);
+            }
         }
+
+        // --- FLOATING ISLANDS ---
+        const floatingIslands = [];
+        function createFloatingIsland(x, y, z, size = 30) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({color: 0x34d399});
+            const dirtMat = new THREE.MeshLambertMaterial({color: 0x78350f});
+            
+            const surface = new THREE.Mesh(new THREE.BoxGeometry(size, 5, size), mat);
+            surface.position.y = 0;
+            group.add(surface); objects.push(surface);
+
+            const bottom = new THREE.Mesh(new THREE.ConeGeometry(size/2, 20, 4), dirtMat);
+            bottom.rotation.x = Math.PI;
+            bottom.position.y = -10;
+            group.add(bottom); objects.push(bottom);
+
+            group.position.set(x, y, z);
+            scene.add(group);
+            floatingIslands.push(group);
+            return group;
+        }
+
+        const island1 = createFloatingIsland(150, 80, -150, 50);
+        const island2 = createFloatingIsland(-150, 100, -150, 50);
+        const island3 = createFloatingIsland(0, 120, -250, 60);
         
         // --- INFINITE HORDE BOSSES ---
         let bossHealth = 150;
@@ -925,12 +970,12 @@
                 };
 
                 const optCode = document.createElement('button');
-                optCode.textContent = 'Block Code';
+                optCode.textContent = 'Program & Release';
                 optCode.style.padding = '5px 10px'; optCode.style.background = '#8b5cf6'; optCode.style.color = 'white';
                 optCode.style.border='none'; optCode.style.borderRadius='4px'; optCode.style.cursor='pointer';
                 optCode.onclick = () => {
                     menu.style.display = 'none';
-                    openBlockCoding(dr);
+                    openBlockCoding(dr, true); // true = fight mode
                 };
 
                 menu.appendChild(optFollow);
@@ -952,19 +997,27 @@
             { id: "destroy()", label: "Robot.Destroy()", color: "#ef4444" },
             { id: "set_friend_mode(true)", label: "FriendMode = true", color: "#ec4899" },
             { id: "follow_player()", label: "Player.Follow()", color: "#8b5cf6" },
-            { id: "on_catch", label: "Event: On Catch", color: "#f59e0b" }
+            { id: "on_catch", label: "Event: On Catch", color: "#f59e0b" },
+            { id: "on_release", label: "Event: On Release", color: "#3b82f6" },
+            { id: "target_boss()", label: "Target: Nearest Boss", color: "#ef4444" },
+            { id: "attack_heavy()", label: "Attack: Heavy Fire", color: "#dc2626" }
         ];
 
-        function openBlockCoding(target) {
+        function openBlockCoding(target, forFight = false) {
             if(inBlockCoding || inRiddle || inMenu) return;
             controls.unlock();
             setTimeout(() => {
                 inBlockCoding = true;
                 inMenu = true;
                 codingTarget = target;
+                codingTarget.userData.forFight = forFight;
                 document.getElementById('blocker').style.display = 'block';
                 document.getElementById('instructions').style.display = 'none';
                 document.getElementById('block-coding-container').style.display = 'block';
+                
+                const title = document.querySelector('#block-coding-container h2');
+                title.textContent = forFight ? "Combat Command: Train to Fight!" : "Friendship Logic: Program a Friend!";
+                
                 resetWorkspace();
             }, 100);
         }
@@ -1101,6 +1154,8 @@
 
         document.getElementById('clear-code-btn').onclick = resetWorkspace;
         document.getElementById('cancel-code-btn').onclick = closeBlockCoding;
+
+
 
         function closeBlockCoding() {
             document.getElementById('block-coding-container').style.display = 'none';
@@ -1750,6 +1805,12 @@
             bossGroup.rotation.z = 0;
             isBossDefeated = false;
             let type = index % 4;
+
+            // Islands positions for specific bosses
+            if (index === 1) bossGroup.position.set(150, 85, -150);
+            else if (index === 2) bossGroup.position.set(-150, 105, -150);
+            else if (index === 3) bossGroup.position.set(0, 125, -250);
+            else bossGroup.position.set(0, 0, -60);
             
             if (type === 0) {
                 activeBossModel = createDinosaur();
@@ -2378,14 +2439,26 @@
                 for(let i=0; i < capturableEntities.length; i++) {
                     const ce = capturableEntities[i];
                     if(ce.visible) {
-                        if (ce.userData.isFriend) {
-                            const pPos = controls.getObject().position;
-                            const dist = ce.position.distanceTo(pPos);
-                            if (dist > 15) {
-                                ce.lookAt(pPos.x, ce.position.y, pPos.z);
-                                ce.translateZ(10.0 * delta);
-                            }
-                        } else {
+                        if (ce.userData.mode === 'FIGHTER' && activeBossModel && !isBossDefeated) {
+                                const bPos = bossGroup.position;
+                                const dist = ce.position.distanceTo(bPos);
+                                if (dist > 30) {
+                                    ce.lookAt(bPos.x, ce.position.y, bPos.z);
+                                    ce.translateZ(20.0 * delta);
+                                } else {
+                                    if (Math.random() < 0.02) {
+                                        createExplosion(ce.position);
+                                        damageBoss(5);
+                                    }
+                                }
+                            } else if (ce.userData.isFriend) {
+                                const pPos = controls.getObject().position;
+                                const dist = ce.position.distanceTo(pPos);
+                                if (dist > 15) {
+                                    ce.lookAt(pPos.x, ce.position.y, pPos.z);
+                                    ce.translateZ(10.0 * delta);
+                                }
+                            } else {
                             ce.translateZ(ce.userData.isSlime ? 2.0 * delta : 5.0 * delta);
                             if(Math.random() < 0.03) {
                                 ce.rotation.y += (Math.random() - 0.5) * 2.0;

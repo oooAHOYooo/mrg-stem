@@ -1755,8 +1755,20 @@
             });
         }
 
+        let secretCodeBuffer = "";
         function onKeyDown(event) {
             const key = event.key.toLowerCase();
+            
+            // Easter egg check
+            if (key.length === 1 && /[a-z]/.test(key)) {
+                secretCodeBuffer += key;
+                if (secretCodeBuffer.length > 20) secretCodeBuffer = secretCodeBuffer.substring(1);
+                if (secretCodeBuffer.includes("gonzalez")) {
+                    triggerEasterEgg();
+                    secretCodeBuffer = "";
+                }
+            }
+
             if (key === 'escape' || key === 'p') {
                 togglePause();
             }
@@ -1773,6 +1785,25 @@
                 keys[key] = true;
             }
             event.preventDefault();
+        }
+
+        function triggerEasterEgg() {
+            showEnvironmentNotification("GONZALEZ MODE ACTIVATED!");
+            [player1, player2, player3].forEach((mesh, index) => {
+                if (!mesh) return;
+                mesh.scale.set(3, 3, 3);
+                mesh.children.forEach(child => {
+                    if (child.material) {
+                        child.material.color.setHex(0xffd700);
+                        child.material.emissive.setHex(0xffd700);
+                    }
+                });
+                const pk = index === 0 ? 'p1' : (index === 1 ? 'p2' : 'p3');
+                players[pk].damageMultiplier = 5;
+                players[pk].hasFinalSmash = true;
+            });
+            screenShake(0.5);
+            createSpecialEffect({x:0, y:5, z:0});
         }
 
         function onKeyUp(event) {
