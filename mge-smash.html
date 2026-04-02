@@ -945,9 +945,9 @@
         <div class="timer-display" id="timer-display">MATCH: 0%</div>
         
         <div class="block-coding-panel" id="block-coding-panel">
-            <h3 style="color:#00bcd4; text-align:center; font-size: 0.9rem; margin-bottom: 5px;">🤖 Preprogram Robot (Block Code)</h3>
-            <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-                <select id="block-player-select" style="background:#333; color:white; border:1px solid #777; padding:2px; border-radius:4px; font-size: 0.8rem;">
+            <h3 onclick="clickEasterEgg()" style="color:#00bcd4; text-align:center; font-size: 0.9rem; margin-bottom: 5px; cursor: pointer; user-select: none;">🤖 Preprogram Robot (Block Code)</h3>
+            <div style="display:flex; justify-content:space-between; margin-bottom: 5px; pointer-events: auto;">
+                <select id="block-player-select" style="background:#333; color:white; border:1px solid #777; padding:2px; border-radius:4px; font-size: 0.8rem; cursor: pointer; pointer-events: auto;">
                     <option value="p1">Player 1 (Red)</option>
                     <option value="p2">Player 2 (Cyan)</option>
                 </select>
@@ -1108,10 +1108,19 @@
             p2: null
         };
         
+        let easterEggClickCounter = 0;
         function addBlock(action) {
             const player = document.getElementById('block-player-select').value;
             activeBlockSequences[player].push(action);
             renderBlockSequence(player);
+        }
+
+        function clickEasterEgg() {
+            easterEggClickCounter++;
+            if (easterEggClickCounter >= 5) {
+                triggerEasterEgg();
+                easterEggClickCounter = 0;
+            }
         }
         
         function clearBlockSequence() {

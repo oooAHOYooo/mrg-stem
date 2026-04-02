@@ -123,7 +123,9 @@
             stone: 0x808080,
             magicFire: 0xff8c00,
             magicWater: 0x00bfff,
-            magicSun: 0xffff00
+            magicSun: 0xffff00,
+            white: 0xffffff,
+            black: 0x000000
         };
 
         const typeColors = [colors.magicFire, colors.magicWater, colors.magicSun];
@@ -352,7 +354,7 @@
             });
 
             document.addEventListener('mousemove', (e) => {
-                if (document.pointerLockElement === document.body) {
+                if (document.pointerLockElement) {
                     camera.rotation.y -= e.movementX * 0.002;
                     camera.rotation.x -= e.movementY * 0.002;
                     camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
@@ -599,7 +601,7 @@
         }
 
         function onKeyDown(e) {
-            if(document.pointerLockElement !== document.body) return;
+            if(!document.pointerLockElement) return;
             switch(e.code) {
                 case 'KeyW': moveForward = true; break;
                 case 'KeyA': moveLeft = true; break;
@@ -636,7 +638,7 @@
             }
         }
         function onMouseDown(e) {
-            if(document.pointerLockElement !== document.body) return;
+            if(!document.pointerLockElement) return;
             if(e.button === 0) {
                 if (activeSlot <= 3) spawnObjectFront();
                 else if (activeSlot === 4) shoot('Fire');
@@ -649,7 +651,7 @@
         }
         
         document.addEventListener('wheel', (e) => {
-            if(document.pointerLockElement !== document.body) return;
+            if(!document.pointerLockElement) return;
             if (e.deltaY > 0) activeSlot++;
             else activeSlot--;
             if (activeSlot > 9) activeSlot = 1;
@@ -845,11 +847,20 @@
                 direction.x = Number( moveRight ) - Number( moveLeft );
                 direction.normalize();
 
-                if ( moveForward || moveBackward ) velocity.z -= direction.z * 150.0 * delta;
-                if ( moveLeft || moveRight ) velocity.x -= direction.x * 150.0 * delta;
+                if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+                if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
 
-                camera.translateX( velocity.x * delta );
-                camera.translateZ( velocity.z * delta );
+                // Walk movement (projected on ground plane)
+                const camDir = new THREE.Vector3();
+                camera.getWorldDirection(camDir);
+                const camSide = new THREE.Vector3(-camDir.z, 0, camDir.x).normalize();
+                const camFront = new THREE.Vector3(camDir.x, 0, camDir.z).normalize();
+
+                const moveX = (velocity.x * camSide.x + velocity.z * camFront.x) * delta;
+                const moveZ = (velocity.x * camSide.z + velocity.z * camFront.z) * delta;
+                
+                camera.position.x += moveX;
+                camera.position.z += moveZ;
                 
                 // Physics and Platforming
                 let targetY = 10;
