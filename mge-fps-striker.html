@@ -611,7 +611,7 @@
         orbit.update();
 
         const fpControls = new THREE.PointerLockControls(camera, document.body);
-        scene.add(fpControls.getObject());
+        // scene.add(fpControls.getObject()); // Camera already added to scene
 
         const raycaster = new THREE.Raycaster();
         const pointer = new THREE.Vector2();
@@ -642,7 +642,10 @@
             group.add(ring);
 
             group.position.copy(pos);
-            group.position.y += 3; // Hover slightly
+            // Ensure target is above ground if pos is terrain point
+            if (pos.y < 3) group.position.y = 3; 
+            else group.position.y += 3;
+
             group.userData.isTarget = true;
             group.userData.hp = 1;
             
@@ -650,6 +653,19 @@
             state.targets.push(group);
             updateScoreUI();
         }
+
+        // Add some default targets for immediate fun
+        function addDefaultTargets() {
+            const points = [
+                new THREE.Vector3(25, 0, 25),
+                new THREE.Vector3(-25, 0, -25),
+                new THREE.Vector3(30, 10, 0),
+                new THREE.Vector3(-30, 5, 20),
+                new THREE.Vector3(0, 15, -40)
+            ];
+            points.forEach(p => createTarget(p));
+        }
+        addDefaultTargets();
 
         // Weapon (Magic Pulse Orb)
         const weapon = new THREE.Group();
@@ -861,10 +877,11 @@
 
         // --- GAMEPLAY ---
         function startGame() {
+            // Auto-generate some targets if there are none, so the game 'works' immediately
             if (state.targets.length === 0) {
-                showNotif("PLACE SOME TARGETS FIRST!");
-                return;
+                addDefaultTargets();
             }
+
             state.mode = 'play';
             state.isPlaying = true;
             state.score = 0;
@@ -880,12 +897,16 @@
             document.getElementById('score-hud').style.display = 'flex';
             document.getElementById('crosshair').style.display = 'block';
 
+            // Ensure Pointer Lock is requested on a direct user gesture
             fpControls.lock();
+            
             updateScoreUI();
             weapon.visible = true;
             
-            // Spawn at center, slightly up
-            fpControls.getObject().position.set(0, 50, 0);
+            // Spawn at center, slightly above ground to avoid long drop
+            fpControls.getObject().position.set(0, 10, 0);
+            // Reset look direction to be horizontal
+            camera.rotation.set(0, 0, 0); 
             
             showNotif("ARENA START!");
             playerLight.intensity = 1.2;
@@ -974,7 +995,7 @@
             beam.position.copy(beamStart).lerp(beamEnd, 0.5);
             beam.lookAt(beamEnd);
             
-            beam.userData.life = 0.1; // Short zap
+            beam.userData.life = 0.3; // Longer zap for visibility
             scene.add(beam);
             state.beams.push(beam);
 
@@ -1140,6 +1161,13 @@
                     state.isJumping = false;
                 }
 
+                // Bounds check (Keep player in arena)
+                const limit = terrainSize / 2 - 5;
+                if (playerPos.x > limit) playerPos.x = limit;
+                if (playerPos.x < -limit) playerPos.x = -limit;
+                if (playerPos.z > limit) playerPos.z = limit;
+                if (playerPos.z < -limit) playerPos.z = -limit;
+
                 // Shake & Recoil
                 if (state.cameraShake > 0) {
                     camera.position.x += (Math.random() - 0.5) * state.cameraShake;
@@ -1241,6 +1269,13 @@
         document.getElementById('stop-game').onclick = stopGame;
         document.getElementById('btn-mode-play').onclick = startGame;
         document.getElementById('btn-mode-build').onclick = stopGame;
+
+        // Re-lock pointer if user clicks canvas during play
+        canvas.addEventListener('click', () => {
+            if (state.isPlaying && state.mode === 'play') {
+                fpControls.lock();
+            }
+        });
 
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.onclick = () => {
