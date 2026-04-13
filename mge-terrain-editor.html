@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE - The Terrain Editor | Mr. Gonzalez STEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mge-primary: #ff4757;
+            --mge-secondary: #2f3542;
+            --mge-accent: #7bed9f;
+            --mge-gold: #ffa502;
+            --mge-blue: #1e90ff;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.7);
+            --neon-glow: 0 0 15px var(--mge-primary);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0c0c14;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .mge-badge {
+            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--neon-glow);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .mode-selector {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 5px;
+            border-radius: 15px;
+            display: flex;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: var(--mge-blue);
+            color: white;
+            box-shadow: 0 0 10px var(--mge-blue);
+        }
+
+        /* --- SIDEBARS --- */
+        .workspace {
+            display: flex;
+            justify-content: space-between;
+            height: 70%;
+            margin: 20px 0;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .sidebar h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--mge-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 10px;
+            border-radius: 16px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .tool-btn.active {
+            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
+            border-color: var(--mge-primary);
+            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .tool-btn span:first-child {
+            font-size: 1.8rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--mge-primary);
+            cursor: pointer;
+        }
+
+        /* --- CODING PANEL --- */
+        .block-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .block {
+            background: #1e222d;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.2s;
+            width: 100%;
+            text-align: left;
+            color: white;
+        }
+
+        .block:hover { background: #2a303d; transform: scale(1.02); }
+
+        .block.move { border-left: 5px solid #4a90e2; }
+        .block.turn { border-left: 5px solid #f5a623; }
+        .block.action { border-left: 5px solid #7ed321; }
+
+        .script-area {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 200px;
+            overflow-y: auto;
+        }
+
+        .script-block {
+            background: #252a34;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- FOOTER --- */
+        .footer {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .big-btn {
+            padding: 18px 45px;
+            border-radius: 24px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .run-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .run-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); transform: translateY(-5px) scale(1.05); }
+
+        .stop-btn { background: linear-gradient(135deg, #ff4757, #c0392b); color: white; display: none; }
+        .stop-btn:hover { transform: translateY(-5px) scale(1.05); }
+
+        /* --- GAME NOTIF --- */
+        #notification {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-dark);
+            padding: 12px 35px;
+            border-radius: 40px;
+            border: 2px solid var(--mge-primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            mix-blend-mode: difference;
+        }
+
+        .car-hud {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 24px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .speedometer {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--mge-accent);
+            text-shadow: 0 0 15px var(--mge-accent);
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            background: rgba(0,0,0,0.4);
+            padding: 5px 20px;
+            border-radius: 20px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+
+    <div id="ui-root">
+        <div class="header">
+            <div class="mge-badge">TERRAIN EDITOR</div>
+            <div class="mode-selector">
+                <button class="mode-btn active" id="btn-mode-build">BUILD</button>
+                <button class="mode-btn" id="btn-mode-play">PLAY</button>
+            </div>
+            <div style="width: 150px; display: flex; justify-content: flex-end;">
+                 <a href="mge.html" style="color:white; text-decoration:none; background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:10px; font-size:0.8rem">🏠 HUB</a>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <!-- Left Sidebar: Tools -->
+            <div class="sidebar" id="build-sidebar">
+                <h2>Landscape Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-btn active" data-tool="raise">
+                        <span>🏔️</span>
+                        <span>Raise</span>
+                    </div>
+                    <div class="tool-btn" data-tool="lower">
+                        <span>🕳️</span>
+                        <span>Lower</span>
+                    </div>
+                    <div class="tool-btn" data-tool="mountains">
+                        <span>⛰️</span>
+                        <span>Mtns</span>
+                    </div>
+                    <div class="tool-btn" data-tool="smooth">
+                        <span>✨</span>
+                        <span>Smooth</span>
+                    </div>
+                    <div class="tool-btn" data-tool="grass">
+                        <span>🌿</span>
+                        <span>Grass</span>
+                    </div>
+                    <div class="tool-btn" data-tool="paint">
+                        <span>🎨</span>
+                        <span>Layer</span>
+                    </div>
+                    <div class="tool-btn" data-tool="flatten">
+                        <span>📏</span>
+                        <span>Flatten</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Brush Size</span>
+                        <span id="brush-size-label">15</span>
+                    </div>
+                    <input type="range" id="brush-size" min="5" max="50" value="15">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Brush Intensity</span>
+                        <span id="brush-intensity-label">2.5</span>
+                    </div>
+                    <input type="range" id="brush-intensity" min="0.5" max="5.0" step="0.5" value="2.5">
+                </div>
+
+                <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                    <strong style="color:var(--mge-gold)">PRO TIP:</strong><br>
+                    Hold <b>SHIFT</b> while clicking to invert Raise/Lower or for extra control!
+                </div>
+
+                <div style="margin-top:auto">
+                    <button class="mode-btn" id="reset-world" style="width:100%; border:1px solid var(--mge-primary); color: var(--mge-primary);">Reset World</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Block Programming -->
+            <div class="sidebar" id="code-sidebar">
+                <h2>RC Car Program</h2>
+                <p style="font-size:0.75rem; color:#888;">Add commands to the script for auto-execution.</p>
+                <div class="block-list">
+                    <button class="block move" onclick="addToScript('forward')">Move Forward <span>10</span></button>
+                    <button class="block move" onclick="addToScript('backward')">Move Backward <span>10</span></button>
+                    <button class="block turn" onclick="addToScript('left')">Turn Left <span>90°</span></button>
+                    <button class="block turn" onclick="addToScript('right')">Turn Right <span>90°</span></button>
+                    <button class="block action" onclick="addToScript('nitro')">Nitro Boost! ⚡</button>
+                    <button class="block action" onclick="addToScript('jump')">Jump 🚀</button>
+                </div>
+                
+                <h2 style="margin-top:10px;">Script Area</h2>
+                <div class="script-area" id="script-container">
+                    <!-- Script blocks go here -->
+                </div>
+                <button class="block" onclick="clearScript()" style="justify-content:center; color:#ff4757; border-color:#ff4757">Clear Script</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="big-btn run-btn" id="start-game">
+                <span>▶</span> TEST WORLD
+            </button>
+            <button class="big-btn stop-btn" id="stop-game">
+                <span>⏹</span> EXIT TEST
+            </button>
+        </div>
+    </div>
+
+    <div id="notification"></div>
+
+    <div class="car-hud" id="car-hud">
+        <div style="font-size: 0.8rem; color: #aaa;">RC VELOCITY</div>
+        <div class="speedometer" id="speed-display">00</div>
+        <div style="font-size: 0.8rem; color: #aaa;">UNITS / SEC</div>
+    </div>
+
+    <div class="controls-hint">
+        BUILD: LMB Raise | Shift+LMB Lower | Flatten Tool | R-Drag Rotate | Wheel Zoom<br>
+        PLAY: WASD Drive | SPACE Jump | SHIFT Boost | ESC Unlock
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        /**
+         * MGE Terrain Editor - Three.js Engine
+         */
+
+        // State Manager
+        const state = {
+            mode: 'build',
+            tool: 'raise',
+            brushSize: 15,
+            brushIntensity: 2.5,  // boosted so sculpting is clearly visible
+            isMouseDown: false,
+            mouseButton: -1,
+            carScript: [],
+            isPlaying: false,
+            lastPoint: new THREE.Vector3()
+        };
+
+        // --- THREE.JS INITIALIZATION ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0c0c14);
+        scene.fog = new THREE.FogExp2(0x0c0c14, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 4000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambient = new THREE.AmbientLight(0x5050ff, 0.4);
+        scene.add(ambient);
+
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+        sun.position.set(150, 250, 100);
+        sun.castShadow = true;
+        sun.shadow.camera.left = -300;
+        sun.shadow.camera.right = 300;
+        sun.shadow.camera.top = 300;
+        sun.shadow.camera.bottom = -300;
+        sun.shadow.mapSize.set(2048, 2048);
+        scene.add(sun);
+
+        const neonPoint = new THREE.PointLight(0xff007f, 0.8, 500);
+        neonPoint.position.set(-100, 100, -100);
+        scene.add(neonPoint);
+
+        // --- TERRAIN GENERATION ---
+        // Build geometry manually in XZ space so Y is always world height.
+        // This avoids the rotateX-bake confusion that broke brush coordinate mapping.
+        const terrainSize = 400;
+        const RES = 80; // Slightly lower res for better performance
+        const vCount = (RES + 1) * (RES + 1);
+
+        const posArr = new Float32Array(vCount * 3);
+        const colArr = new Float32Array(vCount * 3);
+        const uvArr  = new Float32Array(vCount * 2);
+
+        for (let j = 0; j <= RES; j++) {
+            for (let i = 0; i <= RES; i++) {
+                const vi = j * (RES + 1) + i;
+                posArr[vi * 3 + 0] = (i / RES - 0.5) * terrainSize; // X
+                posArr[vi * 3 + 1] = 0;                               // Y (height)
+                posArr[vi * 3 + 2] = (j / RES - 0.5) * terrainSize; // Z
+                colArr[vi * 3 + 0] = 0.2;
+                colArr[vi * 3 + 1] = 0.6;
+                colArr[vi * 3 + 2] = 0.3;
+                uvArr[vi * 2 + 0] = i / RES;
+                uvArr[vi * 2 + 1] = j / RES;
+            }
+        }
+
+        // Build triangle index list
+        const idxArr = new Uint32Array(RES * RES * 6);
+        let ii = 0;
+        for (let j = 0; j < RES; j++) {
+            for (let i = 0; i < RES; i++) {
+                const a = j * (RES + 1) + i;
+                const b = a + 1;
+                const c = a + (RES + 1);
+                const d = c + 1;
+                idxArr[ii++] = a; idxArr[ii++] = c; idxArr[ii++] = b;
+                idxArr[ii++] = b; idxArr[ii++] = c; idxArr[ii++] = d;
+            }
+        }
+
+        const terrainGeom = new THREE.BufferGeometry();
+        const posAttr = new THREE.BufferAttribute(posArr, 3);
+        posAttr.usage = THREE.DynamicDrawUsage;
+        terrainGeom.setAttribute('position', posAttr);
+        terrainGeom.setAttribute('color',    new THREE.BufferAttribute(colArr, 3));
+        terrainGeom.setAttribute('uv',       new THREE.BufferAttribute(uvArr,  2));
+        terrainGeom.setIndex(new THREE.BufferAttribute(idxArr, 1));
+        terrainGeom.computeVertexNormals();
+
+        const terrainMat = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            roughness: 0.85,
+            metalness: 0.05,
+            flatShading: true,
+            side: THREE.FrontSide
+        });
+
+        const terrain = new THREE.Mesh(terrainGeom, terrainMat);
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+
+        // Grid
+        const grid = new THREE.GridHelper(terrainSize, 40, 0x4444ff, 0x222244);
+        grid.position.y = 0.1;
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+        // Brush Ring
+        const ringGeom = new THREE.RingBufferGeometry(0.98, 1.0, 64);
+        ringGeom.rotateX(-Math.PI / 2);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, side: THREE.DoubleSide, transparent:true, opacity:0.8 });
+        const brushRing = new THREE.Mesh(ringGeom, ringMat);
+        scene.add(brushRing);
+
+        // --- INSTANCED GRASS ---
+        const grassCount = 15000;
+        const gGeom = new THREE.PlaneBufferGeometry(0.3, 0.7);
+        gGeom.translate(0, 0.35, 0);
+        const gMat = new THREE.MeshStandardMaterial({ color: 0x44ee66, side: THREE.DoubleSide, alphaTest: 0.5 });
+        const grassSys = new THREE.InstancedMesh(gGeom, gMat, grassCount);
+        grassSys.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        scene.add(grassSys);
+
+        let grassIdx = 0;
+        const dummy = new THREE.Object3D();
+        function placeGrassAt(pos) {
+            if (grassIdx >= grassCount) grassIdx = 0;
+            const spread = 2;
+            dummy.position.set(
+                pos.x + (Math.random()-0.5)*spread,
+                pos.y,
+                pos.z + (Math.random()-0.5)*spread
+            );
+            dummy.rotation.y = Math.random() * Math.PI;
+            dummy.scale.setScalar(0.5 + Math.random());
+            dummy.updateMatrix();
+            grassSys.setMatrixAt(grassIdx++, dummy.matrix);
+            grassSys.instanceMatrix.needsUpdate = true;
+        }
+
+        // --- RC CAR MODEL ---
+        const car = new THREE.Group();
+        // Body
+        const bodyMesh = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(1.2, 0.6, 2),
+            new THREE.MeshStandardMaterial({ color: 0xff4757, metalness: 0.6, roughness: 0.1 })
+        );
+        bodyMesh.castShadow = true;
+        car.add(bodyMesh);
+        // Cockpit
+        const cockpit = new THREE.Mesh(
+            new THREE.BoxBufferGeometry(0.8, 0.4, 0.9),
+            new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.8 })
+        );
+        cockpit.position.set(0, 0.5, -0.1);
+        car.add(cockpit);
+        // Wheels
+        const wGeom = new THREE.CylinderBufferGeometry(0.35, 0.35, 0.3, 16);
+        wGeom.rotateZ(Math.PI/2);
+        const wMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+        const wheels = [];
+        const wOffsets = [[0.7, -0.2, 0.7], [-0.7, -0.2, 0.7], [0.7, -0.2, -0.7], [-0.7, -0.2, -0.7]];
+        wOffsets.forEach(ofs => {
+            const w = new THREE.Mesh(wGeom, wMat);
+            w.position.set(...ofs);
+            car.add(w);
+            wheels.push(w);
+        });
+        car.visible = false;
+        scene.add(car);
+
+        // --- CAMERA CONTROLS ---
+        const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+        orbit.enableDamping = true;
+        orbit.dampingFactor = 0.05;
+        orbit.mouseButtons = {
+            LEFT: null,
+            MIDDLE: THREE.MOUSE.PAN,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+        camera.position.set(120, 120, 120);
+        orbit.update();
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        // --- CORE FUNCTIONS ---
+
+        function updateBrush() {
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObject(terrain);
+            if(hits.length > 0) {
+                brushRing.visible = true;
+                brushRing.position.copy(hits[0].point);
+                brushRing.position.y += 0.3;
+                brushRing.scale.setScalar(state.brushSize);
+                state.lastPoint.copy(hits[0].point);
+                if(state.isMouseDown) runTool();
+            } else {
+                brushRing.visible = false;
+            }
+        }
+
+
+        function runTool() {
+            const pos = terrainGeom.attributes.position.array;
+            const cols = terrainGeom.attributes.color.array;
+            const center = state.lastPoint;
+            
+            // UE5 Style: Shift inverts or triggers alternate tools
+            const isShift = keys['ShiftLeft'] || keys['ShiftRight'];
+            
+            let mod = state.brushIntensity;
+            let currentTool = state.tool;
+
+            if (state.tool === 'raise') {
+                if (isShift) currentTool = 'lower';
+            } else if (state.tool === 'lower') {
+                if (isShift) currentTool = 'raise';
+            }
+
+            if (currentTool === 'lower') mod = -state.brushIntensity;
+            if (currentTool === 'raise') mod = state.brushIntensity;
+
+            // Map world coords to grid indices
+            // posArr[vi*3+0] = (i/RES - 0.5)*terrainSize  =>  i = (x/terrainSize + 0.5)*RES
+            const step = terrainSize / RES;
+            const gridX = Math.round((center.x / terrainSize + 0.5) * RES);
+            const gridZ = Math.round((center.z / terrainSize + 0.5) * RES);
+            const radiusInCells = Math.ceil(state.brushSize / step) + 1;
+
+            let changed = false;
+
+            const startX = Math.max(0, gridX - radiusInCells);
+            const endX   = Math.min(RES, gridX + radiusInCells);
+            const startZ = Math.max(0, gridZ - radiusInCells);
+            const endZ   = Math.min(RES, gridZ + radiusInCells);
+
+            for (let j = startZ; j <= endZ; j++) {
+                for (let i = startX; i <= endX; i++) {
+                    const vi  = j * (RES + 1) + i;
+                    const idx = vi * 3;
+                    const vx = pos[idx];     // world X
+                    const vy = pos[idx + 1]; // world Y (height)
+                    const vz = pos[idx + 2]; // world Z
+
+                    const dx = vx - center.x;
+                    const dz = vz - center.z;
+                    const dSquared = dx*dx + dz*dz;
+                    const rSquared = state.brushSize * state.brushSize;
+
+                    if (dSquared < rSquared) {
+                        const dist = Math.sqrt(dSquared);
+                        const falloff = 1 - (dist / state.brushSize);
+                        const effort = Math.pow(falloff, 2); // Quadratic falloff for UE5 look
+
+                        if (currentTool === 'raise' || currentTool === 'lower') {
+                            pos[idx+1] += mod * effort * 1.5;
+                            changed = true;
+                        } 
+                        else if (currentTool === 'mountains') {
+                            const noise = (Math.sin(vx * 0.2) * Math.cos(vz * 0.2)) * 2;
+                            pos[idx+1] += (mod * 5 + noise) * effort * 0.5;
+                            changed = true;
+                        }
+                        else if (currentTool === 'smooth') {
+                            // Real Laplacian smooth: average Neighbors
+                            let sum = 0;
+                            let count = 0;
+                            for (let nj = -1; nj <= 1; nj++) {
+                                for (let ni = -1; ni <= 1; ni++) {
+                                    if (i+ni >= 0 && i+ni <= RES && j+nj >= 0 && j+nj <= RES) {
+                                        sum += pos[((j+nj) * (RES + 1) + (i+ni)) * 3 + 1];
+                                        count++;
+                                    }
+                                }
+                            }
+                            const avg = sum / count;
+                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], avg, 0.2 * falloff);
+                            changed = true;
+                        }
+                        else if (currentTool === 'grass' && Math.random() < 0.2) {
+                            placeGrassAt(new THREE.Vector3(vx, vy, vz));
+                        }
+                        else if (currentTool === 'paint') {
+                            // Multi-layer painting feel
+                            const rockCol = [0.5, 0.45, 0.4];
+                            const grassCol = [0.2, 0.6, 0.3];
+                            const lerpVal = effort * 0.2;
+                            
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], rockCol[0], lerpVal);
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], rockCol[1], lerpVal);
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], rockCol[2], lerpVal);
+                            terrainGeom.attributes.color.needsUpdate = true;
+                        }
+                        else if (currentTool === 'flatten') {
+                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], center.y, effort * (state.brushIntensity * 0.5));
+                            changed = true;
+                        }
+                    }
+                }
+            }
+
+            if(changed) {
+                terrainGeom.attributes.position.needsUpdate = true;
+                terrainGeom.computeVertexNormals();
+            }
+        }
+
+        // --- CAR ENGINE ---
+        let carVel = new THREE.Vector3();
+        let carYaw = 0;
+        const keys = {};
+
+        function moveCar(delta) {
+            if(!state.isPlaying) return;
+
+            const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? 15 : 6; // Much slower
+            const friction = 0.98;
+            const turnSpeed = 1.8; // Slower turn
+            const grav = 50;
+
+            if(keys['KeyA']) carYaw += turnSpeed * delta;
+            if(keys['KeyD']) carYaw -= turnSpeed * delta;
+
+            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw);
+            if(keys['KeyW']) carVel.add(fwd.clone().multiplyScalar(accel * delta));
+            if(keys['KeyS']) carVel.sub(fwd.clone().multiplyScalar(accel * delta * 0.5));
+
+            carVel.x *= friction;
+            carVel.z *= friction;
+
+            car.position.x += carVel.x * delta * 8; // Much slower
+            car.position.z += carVel.z * delta * 8;
+            
+            // Boundary Check
+            const bound = terrainSize / 2 - 5;
+            if (car.position.x > bound) { car.position.x = bound; carVel.x = 0; }
+            if (car.position.x < -bound) { car.position.x = -bound; carVel.x = 0; }
+            if (car.position.z > bound) { car.position.z = bound; carVel.z = 0; }
+            if (car.position.z < -bound) { car.position.z = -bound; carVel.z = 0; }
+            car.position.y += carVel.y * delta;
+
+            const groundY = findGround(car.position.x, car.position.z);
+            if(car.position.y < groundY + 0.4) {
+                car.position.y = groundY + 0.4;
+                if(carVel.y < 0) carVel.y = 0;
+            } else {
+                carVel.y -= grav * delta;
+            }
+
+            if(keys['Space'] && car.position.y < groundY + 0.6) {
+                carVel.y = 20;
+            }
+
+            car.rotation.y = carYaw;
+            
+            // Speed UI
+            const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
+            document.getElementById('speed-display').innerText = spd.toString().padStart(2, '0');
+
+            // Chase Cam
+            const camTarget = car.position.clone().add(new THREE.Vector3(0, 8, -18).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw));
+            camera.position.lerp(camTarget, 0.1);
+            camera.lookAt(car.position.clone().add(new THREE.Vector3(0,1,0)));
+            
+            // Wheel Spin
+            wheels.forEach(w => w.rotation.x += spd * delta);
+        }
+
+        function findGround(x, z) {
+            raycaster.set(new THREE.Vector3(x, 1000, z), new THREE.Vector3(0, -1, 0));
+            const intersect = raycaster.intersectObject(terrain);
+            return intersect.length > 0 ? intersect[0].point.y : 0;
+        }
+
+        // --- INTERACTION ---
+
+        window.addEventListener('mousedown', e => {
+            // Update pointer immediately for raycasting
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            // Ignore if clicking on UI
+            if (e.target.closest('.sidebar') || e.target.closest('.header') || e.target.closest('.footer') || e.target.closest('.mode-selector')) {
+                return;
+            }
+            
+            // Only Left Click (0) for sculpting in Build mode
+            if (e.button === 0) {
+                state.isMouseDown = true;
+                state.mouseButton = e.button;
+                if(state.mode === 'build') {
+                    updateBrush(); // Sync lastPoint before running tool
+                    runTool();
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            state.isMouseDown = false;
+        });
+
+        window.addEventListener('mousemove', e => {
+            pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        window.addEventListener('keydown', e => { 
+            keys[e.code] = true; 
+            if(e.code === 'Escape') cancelPlay();
+        });
+
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Prevent context menu on right click to allow smooth camera rotation
+        window.addEventListener('contextmenu', e => {
+            if (state.mode === 'build') e.preventDefault();
+        });
+
+        // UI Events
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.tool = btn.dataset.tool;
+            };
+        });
+
+        document.getElementById('brush-size').oninput = e => {
+            state.brushSize = parseInt(e.target.value);
+            document.getElementById('brush-size-label').innerText = state.brushSize;
+        };
+
+        document.getElementById('brush-intensity').oninput = e => {
+            state.brushIntensity = parseFloat(e.target.value);
+            document.getElementById('brush-intensity-label').innerText = state.brushIntensity.toFixed(1);
+        };
+
+        document.getElementById('reset-world').onclick = () => {
+            const p = terrainGeom.attributes.position.array;
+            for(let i=0; i<p.length; i+=3) p[i+1] = 0;
+            terrainGeom.attributes.position.needsUpdate = true;
+            terrainGeom.computeVertexNormals();
+            grassIdx = 0;
+            grassSys.count = 0;
+            grassSys.count = grassCount;
+            for(let i=0; i<grassCount; i++) grassSys.setMatrixAt(i, new THREE.Matrix4().makeScale(0,0,0));
+            grassSys.instanceMatrix.needsUpdate = true;
+        };
+
+        function startPlay() {
+            state.isPlaying = true;
+            state.mode = 'play';
+            document.getElementById('build-sidebar').style.display = 'none';
+            document.getElementById('code-sidebar').style.display = 'none';
+            document.getElementById('start-game').style.display = 'none';
+            document.getElementById('stop-game').style.display = 'flex';
+            document.getElementById('car-hud').style.display = 'flex';
+            document.getElementById('crosshair').style.display = 'block';
+            car.visible = true;
+            car.position.set(0, 10, 0);
+            orbit.enabled = false;
+            brushRing.visible = false;
+            document.body.requestPointerLock();
+            if(state.carScript.length > 0) executeScript();
+        }
+
+        function cancelPlay() {
+            state.isPlaying = false;
+            state.mode = 'build';
+            document.getElementById('build-sidebar').style.display = 'flex';
+            document.getElementById('code-sidebar').style.display = 'flex';
+            document.getElementById('start-game').style.display = 'flex';
+            document.getElementById('stop-game').style.display = 'none';
+            document.getElementById('car-hud').style.display = 'none';
+            document.getElementById('crosshair').style.display = 'none';
+            car.visible = false;
+            orbit.enabled = true;
+            document.exitPointerLock();
+        }
+
+        document.getElementById('start-game').onclick = startPlay;
+        document.getElementById('stop-game').onclick = cancelPlay;
+        document.getElementById('btn-mode-play').onclick = startPlay;
+        document.getElementById('btn-mode-build').onclick = cancelPlay;
+
+        // Scripting
+        function addToScript(t) {
+            state.carScript.push(t);
+            const titles = {forward:'Fwd', backward:'Bwd', left:'Left', right:'Right', nitro:'Nitro', jump:'Jump'};
+            const div = document.createElement('div');
+            div.className = 'script-block';
+            div.innerHTML = `<span><b>${titles[t]}</b> (Auto)</span> <span style="color:#ff4757; cursor:pointer" onclick="removeItem('${t}', this)">✕</span>`;
+            document.getElementById('script-container').appendChild(div);
+        }
+
+        function removeItem(t, el) {
+            const idx = state.carScript.indexOf(t);
+            if(idx > -1) state.carScript.splice(idx, 1);
+            el.parentElement.remove();
+        }
+
+        function clearScript() {
+            state.carScript = [];
+            document.getElementById('script-container').innerHTML = '';
+        }
+
+        async function executeScript() {
+            for(const cmd of state.carScript) {
+                if(!state.isPlaying) break;
+                if(cmd === 'forward') { keys['KeyW'] = true; await wait(800); keys['KeyW'] = false; }
+                if(cmd === 'backward') { keys['KeyS'] = true; await wait(800); keys['KeyS'] = false; }
+                if(cmd === 'left') { keys['KeyA'] = true; await wait(400); keys['KeyA'] = false; }
+                if(cmd === 'right') { keys['KeyD'] = true; await wait(400); keys['KeyD'] = false; }
+                if(cmd === 'nitro') { keys['ShiftLeft'] = true; keys['KeyW'] = true; await wait(1500); keys['ShiftLeft'] = false; keys['KeyW'] = false; }
+                if(cmd === 'jump') { keys['Space'] = true; await wait(100); keys['Space'] = false; }
+                await wait(200);
+            }
+        }
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // Loop
+        const clock = new THREE.Clock();
+        function loop() {
+            requestAnimationFrame(loop);
+            const delta = clock.getDelta();
+            if(state.mode === 'play') moveCar(delta);
+            else {
+                updateBrush();
+                if(state.isMouseDown) runTool();
+                orbit.update();
+            }
+            renderer.render(scene, camera);
+        }
+        loop();
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+    </script>
+</body>
+</html>

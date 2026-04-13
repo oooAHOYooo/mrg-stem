@@ -647,26 +647,234 @@
             opacity: 0.8;
             margin-top: 0.25rem;
         }
+
+        .pause-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(30px);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            border: 4px solid #00bcd4;
+            box-shadow: 0 0 50px rgba(0, 188, 212, 0.8);
+            z-index: 200;
+            display: none;
+            color: white;
+            min-width: 350px;
+        }
+
+        .pause-menu.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .pause-menu h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #00bcd4;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .pause-menu button {
+            display: block;
+            width: 100%;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid #00bcd4;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pause-menu button:hover {
+            background: #00bcd4;
+            color: black;
+            transform: scale(1.05);
+        }
+
+        .training-overlay {
+            position: fixed;
+            top: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 188, 212, 0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid #00bcd4;
+            color: white;
+            font-weight: 800;
+            z-index: 10;
+            display: none;
+        }
+
+        .player3-name {
+            color: #7f8c8d;
+            text-shadow: 0 0 8px rgba(127, 140, 141, 0.8);
+        }
+
+        .player3-health-bar {
+            background: linear-gradient(90deg, #95a5a6, #7f8c8d);
+            box-shadow: 0 0 15px rgba(127, 140, 141, 0.5);
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            color: #00ffff;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            width: 300px;
+            text-align: center;
+        }
+
+        .loader-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 20px #00ffff;
+            transition: width 0.3s ease;
+        }
+
+        .loader-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .loader-subtext {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* --- ANIME FLUTTER EFFECT --- */
+        .anime-flutter {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            font-family: 'Arial Black', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            opacity: 0;
+            user-select: none;
+        }
+
+        .anime-word {
+            font-size: 80px;
+            color: #fff;
+            text-shadow: 
+                4px 4px 0px #00ffff, 
+                -4px -4px 0px #ff00ff, 
+                6px 6px 0px #000;
+            animation: anime-pop 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .anime-kanji {
+            font-size: 60px;
+            color: #000;
+            background: #f8fb00;
+            padding: 5px 15px;
+            border: 4px solid black;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.3);
+            animation: anime-float 2s linear forwards;
+        }
+
+        @keyframes anime-pop {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8) translateY(-100px); opacity: 0; }
+        }
+
+        @keyframes anime-float {
+            0% { transform: translate(var(--rx), var(--ry)) scale(0.5) rotate(var(--ra)); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(calc(var(--ra) + 20deg)); opacity: 0; }
+        }
     </style>
 </head>
 
 <body>
+    <div id="loading-screen">
+        <div class="loader-container">
+            <div class="loader-text">Initializing Smash Engine</div>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <div id="loader-subtext" class="loader-subtext">Compiling physics shaders...</div>
+        </div>
+    </div>
+
     <a href="mge.html" class="back-button">← Back to Experiments</a>
 
     <div id="game-container"></div>
 
     <div class="ui-overlay">
-        <div class="health-panel ui-panel">
+        <div class="health-panel ui-panel" style="width: 700px;">
             <div class="health-bars">
                 <div class="player-health">
-                    <div class="player-name player1-name">P1</div>
+                    <div class="player-name player1-name">P1 (Red)</div>
                     <div class="health-bar-container">
                         <div class="health-bar player1-health-bar" id="health-bar-1" style="width: 0%;"></div>
                         <div class="health-text" id="health-text-1">0%</div>
                     </div>
                 </div>
                 <div class="player-health">
-                    <div class="player-name player2-name">P2</div>
+                    <div class="player-name player3-name">🤖 ROBOT</div>
+                    <div class="health-bar-container">
+                        <div class="health-bar player3-health-bar" id="health-bar-3" style="width: 0%;"></div>
+                        <div class="health-text" id="health-text-3">0%</div>
+                    </div>
+                </div>
+                <div class="player-health">
+                    <div class="player-name player2-name">P2 (Cyan)</div>
                     <div class="health-bar-container">
                         <div class="health-bar player2-health-bar" id="health-bar-2" style="width: 0%;"></div>
                         <div class="health-text" id="health-text-2">0%</div>
@@ -727,7 +935,7 @@
             </div>
         </div>
 
-        <div class="timer-display" id="timer-display">BUILD: 0%</div>
+        <div class="timer-display" id="timer-display">MATCH: 0%</div>
         
         <div class="block-coding-panel" id="block-coding-panel">
             <h3 style="color:#00bcd4; text-align:center; font-size: 0.9rem; margin-bottom: 5px;">🤖 Preprogram Robot (Block Code)</h3>
@@ -773,6 +981,21 @@
             <button onclick="restartGame()">Play Again Now</button>
         </div>
 
+        <div id="pause-menu" class="pause-menu">
+            <h2>Game Paused</h2>
+            <div style="color: #00bcd4; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                PAUSE: ESC key to resume<br>
+                ROBOT CONTROL: Use [I J K L] keys
+            </div>
+            <button onclick="togglePause()">Resume</button>
+            <button id="training-btn" onclick="toggleTrainingCenter()">Enter Training Center</button>
+            <button onclick="restartGame(); togglePause();">Restart Match</button>
+        </div>
+
+        <div id="training-overlay" class="training-overlay">
+            🛠️ TRAINING CENTER ACTIVE - PRACTICE MOVES!
+        </div>
+
         <div id="fact-overlay" class="fact-overlay">
             <span class="fact-icon">🔬</span>
             <h3>STEM Fact!</h3>
@@ -784,10 +1007,12 @@
     <script>
         // Game state
         let scene, camera, renderer;
-        let player1, player2;
+        let player1, player2, player3;
         let platform;
         let keys = {};
         let gameRunning = true;
+        let isPaused = false;
+        let inTrainingCenter = false;
         const SOURCE_CODE = [
             "function initSmashEngine() {",
             "  // System Initialization",
@@ -1048,6 +1273,28 @@
                 hasShield: false,
                 attackAnimation: 0,
                 specialAnimation: 0
+            },
+            p3: {
+                percentage: 0,
+                position: { x: 0, y: 2, z: 0 },
+                velocity: { x: 0, y: 0, z: 0 },
+                onGround: false,
+                jumps: 0,
+                jumpKeyWasDown: false,
+                hasFinalSmash: false,
+                facing: 1,
+                attackCooldown: 0,
+                specialCooldown: 0,
+                color: 0x95a5a6,
+                invulnerable: 0,
+                isDead: false,
+                powerups: {},
+                moveSpeedMultiplier: 1,
+                damageMultiplier: 1,
+                hasShield: false,
+                attackAnimation: 0,
+                specialAnimation: 0,
+                isRobot: true
             }
         };
 
@@ -1186,6 +1433,7 @@
             // Create players
             createPlayer(1);
             createPlayer(2);
+            createPlayer(3); // Robot
 
             // Background elements
             createBackground();
@@ -1193,20 +1441,44 @@
             // Initialize powerup system
             spawnPowerup();
 
+            // Fake loading steps for premium feel
+            const lProgress = document.getElementById('loader-progress');
+            const lSub = document.getElementById('loader-subtext');
+            
+            setTimeout(() => { if(lProgress) lProgress.style.width = '30%'; if(lSub) lSub.textContent = 'Mapping input buffers...'; }, 100);
+            setTimeout(() => { if(lProgress) lProgress.style.width = '60%'; if(lSub) lSub.textContent = 'Allocating memory for fighters...'; }, 250);
+            setTimeout(() => { if(lProgress) lProgress.style.width = '90%'; if(lSub) lSub.textContent = 'Universal physics sync...'; }, 400);
+
             // Event listeners
             window.addEventListener('resize', onWindowResize);
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
+
+            // Reset game state to ensure everything is initialized
+            restartGame();
 
             // Start game loop
             animate();
 
             // Initialize match score display
             updateMatchScore();
+            console.log("Super Smash Fighters: Initialization complete.");
+
+            // Hide loading screen
+            const loaderProgress = document.getElementById('loader-progress');
+            const loaderSubtext = document.getElementById('loader-subtext');
+            const loadingScreen = document.getElementById('loading-screen');
+
+            if (loaderProgress) loaderProgress.style.width = '100%';
+            if (loaderSubtext) loaderSubtext.textContent = 'Ready to Fight!';
+
+            setTimeout(() => {
+                if (loadingScreen) loadingScreen.classList.add('hidden');
+            }, 500);
         }
 
         function createPlayer(num) {
-            const player = players[num === 1 ? 'p1' : 'p2'];
+            const player = players['p' + num];
             const group = new THREE.Group();
 
             // Body
@@ -1222,13 +1494,37 @@
             group.add(body);
 
             // Head
-            const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-            const headMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffdbac,
-                emissive: 0xffdbac,
-                emissiveIntensity: 0.1
-            });
-            const head = new THREE.Mesh(headGeometry, headMaterial);
+            let head;
+            if (player.isRobot) {
+                const headGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const headMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x7f8c8d,
+                    metalness: 0.8,
+                    roughness: 0.2
+                });
+                head = new THREE.Mesh(headGeometry, headMaterial);
+                
+                // Antenna
+                const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.4);
+                const antMat = new THREE.MeshStandardMaterial({color: 0x333333});
+                const antenna = new THREE.Mesh(antGeo, antMat);
+                antenna.position.y = 0.4;
+                head.add(antenna);
+                
+                const tipGeo = new THREE.SphereGeometry(0.05, 8, 8);
+                const tipMat = new THREE.MeshStandardMaterial({color: 0x00ffff, emissive: 0x00ffff});
+                const tip = new THREE.Mesh(tipGeo, tipMat);
+                tip.position.y = 0.6;
+                head.add(tip);
+            } else {
+                const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+                const headMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffdbac,
+                    emissive: 0xffdbac,
+                    emissiveIntensity: 0.1
+                });
+                head = new THREE.Mesh(headGeometry, headMaterial);
+            }
             head.position.y = 1.6;
             head.castShadow = true;
             group.add(head);
@@ -1278,8 +1574,10 @@
 
             if (num === 1) {
                 player1 = group;
-            } else {
+            } else if (num === 2) {
                 player2 = group;
+            } else {
+                player3 = group;
             }
         }
 
@@ -1431,6 +1729,9 @@
 
         function onKeyDown(event) {
             const key = event.key.toLowerCase();
+            if (key === 'escape' || key === 'p') {
+                togglePause();
+            }
             // Handle arrow keys
             if (key === 'arrowup') {
                 keys['arrowup'] = true;
@@ -1610,6 +1911,36 @@
             if (player.specialCooldown > 0) player.specialCooldown--;
         }
 
+        function togglePause() {
+            if (matchEnded) return;
+            isPaused = !isPaused;
+            gameRunning = !isPaused;
+            document.getElementById('pause-menu').classList.toggle('show', isPaused);
+        }
+
+        function toggleTrainingCenter() {
+            inTrainingCenter = !inTrainingCenter;
+            document.getElementById('training-overlay').style.display = inTrainingCenter ? 'block' : 'none';
+            document.getElementById('training-btn').textContent = inTrainingCenter ? 'Exit Training Center' : 'Enter Training Center';
+            
+            if (inTrainingCenter) {
+                // Adjust platform for training
+                platform.scale.set(1.5, 1, 1);
+                platform.material.emissive.setHex(0x00bcd4);
+                platform.material.emissiveIntensity = 0.2;
+                // Move death zones further away
+                // Reset players
+                restartGame();
+                togglePause(); // Close menu
+            } else {
+                platform.scale.set(1, 1, 1);
+                platform.material.emissive.setHex(0x000000);
+                platform.material.emissiveIntensity = 0;
+                restartGame();
+                togglePause();
+            }
+        }
+
         function updateAttackAnimation(playerKey, playerMesh) {
             const player = players[playerKey];
             const leftArm = playerMesh.getObjectByName('leftArm');
@@ -1673,130 +2004,171 @@
 
                 player.specialAnimation--;
             }
+
+            // Robot special effect (Constant glow when moving)
+            if (player.isRobot) {
+                const group = playerMesh;
+                const tip = group.getObjectByProperty('type', 'Mesh'); // Finding any mesh to animate
+                // Just keep robot feeling "active"
+                group.position.y += Math.sin(Date.now() * 0.01) * 0.005;
+            }
         }
 
         function performAttack(attackerKey) {
             const attacker = players[attackerKey];
-            const defenderKey = attackerKey === 'p1' ? 'p2' : 'p1';
-            const defender = players[defenderKey];
+            if (attacker.isDead) return;
 
-            if (defender.invulnerable > 0 || defender.isDead) return;
-
-            // Check smash ball collision in performAttack
+            // Check smash ball
             if (smashBall) {
                 const ballDist = Math.sqrt(Math.pow(attacker.position.x - smashBall.position.x, 2) + Math.pow(attacker.position.y - smashBall.position.y, 2));
-                if (ballDist < ATTACK_RANGE * 1.5) {
-                    hitSmashBall(attackerKey);
-                }
+                if (ballDist < ATTACK_RANGE * 1.5) hitSmashBall(attackerKey);
             }
 
-            const distance = Math.abs(attacker.position.x - defender.position.x);
-            const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
-            if (distance < ATTACK_RANGE && verticalDistance < 2) {
-                // Check for shield
-                if (defender.hasShield) {
-                    defender.hasShield = false;
-                    createShieldBreakEffect(defender.position);
-                    return;
+            // Target any other player
+            Object.keys(players).forEach(defenderKey => {
+                if (defenderKey === attackerKey) return;
+                const defender = players[defenderKey];
+                if (defender.invulnerable > 0 || defender.isDead) return;
+
+                const distance = Math.abs(attacker.position.x - defender.position.x);
+                const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
+
+                if (distance < ATTACK_RANGE && verticalDistance < 2) {
+                    if (defender.hasShield) {
+                        defender.hasShield = false;
+                        createShieldBreakEffect(defender.position);
+                        return;
+                    }
+
+                    const damage = ATTACK_DAMAGE * attacker.damageMultiplier;
+                    defender.percentage += damage;
+                    const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING);
+                    const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
+                    defender.velocity.x += knockbackDir * knockbackStrength * 8;
+                    defender.velocity.y += knockbackStrength * 4;
+                    defender.invulnerable = INVULNERABLE_TIME;
+
+                    if (attackerKey !== 'p3') {
+                        const currentTime = Date.now();
+                        comboCount[attackerKey] = (currentTime - lastHitTime[attackerKey] < 2000) ? comboCount[attackerKey] + 1 : 1;
+                        lastHitTime[attackerKey] = currentTime;
+                        if (comboCount[attackerKey] > 1) showCombo(attackerKey, comboCount[attackerKey]);
+                        appendCodeLine(attackerKey);
+                    }
+
+                    createHitEffect(defender.position, defender.color);
+                    screenShake(0.1);
+                    updateHealthBars();
+                    if(Math.random() > 0.3) triggerAnimeFlutter('damage');
                 }
-
-                // Add percentage damage (with damage multiplier)
-                const damage = ATTACK_DAMAGE * attacker.damageMultiplier;
-                defender.percentage += damage;
-
-                // Calculate knockback based on percentage (like Smash Bros)
-                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING);
-                const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
-                defender.velocity.x += knockbackDir * knockbackStrength * 8;
-                defender.velocity.y += knockbackStrength * 4;
-
-                // Invulnerability frames
-                defender.invulnerable = INVULNERABLE_TIME;
-
-                // Combo system
-                const currentTime = Date.now();
-                if (currentTime - lastHitTime[attackerKey] < 2000) {
-                    comboCount[attackerKey]++;
-                    showCombo(attackerKey, comboCount[attackerKey]);
-                } else {
-                    comboCount[attackerKey] = 1;
-                }
-                lastHitTime[attackerKey] = currentTime;
-
-                // Add code contribution
-                appendCodeLine(attackerKey);
-
-                // Visual effects
-                createHitEffect(defender.position, defender.color);
-                screenShake(0.1);
-
-                updateHealthBars();
-            }
+            });
         }
 
         function performSpecialAttack(attackerKey) {
             const attacker = players[attackerKey];
-            const defenderKey = attackerKey === 'p1' ? 'p2' : 'p1';
-            const defender = players[defenderKey];
-
-            if (defender.invulnerable > 0 || defender.isDead) return;
+            if (attacker.isDead) return;
 
             let isFinalSmash = attacker.hasFinalSmash;
             if (isFinalSmash) {
                 attacker.hasFinalSmash = false;
-                attacker.invulnerable = 60; // Safe during final smash
+                attacker.invulnerable = 60;
             }
 
-            const distance = Math.abs(attacker.position.x - defender.position.x);
-            const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
-            if (distance < ATTACK_RANGE * 1.5 && verticalDistance < 2.5) {
-                // Check for shield
-                if (defender.hasShield) {
-                    defender.hasShield = false;
-                    createShieldBreakEffect(defender.position);
-                    return;
+            Object.keys(players).forEach(defenderKey => {
+                if (defenderKey === attackerKey) return;
+                const defender = players[defenderKey];
+                if (defender.invulnerable > 0 || defender.isDead) return;
+
+                const distance = Math.abs(attacker.position.x - defender.position.x);
+                const verticalDistance = Math.abs(attacker.position.y - defender.position.y);
+
+                if (distance < ATTACK_RANGE * 1.5 && verticalDistance < 2.5) {
+                    if (defender.hasShield) {
+                        defender.hasShield = false;
+                        createShieldBreakEffect(defender.position);
+                        return;
+                    }
+
+                    const baseSpecialDmg = isFinalSmash ? 40 : SPECIAL_DAMAGE;
+                    const damage = baseSpecialDmg * attacker.damageMultiplier;
+                    defender.percentage += damage;
+
+                    const baseKnockback = isFinalSmash ? 3.0 : 1.5;
+                    const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * baseKnockback;
+                    const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
+                    defender.velocity.x += knockbackDir * knockbackStrength * (isFinalSmash ? 20 : 12);
+                    defender.velocity.y += knockbackStrength * (isFinalSmash ? 10 : 6);
+
+                    if (isFinalSmash) {
+                        screenShake(0.8);
+                        createDeathEffect(defender.position, attacker.color); 
+                    }
+
+                    defender.invulnerable = INVULNERABLE_TIME;
+
+                    if (attackerKey !== 'p3') {
+                        const currentTime = Date.now();
+                        comboCount[attackerKey] = (currentTime - lastHitTime[attackerKey] < 2000) ? comboCount[attackerKey] + 1 : 1;
+                        lastHitTime[attackerKey] = currentTime;
+                        if (comboCount[attackerKey] > 1) showCombo(attackerKey, comboCount[attackerKey]);
+                        appendCodeLine(attackerKey);
+                        appendCodeLine(attackerKey);
+                    }
+
+                    if (attackerKey === 'p2') createIceEffect(attacker.position);
+                    else createSpecialEffect(attacker.position);
+
+                    createHitEffect(defender.position, defender.color);
+                    screenShake(0.2);
+                    updateHealthBars();
+                    triggerAnimeFlutter(isFinalSmash ? 'special' : 'damage');
                 }
+            });
+        }
 
-                // Add percentage damage (with damage multiplier)
-                const baseSpecialDmg = isFinalSmash ? 40 : SPECIAL_DAMAGE;
-                const damage = baseSpecialDmg * attacker.damageMultiplier;
-                defender.percentage += damage;
+        function createIceEffect(position) {
+            const geometry = new THREE.TorusGeometry(1, 0.4, 16, 100);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 1,
+                transparent: true,
+                opacity: 0.8
+            });
+            const effect = new THREE.Mesh(geometry, material);
+            effect.position.set(position.x, position.y + 1, position.z);
+            effect.rotation.x = Math.PI / 2;
+            scene.add(effect);
 
-                // Strong knockback that scales with percentage
-                const baseKnockback = isFinalSmash ? 3.0 : 1.5;
-                const knockbackStrength = KNOCKBACK_BASE + (defender.percentage * KNOCKBACK_SCALING) * baseKnockback;
-                const knockbackDir = attacker.position.x < defender.position.x ? 1 : -1;
-                defender.velocity.x += knockbackDir * knockbackStrength * (isFinalSmash ? 20 : 12);
-                defender.velocity.y += knockbackStrength * (isFinalSmash ? 10 : 6);
-
-                if (isFinalSmash) {
-                    screenShake(0.8);
-                    createDeathEffect(defender.position, attacker.color); 
-                }
-
-                // Invulnerability frames
-                defender.invulnerable = INVULNERABLE_TIME;
-
-                // Combo system
-                const currentTime = Date.now();
-                if (currentTime - lastHitTime[attackerKey] < 2000) {
-                    comboCount[attackerKey]++;
-                    showCombo(attackerKey, comboCount[attackerKey]);
+            let scale = 0.5;
+            const animate = () => {
+                scale += 0.2;
+                effect.scale.set(scale, scale, 1);
+                material.opacity -= 0.04;
+                if (material.opacity > 0) {
+                    requestAnimationFrame(animate);
                 } else {
-                    comboCount[attackerKey] = 1;
+                    scene.remove(effect);
                 }
-                lastHitTime[attackerKey] = currentTime;
-
-                // Add huge code contribution for special attack
-                appendCodeLine(attackerKey);
-                appendCodeLine(attackerKey);
-
-                // Visual effects
-                createSpecialEffect(attacker.position);
-                createHitEffect(defender.position, defender.color);
-                screenShake(0.2);
-
-                updateHealthBars();
+            };
+            animate();
+            
+            // Add some ice spikes
+            for(let i=0; i<8; i++) {
+                const spike = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.2, 1, 8),
+                    material.clone()
+                );
+                const angle = (Math.PI * 2 * i) / 8;
+                spike.position.set(
+                    position.x + Math.cos(angle) * 1.5,
+                    position.y + 0.5,
+                    position.z + Math.sin(angle) * 1.5
+                );
+                spike.rotation.x = Math.PI;
+                scene.add(spike);
+                
+                setTimeout(() => scene.remove(spike), 500);
             }
         }
 
@@ -2099,6 +2471,7 @@
                     break;
             }
 
+            triggerAnimeFlutter('powerup');
             updatePowerupDisplay();
         }
 
@@ -2325,7 +2698,7 @@
 
             const percent = Math.floor((currentCodeLine / SOURCE_CODE.length) * 100);
             const timerDisplay = document.getElementById('timer-display');
-            timerDisplay.textContent = `BUILD: ${percent}%`;
+            timerDisplay.textContent = `MATCH: ${percent}%`;
 
             if (currentCodeLine >= SOURCE_CODE.length && !matchEnded) {
                 endMatchByTime();
@@ -2401,7 +2774,7 @@
         function updateGameCode() {
             if (!gameRunning) return;
             const now = Date.now();
-            if (now - lastCodeUpdate >= 2000) { // Every 2s auto-add
+            if (now - lastCodeUpdate >= 1000) { // Every 1s auto-add
                 lastCodeUpdate = now;
                 appendCodeLine(null);
             }
@@ -2436,19 +2809,26 @@
             const maxDisplayPercent = 200;
             const p1BarPercent = Math.min(100, (p1.percentage / maxDisplayPercent) * 100);
             const p2BarPercent = Math.min(100, (p2.percentage / maxDisplayPercent) * 100);
-
+            
             document.getElementById('health-bar-1').style.width = p1BarPercent + '%';
             document.getElementById('health-text-1').textContent = Math.round(p1.percentage) + '%';
 
             document.getElementById('health-bar-2').style.width = p2BarPercent + '%';
             document.getElementById('health-text-2').textContent = Math.round(p2.percentage) + '%';
+            
+            const p3 = players.p3;
+            const p3BarPercent = Math.min(100, (p3.percentage / maxDisplayPercent) * 100);
+            document.getElementById('health-bar-3').style.width = p3BarPercent + '%';
+            document.getElementById('health-text-3').textContent = Math.round(p3.percentage) + '%';
 
-            // Change color based on percentage (green -> yellow -> orange -> red)
+            // Change color based on percentage
             const p1Bar = document.getElementById('health-bar-1');
             const p2Bar = document.getElementById('health-bar-2');
+            const p3Bar = document.getElementById('health-bar-3');
 
             updateBarColor(p1Bar, p1.percentage);
             updateBarColor(p2Bar, p2.percentage);
+            updateBarColor(p3Bar, p3.percentage);
         }
 
         function updateBarColor(bar, percentage) {
@@ -2472,6 +2852,16 @@
             } else if (players.p2.isDead && !players.p1.isDead) {
                 matchScore.p1++;
                 endMatch('Player 1', true);
+            } else if (players.p3.isDead) {
+                // Robot reborn or just ignorable game over?
+                // Let's just reset robot if it falls in training
+                if (inTrainingCenter) {
+                    players.p3.position = { x: 0, y: 5, z: 0 };
+                    players.p3.velocity = { x: 0, y: 0, z: 0 };
+                    players.p3.isDead = false;
+                    players.p3.percentage = 0;
+                    updateHealthBars();
+                }
             }
         }
 
@@ -2481,6 +2871,8 @@
 
             const winText = isKO ? `${winner} Wins by KO!` : `${winner} Wins!`;
             document.getElementById('winner-text').textContent = winText;
+
+            if (isKO) triggerAnimeFlutter('ko');
 
             // Update match score display
             updateMatchScore();
@@ -2572,11 +2964,22 @@
             players.p2.attackAnimation = 0;
             players.p1.specialAnimation = 0;
             players.p2.specialAnimation = 0;
+            
+            // Reset P3
+            players.p3.percentage = 0;
+            players.p3.position = { x: 0, y: 5, z: 0 };
+            players.p3.velocity = { x: 0, y: 0, z: 0 };
+            players.p3.isDead = false;
+            players.p3.invulnerable = 0;
+            players.p3.attackCooldown = 0;
+            players.p1.specialCooldown = 0;
 
             player1.position.set(-3, 2, 0);
             player2.position.set(3, 2, 0);
+            player3.position.set(0, 5, 0); // Robot drops from sky
             player1.rotation.set(0, 0, 0);
             player2.rotation.set(0, Math.PI, 0);
+            player3.rotation.set(0, 0, 0);
 
             // Reset arm positions
             const p1LeftArm = player1.getObjectByName('leftArm');
@@ -2601,11 +3004,12 @@
             powerups = [];
             powerupSpawnTimer = 0;
 
-            if (smashBall) {
-                scene.remove(smashBall);
-                smashBall = null;
+            // In training mode, don't spawn smash ball automatically
+            if (inTrainingCenter) {
+                smashBallSpawnTimer = -999999; 
+            } else {
+                smashBallSpawnTimer = 0;
             }
-            smashBallSpawnTimer = 0;
 
             // Reset code building
             currentCodeLine = 0;
@@ -2613,8 +3017,11 @@
             p2CodeLines = 0;
             lastCodeUpdate = Date.now();
             document.getElementById('code-container').innerHTML = '';
-            document.getElementById('timer-display').textContent = 'BUILD: 0%';
+            document.getElementById('timer-display').textContent = 'MATCH: 0%';
             matchEnded = false;
+            
+            // Add first line immediately to show it's working
+            appendCodeLine(null);
 
             // Reset combo
             comboCount = { p1: 0, p2: 0 };
@@ -2711,8 +3118,19 @@
                     special: keys['.'] === true || keys['period'] === true
                 };
 
+                // Player 3 (Robot) shared controls
+                // Responds to IJKL and shared movement if players try
+                const p3Controls = {
+                    jump: keys['i'] || (keys['w'] && keys['arrowup']), // Both jump = Robot jumps
+                    left: keys['j'] || (keys['a'] && keys['arrowleft']),
+                    right: keys['l'] || (keys['d'] && keys['arrowright']),
+                    attack: keys['u'] || (keys['s'] && keys['arrowdown']),
+                    special: keys['o']
+                };
+
                 updatePlayer('p1', p1Controls, player1);
                 updatePlayer('p2', p2Controls, player2);
+                updatePlayer('p3', p3Controls, player3);
 
                 // Check for deaths continuously
                 checkGameOver();
@@ -2769,8 +3187,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // Start the game
-        init();
+        // Start the game when the window loads
+        window.addEventListener('load', () => {
+            init();
+        });
     </script>
     <!-- Mobile Controls -->
     <style>
@@ -2844,8 +3264,8 @@
             body.ui-hidden #mobile-controls,
             body.ui-hidden #controls,
             body.ui-hidden #info,
-            body.ui-hidden .controls-panel,
             body.ui-hidden #instructions,
+            body.ui-hidden .controls-panel,
             body.ui-hidden #score-container,
             body.ui-hidden #crosshair,
             body.ui-hidden #inventory,
@@ -2869,6 +3289,57 @@
             uiToggleBtn.addEventListener('touchstart', toggleUI);
             uiToggleBtn.addEventListener('mousedown', toggleUI);
         }
+    </script>
+
+    <!-- Anime Flutter Script -->
+    <script>
+        window.triggerAnimeFlutter = function(type) {
+            const WORDS_MAP = {
+                'damage': ["CRITICAL", "SMASH", "BOOM", "GOTCHA", "OOF"],
+                'ko': ["KO", "PERFECT", "FINISH"],
+                'powerup': ["MAX POWER", "ZAP", "LEVEL UP", "BUFF"],
+                'special': ["ULTIMATE", "MEGA", "SUPREME"]
+            };
+            const KANJI_MAP = {
+                'damage': ["攻撃", "爆発", "痛"],
+                'ko': ["勝利", "終"],
+                'powerup': ["究極", "伝説", "力"],
+                'special': ["真諦", "秘技"]
+            };
+
+            const pool = WORDS_MAP[type] || ["SMASH"];
+            const kanjiPool = KANJI_MAP[type] || ["究極"];
+            
+            const isKanji = Math.random() > 0.4;
+            const text = isKanji ? kanjiPool[Math.floor(Math.random() * kanjiPool.length)] : pool[Math.floor(Math.random() * pool.length)];
+            
+            const el = document.createElement('div');
+            el.className = `anime-flutter ${isKanji ? 'anime-kanji' : 'anime-word'}`;
+            el.innerText = text;
+
+            const x = Math.random() * 60 + 20;
+            const y = Math.random() * 60 + 20;
+            
+            if (!isKanji) {
+                el.style.left = '50%';
+                el.style.top = '40%';
+            } else {
+                el.style.left = x + '%';
+                el.style.top = y + '%';
+                el.style.setProperty('--rx', (Math.random() * 40 - 20) + 'px');
+                el.style.setProperty('--ry', (Math.random() * 40 - 20) + 'px');
+                el.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+                el.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+                el.style.setProperty('--ra', (Math.random() * 40 - 20) + 'deg');
+            }
+
+            document.body.appendChild(el);
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.5s';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            }, 1500);
+        };
     </script>
 </body>
 </html>

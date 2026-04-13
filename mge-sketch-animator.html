@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE Sketch Animator Pro - 2D to 3D Magic</title>
+    <!-- MGE Standard Styles & Fonts -->
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a14;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --accent-glow: #00f2ff;
+            --accent-subtle: #94d2bd;
+            --danger: #ff4d4d;
+            --success: #00ff88;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            user-select: none;
+        }
+
+        /* Loading Screen / Intro */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+            border: 4px solid var(--glass-bg);
+            border-top: 4px solid var(--accent-glow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Studio Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a14 100%);
+        }
+
+        /* Sidebar / Drawing Tools */
+        .sidebar {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 100;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .mge-logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            background: linear-gradient(90deg, #00f2ff, #94d2bd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+
+        .tool-group {
+            background: var(--glass-bg);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tool-title {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        canvas#sketchpad {
+            background: white;
+            border-radius: 8px;
+            width: 100%;
+            aspect-ratio: 1;
+            cursor: crosshair;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            touch-action: none;
+        }
+
+        .brush-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-swatch:hover { transform: scale(1.15); }
+        .color-swatch.active { border-color: white; transform: scale(1.2); }
+
+        .btn {
+            background: var(--glass-bg);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--accent-glow);
+        }
+
+        .btn-magic {
+            background: linear-gradient(135deg, #00f2ff, #0077ff);
+            color: white;
+            border: none;
+            padding: 16px;
+            margin-top: auto;
+            font-size: 1.1rem;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        .btn-magic:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+        }
+
+        .btn-magic:active { transform: scale(0.98); }
+
+        /* Main Viewport */
+        .viewport-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay-ui {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            pointer-events: none;
+        }
+
+        .info-card {
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-glow);
+            max-width: 250px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* HUD & Controls */
+        .hud {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+        }
+
+        .back-to-hub {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 1001;
+            text-decoration: none;
+            color: white;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .back-to-hub:hover { opacity: 1; }
+
+        /* Hidden Canvas for Processing */
+        #hidden-canvas { display: none; }
+
+        .helper-bot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-glow);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+            z-index: 200;
+        }
+
+        .tool-tip {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: white;
+            color: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+            max-width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 200;
+        }
+
+        .tool-tip::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 20px;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid white;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="mge.html" class="back-to-hub">← Exit Studio</a>
+
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <p style="margin-top: 20px; font-weight: 600; color: var(--accent-glow);">Initializing MGE Animation Engine...</p>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Tools -->
+        <div class="sidebar">
+            <div class="mge-logo">SKETCH ANIMATOR PRO</div>
+            
+            <div class="tool-group">
+                <span class="tool-title">1. Draw Character</span>
+                <canvas id="sketchpad" width="400" height="400"></canvas>
+                <div class="brush-controls" id="color-palette">
+                    <!-- Javascript will inject colors here -->
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <span class="tool-title">2. Brush Settings</span>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <input type="range" id="brush-size" min="1" max="20" value="5" style="flex: 1;">
+                    <span id="brush-size-val">5px</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <button class="btn" id="btn-clear">🧹 Clear</button>
+                    <button class="btn" id="btn-eraser">🧽 Eraser</button>
+                </div>
+            </div>
+
+            <button class="btn btn-magic" id="btn-animate">✨ BRING TO LIFE! ✨</button>
+        </div>
+
+        <!-- 3D Arena -->
+        <div class="viewport-container">
+            <div id="three-canvas"></div>
+            
+            <div class="overlay-ui">
+                <div class="info-card">
+                    <strong>STEM Topic: Frames</strong>
+                    <p>Animation is just many pictures shown quickly. We use 60 Frames Per Second (FPS) for smooth motion!</p>
+                </div>
+                <div id="stats-card" class="info-card" style="display: none;">
+                    <strong>Character Active</strong>
+                    <p id="char-status">Idle (Breathing)</p>
+                </div>
+            </div>
+
+            <div class="hud">
+                <button class="btn" onclick="triggerAction('jump')">🦘 Jump</button>
+                <button class="btn" onclick="triggerAction('wobble')">💃 Wobble</button>
+                <button class="btn" onclick="triggerAction('flip')">🌀 Flip</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="helper-bot" id="helper-btn">🤖</div>
+    <div class="tool-tip" id="helper-text">
+        <strong>Helper Bot:</strong> "Draw a thick outline for your character! Use the eraser if you make a mistake. When you're ready, hit 'BRING TO LIFE' to see the 3D conversion!"
+    </div>
+
+    <canvas id="hidden-canvas"></canvas>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // --- Configuration & State ---
+        const colors = [
+            '#000000', '#ffffff', '#ff4d4d', '#ff9f43', '#feca57', 
+            '#00ff88', '#00d2d3', '#00f2ff', '#0077ff', '#a55eea'
+        ];
+        let currentBrushColor = '#000000';
+        let brushSize = 5;
+        let isEraser = false;
+        let isDrawing = false;
+        let drawHistory = [];
+
+        // Three.js Globals
+        let scene, camera, renderer, controls;
+        let characterMesh = null;
+        let characterTexture = null;
+        let clock = new THREE.Clock();
+        
+        let targetScale = new THREE.Vector3(1, 1, 1);
+        let animationState = 'idle'; // idle, jumping, flipping, wobbling
+        let animationTime = 0;
+
+        // Elements
+        const sketchpad = document.getElementById('sketchpad');
+        const ctx = sketchpad.getContext('2d');
+        const hiddenCanvas = document.getElementById('hidden-canvas');
+        const hCtx = hiddenCanvas.getContext('2d');
+
+        // --- Initialization ---
+        function init() {
+            setupDrawing();
+            setupThree();
+            setupUI();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                }, 1000);
+            }, 1500);
+            
+            animate();
+        }
+
+        function setupDrawing() {
+            // Fill background with transparent
+            ctx.clearRect(0,0, sketchpad.width, sketchpad.height);
+            
+            // Palette Setup
+            const paletteWrap = document.getElementById('color-palette');
+            colors.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                if (color === '#000000') swatch.classList.add('active');
+                swatch.onclick = () => {
+                    currentBrushColor = color;
+                    isEraser = false;
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                    swatch.classList.add('active');
+                    document.getElementById('btn-eraser').classList.remove('active');
+                };
+                paletteWrap.appendChild(swatch);
+            });
+
+            // Drawing Events
+            const startDraw = (e) => {
+                isDrawing = true;
+                ctx.beginPath();
+                const pos = getMousePos(e);
+                ctx.moveTo(pos.x, pos.y);
+            };
+
+            const doDraw = (e) => {
+                if (!isDrawing) return;
+                const pos = getMousePos(e);
+                
+                ctx.lineWidth = brushSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                if (isEraser) {
+                    ctx.globalCompositeOperation = 'destination-out';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = currentBrushColor;
+                }
+                
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            };
+
+            const endDraw = () => { isDrawing = false; };
+
+            sketchpad.addEventListener('mousedown', startDraw);
+            sketchpad.addEventListener('mousemove', doDraw);
+            window.addEventListener('mouseup', endDraw);
+            
+            // Mobile Support
+            sketchpad.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e.touches[0]); });
+            sketchpad.addEventListener('touchmove', (e) => { e.preventDefault(); doDraw(e.touches[0]); });
+            sketchpad.addEventListener('touchend', endDraw);
+        }
+
+        function getMousePos(e) {
+            const rect = sketchpad.getBoundingClientRect();
+            const scaleX = sketchpad.width / rect.width;
+            const scaleY = sketchpad.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function setupThree() {
+            scene = new THREE.Scene();
+            scene.background = null; // Let CSS handle gradient
+
+            const container = document.getElementById('three-canvas');
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 15);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 2, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 5;
+            controls.maxDistance = 30;
+
+            // Lights
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambient);
+
+            const direct = new THREE.DirectionalLight(0xfff2cc, 0.8);
+            direct.position.set(5, 10, 7.5);
+            direct.castShadow = true;
+            scene.add(direct);
+
+            // Floor / Stage
+            const floorGeo = new THREE.CylinderGeometry(15, 15, 0.5, 32);
+            const floorMat = new THREE.MeshPhongMaterial({ 
+                color: 0x1a1a2e, 
+                shininess: 30,
+                transparent: true,
+                opacity: 0.8
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.position.y = -0.25;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Grid
+            const grid = new THREE.GridHelper(30,  20, 0x00f2ff, 0x222222);
+            grid.position.y = 0.01;
+            grid.material.opacity = 0.1;
+            grid.material.transparent = true;
+            scene.add(grid);
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        function setupUI() {
+            document.getElementById('brush-size').oninput = (e) => {
+                brushSize = e.target.value;
+                document.getElementById('brush-size-val').innerText = brushSize + 'px';
+            };
+
+            document.getElementById('btn-clear').onclick = () => {
+                ctx.clearRect(0, 0, sketchpad.width, sketchpad.height);
+            };
+
+            document.getElementById('btn-eraser').onclick = () => {
+                isEraser = !isEraser;
+                document.getElementById('btn-eraser').classList.toggle('active', isEraser);
+                if (isEraser) {
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                }
+            };
+
+            document.getElementById('btn-animate').onclick = processDrawing;
+
+            const helperBtn = document.getElementById('helper-btn');
+            const helperText = document.getElementById('helper-text');
+            helperBtn.onclick = () => {
+                helperText.style.display = helperText.style.display === 'block' ? 'none' : 'block';
+            };
+        }
+
+        // --- Character Magic (2D to 3D) ---
+        function processDrawing() {
+            // 1. Check if canvas is empty
+            const pixels = ctx.getImageData(0,0, sketchpad.width, sketchpad.height).data;
+            let hasPixels = false;
+            for(let i=0; i<pixels.length; i+=4) {
+                if(pixels[i+3] > 0) { hasPixels = true; break; }
+            }
+            if(!hasPixels) {
+                alert("Draw something first! 🎨");
+                return;
+            }
+
+            // 2. Find Bounding Box
+            let minX = sketchpad.width, minY = sketchpad.height, maxX = 0, maxY = 0;
+            for(let y=0; y<sketchpad.height; y++) {
+                for(let x=0; x<sketchpad.width; x++) {
+                    const idx = (y * sketchpad.width + x) * 4;
+                    if(pixels[idx+3] > 10) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+
+            // Trim margins
+            const pad = 10;
+            minX = Math.max(0, minX - pad);
+            minY = Math.max(0, minY - pad);
+            maxX = Math.min(sketchpad.width, maxX + pad);
+            maxY = Math.min(sketchpad.height, maxY + pad);
+
+            const width = maxX - minX;
+            const height = maxY - minY;
+            
+            // 3. Extract to Hidden Canvas
+            hiddenCanvas.width = width;
+            hiddenCanvas.height = height;
+            hCtx.clearRect(0,0, width, height);
+            hCtx.drawImage(sketchpad, minX, minY, width, height, 0, 0, width, height);
+
+            // 4. Create 3D Texture
+            if(characterTexture) characterTexture.dispose();
+            characterTexture = new THREE.CanvasTexture(hiddenCanvas);
+            characterTexture.colorSpace = THREE.SRGBColorSpace;
+            characterTexture.magFilter = THREE.LinearFilter;
+            characterTexture.minFilter = THREE.LinearFilter;
+
+            // 5. Build/Update Mesh
+            const worldHeight = 6;
+            const worldWidth = (width / height) * worldHeight;
+
+            if(characterMesh) {
+                scene.remove(characterMesh);
+                characterMesh.geometry.dispose();
+                characterMesh.material.dispose();
+            }
+
+            // Technique: Double plane with segment density for "wobble/squash"
+            const geometry = new THREE.PlaneGeometry(worldWidth, worldHeight, 8, 8);
+            
+            // We use standard material for basic lighting response
+            const material = new THREE.MeshPhongMaterial({
+                map: characterTexture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            characterMesh = new THREE.Mesh(geometry, material);
+            characterMesh.position.y = worldHeight/2;
+            characterMesh.castShadow = true;
+            scene.add(characterMesh);
+
+            // UI Feedback
+            document.getElementById('char-status').innerText = 'Character Spawned!';
+            document.getElementById('stats-card').style.display = 'block';
+            
+            // Transition effect
+            triggerAction('spawn');
+            
+            // Helpful Robot
+            const hText = document.getElementById('helper-text');
+            hText.innerHTML = "<strong>Awesome!</strong> Your character is alive. Click the <strong>Jump</strong> or <strong>Flip</strong> buttons to test its animations!";
+            hText.style.display = 'block';
+            setTimeout(() => { if(hText.style.display === 'block') hText.style.display='none'; }, 6000);
+        }
+
+        // --- Animation Logic ---
+        function triggerAction(action) {
+            if(!characterMesh) {
+                if(action !== 'spawn') alert("Draw and 'Bring to Life' first! ✨");
+                return;
+            }
+            
+            animationState = action;
+            animationTime = 0;
+            
+            if(action === 'jump') {
+                document.getElementById('char-status').innerText = 'Jumping (Squash & Stretch)';
+            } else if(action === 'flip') {
+                document.getElementById('char-status').innerText = 'Flipping (Centrifugal)';
+            } else if(action === 'wobble') {
+                document.getElementById('char-status').innerText = 'Wobbling (Secondary Motion)';
+            }
+        }
+
+        function updateCharacter(dt) {
+            if(!characterMesh) return;
+            animationTime += dt;
+
+            // 1. Idle Breath (Subtle Scaling)
+            if(animationState === 'idle' || animationState === 'spawn') {
+                const s = 1.0 + Math.sin(animationTime * 2) * 0.02;
+                characterMesh.scale.set(1/s, s, 1);
+                
+                // Floating
+                characterMesh.position.y = (characterMesh.geometry.parameters.height / 2) + Math.sin(animationTime * 1.5) * 0.2;
+            }
+
+            // 2. Action States
+            if(animationState === 'jump') {
+                const duration = 0.8;
+                const t = animationTime / duration;
+                if(t < 1) {
+                    // Parabolic arc
+                    const jumpHeight = 5;
+                    const h = 4 * jumpHeight * t * (1 - t);
+                    characterMesh.position.y = (characterMesh.geometry.parameters.height / 2) + h;
+                    
+                    // Squash and stretch
+                    // Squash before/middle Stretch on descent
+                    let sy = 1;
+                    if(t < 0.2) sy = 0.8; // Initial squash
+                    else if(t < 0.5) sy = 1.3; // Flying stretch
+                    else if(t < 0.8) sy = 1.1; // Falling
+                    else sy = 0.8; // Landing squash
+                    
+                    characterMesh.scale.set(1/sy, sy, 1);
+                } else {
+                    animationState = 'idle';
+                    document.getElementById('char-status').innerText = 'Idle';
+                }
+            }
+
+            if(animationState === 'flip') {
+                const duration = 1.0;
+                const t = animationTime / duration;
+                if(t < 1) {
+                    characterMesh.rotation.z = t * Math.PI * 2;
+                    characterMesh.position.y = (characterMesh.geometry.parameters.height / 2) + Math.sin(t * Math.PI) * 3;
+                    
+                    // Squash to ball
+                    const s = 1.0 - Math.sin(t * Math.PI) * 0.2;
+                    characterMesh.scale.set(s, s, s);
+                } else {
+                    characterMesh.rotation.z = 0;
+                    animationState = 'idle';
+                }
+            }
+
+            if(animationState === 'wobble') {
+                const duration = 1.5;
+                const t = animationTime / duration;
+                if(t < 1) {
+                    characterMesh.rotation.z = Math.sin(t * Math.PI * 4) * 0.2;
+                    const s = 1.0 + Math.abs(Math.sin(t * Math.PI * 4)) * 0.1;
+                    characterMesh.scale.set(s, 1/s, 1);
+                } else {
+                    characterMesh.rotation.z = 0;
+                    animationState = 'idle';
+                }
+            }
+
+            // 3. "Classic" Technique: Lag behind camera rotation (Billboarding but with delay)
+            // Just basic billboarding for this demo
+            characterMesh.lookAt(camera.position.x, characterMesh.position.y, camera.position.z);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+            
+            if(controls) controls.update();
+            updateCharacter(dt);
+            
+            if(renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        // Run
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROBO-PATH CHAOS 🤖💥 – MGE Summer Hub</title>
+  <meta name="description" content="Ultimate 2-player logic showdown! Negotiate a chaotic neon world with your robots.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    /* ── RESET & BASE ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0d0f1a;
+      --panel:    #13172a;
+      --card:     #1a2040;
+      --border:   #2a2f50;
+      --blue:     #4fc3f7;
+      --cyan:     #00e5ff;
+      --green:    #69f0ae;
+      --red:      #ff5252;
+      --yellow:   #ffe066;
+      --purple:   #b388ff;
+      --orange:   #ff9800;
+      --white:    #e8ecff;
+      --gray:     #64748b;
+    }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: radial-gradient(circle at center, #1a2040 0%, #0d0f1a 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Chaos Glow */
+  #canvas-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    box-shadow: inset 0 0 100px rgba(0, 229, 255, 0.15);
+    pointer-events: none; mix-blend-mode: screen;
+  }
+
+    /* ── TOP BAR ───────────────────────────────────────── */
+    #topbar {
+      height: 52px;
+      background: var(--panel);
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    #topbar .logo { font-size: 1.8rem; filter: drop-shadow(0 0 10px var(--cyan)); }
+    #topbar h1 {
+      font-size: 1.3rem; font-weight: 900; color: #fff;
+      background: linear-gradient(to right, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(0,229,255,.3);
+    }
+    #topbar .sep { flex: 1; }
+    #topbar .hint {
+      font-size: .78rem; color: var(--gray);
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 4px 10px;
+    }
+    #backBtn {
+      background: rgba(79,195,247,.15);
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      border-radius: 8px; padding: 6px 14px;
+      font-family: inherit; font-weight: 700; cursor: pointer;
+      transition: all .2s;
+    }
+    #backBtn:hover { background: var(--blue); color: #000; }
+
+    /* ── BODY LAYOUT ───────────────────────────────────── */
+    #layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 3D VIEWPORT ───────────────────────────────────── */
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Level & score overlay */
+    #hud {
+      position: absolute;
+      top: 12px; left: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      pointer-events: none;
+    }
+    .hud-chip {
+      background: rgba(13,15,26,.8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: .85rem; font-weight: 700;
+    }
+
+    /* ── RIGHT PANEL ───────────────────────────────────── */
+    #panel {
+      width: 290px;
+      background: var(--panel);
+      border-left: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* Level selector */
+    #levelBar {
+      padding: 10px 12px 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .lvlBtn {
+      flex: 1; min-width: 60px;
+      background: var(--card); border: 2px solid var(--border);
+      color: var(--white); font-family: inherit; font-weight: 700;
+      font-size: .78rem; border-radius: 8px; padding: 5px 4px;
+      cursor: pointer; transition: all .2s;
+    }
+    .lvlBtn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .lvlBtn.active { border-color: var(--cyan); background: rgba(0,229,255,.15); color: var(--cyan); }
+
+    /* 2P Toggle */
+    #modeSwitch {
+      padding: 12px;
+      display: flex; gap: 8px;
+      background: rgba(255,255,255,.05);
+      border-bottom: 2px solid var(--border);
+    }
+    .modeBtn {
+      flex: 1; padding: 10px; border-radius: 12px;
+      border: 2px solid var(--border); background: var(--card);
+      color: var(--gray); font-weight: 800; cursor: pointer;
+      transition: all .3s;
+    }
+    .modeBtn.active {
+      border-color: var(--cyan); color: var(--cyan);
+      background: rgba(0,229,255,.1);
+      box-shadow: 0 0 15px rgba(0,229,255,.2);
+    }
+    .modeBtn.active.p2 { border-color: var(--red); color: var(--red); background: rgba(255,82,82,.1); }
+
+    /* Command palette */
+    #palette {
+      padding: 14px 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    #palette h3 { font-size: .8rem; font-weight: 900; color: var(--cyan); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+    #palette .tiles {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .cmd-source {
+      user-select: none;
+      cursor: grab;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: .85rem; font-weight: 700;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .cmd-source:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+    .cmd-source[data-cmd="forward"]  { border-color: var(--green);  color: var(--green);  }
+    .cmd-source[data-cmd="left"]     { border-color: var(--blue);   color: var(--blue);   }
+    .cmd-source[data-cmd="right"]    { border-color: var(--purple);  color: var(--purple);  }
+    .cmd-source[data-cmd="backward"] { border-color: var(--orange);  color: var(--orange);  }
+    .cmd-source[data-cmd="loop"]     { border-color: var(--yellow);  color: var(--yellow);  }
+
+    /* Command rail */
+    #rail-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    #rail-wrap h3 { font-size: .78rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    #rail {
+      min-height: 120px;
+      display: flex; flex-direction: column; gap: 5px;
+      background: rgba(0,0,0,.2);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      transition: border-color .2s;
+    }
+    #rail.drag-over { border-color: var(--cyan); background: rgba(0,229,255,.05); }
+    .cmd-tile {
+      display: flex; align-items: center;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: .88rem; font-weight: 700;
+      gap: 7px;
+      cursor: grab;
+      user-select: none;
+      transition: all .25s;
+      position: relative;
+    }
+    .cmd-tile .del {
+      margin-left: auto;
+      background: none; border: none;
+      color: var(--gray); cursor: pointer;
+      font-size: 1.1rem; padding: 0 2px;
+      line-height: 1;
+      transition: color .15s;
+    }
+    .cmd-tile .del:hover { color: var(--red); }
+    .cmd-tile[data-cmd="forward"]  { border-color: var(--green);  color: var(--green);  }
+    .cmd-tile[data-cmd="left"]     { border-color: var(--blue);   color: var(--blue);   }
+    .cmd-tile[data-cmd="right"]    { border-color: var(--purple);  color: var(--purple);  }
+    .cmd-tile[data-cmd="backward"] { border-color: var(--orange);  color: var(--orange);  }
+    .cmd-tile[data-cmd="loop"]     { border-color: var(--yellow);  color: var(--yellow);  }
+    .cmd-tile.executing {
+      box-shadow: 0 0 16px 4px currentColor;
+      transform: scale(1.04);
+    }
+    .cmd-tile.error {
+      animation: flash-red .4s ease 3;
+      border-color: var(--red) !important;
+      color: var(--red) !important;
+    }
+    @keyframes flash-red {
+      0%,100% { background: var(--card); }
+      50%      { background: rgba(255,82,82,.25); }
+    }
+
+    /* Controls */
+    #controls {
+      padding: 10px 12px;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .ctrl-btn {
+      flex: 1; min-width: 70px;
+      font-family: inherit; font-weight: 700; font-size: .88rem;
+      border-radius: 10px; padding: 9px 4px;
+      cursor: pointer; border: 2px solid transparent;
+      transition: all .2s;
+    }
+    #runBtn {
+      background: linear-gradient(135deg, #00c853, #00e676);
+      color: #000; border-color: #00e676;
+    }
+    #runBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,200,83,.5); }
+    #resetBtn {
+      background: rgba(255,82,82,.15);
+      color: var(--red); border-color: var(--red);
+    }
+    #resetBtn:hover { background: var(--red); color: #fff; }
+    #clearBtn {
+      background: rgba(100,116,139,.15);
+      color: var(--gray); border-color: var(--border);
+    }
+    #clearBtn:hover { background: rgba(100,116,139,.3); color: var(--white); }
+
+    /* Status message */
+    #statusMsg {
+      padding: 8px 12px;
+      font-size: .82rem; font-weight: 700;
+      border-top: 1px solid var(--border);
+      min-height: 36px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* ── DEBUG OVERLAY ─────────────────────────────────── */
+    #debugOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,5,20,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 30;
+      display: none;
+    }
+    #debugBox {
+      background: var(--panel);
+      border: 3px solid var(--red);
+      border-radius: 20px;
+      padding: 28px 36px;
+      text-align: center;
+      max-width: 360px;
+      box-shadow: 0 0 60px rgba(255,82,82,.3);
+      animation: popIn .4s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(.6); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+    #debugBox .bug-icon { font-size: 3.5rem; margin-bottom: 10px; }
+    #debugBox h2 { color: var(--red); font-size: 1.5rem; margin-bottom: 8px; }
+    #debugBox p  { color: var(--white); font-size: 1rem; margin-bottom: 18px; line-height: 1.5; }
+    #debugBox button {
+      font-family: inherit; font-weight: 700; font-size: 1rem;
+      background: var(--red); color: #fff;
+      border: none; border-radius: 12px; padding: 10px 24px;
+      cursor: pointer; transition: all .2s;
+    }
+    #debugBox button:hover { background: #ff1744; transform: translateY(-2px); }
+
+    /* ── WIN OVERLAY ───────────────────────────────────── */
+    #winOverlay {
+      position: absolute; inset: 0;
+      background: rgba(0,10,0,.75);
+      display: none; align-items: center; justify-content: center;
+      z-index: 30;
+    }
+    #winBox {
+      background: var(--panel);
+      border: 3px solid var(--green);
+      border-radius: 20px;
+      padding: 28px 36px;
+      text-align: center;
+      max-width: 380px;
+      box-shadow: 0 0 80px rgba(105,240,174,.35);
+      animation: popIn .5s cubic-bezier(.175,.885,.32,1.275);
+    }
+    #winBox .win-icon { font-size: 4rem; margin-bottom: 10px; }
+    #winBox h2 { color: var(--green); font-size: 1.8rem; margin-bottom: 8px; }
+    #winBox p  { color: var(--white); margin-bottom: 18px; line-height: 1.5; }
+    #winBox button {
+      font-family: inherit; font-weight: 700; font-size: 1rem;
+      background: linear-gradient(135deg, #00c853, #69f0ae); color: #000;
+      border: none; border-radius: 12px; padding: 10px 24px;
+      cursor: pointer; transition: all .2s;
+    }
+    #winBox button:hover { transform: scale(1.05); }
+
+    /* scrollbar */
+    #rail-wrap::-webkit-scrollbar { width: 5px; }
+    #rail-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<!-- ── TOP BAR ──────────────────────────────────────── -->
+<div id="topbar">
+  <span class="logo">🤖💥</span>
+  <h1>ROBO-PATH CHAOS</h1>
+  <div class="sep"></div>
+  <div class="hint">2-Player Logic Battle! Press RUN when ready.</div>
+  <button id="backBtn" onclick="location.href='index.html'">← Return to Summer Hub</button>
+</div>
+
+<!-- ── MAIN LAYOUT ──────────────────────────────────── -->
+<div id="layout">
+
+  <!-- 3D VIEWPORT -->
+  <div id="canvas-wrap">
+    <div id="hud">
+      <div class="hud-chip" id="lvlChip">⭐ Level: <span id="hudLevel">1</span></div>
+      <div class="hud-chip">✅ P1 Moves: <span id="hudMoves1">0</span></div>
+      <div class="hud-chip p2-only" style="display:none; border-color: var(--red); color: var(--red);">⚡ P2 Moves: <span id="hudMoves2">0</span></div>
+    </div>
+    <div id="debugOverlay">
+      <div id="debugBox">
+        <div class="bug-icon">🐛</div>
+        <h2>GLITCH DETECTED!</h2>
+        <p id="debugMsg">The robot hit a wall and got confused.<br>Fix your code and try again!</p>
+        <button id="debugClose">Fix Glitch 🔧</button>
+      </div>
+    </div>
+    <div id="winOverlay">
+      <div id="winBox">
+        <div class="win-icon">🎉</div>
+        <h2 id="winTitle">GOAL REACHED!</h2>
+        <p id="winMsg">Your robot reached the star!<br>Amazing sequencing skills!</p>
+        <button id="winNext">Next Mission ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="panel">
+
+    <!-- Mode switch -->
+    <div id="modeSwitch">
+      <button class="modeBtn active" id="mode1P">1 PLAYER</button>
+      <button class="modeBtn" id="mode2P">2 PLAYER</button>
+    </div>
+
+    <!-- Level selector -->
+    <div id="levelBar">
+      <button class="lvlBtn active" data-level="0">⬜ L1</button>
+      <button class="lvlBtn" data-level="1">🟦 L2</button>
+      <button class="lvlBtn" data-level="2">🟥 L3</button>
+      <button class="lvlBtn" data-level="3">⭐ Boss</button>
+    </div>
+
+    <!-- Player switcher (only in 2P) -->
+    <div id="pSwitch" style="display:none; padding: 10px 12px 0; display:flex; gap: 8px;">
+      <button class="modeBtn active" id="selP1">P1 (Blue)</button>
+      <button class="modeBtn p2" id="selP2">P2 (Red)</button>
+    </div>
+
+    <!-- Command palette -->
+    <div id="palette">
+      <h3>🧩 Logic Blocks</h3>
+      <div class="tiles">
+        <div class="cmd-source" data-cmd="forward"  draggable="true">⬆ Forward</div>
+        <div class="cmd-source" data-cmd="backward" draggable="true">⬇ Back</div>
+        <div class="cmd-source" data-cmd="left"     draggable="true">↩ Turn L</div>
+        <div class="cmd-source" data-cmd="right"    draggable="true">↪ Turn R</div>
+        <div class="cmd-source" data-cmd="loop"     draggable="true">🔁 ×2</div>
+      </div>
+    </div>
+
+    <!-- Command rail -->
+    <div id="rail-wrap">
+      <h3 id="railTitle">📋 P1 Sequence</h3>
+      <div id="rail"></div>
+      <div id="rail2" style="display:none; margin-top: 10px;"></div>
+    </div>
+
+    <!-- Control buttons -->
+    <div id="controls">
+      <button class="ctrl-btn" id="runBtn">▶ RUN PROGRAM</button>
+      <button class="ctrl-btn" id="resetBtn">↺ RESET</button>
+      <button class="ctrl-btn" id="clearBtn">🗑 CLEAR</button>
+    </div>
+
+    <!-- Status message -->
+    <div id="statusMsg">Drag logic blocks to program your bot!</div>
+
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─────────────────────────────────────────────────────────────
+//  LEVELS  (grid 8×8, 0=empty tile, 1=wall, G=goal, S=start)
+// ─────────────────────────────────────────────────────────────
+const LEVELS = [
+  {
+    name: "Straight Shot",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,1,0,0,1,0,1],
+      [1,0,1,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,  // dir: 0=+Z, 1=+X, 2=-Z, 3=-X
+    goal:  [1,6],
+    tip: "Forward 5 times!"
+  },
+  {
+    name: "Right Turn",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 2,
+    goal:  [6,6],
+    tip: "Forward 3, Turn Right, Forward 2!"
+  },
+  {
+    name: "Maze Run",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,1],
+      [1,1,1,0,1,0,1,1],
+      [1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,1,0,1],
+      [1,1,1,1,0,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,
+    goal:  [6,6],
+    tip: "Follow the path carefully!"
+  },
+  {
+    name: "Boss: The Star",
+    grid: [
+      [1,1,1,1,1,1,1,1],
+      [1,0,0,1,0,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1],
+      [1,1,1,0,1,0,1,1],
+      [1,0,0,0,1,0,0,1],
+      [1,0,1,1,1,1,0,1],
+      [1,1,1,1,1,1,1,1],
+    ],
+    start: [1,1], startDir: 0,
+    goal:  [6,6],
+    tip: "Think before you code — this one needs a plan!"
+  }
+];
+
+// ─────────────────────────────────────────────────────────────
+//  THREE.JS SETUP
+// ─────────────────────────────────────────────────────────────
+const wrap = document.getElementById('canvas-wrap');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0f1a);
+scene.fog = new THREE.FogExp2(0x0d0f1a, 0.03);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(0, 14, 16);
+camera.lookAt(0, 0, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.minDistance = 6;
+controls.maxDistance = 30;
+
+// Lights
+const ambient = new THREE.AmbientLight(0x2a2f4a, 1.5);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xffffff, 2);
+sun.position.set(8, 14, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+const fillLight = new THREE.DirectionalLight(0x4fc3f7, 0.6);
+fillLight.position.set(-8, 5, -8);
+scene.add(fillLight);
+
+// ─────────────────────────────────────────────────────────────
+//  GRID / WORLD BUILDER
+// ─────────────────────────────────────────────────────────────
+const TILE  = 1.5;
+const WALL_H = 1.0;
+const TILE_H = 0.3;
+
+const tileGroup = new THREE.Group();
+scene.add(tileGroup);
+
+const matFloor = new THREE.MeshStandardMaterial({ color: 0x1e2d4a, roughness: .8 });
+const matWall  = new THREE.MeshStandardMaterial({ color: 0x0a1428, roughness: .9,
+  emissive: 0x0a1020, emissiveIntensity: .3 });
+const matGoal  = new THREE.MeshStandardMaterial({ color: 0xffe066, roughness: .3,
+  emissive: 0xffe066, emissiveIntensity: .4 });
+
+let goalMesh = null;
+let floorTiles = [];  // {mesh, gx, gz}
+let wallMeshes = [];
+
+function clearWorld() {
+  while (tileGroup.children.length) tileGroup.remove(tileGroup.children[0]);
+  floorTiles = [];
+  wallMeshes = [];
+  goalMesh = null;
+}
+
+function buildWorld(level) {
+  clearWorld();
+  const grid = level.grid;
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const offsetX = -(cols / 2 - 0.5) * TILE;
+  const offsetZ = -(rows / 2 - 0.5) * TILE;
+
+  const floorGeo = new THREE.BoxGeometry(TILE - .06, TILE_H, TILE - .06);
+  const wallGeo  = new THREE.BoxGeometry(TILE, WALL_H, TILE);
+  const goalGeo  = new THREE.CylinderGeometry(.45, .45, TILE_H * 2, 6);
+
+  for (let z = 0; z < rows; z++) {
+    for (let x = 0; x < cols; x++) {
+      const wx = offsetX + x * TILE;
+      const wz = offsetZ + z * TILE;
+
+      if (grid[z][x] === 1) {
+        const m = new THREE.Mesh(wallGeo, matWall.clone());
+        m.position.set(wx, WALL_H / 2, wz);
+        m.castShadow = true; m.receiveShadow = true;
+        tileGroup.add(m);
+        wallMeshes.push({ mesh: m, gx: x, gz: z });
+      } else {
+        // Slightly randomise floor tile height for "terrain" feel
+        const jitter = Math.random() * 0.06;
+        const m = new THREE.Mesh(floorGeo, matFloor.clone());
+        m.position.set(wx, -jitter, wz);
+        m.receiveShadow = true;
+        tileGroup.add(m);
+        floorTiles.push({ mesh: m, gx: x, gz: z });
+
+        // Goal tile
+        if (x === level.goal[0] && z === level.goal[1]) {
+          const gm = new THREE.Mesh(goalGeo, matGoal);
+          gm.position.set(wx, TILE_H, wz);
+          tileGroup.add(gm);
+          goalMesh = gm;
+          // pulsing light
+          const gl = new THREE.PointLight(0xffe066, 2, 3);
+          gl.position.set(wx, .8, wz);
+          tileGroup.add(gl);
+        }
+      }
+    }
+  }
+
+  // add subtle grid lines
+  const gHelper = new THREE.GridHelper(cols * TILE, cols, 0x1a2a40, 0x1a2a40);
+  gHelper.position.y = .01;
+  tileGroup.add(gHelper);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CHAOS BACKGROUND
+// ─────────────────────────────────────────────────────────────
+const chaosGroup = new THREE.Group();
+scene.add(chaosGroup);
+
+function createChaos() {
+  const geo = new THREE.BoxGeometry(.4, .4, .4);
+  for (let i = 0; i < 40; i++) {
+    const mat = new THREE.MeshStandardMaterial({ 
+      color: Math.random() > 0.5 ? 0x00e5ff : 0xb388ff,
+      transparent: true, opacity: 0.4, wireframe: Math.random() > 0.7
+    });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set((Math.random()-0.5)*40, (Math.random()-0.5)*20, (Math.random()-0.5)*40);
+    m.userData.rot = new THREE.Vector3(Math.random()*0.02, Math.random()*0.02, Math.random()*0.02);
+    chaosGroup.add(m);
+  }
+}
+createChaos();
+
+function updateChaos(dt) {
+  chaosGroup.children.forEach(c => {
+    c.rotation.x += c.userData.rot.x;
+    c.rotation.y += c.userData.rot.y;
+    c.position.y += Math.sin(Date.now()*0.001 + c.position.x)*0.005;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ROBOT FACTORY
+// ─────────────────────────────────────────────────────────────
+function createRobot(color = 0x29b6f6, emissive = 0x0d47a1) {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: .35, metalness: .6, emissive, emissiveIntensity: .3 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), bodyMat);
+  body.position.y = .7;
+  group.add(body);
+
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xe3f2fd, roughness: .4, emissive: color, emissiveIntensity: .1 });
+  const head = new THREE.Mesh(new THREE.BoxGeometry(.42, .38, .38), headMat);
+  head.position.y = 1.17;
+  group.add(head);
+
+  [-1,1].forEach(side => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.08), new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 1 }));
+    eye.position.set(side * .12, 1.2, .19);
+    group.add(eye);
+  });
+
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .06), new THREE.MeshStandardMaterial({ color: 0x69f0ae, emissive: 0x69f0ae, emissiveIntensity: .6 }));
+  chest.position.set(0, .7, .25);
+  group.add(chest);
+
+  [-1,1].forEach(side => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.18, .32, .18), new THREE.MeshStandardMaterial({ color: emissive, roughness: .5, metalness: .5 }));
+    leg.position.set(side * .19, .18, 0);
+    group.add(leg);
+  });
+
+  const light = new THREE.PointLight(color, 0, 2.5);
+  group.add(light);
+  group.userData.light = light;
+  return group;
+}
+
+const robot1 = createRobot(0x29b6f6, 0x0d47a1); // Blue
+const robot2 = createRobot(0xff5252, 0x880e4f); // Red
+robot2.visible = false;
+scene.add(robot1, robot2);
+
+const robotGroup = robot1; // Legacy support
+
+// Execution trail particles
+const trailGeo   = new THREE.SphereGeometry(.06, 6, 6);
+const trailMat   = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: .7 });
+const trailGroup = new THREE.Group();
+scene.add(trailGroup);
+
+function spawnTrailParticle(pos) {
+  const p = new THREE.Mesh(trailGeo, trailMat.clone());
+  p.position.copy(pos);
+  p.position.y = 0.1;
+  p.userData.life = 1;
+  trailGroup.add(p);
+}
+
+function updateTrail(dt) {
+  for (let i = trailGroup.children.length - 1; i >= 0; i--) {
+    const p = trailGroup.children[i];
+    p.userData.life -= dt * 1.5;
+    p.material.opacity = p.userData.life * .7;
+    p.position.y += dt * .3;
+    if (p.userData.life <= 0) trailGroup.remove(p);
+  }
+}
+
+// Tile pulse plane
+const pulsePlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(TILE - .1, TILE - .1),
+  new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0, side: THREE.DoubleSide })
+);
+pulsePlane.rotation.x = -Math.PI / 2;
+pulsePlane.position.y = .02;
+scene.add(pulsePlane);
+
+// Ghost robot (debug mode)
+const ghostMat = new THREE.MeshStandardMaterial({ color: 0xff5252, transparent: true, opacity: .35, wireframe: false });
+const ghostGroup = new THREE.Group();
+const ghostBody = new THREE.Mesh(new THREE.BoxGeometry(.55, .65, .45), ghostMat);
+ghostBody.position.y = .7;
+ghostGroup.add(ghostBody);
+ghostGroup.visible = false;
+scene.add(ghostGroup);
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let currentLevel = 0;
+let is2P = false;
+let activeP = 1;
+
+let p1Data = { gx:0, gz:0, dir:0, moves:0, isRunning:false, queue:[], timer:0, group:robot1, rail:null };
+let p2Data = { gx:0, gz:0, dir:0, moves:0, isRunning:false, queue:[], timer:0, group:robot2, rail:null };
+
+const getActiveData = () => activeP === 1 ? p1Data : p2Data;
+
+const DIRS = [
+  [0,  1],  // 0: +Z (south)
+  [1,  0],  // 1: +X (east)
+  [0, -1],  // 2: -Z (north)
+  [-1, 0],  // 3: -X (west)
+];
+
+function gridToWorld(gx, gz, level) {
+  const grid = level.grid;
+  const cols = grid[0].length;
+  const rows = grid.length;
+  return {
+    x: -(cols/2 - .5) * TILE + gx * TILE,
+    z: -(rows/2 - .5) * TILE + gz * TILE,
+  };
+}
+
+function loadLevel(idx) {
+  currentLevel = idx;
+  const level = LEVELS[idx];
+  buildWorld(level);
+
+  [p1Data, p2Data].forEach((p, i) => {
+    p.gx = level.start[0];
+    p.gz = level.start[1];
+    p.dir = level.startDir;
+    p.moves = 0;
+    p.isRunning = false;
+    p.group.visible = i === 0 || is2P;
+    
+    const wpos = gridToWorld(p.gx, p.gz, level);
+    p.group.position.set(wpos.x, TILE_H, wpos.z);
+    p.group.rotation.y = -p.dir * Math.PI / 2;
+    p.group.userData.light.intensity = 0;
+  });
+
+  // clear trail
+  while (trailGroup.children.length) trailGroup.remove(trailGroup.children[0]);
+  ghostGroup.visible = false;
+  pulsePlane.material.opacity = 0;
+
+  document.getElementById('hudLevel').textContent = idx + 1;
+  document.getElementById('hudMoves1').textContent = 0;
+  document.getElementById('hudMoves2').textContent = 0;
+  document.getElementById('statusMsg').textContent = `🗺 MISSION: ${level.name} — ${level.tip}`;
+
+  // camera soft reset
+  camera.position.set(0, 14, 16);
+  camera.lookAt(0, 0, 0);
+  controls.target.set(0, 0, 0);
+
+  document.querySelectorAll('.lvlBtn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  COMMAND COMPILATION
+// ─────────────────────────────────────────────────────────────
+function compileProgramToSteps(tiles) {
+  const steps = [];
+  for (const t of tiles) {
+    if (t.cmd === 'loop') {
+      if (steps.length > 0) {
+        steps.push({ ...steps[steps.length - 1] });
+      }
+    } else {
+      steps.push({ cmd: t.cmd, tileEl: t.tileEl });
+    }
+  }
+  return steps;
+}
+
+function buildStepsFromRail(containerId) {
+  const tiles = [];
+  document.querySelectorAll(`#${containerId} .cmd-tile`).forEach(el => {
+    tiles.push({ cmd: el.dataset.cmd, tileEl: el });
+  });
+  return compileProgramToSteps(tiles);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ANIMATION QUEUE EXECUTION
+// ─────────────────────────────────────────────────────────────
+const STEP_DURATION = 0.42;
+
+function canMoveToCell(gx, gz) {
+  const grid = LEVELS[currentLevel].grid;
+  if (gz < 0 || gz >= grid.length || gx < 0 || gx >= grid[0].length) return false;
+  return grid[gz][gx] === 0;
+}
+
+let isRunning = false;
+let globalTimer = 0;
+
+function runProgram() {
+  if (isRunning) return;
+  
+  p1Data.queue = buildStepsFromRail('rail');
+  p2Data.queue = is2P ? buildStepsFromRail('rail2') : [];
+
+  if (!p1Data.queue.length && (!is2P || !p2Data.queue.length)) {
+    setStatus("⚠️ Add some blocks first!");
+    return;
+  }
+
+  isRunning = true;
+  globalTimer = STEP_DURATION;
+  
+  [p1Data, p2Data].forEach((p, i) => {
+    p.isRunning = (i === 0) || (is2P && p.queue.length > 0);
+    p.moves = 0;
+    p.group.userData.light.intensity = p.isRunning ? 2 : 0;
+  });
+
+  setStatus("🤖 CHAOS MODE ENGAGED...");
+}
+
+function popPlayerStep(p) {
+  if (!p.queue.length) {
+    p.isRunning = false;
+    p.group.userData.light.intensity = 0;
+    if (p.executingTile) p.executingTile.classList.remove('executing');
+    return;
+  }
+
+  const step = p.queue.shift();
+  const { cmd, tileEl } = step;
+
+  if (p.executingTile) p.executingTile.classList.remove('executing');
+  p.executingTile = tileEl;
+  if (tileEl) tileEl.classList.add('executing');
+
+  p.phase = 'idle';
+  p.moveProgress = 0;
+
+  if (cmd === 'forward' || cmd === 'backward') {
+    const d = DIRS[p.dir];
+    const mult = cmd === 'backward' ? -1 : 1;
+    const nx = p.gx + d[0] * mult;
+    const nz = p.gz + d[1] * mult;
+
+    if (!canMoveToCell(nx, nz)) {
+      p.isRunning = false;
+      if (tileEl) {
+        tileEl.classList.add('error');
+        setTimeout(() => tileEl.classList.remove('error'), 1000);
+      }
+      return;
+    }
+
+    const wFrom = gridToWorld(p.gx, p.gz, LEVELS[currentLevel]);
+    const wTo   = gridToWorld(nx, nz, LEVELS[currentLevel]);
+    p.fromPos = new THREE.Vector3(wFrom.x, TILE_H, wFrom.z);
+    p.toPos   = new THREE.Vector3(wTo.x, TILE_H, wTo.z);
+    
+    p.gx = nx; p.gz = nz;
+    p.phase = 'move';
+    p.moves++;
+    
+    // Check goal
+    if (nx === LEVELS[currentLevel].goal[0] && nz === LEVELS[currentLevel].goal[1]) {
+      setTimeout(() => {
+        if (!isRunning) return;
+        finishRun(true, p === p1Data ? "P1" : "P2");
+      }, STEP_DURATION * 1000);
+    }
+
+  } else if (cmd === 'left' || cmd === 'right') {
+    const oldDir = p.dir;
+    p.dir = ((p.dir + (cmd === 'right' ? 1 : 3)) % 4);
+    p.startQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -oldDir * Math.PI / 2, 0));
+    p.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -p.dir * Math.PI / 2, 0));
+    p.phase = 'turn';
+    p.leanDir = cmd === 'right' ? 1 : -1;
+  }
+}
+
+function tickAnimation(dt) {
+  if (!isRunning) return;
+
+  globalTimer -= dt;
+  if (globalTimer <= 0) {
+    globalTimer = STEP_DURATION;
+    [p1Data, p2Data].forEach(p => { if (p.isRunning) popPlayerStep(p); });
+    
+    // update moves hud
+    document.getElementById('hudMoves1').textContent = p1Data.moves;
+    document.getElementById('hudMoves2').textContent = p2Data.moves;
+
+    // stop if both done
+    if (!p1Data.isRunning && !p2Data.isRunning) {
+      setTimeout(() => { if (isRunning) finishRun(false); }, 500);
+    }
+  }
+
+  const t = 1 - (globalTimer / STEP_DURATION);
+  const ease = t * (2 - t); // simple ease out
+
+  [p1Data, p2Data].forEach(p => {
+    if (!p.isRunning || !p.phase) return;
+
+    if (p.phase === 'move') {
+      const hop = Math.sin(t * Math.PI) * 0.4;
+      p.group.position.lerpVectors(p.fromPos, p.toPos, t);
+      p.group.position.y = TILE_H + hop;
+      if (Math.random() < 0.3) spawnTrailParticle(p.group.position);
+    } else if (p.phase === 'turn') {
+      p.group.quaternion.slerpQuaternions(p.startQuat, p.targetQuat, t);
+      p.group.rotation.z = Math.sin(t * Math.PI) * p.leanDir * 0.25;
+    }
+  });
+}
+
+function finishRun(won, winner = null) {
+  isRunning = false;
+  [p1Data, p2Data].forEach(p => {
+    p.isRunning = false;
+    p.group.userData.light.intensity = 0;
+    if (p.executingTile) p.executingTile.classList.remove('executing');
+  });
+
+  if (won) {
+    document.getElementById('winTitle').textContent = is2P ? `${winner} WINS!` : "MISSION COMPLETE!";
+    document.getElementById('winMsg').innerHTML = is2P ? `Robot ${winner} reached the star first!` : "Your robot reached the goal! Logic master!";
+    document.getElementById('winOverlay').style.display = 'flex';
+    for (let i = 0; i < 50; i++) setTimeout(spawnConfettiParticle, i * 30);
+    setStatus("🎉 CHAMPION DATA DETECTED!");
+  } else {
+    setStatus("❌ Sequence incomplete. Try again!");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  GOAL & ROBOT ANIM
+// ─────────────────────────────────────────────────────────────
+let goalAngle = 0;
+function animateGoal(dt) {
+  if (!goalMesh) return;
+  goalAngle += dt * 2;
+  goalMesh.rotation.y = goalAngle;
+  const s = 1 + Math.sin(goalAngle * 4) * .1;
+  goalMesh.scale.set(s, s, s);
+}
+
+function animateEyes(dt) {
+  const t = Date.now() * 0.001;
+  [robot1, robot2].forEach(r => {
+    const eyes = r.children.filter(c => c.geometry && c.geometry.type === 'BoxGeometry' && c.position.y > 1.1);
+    const blink = Math.sin(t * 5) > 0.98;
+    eyes.forEach(e => e.scale.y = blink ? 0.1 : 1);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  UI HANDLERS
+// ─────────────────────────────────────────────────────────────
+function setStatus(msg) { document.getElementById('statusMsg').textContent = msg; }
+
+// Mode switching
+document.getElementById('mode1P').onclick = () => {
+  is2P = false;
+  document.getElementById('mode1P').classList.add('active');
+  document.getElementById('mode2P').classList.remove('active');
+  document.getElementById('pSwitch').style.display = 'none';
+  document.querySelectorAll('.p2-only').forEach(el => el.style.display = 'none');
+  document.getElementById('rail2').style.display = 'none';
+  document.getElementById('railTitle').textContent = "📋 Sequence";
+  loadLevel(currentLevel);
+};
+
+document.getElementById('mode2P').onclick = () => {
+  is2P = true;
+  document.getElementById('mode2P').classList.add('active');
+  document.getElementById('mode1P').classList.remove('active');
+  document.getElementById('pSwitch').style.display = 'flex';
+  document.querySelectorAll('.p2-only').forEach(el => el.style.display = 'block');
+  document.getElementById('rail2').style.display = (activeP === 2) ? 'flex' : 'none';
+  document.getElementById('railTitle').textContent = `📋 P${activeP} Sequence`;
+  loadLevel(currentLevel);
+};
+
+document.getElementById('selP1').onclick = () => {
+  activeP = 1;
+  document.getElementById('selP1').classList.add('active');
+  document.getElementById('selP2').classList.remove('active');
+  document.getElementById('rail').style.display = 'flex';
+  document.getElementById('rail2').style.display = 'none';
+  document.getElementById('railTitle').textContent = "📋 P1 Sequence";
+};
+
+document.getElementById('selP2').onclick = () => {
+  activeP = 2;
+  document.getElementById('selP2').classList.add('active');
+  document.getElementById('selP1').classList.remove('active');
+  document.getElementById('rail').style.display = 'none';
+  document.getElementById('rail2').style.display = 'flex';
+  document.getElementById('railTitle').textContent = "📋 P2 Sequence";
+};
+
+document.getElementById('runBtn').onclick = runProgram;
+document.getElementById('resetBtn').onclick = () => { 
+  document.getElementById('winOverlay').style.display='none'; 
+  loadLevel(currentLevel); 
+};
+document.getElementById('clearBtn').onclick = () => {
+  const r = activeP === 1 ? document.getElementById('rail') : document.getElementById('rail2');
+  r.innerHTML = '';
+};
+document.getElementById('debugClose').onclick = () => {
+  document.getElementById('debugOverlay').style.display = 'none';
+  loadLevel(currentLevel);
+};
+document.getElementById('winNext').onclick = () => {
+  document.getElementById('winOverlay').style.display = 'none';
+  loadLevel((currentLevel + 1) % LEVELS.length);
+};
+
+document.querySelectorAll('.lvlBtn').forEach((btn, i) => {
+  btn.onclick = () => { 
+    document.getElementById('rail').innerHTML=''; 
+    document.getElementById('rail2').innerHTML=''; 
+    loadLevel(i); 
+  };
+});
+
+// ─────────────────────────────────────────────────────────────
+//  DRAG & DROP (updated for target rail)
+// ─────────────────────────────────────────────────────────────
+const rail1 = document.getElementById('rail');
+const rail2 = document.getElementById('rail2');
+let draggingEl = null;
+let dragSrcCmd = null;
+
+document.querySelectorAll('.cmd-source').forEach(src => {
+  src.addEventListener('dragstart', e => { dragSrcCmd = src.dataset.cmd; draggingEl = null; });
+});
+
+[rail1, rail2].forEach(r => {
+  r.addEventListener('dragover', e => { e.preventDefault(); r.classList.add('drag-over'); });
+  r.addEventListener('dragleave', () => r.classList.remove('drag-over'));
+  r.addEventListener('drop', e => {
+    e.preventDefault();
+    r.classList.remove('drag-over');
+    if (isRunning) return;
+    
+    if (draggingEl) { // reorder
+      const afterEl = getDragAfterElement(r, e.clientY);
+      if (afterEl == null) r.appendChild(draggingEl);
+      else r.insertBefore(draggingEl, afterEl);
+    } else if (dragSrcCmd) { // new tile
+      const tile = makeTile(dragSrcCmd);
+      const afterEl = getDragAfterElement(r, e.clientY);
+      if (afterEl == null) r.appendChild(tile);
+      else r.insertBefore(tile, afterEl);
+    }
+  });
+});
+
+function makeTile(cmd) {
+  const labels = { forward:'⬆ Forward', backward:'⬇ Back', left:'↩ Turn L', right:'↪ Turn R', loop:'🔁 ×2' };
+  const el = document.createElement('div');
+  el.className = 'cmd-tile';
+  el.dataset.cmd = cmd;
+  el.draggable = true;
+  el.innerHTML = `<span>${labels[cmd]}</span><button class="del">✕</button>`;
+  el.querySelector('.del').onclick = (e) => { e.stopPropagation(); el.remove(); };
+  el.addEventListener('dragstart', e => {
+    draggingEl = el;
+    setTimeout(() => el.style.opacity = '.3', 0);
+  });
+  el.addEventListener('dragend', () => { el.style.opacity = '1'; draggingEl = null; });
+  return el;
+}
+
+function getDragAfterElement(container, y) {
+  const els = [...container.querySelectorAll('.cmd-tile:not(.dragging)')];
+  return els.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Resize & Animate
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  controls.update();
+  tickAnimation(dt);
+  updateTrail(dt);
+  updateChaos(dt);
+  animateGoal(dt);
+  animateEyes(dt);
+  renderer.render(scene, camera);
+}
+
+loadLevel(0);
+animate();
+</script>
+</body>
+</html>

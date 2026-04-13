@@ -96,6 +96,12 @@
             width: 100%; height: 100%; background: #ef4444; transition: width 0.2s;
         }
 
+        #pokeball-status {
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); 
+            color: #f472b6; font-weight: 900; font-size: 24px; display: none; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 100;
+        }
+        
         #fly-status {
             position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); 
             color: #34d399; font-weight: 900; font-size: 24px; display: none; 
@@ -200,6 +206,7 @@
     
     <div id="homework-tracker">📚 Homework: 0 / 5</div>
     
+    <div id="pokeball-status">🔴 POKEBALL MODE ACTIVE</div>
     <div id="fly-status">🦅 FLY MODE ACTIVE</div>
 
     <div id="build-challenge-ui" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 2px solid #34d399; padding: 20px; border-radius: 10px; color: white; text-align: center; z-index: 100;">
@@ -247,10 +254,10 @@
         <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
         <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
         <div class="control-item"><div class="control-key">Q</div> Change Block Size</div>
-        <div class="control-item"><div class="control-key">C</div> Throw Pokeball</div>
+        <div class="control-item"><div class="control-key">C</div> Select/Throw Pokeball</div>
         <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
-        <div class="control-item"><div class="control-key">R-CLICK</div> Place Block</div>
-        <div class="control-item"><div class="control-key">1-8</div> Select Color</div>
+        <div class="control-item"><div class="control-key">R-CLICK</div> <span id="rclick-action-text">Place Block</span></div>
+        <div class="control-item"><div class="control-key">1-9</div> Select Item</div>
     </div>
 
     <div id="blocker">
@@ -404,12 +411,28 @@
         const colorPicker = document.getElementById('colorPicker');
         const colorBtns = [];
         
+        let pokeballMode = false;
+        const pokeballStatus = document.getElementById('pokeball-status');
+
         window.selectColor = function(index) {
-            if(index >= 0 && index < colors.length) {
+            // Index 8 is our new Pokeball slot
+            if (index === 8) {
+                pokeballMode = true;
+                pokeballStatus.style.display = 'block';
+                document.getElementById('rclick-action-text').textContent = "Throw Pokeball";
+                document.getElementById('rclick-action-text').style.color = "#f472b6";
+            } else if(index >= 0 && index < colors.length) {
                 currentColor = colors[index];
-                colorBtns.forEach(b => b.classList.remove('active'));
-                colorBtns[index].classList.add('active');
+                pokeballMode = false;
+                pokeballStatus.style.display = 'none';
+                document.getElementById('rclick-action-text').textContent = "Place Block";
+                document.getElementById('rclick-action-text').style.color = "white";
             }
+            
+            colorBtns.forEach((b, i) => {
+                if(i === index) b.classList.add('active');
+                else b.classList.remove('active');
+            });
         };
 
         colors.forEach((c, index) => {
@@ -433,6 +456,25 @@
             colorBtns.push(btn);
             colorPicker.appendChild(btn);
         });
+
+        // Add Pokeball Item Slot (Slot 9)
+        const ballBtn = document.createElement('div');
+        ballBtn.className = 'color-btn';
+        ballBtn.style.background = 'radial-gradient(circle at 30% 30%, #ff4444, #990000)';
+        ballBtn.style.display = 'flex';
+        ballBtn.style.justifyContent = 'center';
+        ballBtn.style.alignItems = 'center';
+        ballBtn.style.color = 'white';
+        ballBtn.style.fontWeight = 'bold';
+        ballBtn.style.textShadow = '1px 1px 2px black';
+        ballBtn.textContent = '9';
+        ballBtn.title = "Pokeball";
+        ballBtn.onclick = (e) => {
+            e.stopPropagation();
+            window.selectColor(8);
+        };
+        colorBtns.push(ballBtn);
+        colorPicker.appendChild(ballBtn);
 
         const getMaterial = (colorValue) => {
             return new THREE.MeshLambertMaterial({ color: colorValue });
@@ -523,11 +565,47 @@
         
         document.getElementById('boss-health-container').style.display = 'block';
         
+        const robotMat = new THREE.MeshLambertMaterial({color: 0xe2e8f0});
+        const robotMetalMat = new THREE.MeshLambertMaterial({color: 0x94a3b8});
+        const robotAccentMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); 
+
+        function createGigaGolemBoss() {
+            const group = new THREE.Group();
+            const stoneMat = new THREE.MeshLambertMaterial({color: 0x64748b});
+            const grassMat = new THREE.MeshLambertMaterial({color: 0x10b981});
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0x3b82f6});
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(30, 40, 20), stoneMat);
+            body.position.y = 20; body.castShadow = true; group.add(body);
+
+            const moss = new THREE.Mesh(new THREE.BoxGeometry(32, 5, 22), grassMat);
+            moss.position.y = 40; group.add(moss);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), stoneMat);
+            head.position.y = 55; head.castShadow = true; group.add(head);
+
+            const eyeL = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 3), eyeMat);
+            eyeL.position.set(-5, 60, 10); group.add(eyeL);
+            const eyeR = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 3), eyeMat);
+            eyeR.position.set(5, 60, 10); group.add(eyeR);
+
+            const armL = new THREE.Mesh(new THREE.BoxGeometry(10, 45, 10), stoneMat);
+            armL.position.set(-20, 30, 0); group.add(armL);
+            const armR = new THREE.Mesh(new THREE.BoxGeometry(10, 45, 10), stoneMat);
+            armR.position.set(20, 30, 0); group.add(armR);
+
+            const legL = new THREE.Mesh(new THREE.BoxGeometry(12, 10, 12), stoneMat);
+            legL.position.set(-8, 5, 0); group.add(legL);
+            const legR = new THREE.Mesh(new THREE.BoxGeometry(12, 10, 12), stoneMat);
+            legR.position.set(8, 5, 0); group.add(legR);
+
+            group.userData = { leftArm: armL, rightArm: armR, bossHead: head, legL, legR };
+            return group;
+        }
+
         function createRobotBoss() {
             const group = new THREE.Group();
-            const robotMat = new THREE.MeshLambertMaterial({color: 0xe2e8f0});
-            const robotMetalMat = new THREE.MeshLambertMaterial({color: 0x94a3b8});
-            const robotAccentMat = new THREE.MeshLambertMaterial({color: 0x3b82f6}); 
+            
             
             const bBody = new THREE.Mesh(new THREE.BoxGeometry(20, 30, 15), robotMat);
             bBody.position.y = 25; bBody.castShadow = true; group.add(bBody);
@@ -565,6 +643,8 @@
             lLeg.position.set(-6, 7.5, 0); group.add(lLeg);
             const rLeg = new THREE.Mesh(new THREE.BoxGeometry(8, 15, 8), robotMetalMat);
             rLeg.position.set(6, 7.5, 0); group.add(rLeg);
+            
+            group.userData = { leftArm: lArm, rightArm: rArm, bossHead: bHead, legL: lLeg, legR: rLeg };
             
             return group;
         }
@@ -642,7 +722,7 @@
             msg.style.transform = 'translate(-50%, -50%)'; msg.style.color = '#f59e0b';
             msg.style.fontSize = '48px'; msg.style.fontWeight = 'bold';
             msg.style.textShadow = '2px 2px 4px black'; msg.style.zIndex='2000';
-            msg.textContent = "DRAGON CAUGHT!";
+            msg.textContent = d.userData.isSlime ? "SLIME CAUGHT!" : "DRAGON CAUGHT!";
             document.body.appendChild(msg);
             setTimeout(() => msg.remove(), 2000);
         }
@@ -669,12 +749,12 @@
 
                 const btn = document.createElement('div');
                 btn.style.width = '40px'; btn.style.height = '40px'; 
-                btn.style.borderRadius = '50%'; btn.style.background = '#10b981';
+                btn.style.borderRadius = '50%'; btn.style.background = dr.userData.isSlime ? '#10b981' : '#f59e0b';
                 btn.style.border = '2px solid white'; btn.style.cursor = 'pointer';
                 btn.style.boxShadow = '0 0 10px rgba(16,185,129,0.8)';
                 btn.style.display = 'flex'; btn.style.justifyContent = 'center'; btn.style.alignItems = 'center';
                 btn.style.fontSize = '24px';
-                btn.innerHTML = '🐉';
+                btn.innerHTML = dr.userData.isSlime ? '🦠' : '🐉';
                 
                 const menu = document.createElement('div');
                 menu.style.position = 'absolute'; menu.style.bottom = '50px'; menu.style.left = '50%';
@@ -1351,7 +1431,39 @@
             {c:0x059669, b:0x34d399, s:0x064e3b}  // green
         ];
 
-        const littleDragons = [];
+        function createCoolSlime(color = 0x10b981) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({color: color, transparent: true, opacity: 0.8});
+            const coreMat = new THREE.MeshLambertMaterial({color: 0x064e3b});
+            
+            const body = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), mat);
+            body.castShadow = true;
+            group.add(body);
+            
+            const core = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), coreMat);
+            group.add(core);
+
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+            const pupilMat = new THREE.MeshBasicMaterial({color: 0x000000});
+            
+            const eyeL = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), eyeMat);
+            eyeL.position.set(-2, 2, 5.01);
+            group.add(eyeL);
+            const pupilL = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.5), pupilMat);
+            pupilL.position.set(-2, 2, 5.4);
+            group.add(pupilL);
+
+            const eyeR = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 1), eyeMat);
+            eyeR.position.set(2, 2, 5.01);
+            group.add(eyeR);
+            const pupilR = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.5), pupilMat);
+            pupilR.position.set(2, 2, 5.4);
+            group.add(pupilR);
+
+            return group;
+        }
+
+        const capturableEntities = [];
         for(let i=0; i<8; i++) {
             const randCol = colOpts[Math.floor(Math.random() * colOpts.length)];
             const ld = createCoolDragon(randCol.c, randCol.b, randCol.s);
@@ -1367,10 +1479,30 @@
             ht.position.y = 10;
             ld.add(ht);
             ld.userData.hitbox = ht;
+            ld.userData.isDragon = true;
             
             scene.add(ld);
-            littleDragons.push(ld);
+            capturableEntities.push(ld);
             activeDragons.push(ld);
+        }
+
+        // Spawn some Slimes too!
+        for(let i=0; i<6; i++) {
+            const slime = createCoolSlime(0x10b981);
+            slime.scale.set(0.5, 0.5, 0.5);
+            slime.position.set(
+                Math.floor(Math.random() * 80 - 40) * 5,
+                5,
+                Math.floor(Math.random() * 80 - 40) * 5
+            );
+            const hitGeo = new THREE.BoxGeometry(12, 12, 12);
+            const ht = new THREE.Mesh(hitGeo, new THREE.MeshBasicMaterial({visible:false}));
+            slime.add(ht);
+            slime.userData.hitbox = ht;
+            slime.userData.isSlime = true;
+            
+            scene.add(slime);
+            capturableEntities.push(slime);
         }
 
         let inParkour = false;
@@ -1458,7 +1590,7 @@
         }
 
         function spawnBoss(index) {
-            if (index === 3 && !hasFireballAbility && !inParkour) {
+            if (index === 4 && !hasFireballAbility && !inParkour) {
                 startParkour();
                 return;
             }
@@ -1469,12 +1601,12 @@
             bossGroup.position.y = 0;
             bossGroup.rotation.z = 0;
             isBossDefeated = false;
-            let type = index % 3;
+            let type = index % 4;
             
             if (type === 0) {
                 activeBossModel = createDinosaur();
                 activeBossModel.position.set(0, 25, 0);
-                maxBossHealth = 150 + (Math.floor(index/3)*50);
+                maxBossHealth = 150 + (Math.floor(index/4)*50);
                 document.getElementById('boss-health-text').textContent = "DINOSAUR BOSS (WAVE " + (index+1) + ")";
                 document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
                 riddles.length = 0;
@@ -1485,7 +1617,7 @@
                 );
             } else if (type === 1) {
                 activeBossModel = createRobotBoss();
-                maxBossHealth = 200 + (Math.floor(index/3)*50);
+                maxBossHealth = 200 + (Math.floor(index/4)*50);
                 document.getElementById('boss-health-text').textContent = "MR GONZALEZ ROBOT (WAVE " + (index+1) + ")";
                 document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #3b82f6, #60a5fa)';
                 riddles.length = 0;
@@ -1498,7 +1630,7 @@
                 activeBossModel = createCoolDragon();
                 activeBossModel.position.set(0, 25, 0);
                 activeBossModel.scale.set(1.5, 1.5, 1.5);
-                maxBossHealth = 250 + (Math.floor(index/3)*50);
+                maxBossHealth = 250 + (Math.floor(index/4)*50);
                 document.getElementById('boss-health-text').textContent = "DRAGON BOSS (WAVE " + (index+1) + ")";
                 document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #10b981, #34d399)';
                 riddles.length = 0;
@@ -1506,6 +1638,17 @@
                     { q: "What is the primary gas found in Earth's atmosphere?", opts: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], a: 2 },
                     { q: "What is the fundamental unit of matter?", opts: ["Molecule", "Atom", "Electron", "Cell"], a: 1 },
                     { q: "In chemistry, what is the pH of pure water at room temperature?", opts: ["0", "7", "14", "10"], a: 1 }
+                );
+            } else if (type === 3) {
+                activeBossModel = createGigaGolemBoss();
+                maxBossHealth = 300 + (Math.floor(index/4)*50);
+                document.getElementById('boss-health-text').textContent = "GIGA GOLEM BOSS (WAVE " + (index+1) + ")";
+                document.getElementById('boss-health-bar').style.background = 'linear-gradient(90deg, #64748b, #94a3b8)';
+                riddles.length = 0;
+                riddles.push(
+                    { q: "Which programming language is predominantly used for web structure?", opts: ["Python", "HTML", "C++", "Java"], a: 1 },
+                    { q: "What does 'RAM' stand for in computer science?", opts: ["Random Access Memory", "Read Always Member", "Rapid Action Micro", "Real Armor Metal"], a: 0 },
+                    { q: "Who is known as the first computer programmer?", opts: ["Isaac Newton", "Ada Lovelace", "Albert Einstein", "Marie Curie"], a: 1 }
                 );
             }
             bossHealth = maxBossHealth;
@@ -1818,12 +1961,27 @@
                 }
                 breakBlock(); 
             }
-            if (event.button === 2) placeBlock(); // Right click to place
+            if (event.button === 2) {
+                if (pokeballMode) {
+                    if(!isChargingBall) {
+                        isChargingBall = true;
+                        ballCharge = 0;
+                        chargeUI.style.display = 'block';
+                        chargeBar.style.background = '#f59e0b';
+                    }
+                } else {
+                    placeBlock(); // Right click to place
+                }
+            }
         });
 
         document.addEventListener( 'mouseup', (event) => {
             if (!controls.isLocked) return;
-            // Removed Pokeball logic from mouseup, moved to KeyC keyup
+            if (event.button === 2 && pokeballMode && isChargingBall) {
+                isChargingBall = false;
+                chargeUI.style.display = 'none';
+                throwPokeball();
+            }
         });
 
         document.addEventListener('keydown', (event) => {
@@ -1850,10 +2008,11 @@
             if(inMenu || inRiddle) return;
             switch ( event.code ) {
                 case 'KeyC':
-                    if(!isChargingBall) {
-                        isChargingBall = true;
-                        ballCharge = 0;
-                        chargeUI.style.display = 'block';
+                    // Toggle Pokeball mode
+                    if (pokeballMode) {
+                        window.selectColor(0); // Back to first color
+                    } else {
+                        window.selectColor(8); // To Pokeball slot
                     }
                     break;
                 case 'ArrowUp':
@@ -1924,17 +2083,14 @@
                 case 'Digit6': window.selectColor(5); break;
                 case 'Digit7': window.selectColor(6); break;
                 case 'Digit8': window.selectColor(7); break;
+                case 'Digit9': window.selectColor(8); break;
             }
         };
 
         const onKeyUp = function ( event ) {
             switch ( event.code ) {
                 case 'KeyC':
-                    if (isChargingBall) {
-                        isChargingBall = false;
-                        chargeUI.style.display = 'none';
-                        throwPokeball();
-                    }
+                    // handled in keydown
                     break;
                 case 'ArrowUp':
                 case 'KeyW':
@@ -1977,12 +2133,18 @@
             const time = performance.now();
 
             // Hover boss logic
-            if(!isBossDefeated) {
+            if(!isBossDefeated && activeBossModel && activeBossModel.userData) {
                 // simple idle hover animation for boss arms
-                leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
-                rightArm.rotation.x = -Math.sin(time * 0.003) * 0.2;
-                bossHead.rotation.y = Math.sin(time * 0.001) * 0.2;
+                if(activeBossModel.userData.leftArm) activeBossModel.userData.leftArm.rotation.x = Math.sin(time * 0.003) * 0.2;
+                if(activeBossModel.userData.rightArm) activeBossModel.userData.rightArm.rotation.x = -Math.sin(time * 0.003) * 0.2;
+                if(activeBossModel.userData.bossHead) activeBossModel.userData.bossHead.rotation.y = Math.sin(time * 0.001) * 0.2;
                 
+                if(activeBossModel.userData.legL) activeBossModel.userData.legL.rotation.x = Math.sin(time * 0.005) * 0.3;
+                if(activeBossModel.userData.legR) activeBossModel.userData.legR.rotation.x = -Math.sin(time * 0.005) * 0.3;
+
+                if(activeBossModel.userData.pivotL) activeBossModel.userData.pivotL.rotation.z = Math.sin(time * 0.012) * 0.5;
+                if(activeBossModel.userData.pivotR) activeBossModel.userData.pivotR.rotation.z = -Math.sin(time * 0.012) * 0.5;
+
                 // Bobbing up and down
                 bossGroup.position.y = Math.sin(time * 0.002) * 5;
 
@@ -2030,12 +2192,16 @@
                     rollOverMesh.visible = false;
                 }
 
-                if(isLookingAtBoss) {
-                    document.getElementById('crosshair').style.color = '#ff4444';
-                    document.getElementById('crosshair').style.textShadow = '0 0 10px #ff0000, 2px 2px 4px black';
-                    document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    document.getElementById('crosshair').textContent = typeof isDragon !== 'undefined' && isDragon ? "💥 CLICK DRAGON TO DEFEAT IT 💥" : "💥 CLICK ROBOT TO DEFEAT IT 💥";
-                    document.getElementById('crosshair').style.width = "auto";
+                    if (isLookingAtBoss) {
+                        document.getElementById('crosshair').style.color = '#ff4444';
+                        document.getElementById('crosshair').style.textShadow = '0 0 10px #ff0000, 2px 2px 4px black';
+                        document.getElementById('crosshair').style.transform = 'translate(-50%, -50%) scale(1.5)';
+                        let bossName = "ROBOT";
+                        if (currentBossIndex % 4 === 0) bossName = "DINOSAUR";
+                        if (currentBossIndex % 4 === 2) bossName = "DRAGON";
+                        if (currentBossIndex % 4 === 3) bossName = "GOLEM";
+                        document.getElementById('crosshair').textContent = `💥 CLICK ${bossName} TO DEFEAT IT 💥`;
+                        document.getElementById('crosshair').style.width = "auto";
                     document.getElementById('crosshair').style.whiteSpace = "nowrap";
                     document.getElementById('crosshair').style.fontWeight = "900";
                 } else {
@@ -2060,30 +2226,43 @@
                     }
                 }
 
-                // Little dragons wandering / following
-                for(let i=0; i < littleDragons.length; i++) {
-                    const ld = littleDragons[i];
-                    if(ld.visible) {
-                        if (ld.userData.isFriend) {
+                // Capturable entities wandering / following
+                for(let i=0; i < capturableEntities.length; i++) {
+                    const ce = capturableEntities[i];
+                    if(ce.visible) {
+                        if (ce.userData.isFriend) {
                             const pPos = controls.getObject().position;
-                            const dist = ld.position.distanceTo(pPos);
+                            const dist = ce.position.distanceTo(pPos);
                             if (dist > 15) {
-                                ld.lookAt(pPos.x, ld.position.y, pPos.z);
-                                ld.translateZ(10.0 * delta);
+                                ce.lookAt(pPos.x, ce.position.y, pPos.z);
+                                ce.translateZ(10.0 * delta);
                             }
                         } else {
-                            ld.translateZ(5.0 * delta);
+                            ce.translateZ(ce.userData.isSlime ? 2.0 * delta : 5.0 * delta);
                             if(Math.random() < 0.03) {
-                                ld.rotation.y += (Math.random() - 0.5) * 2.0;
+                                ce.rotation.y += (Math.random() - 0.5) * 2.0;
+                            }
+                            if(ce.userData.isSlime) {
+                                // bounce logic for slime
+                                ce.position.y = 5 + Math.abs(Math.sin(time * 0.005)) * 2;
                             }
                         }
                     }
                 }
 
                 if (isChargingBall) {
-                    ballCharge += 100 * delta;
-                    if (ballCharge > 100) ballCharge = 100;
-                    chargeBar.style.width = ballCharge + '%';
+                    ballCharge += 20 * delta; // 5 seconds to reach 100
+                    if (ballCharge >= 100) {
+                        ballCharge = 100;
+                        chargeBar.style.background = '#10b981'; // Turn green when ready/thrown
+                        isChargingBall = false;
+                        setTimeout(() => {
+                            chargeUI.style.display = 'none';
+                        }, 200);
+                        throwPokeball();
+                    } else {
+                        chargeBar.style.width = ballCharge + '%';
+                    }
                 }
 
                 // Update active balls (Pokeballs)
@@ -2100,13 +2279,13 @@
                         continue;
                     }
                     
-                    for(let j=0; j<littleDragons.length; j++) {
-                        const ld = littleDragons[j];
-                        if (!ld.visible || ld.userData.isFriend) continue;
-                        if (b.mesh.position.distanceTo(ld.position) < 15) { 
+                    for(let j=0; j<capturableEntities.length; j++) {
+                        const ce = capturableEntities[j];
+                        if (!ce.visible || ce.userData.isFriend) continue;
+                        if (b.mesh.position.distanceTo(ce.position) < 15) { 
                             scene.remove(b.mesh);
                             activeBalls.splice(i, 1);
-                            addDragonToInventory(ld);
+                            addDragonToInventory(ce);
                             break;
                         }
                     }

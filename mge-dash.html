@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE Dash: STEM Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-container {
+            width: 300px;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00ffff 50%, #ff00ff 100%);
+            box-shadow: 0 0 20px #00ff88, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            transition: width 0.1s linear;
+        }
+
+        .attempts {
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #00ff88;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.8), 0 0 30px rgba(0, 255, 136, 0.4);
+            font-weight: bold;
+        }
+
+        .menu-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 50px;
+            border-radius: 25px;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin: 0 0 20px;
+            background: linear-gradient(45deg, #00ff88, #00ffff, #ff00ff, #ffff00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.6), 0 0 60px rgba(255, 0, 255, 0.4);
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #00ff88, #00ffff);
+            color: #000;
+            border: 2px solid #00ffff;
+            padding: 15px 50px;
+            font-size: 1.6rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .death-message {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            color: #ff0088;
+            opacity: 0;
+            text-align: center;
+            text-shadow: 0 0 30px rgba(255, 0, 136, 0.8), 0 0 60px rgba(255, 0, 136, 0.4);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .fact-box {
+            font-size: 0.95rem;
+            color: #00ffff;
+            margin-top: 15px;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ffff;
+            font-size: 1.1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="ui-overlay">
+        <div class="hud-top">
+            <div class="attempts">ATTEMPT <span id="attempt-count">1</span></div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div style="font-weight: bold; color: #4facfe;">STEM DASH</div>
+        </div>
+
+        <div id="menu" class="menu-overlay">
+            <h1>MGE DASH</h1>
+            <p>Master the STEM Course!</p>
+            <button class="start-btn" onclick="startGame()">START RUN</button>
+            <div class="fact-box">Space / Click to Jump</div>
+        </div>
+
+        <div id="death-msg" class="death-message">
+            <div id="death-text">INERTIA DETECTED!</div>
+            <div class="fact-box" id="fact-text">Newton says: Objects in motion stay in motion... unless they hit a gear.</div>
+        </div>
+
+        <div id="instructions">SPACEBAR OR CLICK TO JUMP / AGAIN TO SLAM DOWN</div>
+    </div>
+
+    <script>
+        // --- GAME CONFIG ---
+        const CONFIG = {
+            gravity: -0.15, // Significantly reduced for floaty feel
+            jumpForce: 10, // Increased for better floaty height
+            slamForce: -1.2, // Rapid descent force
+            jumpArcForce: 0.08, // Horizontal forward momentum on jump
+            baseSpeed: 0.12, // Slower for easier play
+            cubeSize: 1,
+            groundY: -2
+        };
+
+        const LEVELS = [
+            { name: "LEVEL 1: BIOLOGY BASIN", speed: 0.12, freq: 0.005, color: 0x00ff88, goal: 300 },
+            { name: "LEVEL 2: CHEMICAL CLIMB", speed: 0.14, freq: 0.008, color: 0x00ffff, goal: 600 },
+            { name: "LEVEL 3: PHYSICS PLAIN", speed: 0.16, freq: 0.01, color: 0xff00ff, goal: 1000 },
+            { name: "LEVEL 4: CODING CANYON", speed: 0.18, freq: 0.012, color: 0xffff00, goal: 1500 }
+        ];
+
+        // --- STEM FACTS ---
+        const STEM_FACTS = [
+            "Force = Mass x Acceleration",
+            "Plants use sunlight to make food!",
+            "Gravity pulls us down to Earth.",
+            "Water can be solid, liquid, or gas.",
+            "Computers use code to follow instructions.",
+            "DNA is like a recipe for your body.",
+            "The Sun is a medium-sized star.",
+            "A triangle has 3 sides and 3 corners."
+        ];
+
+        const DEATH_MSGS = [
+            "WHOOPS! TRY AGAIN!",
+            "STAY FOCUSED!",
+            "YOU GOT THIS!",
+            "ALMOST HAD IT!",
+            "GEAR DETECTED!",
+            "STEM POWER!"
+        ];
+
+        // --- GLOBAL VARIABLES ---
+        let scene, camera, renderer, player;
+        let clock = new THREE.Clock();
+        let isStarted = false;
+        let isDead = false;
+        let attempts = 1;
+        let velocityY = 0;
+        let velocityX = 0; // Horizontal velocity for arc trajectory
+        let obstacles = [];
+        let groundBlocks = [];
+        let distanceCovered = 0;
+        let lastObstacleX = 10;
+        let targetRotation = 0;
+        let currentLevelIndex = 0;
+        let scrollSpeed = CONFIG.baseSpeed;
+
+        // --- INITIALIZATION ---
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0015);
+            scene.fog = new THREE.Fog(0x0a0015, 15, 50);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 12);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+
+            const directional = new THREE.DirectionalLight(0xffffff, 1.5);
+            directional.position.set(5, 10, 5);
+            scene.add(directional);
+
+            createBackgroundGrid();
+            createPlayer();
+            createInitialGround();
+
+            window.addEventListener('resize', onResize);
+            window.addEventListener('keydown', handleInput);
+            window.addEventListener('mousedown', handleInput);
+
+            animate();
+        }
+
+        function createBackgroundGrid() {
+            const gridHelper = new THREE.GridHelper(200, 40, 0x00ffff, 0x1a003a);
+            gridHelper.rotation.x = Math.PI / 2;
+            gridHelper.position.z = -5;
+            gridHelper.name = "grid";
+            scene.add(gridHelper);
+
+            // Floating neon elements in background
+            const neonColors = [0x00ff88, 0x00ffff, 0xff00ff, 0xffff00];
+            for(let i=0; i<40; i++) {
+                const geo = new THREE.IcosahedronGeometry(Math.random()*0.3 + 0.1, 0);
+                const color = neonColors[Math.floor(Math.random() * neonColors.length)];
+                const mat = new THREE.MeshPhongMaterial({
+                    color: color,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.4,
+                    emissive: color,
+                    emissiveIntensity: 0.3
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(Math.random()*100 - 50, Math.random()*40 - 20, -10 + Math.random()*-20);
+                scene.add(mesh);
+            }
+        }
+
+        function createPlayer() {
+            const geometry = new THREE.BoxGeometry(CONFIG.cubeSize, CONFIG.cubeSize, CONFIG.cubeSize);
+            
+            // Texture loading
+            const loader = new THREE.TextureLoader();
+            const texture = loader.load('static/imgs/mge_dash_cube.png');
+            
+            const material = [
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Left
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Right
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Top
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa }), // Bottom
+                new THREE.MeshPhongMaterial({ map: texture }),    // Front
+                new THREE.MeshPhongMaterial({ color: 0xaaaaaa })  // Back
+            ];
+
+            player = new THREE.Mesh(geometry, material);
+            player.position.set(-5, CONFIG.groundY + CONFIG.cubeSize/2, 0);
+            scene.add(player);
+
+            // Neon glow wireframe
+            const glowGeo = new THREE.BoxGeometry(1.08, 1.08, 1.08);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88, wireframe: true, transparent: true, opacity: 0.6 });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            player.add(glow);
+        }
+
+        function createInitialGround() {
+            for(let i = -20; i < 40; i++) {
+                addGroundBlock(i);
+            }
+        }
+
+        function addGroundBlock(x) {
+            const geo = new THREE.BoxGeometry(1, 4, 2);
+            const mat = new THREE.MeshPhongMaterial({
+                color: 0x001a33,
+                emissive: 0x000033,
+                shininess: 60
+            });
+            const block = new THREE.Mesh(geo, mat);
+            block.position.set(x, CONFIG.groundY - 2, 0);
+
+            // Bright neon edge highlight
+            const edgeGeo = new THREE.EdgesGeometry(geo);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7, linewidth: 2 });
+            const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            edges.name = "edge";
+            block.add(edges);
+
+            scene.add(block);
+            groundBlocks.push(block);
+        }
+
+        // --- GAMEPLAY FUNCTIONS ---
+
+        function handleInput(e) {
+            if(!isStarted || isDead) return;
+            if(e.type === 'keydown' && e.code !== 'Space' && e.code !== 'ArrowUp' && e.code !== 'ArrowDown' && e.code !== 'KeyS') return;
+            
+            // Allow intentional rapid descent with Down Arrow or S
+            if(e.code === 'ArrowDown' || e.code === 'KeyS') {
+                slam();
+                return;
+            }
+
+            // Standard jump or multi-click slam
+            if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
+                jump();
+            } else {
+                slam();
+            }
+        }
+
+        function jump() {
+            velocityY = CONFIG.jumpForce * 0.12;
+            velocityX = CONFIG.jumpArcForce; // Forward arc momentum
+            targetRotation -= Math.PI / 2;
+        }
+
+        function slam() {
+            if(player.position.y > CONFIG.groundY + CONFIG.cubeSize/2 + 0.1) {
+                velocityY = CONFIG.slamForce;
+                // Add a little squash effect if possible, or just snappy movement
+                gsap.to(player.scale, { y: 0.7, x: 1.3, duration: 0.1, yoyo: true, repeat: 1 });
+            }
+        }
+
+        function startGame() {
+            document.getElementById('menu').style.display = 'none';
+            isStarted = true;
+            isDead = false;
+            currentLevelIndex = 0;
+            updateLevelUI();
+        }
+
+        function updateLevelUI() {
+            const level = LEVELS[currentLevelIndex];
+            scrollSpeed = level.speed;
+            
+            // Update grid color
+            const grid = scene.getObjectByName("grid");
+            if(grid) grid.material.color.setHex(level.color);
+
+            groundBlocks.forEach(b => {
+                const edge = b.getObjectByName("edge");
+                if(edge) edge.material.color.setHex(level.color);
+            });
+
+            // Show level name briefly
+            const dashTitle = document.querySelector('h1').innerText;
+            const statusText = document.createElement('div');
+            statusText.style.position = 'absolute';
+            statusText.style.top = '40%';
+            statusText.style.left = '50%';
+            statusText.style.transform = 'translate(-50%, -50%)';
+            statusText.style.fontSize = '3rem';
+            statusText.style.color = '#' + level.color.toString(16).padStart(6, '0');
+            statusText.style.textShadow = '0 0 20px rgba(255,255,255,0.5)';
+            statusText.innerText = level.name;
+            statusText.style.zIndex = '100';
+            document.body.appendChild(statusText);
+            
+            gsap.fromTo(statusText, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5 });
+            gsap.to(statusText, { opacity: 0, y: -100, delay: 1.5, duration: 0.5, onComplete: () => statusText.remove() });
+        }
+
+        function die() {
+            if(isDead) return;
+            isDead = true;
+            
+            attempts++;
+            document.getElementById('attempt-count').innerText = attempts;
+            
+            const deathMsg = document.getElementById('death-msg');
+            document.getElementById('death-text').innerText = DEATH_MSGS[Math.floor(Math.random() * DEATH_MSGS.length)];
+            document.getElementById('fact-text').innerText = STEM_FACTS[Math.floor(Math.random() * STEM_FACTS.length)];
+            
+            gsap.to(deathMsg, { opacity: 1, y: -20, duration: 0.5 });
+            gsap.to(camera.position, { x: 0.5, duration: 0.05, repeat: 5, yoyo: true });
+
+            setTimeout(() => {
+                resetGame();
+                gsap.to(deathMsg, { opacity: 0, y: 0, duration: 0.5 });
+            }, 1200);
+        }
+
+        function resetGame() {
+            player.position.y = CONFIG.groundY + CONFIG.cubeSize/2;
+            player.rotation.z = 0;
+            player.scale.set(1, 1, 1);
+            targetRotation = 0;
+            velocityY = 0;
+            velocityX = 0;
+            isDead = false;
+            distanceCovered = 0;
+            currentLevelIndex = 0;
+            scrollSpeed = CONFIG.baseSpeed;
+            updateLevelUI();
+
+            obstacles.forEach(o => scene.remove(o));
+            obstacles = [];
+            lastObstacleX = 10;
+        }
+
+        function spawnObstacle() {
+            lastObstacleX += scrollSpeed;
+
+            const level = LEVELS[currentLevelIndex];
+            const minSpacing = (currentLevelIndex === 0) ? 16 : (currentLevelIndex === 1) ? 14 : (currentLevelIndex === 2) ? 12 : 11;
+
+            if(lastObstacleX > minSpacing) {
+                const rand = Math.random();
+                if(rand < level.freq * 50) { // Frequency check
+                    if(currentLevelIndex === 0) {
+                        createGear(20); // Only single spikes in level 1
+                    } else if(currentLevelIndex === 1) {
+                         if(rand < 0.15) createBlock(20); else createGear(20);
+                    } else {
+                        if(rand < 0.15) createBlock(20);
+                        else if(rand < 0.25) { createGear(20); createGear(20.8); }
+                        else createGear(20);
+                    }
+                    lastObstacleX = 0;
+                }
+            }
+        }
+
+        function createGear(x) {
+            const group = new THREE.Group();
+            group.position.set(x, CONFIG.groundY + 0.5, 0);
+            group.name = "spike";
+
+            // Neon gear core
+            const coreGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.2, 8);
+            const coreMat = new THREE.MeshPhongMaterial({
+                color: 0xff00ff,
+                emissive: 0xff00ff,
+                emissiveIntensity: 0.5,
+                shininess: 100
+            });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            core.rotation.x = Math.PI / 2;
+            group.add(core);
+
+            // Neon gear teeth
+            for(let i=0; i<8; i++) {
+                const toothGeo = new THREE.BoxGeometry(0.15, 0.6, 0.2);
+                const tooth = new THREE.Mesh(toothGeo, coreMat);
+                tooth.rotation.z = (i / 8) * Math.PI * 2;
+                group.add(tooth);
+            }
+
+            // Bright neon bolt
+            const boltGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.25, 6);
+            const boltMat = new THREE.MeshPhongMaterial({
+                color: 0xffff00,
+                emissive: 0xffff00,
+                emissiveIntensity: 0.6,
+                shininess: 100
+            });
+            const bolt = new THREE.Mesh(boltGeo, boltMat);
+            bolt.rotation.x = Math.PI / 2;
+            group.add(bolt);
+
+            scene.add(group);
+            obstacles.push(group);
+        }
+
+        function createBlock(x) {
+            const group = new THREE.Group();
+            group.position.set(x, CONFIG.groundY + 0.4, 0);
+            group.name = "block";
+
+            // Neon circuit block
+            const geo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const mat = new THREE.MeshPhongMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.4,
+                transparent: true,
+                opacity: 0.9,
+                shininess: 100
+            });
+            const block = new THREE.Mesh(geo, mat);
+            group.add(block);
+
+            // Bright neon internal lines
+            const lineGeo = new THREE.BoxGeometry(0.82, 0.05, 0.82);
+            const lineMat = new THREE.MeshBasicMaterial({
+                color: 0x00ff88,
+                emissive: 0x00ff88,
+                emissiveIntensity: 0.8
+            });
+            const line1 = new THREE.Mesh(lineGeo, lineMat);
+            line1.position.y = 0.2;
+            block.add(line1);
+
+            const line2 = new THREE.Mesh(lineGeo, lineMat);
+            line2.position.y = -0.2;
+            block.add(line2);
+
+            // Neon outline
+            const edgeGeo = new THREE.EdgesGeometry(geo);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0xff00ff, linewidth: 2 });
+            const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            block.add(edges);
+
+            scene.add(group);
+            obstacles.push(group);
+        }
+
+        // --- ANIMATION LOOP ---
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if(isStarted && !isDead) {
+                const delta = clock.getDelta();
+                
+                // Physics
+                velocityY += CONFIG.gravity;
+                player.position.y += velocityY;
+                player.position.x += velocityX;
+                velocityX *= 0.95; // Damping for horizontal momentum
+
+                // Ground Collision
+                if(player.position.y <= CONFIG.groundY + CONFIG.cubeSize/2 + 0.05) {
+                    if(velocityY < -0.3) {
+                         gsap.to(player.scale, { y: 0.8, x: 1.2, duration: 0.1, yoyo: true, repeat: 1 });
+                    }
+                    player.position.y = CONFIG.groundY + CONFIG.cubeSize/2;
+                    velocityY = 0;
+                    velocityX = 0;
+                    player.rotation.z = Math.round(player.rotation.z / (Math.PI/2)) * (Math.PI/2);
+                    targetRotation = player.rotation.z;
+                } else {
+                    player.rotation.z += (targetRotation - player.rotation.z) * 0.1;
+                }
+
+                // Move obstacles
+                obstacles.forEach((obj, index) => {
+                    obj.position.x -= scrollSpeed;
+                    
+                    const dx = Math.abs(player.position.x - obj.position.x);
+                    const dy = Math.abs(player.position.y - obj.position.y);
+
+                    if(obj.name === "spike") {
+                        if(dx < 0.3 && dy < 0.35) die(); // Super forgiving hitbox
+                    } else if(obj.name === "block") {
+                        // Forgiving block collision: need to be really hitting the front
+                        if(dx < 0.55 && dy < 0.3 && player.position.x < obj.position.x) die();
+                        
+                        // Interaction for landing on top
+                        if(dx < 0.5 && dy < 1.0 && player.position.y > obj.position.y) {
+                            if(velocityY < -0.3) gsap.to(player.scale, { y: 0.8, x: 1.2, duration: 0.1, yoyo: true, repeat: 1 });
+                            player.position.y = obj.position.y + 0.8;
+                            velocityY = 0;
+                            velocityX = 0;
+                            player.rotation.z = Math.round(player.rotation.z / (Math.PI/2)) * (Math.PI/2);
+                        }
+                    }
+
+                    if(obj.position.x < -15) {
+                        scene.remove(obj);
+                        obstacles.splice(index, 1);
+                    }
+                });
+
+                // Move ground
+                groundBlocks.forEach(block => {
+                    block.position.x -= scrollSpeed;
+                    if(block.position.x < -20) block.position.x += 60;
+                });
+
+                // Update Progress & Level Up
+                distanceCovered += scrollSpeed * 10;
+                const level = LEVELS[currentLevelIndex];
+                const progress = Math.min((distanceCovered / level.goal) * 100, 100);
+                document.getElementById('progress-bar').style.width = progress + '%';
+
+                if(distanceCovered >= level.goal) {
+                    if(currentLevelIndex < LEVELS.length - 1) {
+                        currentLevelIndex++;
+                        distanceCovered = 0;
+                        updateLevelUI();
+                    } else {
+                        isStarted = false;
+                        alert("STEM MASTER REACHED! YOU ARE A SCIENTIST!");
+                        location.reload();
+                    }
+                }
+
+                spawnObstacle();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+</html>

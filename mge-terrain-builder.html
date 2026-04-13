@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE Terrain Builder</title>
+    <style>
+        :root {
+            --primary: #bb86fc;
+            --secondary: #03dac6;
+            --background: #121212;
+            --surface: #1e1e1e;
+            --error: #cf6679;
+            --on-primary: #000000;
+            --on-surface: #ffffff;
+        }
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #87CEEB; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: var(--on-surface);
+        }
+
+        #canvas-container { 
+            width: 100vw; 
+            height: 100vh; 
+            display: block; 
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .panel {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            pointer-events: auto;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 280px;
+        }
+
+        h1 { 
+            margin: 0 0 15px 0; 
+            font-size: 28px; 
+            color: var(--primary); 
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        p { 
+            margin: 8px 0; 
+            font-size: 15px; 
+            line-height: 1.4;
+        }
+
+        strong {
+            color: var(--secondary);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), #9965f4);
+            color: var(--on-primary);
+            border: none;
+            padding: 12px 24px;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            display: block;
+            width: 100%;
+            font-size: 14px;
+            margin: 15px 0 5px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(187, 134, 252, 0.4);
+        }
+
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(187, 134, 252, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 0 10px var(--primary);
+            z-index: 100;
+        }
+
+        .control-group {
+            margin: 15px 0 5px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+
+        input[type=range] { 
+            width: 100%;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        #mode-badge {
+            display: inline-block;
+            background: rgba(3, 218, 198, 0.2);
+            color: var(--secondary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="ui-layer">
+    <div class="panel">
+        <h1>Terrain Builder</h1>
+        <div id="mode-badge">BUILD MODE</div>
+        <button id="toggle-mode-btn">Switch to Flying Car</button>
+    </div>
+    
+    <div class="panel" id="build-controls">
+        <p><strong>Left Click & Drag:</strong> Raise Terrain</p>
+        <p><strong>Right Click & Drag:</strong> Lower Terrain</p>
+        <p><strong>Middle Click (Scroll Wheel):</strong> Rotate Camera</p>
+        <p><strong>Scroll:</strong> Zoom Camera</p>
+        
+        <div class="control-group">
+            <div class="control-label">
+                <span>Brush Size</span>
+                <span id="brush-size-val">15</span>
+            </div>
+            <input type="range" id="brush-size" min="2" max="50" value="15">
+        </div>
+        
+        <div class="control-group">
+            <div class="control-label">
+                <span>Brush Strength</span>
+                <span id="brush-strength-val">1.0</span>
+            </div>
+            <input type="range" id="brush-strength" min="0.1" max="5" value="1.0" step="0.1">
+        </div>
+    </div>
+    
+    <div class="panel" id="drive-controls" style="display: none;">
+        <p><strong>Mouse:</strong> Look Around</p>
+        <p><strong>W A S D:</strong> Move Car</p>
+        <p><strong>SPACE:</strong> Fly Up</p>
+        <p><strong>SHIFT:</strong> Fly Down</p>
+        <p><em>Press ESC to free mouse</em></p>
+    </div>
+</div>
+
+<div id="crosshair"></div>
+<div id="canvas-container"></div>
+
+<!-- Three.js + Noise for terrain generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // --- Setup Scene ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a2e); // Dark night sky
+    scene.fog = new THREE.FogExp2(0x1a1a2e, 0.003);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    // --- Lighting ---
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft white light
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    // Position light slightly like a moon/sun
+    dirLight.position.set(100, 200, 100);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 1000;
+    dirLight.shadow.camera.left = -200;
+    dirLight.shadow.camera.right = 200;
+    dirLight.shadow.camera.top = 200;
+    dirLight.shadow.camera.bottom = -200;
+    scene.add(dirLight);
+    
+    const hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.5 );
+    scene.add(hemiLight);
+
+    // --- Terrain Structure ---
+    const terrainSize = 400; // Large terrain length/width
+    const terrainSegments = 150; // Resolution
+    const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+    terrainGeometry.rotateX(-Math.PI / 2); // Rotate to lay flat on XZ plane
+    
+    // Initialize heights flat
+    const vertices = terrainGeometry.attributes.position.array;
+    for ( let i = 0; i < vertices.length; i += 3 ) {
+        vertices[i + 1] = 0; // Set Y to 0
+    }
+    terrainGeometry.computeVertexNormals();
+
+    // Terrain material
+    const terrainMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x3b82f6, // Nice blueish cyber-terrain initially, or maybe green
+        roughness: 0.7,
+        metalness: 0.2,
+        flatShading: true, // Gives low-poly cool stylized look
+        side: THREE.FrontSide
+    });
+    // Let's use vertex colors for cooler look later, but standard is fine for now
+    terrainMaterial.color.setHex(0x16a085); // Emerald green
+    
+    const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+    terrain.receiveShadow = true;
+    terrain.castShadow = true;
+    scene.add(terrain);
+
+    // Grid helper overlay
+    const gridHelper = new THREE.GridHelper(terrainSize, terrainSegments, 0xffffff, 0xffffff);
+    gridHelper.material.opacity = 0.05;
+    gridHelper.material.transparent = true;
+    gridHelper.position.y = 0.05; // Slightly above ground
+    scene.add(gridHelper);
+
+    // Brush Indicator (ring)
+    const brushGeometry = new THREE.RingGeometry(0.8, 1, 32);
+    brushGeometry.rotateX(-Math.PI / 2);
+    const brushMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x03dac6, 
+        transparent: true, 
+        opacity: 0.8, 
+        side: THREE.DoubleSide,
+        depthTest: false
+    });
+    const brushMesh = new THREE.Mesh(brushGeometry, brushMaterial);
+    scene.add(brushMesh);
+    brushMesh.visible = false;
+
+    // --- Car Mode Setup ---
+    const carGroup = new THREE.Group();
+    
+    // Modern cyberpunk car body
+    const bodyGeom = new THREE.BoxGeometry(2.2, 0.8, 4.5);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xbb86fc, roughness: 0.3, metalness: 0.8 });
+    const body = new THREE.Mesh(bodyGeom, bodyMat);
+    body.position.y = 1.0;
+    body.castShadow = true;
+    carGroup.add(body);
+    
+    // Cockpit / Glass
+    const cockpitGeom = new THREE.BoxGeometry(1.6, 0.7, 2.2);
+    const cockpitMat = new THREE.MeshPhysicalMaterial({ 
+        color: 0x000000, 
+        metalness: 0.9, 
+        roughness: 0.1, 
+        transmission: 0.5, 
+        transparent: true 
+    });
+    const cockpit = new THREE.Mesh(cockpitGeom, cockpitMat);
+    cockpit.position.set(0, 1.7, -0.4);
+    cockpit.castShadow = true;
+    carGroup.add(cockpit);
+    
+    // Thrusters (glow)
+    const thrusterGeom = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
+    thrusterGeom.rotateX(Math.PI / 2);
+    const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x03dac6 });
+    const t1 = new THREE.Mesh(thrusterGeom, thrusterMat); t1.position.set(0.6, 1.0, 2.3); carGroup.add(t1);
+    const t2 = new THREE.Mesh(thrusterGeom, thrusterMat); t2.position.set(-0.6, 1.0, 2.3); carGroup.add(t2);
+
+    // Wheels (hover disks)
+    const wheelGeom = new THREE.CylinderGeometry(0.6, 0.6, 0.3, 24);
+    wheelGeom.rotateZ(Math.PI / 2);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x03dac6, emissiveIntensity: 0.2 });
+    
+    const w1 = new THREE.Mesh(wheelGeom, wheelMat); w1.position.set(1.4, 0.6, 1.5); carGroup.add(w1);
+    const w2 = new THREE.Mesh(wheelGeom, wheelMat); w2.position.set(-1.4, 0.6, 1.5); carGroup.add(w2);
+    const w3 = new THREE.Mesh(wheelGeom, wheelMat); w3.position.set(1.4, 0.6, -1.5); carGroup.add(w3);
+    const w4 = new THREE.Mesh(wheelGeom, wheelMat); w4.position.set(-1.4, 0.6, -1.5); carGroup.add(w4);
+
+    scene.add(carGroup);
+    carGroup.position.set(0, 1.5, 0);
+    carGroup.visible = false; // Hidden in build mode
+
+    // Helper lights for car
+    const carLight = new THREE.PointLight(0x03dac6, 1, 20);
+    carLight.position.set(0, 2, 0);
+    carGroup.add(carLight);
+
+    // --- State & Variables ---
+    let mode = 'build'; // 'build' or 'drive'
+    
+    // Input state
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let isMouseDown = false;
+    let mouseButton = -1; // 0: left, 1: middle, 2: right
+    let isCtrlDown = false;
+
+    // Driving Keys state
+    const keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
+    
+    // Car physics state
+    let velocity = new THREE.Vector3();
+    let carYaw = 0;       // Car's facing direction
+    
+    // Camera Settings (Build Mode)
+    const buildTarget = new THREE.Vector3(0, 0, 0);
+    let buildAngleY = Math.PI / 4; // Azimuth
+    let buildAngleX = Math.PI / 4; // Elevation
+    let buildDistance = 80;
+
+    // Camera Settings (Drive/Fly Mode)
+    let driveYaw = 0;
+    let drivePitch = -0.2; // slight down angle
+    
+    // UI Event Listeners for sliders
+    document.getElementById('brush-size').addEventListener('input', (e) => {
+        document.getElementById('brush-size-val').innerText = e.target.value;
+    });
+    document.getElementById('brush-strength').addEventListener('input', (e) => {
+        document.getElementById('brush-strength-val').innerText = parseFloat(e.target.value).toFixed(1);
+    });
+
+    // --- Update Build Camera ---
+    function updateBuildCamera() {
+        // Orbit camera math
+        camera.position.x = buildTarget.x + buildDistance * Math.sin(buildAngleY) * Math.cos(buildAngleX);
+        camera.position.y = buildTarget.y + buildDistance * Math.sin(buildAngleX);
+        camera.position.z = buildTarget.z + buildDistance * Math.cos(buildAngleY) * Math.cos(buildAngleX);
+        camera.lookAt(buildTarget);
+    }
+    updateBuildCamera();
+
+    // --- Mode Toggle Logic ---
+    document.getElementById('toggle-mode-btn').addEventListener('click', () => {
+        const badge = document.getElementById('mode-badge');
+        if (mode === 'build') {
+            // SWITCH TO DRIVE MODE
+            mode = 'drive';
+            badge.innerText = 'FLYING CAR MODE';
+            badge.style.background = 'rgba(207, 102, 121, 0.2)';
+            badge.style.color = 'var(--error)';
+            
+            document.getElementById('toggle-mode-btn').innerText = 'Switch back to BUILD';
+            document.getElementById('build-controls').style.display = 'none';
+            document.getElementById('drive-controls').style.display = 'block';
+            document.getElementById('crosshair').style.display = 'block';
+            
+            carGroup.visible = true;
+            brushMesh.visible = false;
+            gridHelper.visible = false; // Hide grid while playing
+
+            // Setup pointer lock for look around
+            document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+            document.body.requestPointerLock();
+            
+            // Spawn car at center, above terrain
+            driveYaw = 0;
+            carYaw = 0;
+            const groundY = getTerrainHeightAt(0, 0);
+            carGroup.position.set(0, groundY + 5, 0);
+            velocity.set(0, 0, 0);
+            
+            // align rotation
+            carGroup.rotation.y = carYaw;
+            
+        } else {
+            // SWITCH TO BUILD MODE
+            mode = 'build';
+            badge.innerText = 'BUILD MODE';
+            badge.style.background = 'rgba(3, 218, 198, 0.2)';
+            badge.style.color = 'var(--secondary)';
+            
+            document.getElementById('toggle-mode-btn').innerText = 'Switch to Flying Car';
+            document.getElementById('build-controls').style.display = 'block';
+            document.getElementById('drive-controls').style.display = 'none';
+            document.getElementById('crosshair').style.display = 'none';
+            
+            carGroup.visible = false;
+            gridHelper.visible = true;
+            
+            document.exitPointerLock = document.exitPointerLock || document.exitPointerLock;
+            document.exitPointerLock();
+            
+            updateBuildCamera();
+        }
+    });
+
+    // Disable right click menu
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // --- Keyboard Inputs ---
+    window.addEventListener('keydown', (e) => {
+        if (mode === 'drive') {
+            switch(e.code) {
+                case 'KeyW': keys.w = true; break;
+                case 'KeyA': keys.a = true; break;
+                case 'KeyS': keys.s = true; break;
+                case 'KeyD': keys.d = true; break;
+                case 'Space': keys.space = true; e.preventDefault(); break;
+                case 'ShiftLeft':
+                case 'ShiftRight': keys.shift = true; e.preventDefault(); break;
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (mode === 'drive') {
+            switch(e.code) {
+                case 'KeyW': keys.w = false; break;
+                case 'KeyA': keys.a = false; break;
+                case 'KeyS': keys.s = false; break;
+                case 'KeyD': keys.d = false; break;
+                case 'Space': keys.space = false; break;
+                case 'ShiftLeft':
+                case 'ShiftRight': keys.shift = false; break;
+            }
+        }
+    });
+
+    // --- Mouse Inputs ---
+    document.addEventListener('mousemove', (e) => {
+        if (mode === 'build') {
+            // Coordinates for Raycasting
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            if (isMouseDown && mouseButton === 1) { 
+                // Middle click drag to orbit camera
+                buildAngleY -= e.movementX * 0.005;
+                buildAngleX += e.movementY * 0.005;
+                // Clamp elevation to avoid flipping
+                buildAngleX = Math.max(0.05, Math.min(Math.PI / 2 - 0.05, buildAngleX));
+                updateBuildCamera();
+            } else if (isMouseDown && (mouseButton === 0 || mouseButton === 2)) {
+                // If dragging while clicking left/right, keep sculpting
+                sculptTerrain();
+            }
+
+        } else if (mode === 'drive') {
+            if (document.pointerLockElement === document.body) {
+                // First person look around (mouse controls camera)
+                driveYaw -= e.movementX * 0.003;
+                drivePitch -= e.movementY * 0.003;
+                // Clamp pitch so we don't look upside down
+                drivePitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, drivePitch));
+            }
+        }
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.panel')) {
+            return; // Ignore UI clicks
+        }
+        
+        if (mode === 'build') {
+            isMouseDown = true;
+            mouseButton = e.button;
+            if (mouseButton === 0 || mouseButton === 2) {
+                sculptTerrain(); // Trigger immediately on click
+            }
+        } else if (mode === 'drive') {
+            // Request pointer lock if lost
+            if (document.pointerLockElement !== document.body) {
+                document.body.requestPointerLock();
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        mouseButton = -1;
+    });
+
+    // Mouse Wheel for Zoom (Build Mode)
+    document.addEventListener('wheel', (e) => {
+        if (mode === 'build' && !e.target.closest('.panel')) {
+            buildDistance += e.deltaY * 0.1;
+            buildDistance = Math.max(20, Math.min(300, buildDistance));
+            updateBuildCamera();
+        }
+    }, { passive: false });
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- Terrain Sculpting Core ---
+    function sculptTerrain() {
+        if (mouseButton !== 0 && mouseButton !== 2) return; // Only L/R click
+        
+        // Raycast to find where mouse is pointing on terrain
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(terrain);
+
+        if (intersects.length > 0) {
+            const point = intersects[0].point;
+            
+            const brushSize = parseFloat(document.getElementById('brush-size').value);
+            let brushStrength = parseFloat(document.getElementById('brush-strength').value);
+            
+            // Left click raises (+), Right click lowers (-)
+            if (mouseButton === 2) brushStrength *= -1; 
+            
+            const positions = terrainGeometry.attributes.position.array;
+            
+            // Optimize: only check vertices roughly within bounding box
+            // The segment width is terrainSize / terrainSegments
+            const segWidth = terrainSize / terrainSegments;
+            const gridX = Math.floor((point.x + terrainSize/2) / segWidth);
+            const gridZ = Math.floor((point.z + terrainSize/2) / segWidth);
+            
+            const searchRadius = Math.ceil(brushSize / segWidth);
+            
+            let minI = Math.max(0, gridX - searchRadius);
+            let maxI = Math.min(terrainSegments, gridX + searchRadius);
+            let minJ = Math.max(0, gridZ - searchRadius);
+            let maxJ = Math.min(terrainSegments, gridZ + searchRadius);
+            
+            let verticesChanged = false;
+
+            // Iterate over positions array
+            for (let i = 0; i < positions.length; i += 3) {
+                const vx = positions[i];
+                const vyLocal = positions[i + 1]; 
+                const vz = positions[i + 2]; 
+                
+                // Calculate distance from brush center (on XZ plane)
+                const dx = vx - point.x;
+                const dz = vz - point.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+
+                if (dist < brushSize) {
+                    // Smooth falloff curve (bell curve/cosine)
+                    const influence = (Math.cos(dist / brushSize * Math.PI) + 1) * 0.5;
+                    
+                    // Modifying the Y axis (height)
+                    positions[i + 1] += brushStrength * influence * 0.5;
+                    verticesChanged = true;
+                }
+            }
+            
+            // Tell Three.js to update the mesh
+            if (verticesChanged) {
+                terrainGeometry.attributes.position.needsUpdate = true;
+                terrainGeometry.computeVertexNormals();
+            }
+        }
+    }
+
+    // Update the visual yellow ring on terrain
+    function updateBrushIndicator() {
+        if (mode === 'build') {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(terrain);
+            if (intersects.length > 0) {
+                brushMesh.visible = true;
+                const bSize = parseFloat(document.getElementById('brush-size').value);
+                // Scale the ring to match brush size
+                brushMesh.scale.set(bSize, bSize, bSize);
+                
+                // Position slightly above terrain to prevent Z-fighting
+                brushMesh.position.copy(intersects[0].point);
+                brushMesh.position.y += 0.2; 
+            } else {
+                brushMesh.visible = false;
+            }
+        }
+    }
+
+    // Function to get ground height given X and Z
+    function getTerrainHeightAt(worldX, worldZ) {
+        // Simple accurate raycast from sky downwards
+        const origin = new THREE.Vector3(worldX, 1000, worldZ);
+        const dir = new THREE.Vector3(0, -1, 0);
+        const rc = new THREE.Raycaster(origin, dir);
+        const hits = rc.intersectObject(terrain);
+        if (hits.length > 0) {
+            return hits[0].point.y;
+        }
+        return 0; 
+    }
+
+    // --- Main Game Loop ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        const delta = clock.getDelta();
+
+        if (mode === 'build') {
+            updateBrushIndicator();
+            // slowly rotate lights maybe?
+        } else if (mode === 'drive') {
+            handleCarPhysics(delta);
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    // Separate logic for Car
+    function handleCarPhysics(delta) {
+        // Car specs
+        const moveSpeed = 40;
+        const turnSpeed = 2.5;
+        const gravity = 30;
+        const jumpThrust = 25;
+        
+        // --- ROTATION ---
+        // Smoothly interpolate the 3D car's rotation to match camera facing direction
+        // A and D now strafe left and right instead of turning the car independently
+        carGroup.rotation.y = THREE.MathUtils.lerp(carGroup.rotation.y, driveYaw, 0.1);
+
+        // Determine forward and right vectors based on camera yaw
+        const forwardVector = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0,1,0), driveYaw);
+        const rightVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0,1,0), driveYaw);
+        
+        // --- LATERAL MOVEMENT ---
+        // Basic physics: velocity dampening (friction)
+        velocity.x *= 0.95; 
+        velocity.z *= 0.95;
+
+        // Accelerate/Reverse/Strafe
+        if (keys.w) {
+            velocity.x += forwardVector.x * moveSpeed * delta;
+            velocity.z += forwardVector.z * moveSpeed * delta;
+        }
+        if (keys.s) {
+            velocity.x -= forwardVector.x * moveSpeed * delta;
+            velocity.z -= forwardVector.z * moveSpeed * delta;
+        }
+        if (keys.a) {
+            velocity.x -= rightVector.x * moveSpeed * delta;
+            velocity.z -= rightVector.z * moveSpeed * delta;
+        }
+        if (keys.d) {
+            velocity.x += rightVector.x * moveSpeed * delta;
+            velocity.z += rightVector.z * moveSpeed * delta;
+        }
+
+        // Apply lateral velocity to position
+        carGroup.position.x += velocity.x;
+        carGroup.position.z += velocity.z;
+
+        // Prevent car from driving completely off the terrain grid
+        const maxDist = terrainSize / 2 - 5;
+        carGroup.position.x = Math.max(-maxDist, Math.min(maxDist, carGroup.position.x));
+        carGroup.position.z = Math.max(-maxDist, Math.min(maxDist, carGroup.position.z));
+
+        // --- VERTICAL MOVEMENT (Flying/Hovering) ---
+        // Get terrain height immediately under car
+        const groundHeight = getTerrainHeightAt(carGroup.position.x, carGroup.position.z);
+        
+        // Minimum hover distance from ground
+        const hoverHeight = 1.0; 
+        
+        // Fly controls
+        if (keys.space) {
+            velocity.y += jumpThrust * delta; // Accelerate upwards
+        } else if (keys.shift) {
+            velocity.y -= jumpThrust * delta; // Dive down
+        } else {
+            // Standard gravity
+            velocity.y -= gravity * delta; 
+        }
+
+        // Apply vertical velocity
+        carGroup.position.y += velocity.y * delta;
+
+        // Ground Collision
+        if (carGroup.position.y < groundHeight + hoverHeight) {
+            // Hit the ground
+            carGroup.position.y = groundHeight + hoverHeight;
+            // Stop falling abruptly or bounce
+            velocity.y = 0; 
+            
+            // Align car slightly with terrain pitch (simplistic tilt calculation)
+            // Just tilting visuals based on velocity
+            const currentSpeed = Math.sqrt(velocity.x*velocity.x + velocity.z*velocity.z);
+            carGroup.rotation.x = THREE.MathUtils.lerp(carGroup.rotation.x, (keys.w ? -0.1 : keys.s ? 0.1 : 0), 0.1);
+        } else {
+            // In air, level out
+            carGroup.rotation.x = THREE.MathUtils.lerp(carGroup.rotation.x, 0, 0.05);
+        }
+
+        // Spin wheels visually based on movement speed
+        const speed = Math.sqrt(velocity.x*velocity.x + velocity.z*velocity.z);
+        let wheelSpin = speed * 10 * delta;
+        if (keys.s) wheelSpin *= -1; // Reverse spin
+        carGroup.children[4].rotation.x += wheelSpin; // front left
+        carGroup.children[5].rotation.x += wheelSpin; // front right
+        carGroup.children[6].rotation.x += wheelSpin; // back left
+        carGroup.children[7].rotation.x += wheelSpin; // back right
+
+        // --- DRIVE CAMERA ---
+        // We want a sweet third-person chase camera
+        // Calculate ideal camera position behind and above the car
+        const idealCamOffset = new THREE.Vector3(0, 4, 12);
+        
+        // The camera should follow the user's "look" direction (driveYaw and drivePitch)
+        // NOT just lock behind the car, so user can look around while driving
+        
+        // Rotate offset by look angles
+        const camEuler = new THREE.Euler(drivePitch, driveYaw, 0, 'YXZ');
+        idealCamOffset.applyEuler(camEuler);
+        
+        // Target camera position
+        const targetCamPos = carGroup.position.clone().add(idealCamOffset);
+        
+        // Smoothly interpolate camera position (lerp) for soft follow
+        camera.position.lerp(targetCamPos, 0.1);
+        
+        // The camera always looks toward the car (plus slightly upwards)
+        const lookAtTarget = carGroup.position.clone().add(new THREE.Vector3(0, 1, 0));
+        camera.lookAt(lookAtTarget);
+    }
+
+    animate();
+</script>
+</body>
+</html>

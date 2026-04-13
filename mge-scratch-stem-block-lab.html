@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scratch STEM Block Lab | Mr. Gonzalez Experiments</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="scratch-block-lab.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bc-page">
+  <nav class="bc-top-nav">
+    <div class="bc-nav-brand">
+      <span style="font-size:1.35rem">🤖</span>
+      Scratch STEM Block Lab
+    </div>
+    <div class="bc-nav-actions">
+      <a class="bc-btn" href="mge.html" style="text-decoration:none; display:inline-flex; align-items:center;">🏠 Hub</a>
+      <button class="bc-btn" id="bc-save" type="button">💾 Save</button>
+      <button class="bc-btn" id="bc-export" type="button">📥 Export</button>
+    </div>
+  </nav>
+
+  <div class="bc-workspace">
+    <!-- Agent (left top) -->
+    <section class="bc-panel bc-chat-panel">
+      <div class="bc-panel-header">
+        <span>💬 Agent Genesis (Notes + Guidance)</span>
+        <span id="bc-agent-progress" style="color:#34d399;">Chapter 0/6</span>
+      </div>
+      <div class="bc-chat-container" id="bc-chat"></div>
+      <div class="bc-agent-actions">
+        <div class="bc-agent-progress" id="bc-agent-progress-text"> </div>
+        <button class="bc-btn bc-btn-primary" id="bc-restart" type="button">↻ Restart</button>
+      </div>
+    </section>
+
+    <!-- Builder (left bottom) -->
+    <section class="bc-panel bc-builder-panel">
+      <div class="bc-panel-header">
+        <span>🧩 <span id="bc-chapter-title">Choice Board</span></span>
+        <span id="bc-objective">Pick a mission. Then build blocks like Scratch!</span>
+      </div>
+      <div class="bc-panel-body" style="padding:0.9rem;">
+        <div class="bc-builder-split">
+          <div class="bc-block-palette">
+            <div class="bc-section-title">Toy Blocks</div>
+            <div class="bc-palette-grid" id="bc-palette"></div>
+          </div>
+          <div class="bc-script-area">
+            <div class="bc-section-title">Your Script</div>
+            <div id="bc-script"></div>
+            <div class="bc-script-controls">
+              <button class="bc-btn bc-btn-primary" id="bc-run" type="button">▶ Run</button>
+              <button class="bc-btn" id="bc-step" type="button">⏭ Step</button>
+              <button class="bc-btn" id="bc-clear" type="button">🧹 Clear</button>
+              <span id="bc-step-mode" style="margin-left:auto; color:#94a3b8; font-weight:900;">Auto</span>
+            </div>
+            <div class="bc-world-hud" style="margin-top:0.75rem;">
+              <span>Moves: <span id="bc-moves-count">0</span></span>
+              <span>Actions: <span id="bc-actions-count">0</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- World (right) -->
+    <section class="bc-panel bc-world-panel">
+      <div class="bc-panel-header">
+        <span>🎮 World</span>
+        <span style="color:#a78bfa; font-weight:1000;" id="bc-objective-short"> </span>
+      </div>
+      <div class="bc-world-body">
+        <div class="bc-hint-bar" id="bc-plan-help" style="display:none;">
+          <span id="bc-plan-help-text">Click tiles from Start to Star.</span>
+          <small>Planning mode</small>
+        </div>
+        <button class="bc-btn bc-btn-primary" id="bc-use-plan" type="button" style="display:none; width:100%; justify-content:center;">Use Plan</button>
+        <div class="bc-canvas-wrap">
+          <canvas class="bc-canvas" id="bc-canvas"></canvas>
+        </div>
+        <div class="bc-world-hud">
+          <span id="bc-world-status">Ready</span>
+          <span id="bc-world-mission"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Choice modal -->
+    <div class="bc-choice-modal" id="bc-choice-modal" style="display:flex;">
+      <div class="bc-choice-card">
+        <div class="bc-choice-header">
+          <div class="bc-choice-title">Pick Your STEM Mission</div>
+          <div style="color:#94a3b8; font-weight:900;">Choice Board → Scratch-like Coding</div>
+        </div>
+        <div class="bc-choice-body">
+          <div class="bc-choice-grid">
+            <button class="bc-choice-option" id="bc-choice-missionA" type="button">
+              <h3>🤖 Neon Maze</h3>
+              <p>Build sequences, plan paths, and code a character through a neon maze.</p>
+            </button>
+            <button class="bc-choice-option" id="bc-choice-missionB" type="button">
+              <h3>🔥 Lava Labyrinth</h3>
+              <p>Same skills, mirrored challenge. Debug a tiny bug at the end.</p>
+            </button>
+            <div class="bc-choice-option" style="cursor:default; opacity:0.65;">
+              <h3>✨ More Later</h3>
+              <p>More missions can be added as you grow your Blockly toolbox!</p>
+            </div>
+          </div>
+          <div style="margin-top:1rem; color:#94a3b8; font-weight:800; line-height:1.4;">
+            Tip: In this game, “Run” executes your blocks. “Step” helps you debug one action at a time.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bc-toast" id="bc-toast">Saved!</div>
+
+  <script src="scratch-block-lab.js" defer></script>
+</body>
+
+</html>
+
