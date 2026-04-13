@@ -279,6 +279,43 @@
             font-weight: 800;
         }
 
+        #health-hud {
+            bottom: 40px;
+            left: 40px;
+            align-items: flex-start;
+        }
+
+        .health-bar-container {
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        #health-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            transition: width 0.3s ease;
+        }
+
+        .enemy-health-bar {
+            position: absolute;
+            width: 40px;
+            height: 6px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid white;
+            border-radius: 3px;
+        }
+
+        .enemy-health-fill {
+            height: 100%;
+            background: #ff4757;
+        }
+
         #notification {
             position: absolute;
             top: 25%;
@@ -405,6 +442,18 @@
                         <span>🎯</span>
                         <span>Target</span>
                     </div>
+                    <div class="tool-btn" data-tool="drone">
+                        <span>🚁</span>
+                        <span>Drone</span>
+                    </div>
+                    <div class="tool-btn" data-tool="stalker">
+                        <span>👾</span>
+                        <span>Stalker</span>
+                    </div>
+                    <div class="tool-btn" data-tool="boss">
+                        <span>👹</span>
+                        <span>Boss</span>
+                    </div>
                     <div class="tool-btn" data-tool="smooth">
                         <span>✨</span>
                         <span>Smooth</span>
@@ -445,9 +494,9 @@
 
                 <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
                     <strong style="color:var(--mge-gold)">BUILD TIPS:</strong><br>
-                    1. Use <b>TARGET</b> to place enemies.<br>
-                    2. Use <b>RAISE</b> to create sniper hills.<br>
-                    3. Delete targets with the <b>DELETE</b> tool.
+                    1. Use <b>DRONE</b> or <b>STALKER</b> to place enemies.<br>
+                    2. <b>BOSS</b> adds a heavy challenge.<br>
+                    3. Delete anything with the <b>DELETE</b> tool.
                 </div>
 
                 <div style="margin-top:auto">
@@ -478,6 +527,14 @@
         <div class="hud-label">⭐ TARGETS SMASHED ⭐</div>
         <div class="big-text score-val" id="score-display" style="text-align:center;">0</div>
         <div id="targets-remaining" style="font-size:1.1rem; color:#fff; font-weight:800; text-align:center;">GET 'EM ALL!</div>
+    </div>
+
+    <div class="game-hud" id="health-hud">
+        <div class="hud-label">Combat Vitals</div>
+        <div class="big-text" id="health-display" style="color:#ff4757">100</div>
+        <div class="health-bar-container">
+            <div id="health-fill"></div>
+        </div>
     </div>
 
     <div id="controls-hint">
@@ -521,6 +578,8 @@
             lastPoint: new THREE.Vector3(),
             score: 0,
             timer: 60,
+            health: 100,
+            maxHealth: 100,
             targets: [],
             cameraShake: 0,
             weaponRecoil: 0,
@@ -618,52 +677,123 @@
 
         // --- MODELS ---
         
-        // Target model template
-        const targetGeom = new THREE.SphereBufferGeometry(2, 8, 8);
-        const targetMat = new THREE.MeshStandardMaterial({ 
-            color: 0xff4757, 
-            emissive: 0xff0000, 
-            emissiveIntensity: 1.5,
-            wireframe: false 
-        });
+        // --- MODELS ---
+        
+        const enemyDefs = {
+            target: { 
+                hp: 1, 
+                score: 1, 
+                color: 0xff4757, 
+                scale: 1, 
+                speed: 0, 
+                type: 'static',
+                mesh: () => new THREE.SphereBufferGeometry(2, 8, 8)
+            },
+            drone: { 
+                hp: 10, 
+                score: 5, 
+                color: 0x00f2ff, 
+                scale: 1.2, 
+                speed: 15, 
+                type: 'flyer',
+                mesh: () => new THREE.OctahedronBufferGeometry(2, 0)
+            },
+            stalker: { 
+                hp: 20, 
+                score: 10, 
+                color: 0x7bed9f, 
+                scale: 1.5, 
+                speed: 12, 
+                type: 'walker',
+                mesh: () => new THREE.BoxBufferGeometry(2.5, 4, 2.5)
+            },
+            boss: { 
+                hp: 200, 
+                score: 100, 
+                color: 0xffa502, 
+                scale: 5, 
+                speed: 8, 
+                type: 'walker',
+                mesh: () => new THREE.IcosahedronBufferGeometry(2, 1)
+            }
+        };
 
-        function createTarget(pos) {
+        function createEnemy(pos, type = 'target') {
+            const def = enemyDefs[type] || enemyDefs.target;
             const group = new THREE.Group();
             
-            const sphere = new THREE.Mesh(targetGeom, targetMat.clone());
-            sphere.castShadow = true;
-            group.add(sphere);
+            const geom = def.mesh();
+            const mat = new THREE.MeshStandardMaterial({ 
+                color: def.color, 
+                emissive: def.color, 
+                emissiveIntensity: 1.0,
+                wireframe: type === 'boss'
+            });
 
-            // Ring around sphere
-            const rGeom = new THREE.TorusBufferGeometry(2.5, 0.2, 8, 24);
-            const rMat = new THREE.MeshStandardMaterial({ color: 0xffa502, emissive: 0xffa502, emissiveIntensity: 0.5 });
-            const ring = new THREE.Mesh(rGeom, rMat);
-            ring.rotation.x = Math.PI / 2;
-            group.add(ring);
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.castShadow = true;
+            group.add(mesh);
+
+            // Health Bar Sprite
+            const canvas_hb = document.createElement('canvas');
+            canvas_hb.width = 64;
+            canvas_hb.height = 16;
+            const ctx_hb = canvas_hb.getContext('2d');
+            const texture_hb = new THREE.CanvasTexture(canvas_hb);
+            const sprite_hb = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture_hb }));
+            sprite_hb.scale.set(6, 1.5, 1);
+            sprite_hb.position.y = def.scale + 3;
+            group.add(sprite_hb);
 
             group.position.copy(pos);
-            // Ensure target is above ground if pos is terrain point
-            if (pos.y < 3) group.position.y = 3; 
-            else group.position.y += 3;
+            group.scale.setScalar(def.scale);
 
-            group.userData.isTarget = true;
-            group.userData.hp = 1;
+            // Ground types: align to floor
+            if (def.type === 'walker' || type === 'target') {
+                group.position.y += def.scale * 2;
+            } else if (def.type === 'flyer') {
+                group.position.y += 15 + Math.random() * 10;
+            }
+
+            group.userData = {
+                isTarget: true,
+                hp: def.hp,
+                maxHp: def.hp,
+                type: type,
+                behavior: def.type,
+                speed: def.speed,
+                hbCtx: ctx_hb,
+                hbTex: texture_hb,
+                attackTimer: 0
+            };
             
+            updateEnemyHB(group);
             scene.add(group);
             state.targets.push(group);
             updateScoreUI();
         }
 
+        function updateEnemyHB(enemy) {
+            const ctx = enemy.userData.hbCtx;
+            const percent = enemy.userData.hp / enemy.userData.maxHp;
+            ctx.clearRect(0,0,64,16);
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(0,0,64,16);
+            ctx.fillStyle = enemy.userData.hp > enemy.userData.maxHp*0.3 ? '#7bed9f' : '#ff4757';
+            ctx.fillRect(2,2, 60 * percent, 12);
+            enemy.userData.hbTex.needsUpdate = true;
+        }
+
+        function createTarget(pos) {
+            createEnemy(pos, 'target');
+        }
+
         // Add some default targets for immediate fun
         function addDefaultTargets() {
-            const points = [
-                new THREE.Vector3(25, 0, 25),
-                new THREE.Vector3(-25, 0, -25),
-                new THREE.Vector3(30, 10, 0),
-                new THREE.Vector3(-30, 5, 20),
-                new THREE.Vector3(0, 15, -40)
-            ];
-            points.forEach(p => createTarget(p));
+            createEnemy(new THREE.Vector3(25, 0, 25), 'target');
+            createEnemy(new THREE.Vector3(-25, 0, -25), 'drone');
+            createEnemy(new THREE.Vector3(30, 0, 0), 'stalker');
+            createEnemy(new THREE.Vector3(0, 0, -60), 'boss');
         }
         addDefaultTargets();
 
@@ -802,9 +932,9 @@
             const point = hits[0].point;
             state.lastPoint.copy(point);
 
-            if (state.tool === 'target') {
+            if (state.tool === 'target' || state.tool === 'drone' || state.tool === 'stalker' || state.tool === 'boss') {
                 if (state.isMouseDown) {
-                    createTarget(point);
+                    createEnemy(point, state.tool);
                     state.isMouseDown = false; // Single click
                 }
                 return;
@@ -885,7 +1015,8 @@
             state.mode = 'play';
             state.isPlaying = true;
             state.score = 0;
-            state.timer = 60;
+            state.timer = 120; // More time for enemies
+            state.health = state.maxHealth;
             state.velocity.set(0,0,0);
             
             document.getElementById('btn-mode-play').classList.add('active');
@@ -895,12 +1026,14 @@
             document.getElementById('stop-game').style.display = 'flex';
             document.getElementById('timer-hud').style.display = 'flex';
             document.getElementById('score-hud').style.display = 'flex';
+            document.getElementById('health-hud').style.display = 'flex';
             document.getElementById('crosshair').style.display = 'block';
 
             // Ensure Pointer Lock is requested on a direct user gesture
             fpControls.lock();
             
             updateScoreUI();
+            updateHealthUI();
             weapon.visible = true;
             
             // Spawn at center, slightly above ground to avoid long drop
@@ -924,6 +1057,7 @@
             document.getElementById('stop-game').style.display = 'none';
             document.getElementById('timer-hud').style.display = 'none';
             document.getElementById('score-hud').style.display = 'none';
+            document.getElementById('health-hud').style.display = 'none';
             document.getElementById('crosshair').style.display = 'none';
 
             fpControls.unlock();
@@ -976,12 +1110,22 @@
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
                 if (hitObj.visible) {
-                    hitObj.visible = false;
-                    state.score++;
-                    updateScoreUI();
-                    state.cameraShake = 0.5;
-                    playHitSound();
+                    // Damage Enemy
+                    hitObj.userData.hp -= 5;
+                    updateEnemyHB(hitObj);
+                    
+                    if (hitObj.userData.hp <= 0) {
+                        hitObj.visible = false;
+                        state.score += enemyDefs[hitObj.userData.type || 'target'].score;
+                        updateScoreUI();
+                        state.cameraShake = 0.8;
+                        playHitSound();
+                    } else {
+                        state.cameraShake = 0.2;
+                    }
+                    
                     spawnImpactFX(beamEnd);
+                    playHitSound();
                 }
             } else if (terrainHits.length > 0) {
                 beamEnd.copy(terrainHits[0].point);
@@ -1062,15 +1206,36 @@
             
             if (remainingVal) {
                 const total = state.targets.length;
-                const hit = state.score;
-                remainingVal.innerText = `${total - hit} REMAINING`;
+                const active = state.targets.filter(t => t.visible).length;
+                remainingVal.innerText = `${active} REMAINING`;
                 
-                if (total > 0 && hit === total && state.isPlaying) {
+                if (total > 0 && active === 0 && state.isPlaying) {
                     showNotif("🏆 ARENA CLEARED! 🏆");
                     playHitSound(); // One last victory chime
                     setTimeout(stopGame, 3000);
                 }
             }
+        }
+
+        function updateHealthUI() {
+            const hDisplay = document.getElementById('health-display');
+            const hFill = document.getElementById('health-fill');
+            if (hDisplay) hDisplay.innerText = Math.ceil(state.health);
+            if (hFill) hFill.style.width = `${(state.health / state.maxHealth) * 100}%`;
+            
+            if (state.health <= 0 && state.isPlaying) {
+                showNotif("MGE AGENT DOWN!");
+                state.health = 0;
+                setTimeout(stopGame, 2000);
+                state.isPlaying = false;
+            }
+        }
+
+        function takeDamage(amt) {
+            state.health -= amt;
+            state.cameraShake = 1.0;
+            updateHealthUI();
+            // Simple damage flash effect or sound could go here
         }
 
         function showNotif(text) {
@@ -1206,6 +1371,15 @@
                     p.userData.life -= delta;
                     if (!p.userData.dir) p.scale.setScalar(p.userData.life); // Only scale small particles
                     
+                    // Collision check for enemy projectiles
+                    if (p.userData.isEnemyProjectile) {
+                        const distToPlayer = p.position.distanceTo(fpControls.getObject().position);
+                        if (distToPlayer < 5) {
+                            takeDamage(10);
+                            p.userData.life = 0; // Destroy on hit
+                        }
+                    }
+
                     if (p.userData.life <= 0) {
                         scene.remove(p);
                         state.particles.splice(i, 1);
@@ -1234,11 +1408,64 @@
                 const secs = Math.floor(Math.max(0, state.timer % 60));
                 document.getElementById('timer-display').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
 
-                // Target Animations
+                // Enemy Behaviors & Animations
                 state.targets.forEach((t, i) => {
                     if (t.visible) {
                         t.rotation.y += delta * 2;
-                        t.position.y += Math.sin(Date.now() * 0.003 + i) * 0.05;
+                        
+                        // Only move if they have a behavior
+                        if (t.userData.behavior === 'walker' || t.userData.behavior === 'flyer') {
+                            const playerPos = fpControls.getObject().position.clone();
+                            const dir = new THREE.Vector3().subVectors(playerPos, t.position);
+                            const dist = dir.length();
+                            
+                            // Prevent overlapping vertically for movement direction
+                            if (t.userData.behavior === 'walker') dir.y = 0;
+                            dir.normalize();
+
+                            const moveSpeed = t.userData.speed || 10;
+                            
+                            if (dist > 5) {
+                                t.position.add(dir.multiplyScalar(moveSpeed * delta));
+                                
+                                // Floor sticking for walkers
+                                if (t.userData.behavior === 'walker') {
+                                    raycaster.set(new THREE.Vector3(t.position.x, t.position.y + 10, t.position.z), new THREE.Vector3(0, -1, 0));
+                                    const hits = raycaster.intersectObject(terrain);
+                                    if (hits.length > 0) {
+                                        t.position.y = hits[0].point.y + (t.scale.x * 2);
+                                    }
+                                }
+                            }
+
+                            // Attack Logic
+                            t.userData.attackTimer -= delta;
+                            if (t.userData.attackTimer <= 0) {
+                                if (t.userData.behavior === 'walker' && dist < 8) {
+                                    takeDamage(t.userData.type === 'boss' ? 20 : 5);
+                                    t.userData.attackTimer = 1.0; // Attack every second
+                                } else if (t.userData.behavior === 'flyer' && dist < 50) {
+                                    // Shoot at player
+                                    const shootDir = new THREE.Vector3().subVectors(playerPos, t.position).normalize();
+                                    const projectile = new THREE.Mesh(
+                                        new THREE.SphereBufferGeometry(0.8, 8, 8),
+                                        new THREE.MeshBasicMaterial({ color: 0xff4757 })
+                                    );
+                                    projectile.position.copy(t.position);
+                                    projectile.userData = {
+                                        dir: shootDir,
+                                        life: 3.0,
+                                        isEnemyProjectile: true
+                                    };
+                                    scene.add(projectile);
+                                    state.particles.push(projectile);
+                                    t.userData.attackTimer = 2.0;
+                                }
+                            }
+                        } else {
+                           // Static targets just bob
+                           t.position.y += Math.sin(Date.now() * 0.003 + i) * 0.05;
+                        }
                     }
                 });
 
