@@ -394,6 +394,14 @@
                 <div class="stat-label">STORM LEVEL</div>
                 <div id="stat-level" class="stat-value">CLEAR</div>
             </div>
+            <div class="stat">
+                <div class="stat-label">SPEED</div>
+                <div id="stat-speed" class="stat-value">0 MPH</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">🏆 ESCAPES</div>
+                <div id="stat-escapes" class="stat-value" style="color: #34d399;">0</div>
+            </div>
         </div>
 
         <!-- Control Panel -->
@@ -428,6 +436,7 @@
             <button class="action-btn" id="lightning-btn">⚡ <span>LIGHTNING</span></button>
             <button class="action-btn" id="tornado-btn">🌪️ <span>STOP TORNADO</span></button>
             <button class="action-btn" id="meteor-btn">☄️ <span>METEOR SHOWER</span></button>
+            <button class="action-btn" id="daynight-btn">🌙 <span>NIGHT MODE</span></button>
             <button class="action-btn" id="reset-btn">🔄 <span>RESET</span></button>
         </div>
 
@@ -451,6 +460,8 @@
 
         class StormChaser {
             constructor() {
+                this.escapeCount = 0;
+                this.isNightMode = false;
                 this.initThree();
                 this.initEnvironment();
                 this.initWeatherSystems();
@@ -759,6 +770,23 @@
                 this.tornado.position.set(0, 0, 0);
                 this.tornado.visible = false;
                 this.scene.add(this.tornado);
+
+                // Debris ring at tornado base
+                const debrisGeo = new THREE.BufferGeometry();
+                const dbCount = 80;
+                const dbPos = new Float32Array(dbCount * 3);
+                for(let i = 0; i < dbCount * 3; i += 3) {
+                    const angle = (i / dbCount) * Math.PI * 2;
+                    const r = 5 + Math.random() * 15;
+                    dbPos[i]   = Math.cos(angle) * r;
+                    dbPos[i+1] = Math.random() * 8;
+                    dbPos[i+2] = Math.sin(angle) * r;
+                }
+                debrisGeo.setAttribute('position', new THREE.BufferAttribute(dbPos, 3));
+                this.tornadoDebris = new THREE.Points(debrisGeo, new THREE.PointsMaterial({
+                    color: 0x8b6914, size: 1.2, transparent: true, opacity: 0
+                }));
+                this.scene.add(this.tornadoDebris);
             }
 
             setupControls() {
@@ -776,15 +804,37 @@
                 $('lightning-btn').onclick = () => this.triggerLightning();
                 $('tornado-btn').onclick = () => this.toggleTornado();
                 $('meteor-btn').onclick = () => this.weather.isMeteors = !this.weather.isMeteors;
+                $('daynight-btn').onclick = () => this.toggleDayNight();
                 $('reset-btn').onclick = () => this.resetWeather();
                 $('start-btn').onclick = () => {
                     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
                     this.audioInitialized = true;
                     gsap.to($('intro-overlay'), { opacity: 0, duration: 1, onComplete: () => $('intro-overlay').style.display = 'none' });
-                    // Default Chase Alert
                     document.getElementById('warning-box').style.display = 'block';
                     document.getElementById('warning-box').innerText = "⚠️ TORNADO CHASE ACTIVE: DRIVE TO ESCAPE!";
                 };
+            }
+
+            toggleDayNight() {
+                this.isNightMode = !this.isNightMode;
+                const btn = document.getElementById('daynight-btn');
+                btn.classList.toggle('active', this.isNightMode);
+                btn.querySelector('span').innerText = this.isNightMode ? 'DAY MODE' : 'NIGHT MODE';
+                btn.querySelector('span').previousSibling.textContent = this.isNightMode ? '🌞 ' : '🌙 ';
+                if (this.isNightMode) {
+                    gsap.to(this.scene.background, { r: 0.03, g: 0.03, b: 0.1, duration: 2 });
+                    gsap.to(this.ambientLight, { intensity: 0.1, duration: 2 });
+                    gsap.to(this.sunLight, { intensity: 0.05, duration: 2 });
+                    // Add a moody moon light
+                    this.moonLight = new THREE.PointLight(0x4466ff, 0.8, 2000);
+                    this.moonLight.position.set(-200, 500, -200);
+                    this.scene.add(this.moonLight);
+                } else {
+                    gsap.to(this.scene.background, { r: 0.53, g: 0.81, b: 0.92, duration: 2 });
+                    gsap.to(this.ambientLight, { intensity: 0.6, duration: 2 });
+                    gsap.to(this.sunLight, { intensity: 1.0, duration: 2 });
+                    if (this.moonLight) { this.scene.remove(this.moonLight); this.moonLight = null; }
+                }
             }
 
             toggleSnow() {
@@ -952,7 +1002,14 @@
                         ring.rotation.z += dt * (10 - i * 0.5);
                         ring.position.x = Math.sin(elapsed * 5 + i) * 2;
                     });
-                    
+
+                    // Animate debris ring — orbit around tornado
+                    if (this.tornadoDebris) {
+                        this.tornadoDebris.visible = true;
+                        this.tornadoDebris.position.copy(this.tornado.position);
+                        this.tornadoDebris.rotation.y += dt * 3;
+                        gsap.to(this.tornadoDebris.material, { opacity: 0.9, duration: 0.5 });
+                    }
                     // CHASE AI: Tornado moves toward car
                     const chaseDir = new THREE.Vector3().subVectors(this.car.position, this.tornado.position).normalize();
                     this.tornado.position.add(chaseDir.multiplyScalar(30 * dt)); // Real speed chase
@@ -978,6 +1035,7 @@
                                         this.tornado.position.set(200, 0, 200);
                                         this.carInput._caught = false;
                                         this.carInput.angle = 0;
+                                        // Escape not counted here — that's when you survive
                                         document.getElementById('warning-box').innerText = "⚠️ TORNADO CHASE ACTIVE: DRIVE TO ESCAPE!";
                                     }
                                 });
@@ -988,14 +1046,29 @@
 
                     if (intensity > 0) {
                         // Show Fujita info
-                        const speed = Math.round(this.weather.windSpeed + (intensity * 100));
+                        const tornadoSpeed = Math.round(this.weather.windSpeed + (intensity * 100));
                         let fInfo = this.fujitaScale[0];
-                        for(let f of this.fujitaScale) { if(speed >= f.min) fInfo = f; }
+                        for(let f of this.fujitaScale) { if(tornadoSpeed >= f.min) fInfo = f; }
                         document.getElementById('stat-level').innerHTML = `<span style="color: #fbbf24">${fInfo.label}</span>`;
                         if(intensity > 0.7) document.getElementById('warning-box').innerText = "🚨 DANGER: TORNADO CLOSING IN — FLOOR IT!";
-                    } else {
+                    } else if (!this.carInput._caught) {
+                        // Far enough away = count as escape!
+                        if (this._wasDangerous) {
+                            this.escapeCount++;
+                            document.getElementById('stat-escapes').innerText = this.escapeCount;
+                            gsap.fromTo(document.getElementById('stat-escapes'), 
+                                { scale: 2, color: '#fff' }, 
+                                { scale: 1, duration: 0.4 }
+                            );
+                        }
                         document.getElementById('warning-box').innerText = "⚠️ TORNADO CHASE ACTIVE: DRIVE TO ESCAPE!";
                     }
+                    this._wasDangerous = (intensity > 0.7);
+                }
+
+                // Hide debris when no tornado
+                if (!this.weather.hasTornado && this.tornadoDebris) {
+                    gsap.to(this.tornadoDebris.material, { opacity: 0, duration: 0.5 });
                 }
 
                 // Car movement
@@ -1015,6 +1088,10 @@
                     this.car.position.x += Math.sin(this.carInput.angle) * this.carInput.speed * dt;
                     this.car.position.z += Math.cos(this.carInput.angle) * this.carInput.speed * dt;
                     this.car.rotation.y = this.carInput.angle;
+
+                    // Speedometer (convert units to MPH-ish)
+                    const carMph = Math.abs(Math.round(this.carInput.speed * 0.5));
+                    document.getElementById('stat-speed').innerText = carMph + ' MPH';
 
                     // Camera follow
                     const camOffset = new THREE.Vector3(0, 20, 50).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.carInput.angle);
