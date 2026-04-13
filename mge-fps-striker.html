@@ -578,8 +578,8 @@
             lastPoint: new THREE.Vector3(),
             score: 0,
             timer: 60,
-            health: 100,
-            maxHealth: 100,
+            health: 300,
+            maxHealth: 300,
             targets: [],
             cameraShake: 0,
             weaponRecoil: 0,
@@ -699,11 +699,12 @@
                 mesh: () => new THREE.OctahedronBufferGeometry(2, 0)
             },
             stalker: { 
-                hp: 20, 
-                score: 10, 
+                hp: 40, 
+                shield: 60,
+                score: 15, 
                 color: 0x7bed9f, 
                 scale: 1.5, 
-                speed: 12, 
+                speed: 14, 
                 type: 'walker',
                 mesh: () => new THREE.BoxBufferGeometry(2.5, 4, 2.5)
             },
@@ -748,6 +749,22 @@
             group.position.copy(pos);
             group.scale.setScalar(def.scale);
 
+            // Add Force Field for Stalkers
+            if (type === 'stalker') {
+                const ffGeom = new THREE.SphereBufferGeometry(3.5, 16, 16);
+                const ffMat = new THREE.MeshStandardMaterial({
+                    color: 0x00f2ff,
+                    transparent: true,
+                    opacity: 0.3,
+                    wireframe: true,
+                    emissive: 0x00f2ff,
+                    emissiveIntensity: 0.5
+                });
+                const forceField = new THREE.Mesh(ffGeom, ffMat);
+                forceField.name = "forcefield";
+                group.add(forceField);
+            }
+
             // Ground types: align to floor
             if (def.type === 'walker' || type === 'target') {
                 group.position.y += def.scale * 2;
@@ -762,6 +779,10 @@
                 type: type,
                 behavior: def.type,
                 speed: def.speed,
+                hp: def.hp,
+                maxHp: def.hp,
+                shield: def.shield || 0,
+                maxShield: def.shield || 0,
                 hbCtx: ctx_hb,
                 hbTex: texture_hb,
                 attackTimer: 0
@@ -775,12 +796,23 @@
 
         function updateEnemyHB(enemy) {
             const ctx = enemy.userData.hbCtx;
-            const percent = enemy.userData.hp / enemy.userData.maxHp;
+            const hpPercent = enemy.userData.hp / enemy.userData.maxHp;
+            const shPercent = enemy.userData.maxShield > 0 ? enemy.userData.shield / enemy.userData.maxShield : 0;
+            
             ctx.clearRect(0,0,64,16);
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(0,0,64,16);
+            
+            // Draw HP
             ctx.fillStyle = enemy.userData.hp > enemy.userData.maxHp*0.3 ? '#7bed9f' : '#ff4757';
-            ctx.fillRect(2,2, 60 * percent, 12);
+            ctx.fillRect(2, 2, 60 * hpPercent, 6);
+            
+            // Draw Shield if exists
+            if (enemy.userData.maxShield > 0) {
+                ctx.fillStyle = '#00f2ff';
+                ctx.fillRect(2, 9, 60 * shPercent, 5);
+            }
+            
             enemy.userData.hbTex.needsUpdate = true;
         }
 
@@ -1110,8 +1142,26 @@
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
                 if (hitObj.visible) {
-                    // Damage Enemy
-                    hitObj.userData.hp -= 5;
+                    // Damage Enemy - Priority Shield
+                    if (hitObj.userData.shield > 0) {
+                        hitObj.userData.shield -= 15; // Shield goes down faster
+                        if (hitObj.userData.shield < 0) hitObj.userData.shield = 0;
+                        
+                        // Flash Force Field
+                        const ff = hitObj.getObjectByName("forcefield");
+                        if (ff) {
+                           ff.material.emissiveIntensity = 3.0;
+                           ff.scale.setScalar(1.2);
+                           setTimeout(() => { 
+                               ff.material.emissiveIntensity = 0.5;
+                               ff.scale.setScalar(1.0);
+                               if (hitObj.userData.shield <= 0) ff.visible = false;
+                           }, 100);
+                        }
+                    } else {
+                        hitObj.userData.hp -= 5;
+                    }
+                    
                     updateEnemyHB(hitObj);
                     
                     if (hitObj.userData.hp <= 0) {
@@ -1465,6 +1515,14 @@
                         } else {
                            // Static targets just bob
                            t.position.y += Math.sin(Date.now() * 0.003 + i) * 0.05;
+                        }
+
+                        // Animate Force Field
+                        const ff = t.getObjectByName("forcefield");
+                        if (ff && ff.visible) {
+                            ff.rotation.y += delta * 5;
+                            ff.rotation.x += delta * 2;
+                            ff.material.opacity = 0.2 + Math.sin(Date.now() * 0.01) * 0.1;
                         }
                     }
                 });
