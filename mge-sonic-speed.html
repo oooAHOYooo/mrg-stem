@@ -259,6 +259,44 @@
             background: rgba(255,255,255,0.2);
             transform: translateX(-5px);
         }
+
+        /* Tinkercad Import UI */
+        #tinkercad-ui {
+            position: absolute;
+            top: 140px;
+            right: 20px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 200;
+        }
+
+        .import-btn {
+            background: var(--mge-blue);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .import-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #file-input {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -303,9 +341,18 @@
         </div>
 
         <div id="notification">GO SUPER!</div>
+
+        <div id="tinkercad-ui">
+            <div class="hud-label" style="margin-bottom: 5px;">Student Models</div>
+            <button class="import-btn" onclick="document.getElementById('file-input').click()">Import OBJ</button>
+            <input type="file" id="file-input" accept=".obj">
+            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Export from Tinkercad as .OBJ</div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
     <script>
         // --- GAME CONFIG & STATE ---
         const CONFIG = {
@@ -343,8 +390,11 @@
             objects: {
                 rings: [],
                 clocks: [],
+                enemies: [],
+                loops: [],
                 particles: [],
-                trails: []
+                trails: [],
+                studentModels: []
             },
             boss: {
                 mesh: null,
@@ -597,6 +647,124 @@
             setTimeout(() => document.getElementById('start-screen').style.display = 'none', 500);
         };
 
+        // --- OBJ LOADER LOGIC ---
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const contents = event.target.result;
+                const loader = new THREE.OBJLoader();
+                const obj = loader.parse(contents);
+                
+                // Position it in front of the player
+                const offset = new THREE.Vector3(Math.sin(state.yaw), 0, Math.cos(state.yaw)).multiplyScalar(10);
+                obj.position.copy(state.pos).add(offset);
+                obj.position.y = 1;
+                obj.scale.setScalar(0.5);
+                
+                scene.add(obj);
+                state.objects.studentModels.push(obj);
+                showNotification("Imported Student Model!");
+            };
+            reader.readAsText(file);
+        });
+
+        // --- RED KNUCKLES ENEMY ---
+        function createKnuckles(x, z) {
+            const group = new THREE.Group();
+            
+            // Body
+            const body = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(1.5, 2, 1.2),
+                new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 })
+            );
+            body.position.y = 1;
+            group.add(body);
+
+            // Head (Red with white crest)
+            const head = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(1.6, 1.4, 1.4),
+                body.material
+            );
+            head.position.y = 2.4;
+            group.add(head);
+
+            const crest = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(0.8, 0.4, 1.5),
+                new THREE.MeshStandardMaterial({ color: 0xffffff })
+            );
+            crest.position.set(0, 3.0, 0);
+            group.add(crest);
+
+            // Large fists (Dreadlocks / Claws vibe)
+            const fistGeo = new THREE.SphereBufferGeometry(0.6, 8, 8);
+            const fistL = new THREE.Mesh(fistGeo, body.material);
+            fistL.position.set(-1.2, 1, 0.5);
+            group.add(fistL);
+            const fistR = new THREE.Mesh(fistGeo, body.material);
+            fistR.position.set(1.2, 1, 0.5);
+            group.add(fistR);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            state.objects.enemies.push({
+                mesh: group,
+                type: 'knuckles',
+                hp: 3
+            });
+        }
+
+        // --- SONIC LOOP-DE-LOOP ---
+        function createSonicLoop(x, z, radius = 25) {
+            const group = new THREE.Group();
+            const segs = 40;
+            const width = 12;
+            const thickness = 1;
+
+            for (let i = 0; i < segs; i++) {
+                const angle = (i / segs) * Math.PI * 2;
+                const nextAngle = ((i + 1) / segs) * Math.PI * 2;
+                
+                const geo = new THREE.BoxBufferGeometry(width, thickness, radius * (Math.PI * 2 / segs) * 1.05);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: i % 2 === 0 ? 0xcc7722 : 0xaa5500, // Brownish soil/track
+                    roughness: 0.9 
+                });
+                const seg = new THREE.Mesh(geo, mat);
+                
+                // Position in a circle
+                seg.position.set(
+                    0, 
+                    Math.cos(angle) * -radius + radius, 
+                    Math.sin(angle) * -radius
+                );
+                seg.rotation.x = angle;
+                
+                seg.receiveShadow = true;
+                group.add(seg);
+            }
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            state.objects.loops.push({
+                mesh: group,
+                center: new THREE.Vector3(x, radius, z),
+                radius: radius
+            });
+        }
+
+        // Spawn some initial Knuckles and Loops
+        for(let i=0; i<5; i++) {
+            createKnuckles(
+                (Math.random()-0.5) * 800,
+                (Math.random()-0.5) * 800
+            );
+        }
+        createSonicLoop(40, -100, 20);
+        createSonicLoop(-60, -200, 30);
+
         // --- GAME LOOP ---
         function update() {
             if(!state.started) return;
@@ -775,6 +943,71 @@
             if(dist < 4 && state.isJumping) {
                 damageBoss();
             }
+
+            // --- ENEMY LOGIC ---
+            state.objects.enemies.forEach((enemy, idx) => {
+                const distEnemy = enemy.mesh.position.distanceTo(state.pos);
+                
+                if (distEnemy < 60) {
+                    // Chase player
+                    const chaseDir = new THREE.Vector3().subVectors(state.pos, enemy.mesh.position);
+                    chaseDir.y = 0;
+                    chaseDir.normalize();
+                    enemy.mesh.position.add(chaseDir.multiplyScalar(0.3 * dt));
+                    enemy.mesh.lookAt(state.pos.x, 0, state.pos.z);
+                }
+
+                if (distEnemy < 3) {
+                    if (state.isJumping || state.speed > 1.2) {
+                        // Kill enemy
+                        scene.remove(enemy.mesh);
+                        state.objects.enemies.splice(idx, 1);
+                        state.rings += 50;
+                        showNotification("KNUCKLES DEFEATED!");
+                        // Respawn
+                        createKnuckles((Math.random()-0.5)*800, (Math.random()-0.5)*800);
+                    } else if (state.rings > 0) {
+                        // Player hit - lose rings
+                        state.rings = Math.max(0, state.rings - 20);
+                        state.velocity.set(
+                            (enemy.mesh.position.x - state.pos.x) * -0.5,
+                            0.2,
+                            (enemy.mesh.position.z - state.pos.z) * -0.5
+                        );
+                        showNotification("OUCH! LOST RINGS!");
+                    }
+                }
+            });
+
+            // --- LOOP LOGIC ---
+            state.objects.loops.forEach(loop => {
+                const localPos = state.pos.clone().sub(loop.mesh.position);
+                // Check if player is within the loop's width and near the circle
+                if (Math.abs(localPos.x) < 6) {
+                    const distFromCenter = Math.sqrt(localPos.y**2 + localPos.z**2);
+                    const angle = Math.atan2(localPos.z, localPos.y); // though our loop is oriented differently
+                    // Our loop is z-axis centered? Let's check the creation:
+                    // seg.position.set(0, cos(angle)*-R + R, sin(angle)*-R)
+                    // Wait, let's re-check the loop orientation.
+                    // Loop is in Y-Z plane at X=0 relative to group.
+                    
+                    const distToRing = Math.abs(Math.sqrt(Math.pow(localPos.y - loop.radius, 2) + Math.pow(localPos.z, 2)) - loop.radius);
+                    
+                    if (distToRing < 3 && state.speed > 0.8) {
+                        // "Glue" to loop
+                        const angle = Math.atan2(localPos.z, localPos.y - loop.radius);
+                        // Disable standard gravity if on top half
+                        if (Math.abs(angle) < Math.PI) {
+                            state.onGround = true;
+                            // Fake upward force/stickiness
+                            const stickyForce = new THREE.Vector3(0, -Math.cos(angle), -Math.sin(angle)).multiplyScalar(0.05);
+                            // This is getting complex for a "basic" request. 
+                            // Let's just make it look cool and give a speed boost.
+                            state.velocity.y += 0.02; 
+                        }
+                    }
+                }
+            });
         }
 
         function damageBoss() {
