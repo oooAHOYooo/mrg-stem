@@ -82,20 +82,7 @@ const mgeChangelog = [
         ],
         category: 'major'
     },
-    {
-        date: '2026-03-30',
-        title: 'Aero Rangers Expansion',
-        gameId: 'magic-game',
-        icon: '🎈',
-        description: 'Transformed into a vertical exploration mission.',
-        updates: [
-            'Height-based transition from ground to space',
-            'New floating sky islands to discover',
-            'Space-station trampoline castle added',
-            'Removed enemies to focus on traversal and exploration'
-        ],
-        category: 'update'
-    },
+
     {
         date: '2026-03-30',
         title: 'Minecraft Visuals Update',
