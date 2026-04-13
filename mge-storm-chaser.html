@@ -422,10 +422,13 @@
 
         <!-- Action Panel -->
         <div id="action-panel">
-            <button class="action-btn" id="rain-btn">⛈️ <span>START RAIN</span></button>
-            <button class="action-btn" id="lightning-btn">⚡ <span>STRIKE LIGHTNING</span></button>
-            <button class="action-btn" id="tornado-btn">🌪️ <span>SUMMON TORNADO</span></button>
-            <button class="action-btn" id="reset-btn">🔄 <span>RESET WEATHER</span></button>
+            <button class="action-btn" id="rain-btn">⛈️ <span>RAIN/STORM</span></button>
+            <button class="action-btn" id="snow-btn">❄️ <span>BLIZZARD</span></button>
+            <button class="action-btn" id="fog-btn">🌫️ <span>DENSE FOG</span></button>
+            <button class="action-btn" id="lightning-btn">⚡ <span>LIGHTNING</span></button>
+            <button class="action-btn" id="tornado-btn">🌪️ <span>STOP TORNADO</span></button>
+            <button class="action-btn" id="meteor-btn">☄️ <span>METEOR SHOWER</span></button>
+            <button class="action-btn" id="reset-btn">🔄 <span>RESET</span></button>
         </div>
 
         <!-- Warnings -->
@@ -634,15 +637,21 @@
             }
 
             initWeatherSystems() {
+                // Weather State
                 this.weather = {
                     temp: 72,
                     humidity: 40,
                     pressure: 1013,
                     windSpeed: 5,
                     isRaining: false,
+                    isSnowing: false,
+                    isFoggy: false,
                     isStorming: false,
-                    hasTornado: false,
+                    isMeteors: false,
+                    hasTornado: true, // Default ON
                     rainParticles: null,
+                    snowParticles: null,
+                    meteorGroup: null,
                     clouds: []
                 };
 
@@ -651,11 +660,15 @@
                 this.scene.add(this.cloudGroup);
                 this.createClouds();
 
-                // Rain System
+                // Rain & Snow Systems
                 this.initRain();
+                this.initSnow();
+                this.initMeteors();
                 
                 // Tornado Model
                 this.initTornado();
+                this.tornado.visible = true; // Default Visible
+                this.tornado.position.set(200, 0, 200); // Start at a distance
 
                 // Lightning setup
                 this.lightningTimer = 0;
@@ -713,6 +726,50 @@
                 this.scene.add(this.rainParticles);
             }
 
+            initSnow() {
+                const count = 3000;
+                const pos = new Float32Array(count * 3);
+                for(let i=0; i<count * 3; i+=3) {
+                    pos[i] = (Math.random()-0.5)*800;
+                    pos[i+1] = Math.random()*300;
+                    pos[i+2] = (Math.random()-0.5)*800;
+                }
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                const mat = new THREE.PointsMaterial({ 
+                    color: 0xffffff, 
+                    size: 1.2, 
+                    transparent: true, 
+                    opacity: 0 
+                });
+                this.snowParticles = new THREE.Points(geo, mat);
+                this.scene.add(this.snowParticles);
+            }
+
+            initMeteors() {
+                this.meteorGroup = new THREE.Group();
+                this.scene.add(this.meteorGroup);
+            }
+
+            createMeteor() {
+                const m = new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 4, 4),
+                    new THREE.MeshBasicMaterial({ color: 0xff4500 })
+                );
+                m.position.set((Math.random()-0.5)*1000, 400, (Math.random()-0.5)*1000);
+                const target = new THREE.Vector3(m.position.x - 200, 0, m.position.z - 200);
+                this.meteorGroup.add(m);
+                
+                gsap.to(m.position, {
+                    x: target.x, y: 0, z: target.z,
+                    duration: 1 + Math.random(),
+                    onComplete: () => {
+                        this.meteorGroup.remove(m);
+                        this.playThunder(); // Explosive sound
+                    }
+                });
+            }
+
             initTornado() {
                 this.tornado = new THREE.Group();
                 const count = 15;
@@ -741,14 +798,40 @@
 
                 // Buttons
                 $('rain-btn').onclick = () => this.toggleRain();
+                $('snow-btn').onclick = () => this.toggleSnow();
+                $('fog-btn').onclick = () => this.toggleFog();
                 $('lightning-btn').onclick = () => this.triggerLightning();
                 $('tornado-btn').onclick = () => this.toggleTornado();
+                $('meteor-btn').onclick = () => this.weather.isMeteors = !this.weather.isMeteors;
                 $('reset-btn').onclick = () => this.resetWeather();
                 $('start-btn').onclick = () => {
                     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
                     this.audioInitialized = true;
                     gsap.to($('intro-overlay'), { opacity: 0, duration: 1, onComplete: () => $('intro-overlay').style.display = 'none' });
+                    // Default Chase Alert
+                    document.getElementById('warning-box').style.display = 'block';
+                    document.getElementById('warning-box').innerText = "⚠️ TORNADO CHASE ACTIVE: DRIVE TO ESCAPE!";
                 };
+            }
+
+            toggleSnow() {
+                this.weather.isSnowing = !this.weather.isSnowing;
+                document.getElementById('snow-btn').classList.toggle('active', this.weather.isSnowing);
+                gsap.to(this.snowParticles.material, { opacity: this.weather.isSnowing ? 1 : 0, duration: 2 });
+                if(this.weather.isSnowing) {
+                    this.updateValue('temp', 25);
+                    this.scene.background = new THREE.Color(0xddeeff);
+                }
+            }
+
+            toggleFog() {
+                this.weather.isFoggy = !this.weather.isFoggy;
+                document.getElementById('fog-btn').classList.toggle('active', this.weather.isFoggy);
+                if(this.weather.isFoggy) {
+                    this.scene.fog = new THREE.FogExp2(0x708090, 0.005);
+                } else {
+                    this.scene.fog = null;
+                }
             }
 
             updateValue(type, val) {
@@ -910,12 +993,16 @@
                     this.rainParticles.geometry.attributes.position.needsUpdate = true;
                 }
 
-                // Tornado animation
+                // Tornado animation & AI Chase
                 if (this.weather.hasTornado) {
                     this.tornado.children.forEach((ring, i) => {
                         ring.rotation.z += dt * (10 - i * 0.5);
                         ring.position.x = Math.sin(elapsed * 5 + i) * 2;
                     });
+                    
+                    // CHASE AI: Tornado moves toward car
+                    const chaseDir = new THREE.Vector3().subVectors(this.car.position, this.tornado.position).normalize();
+                    this.tornado.position.add(chaseDir.multiplyScalar(30 * dt)); // Real speed chase
                     
                     // Intensity effects based on car distance
                     const dist = this.car.position.distanceTo(this.tornado.position);
@@ -961,6 +1048,21 @@
                     const camOffset = new THREE.Vector3(0, 20, 50).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.carInput.angle);
                     this.camera.position.lerp(this.car.position.clone().add(camOffset), 0.1);
                     this.camera.lookAt(this.car.position);
+                }
+
+                // Snow animation
+                if (this.weather.isSnowing) {
+                    const pos = this.snowParticles.geometry.attributes.position.array;
+                    for(let i=1; i<pos.length; i+=3) {
+                        pos[i] -= 20 * dt;
+                        if(pos[i] < -50) pos[i] = 300;
+                    }
+                    this.snowParticles.geometry.attributes.position.needsUpdate = true;
+                }
+
+                // Meteors
+                if (this.weather.isMeteors && Math.random() < 0.05) {
+                    this.createMeteor();
                 }
 
                 // Random auto-lightning in severe weather
