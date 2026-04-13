@@ -306,7 +306,7 @@
 
     <div id="start-screen">
         <h1 style="font-size: 4rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--mge-blue);">SONIC SPEED</h1>
-        <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Collect 500 rings to go SUPER!</p>
+        <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Collect 50 rings to go SUPER!</p>
         <button class="start-btn" id="start-btn">GO FAST!</button>
     </div>
 
@@ -365,7 +365,7 @@
             DRAG: 0.97,
             GRAVITY: -0.015,
             JUMP_FORCE: 0.4,
-            RINGS_FOR_SUPER: 500,
+            RINGS_FOR_SUPER: 50,
             RING_ROT_SPEED: 0.08,
             CLOCK_COUNT: 30,
             RING_COUNT: 300,
@@ -394,7 +394,13 @@
                 loops: [],
                 particles: [],
                 trails: [],
-                studentModels: []
+                studentModels: [],
+                abilities: []
+            },
+            tails: {
+                mesh: null,
+                pos: new THREE.Vector3(),
+                targetOffset: new THREE.Vector3(-3, 1, -2)
             },
             boss: {
                 mesh: null,
@@ -488,6 +494,57 @@
 
         scene.add(playerGroup);
         playerGroup.position.y = 1;
+
+        // --- TAILS COMPANION ---
+        function createTails() {
+            const group = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(0.6, 32, 32),
+                new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3, metalness: 0.2 })
+            );
+            group.add(body);
+
+            // Two "tails" (cones)
+            const tailGeo = new THREE.ConeBufferGeometry(0.2, 1, 8);
+            const tailMat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
+            const tail1 = new THREE.Mesh(tailGeo, tailMat);
+            tail1.position.set(-0.3, 0, -0.6);
+            tail1.rotation.x = Math.PI / 2;
+            group.add(tail1);
+            const tail2 = new THREE.Mesh(tailGeo, tailMat);
+            tail2.position.set(0.3, 0, -0.6);
+            tail2.rotation.x = Math.PI / 2;
+            group.add(tail2);
+
+            scene.add(group);
+            state.tails.mesh = group;
+        }
+        createTails();
+
+        // --- ABILITY BOXES ---
+        function createAbilityBox(x, z, type = 'speed') {
+            const group = new THREE.Group();
+            const box = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(2, 2, 2),
+                new THREE.MeshStandardMaterial({ 
+                    color: type === 'speed' ? 0x00ffff : 0xff00ff,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            group.add(box);
+
+            // Floating icon inside
+            const iconGeo = type === 'speed' ? new THREE.ConeBufferGeometry(0.5, 1, 4) : new THREE.SphereBufferGeometry(0.5, 8, 8);
+            const iconMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const icon = new THREE.Mesh(iconGeo, iconMat);
+            icon.position.y = 0;
+            group.add(icon);
+
+            group.position.set(x, 1, z);
+            scene.add(group);
+            state.objects.abilities.push({ mesh: group, type: type });
+        }
 
         // --- ASSET BUILDERS ---
         
@@ -762,6 +819,13 @@
                 (Math.random()-0.5) * 800
             );
         }
+        for(let i=0; i<10; i++) {
+            createAbilityBox(
+                (Math.random()-0.5) * 800,
+                (Math.random()-0.5) * 800,
+                Math.random() > 0.5 ? 'speed' : 'jump'
+            );
+        }
         createSonicLoop(40, -100, 20);
         createSonicLoop(-60, -200, 30);
 
@@ -776,8 +840,29 @@
             handleMovement(dt);
             handleObjects(dt);
             handleBoss(dt);
+            handleTails(dt);
             updateCamera(dt);
             updateUI();
+        }
+
+        function handleTails(dt) {
+            if(!state.tails.mesh) return;
+            
+            // Calculate target position relative to player
+            const offset = new THREE.Vector3(-2.5, 1.5, -2.5);
+            offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.yaw);
+            const targetPos = state.pos.clone().add(offset);
+            
+            // Smoothed follow
+            state.tails.mesh.position.lerp(targetPos, 0.05 * dt);
+            state.tails.mesh.lookAt(state.pos.x, state.tails.mesh.position.y, state.pos.z);
+            
+            // Rotation animation (tails spinning)
+            state.tails.mesh.children.forEach(c => {
+                if(c.geometry.type === 'ConeBufferGeometry') {
+                    c.rotation.z += 0.5 * dt;
+                }
+            });
         }
 
         function handleMovement(dt) {
@@ -978,6 +1063,33 @@
                     }
                 }
             });
+
+            // --- ABILITY BOX LOGIC ---
+            for(let i=state.objects.abilities.length-1; i>=0; i--) {
+                const ability = state.objects.abilities[i];
+                const dist = ability.mesh.position.distanceTo(state.pos);
+                
+                // Animation
+                ability.mesh.rotation.y += 0.05 * dt;
+                ability.mesh.position.y = 1 + Math.sin(performance.now() * 0.005) * 0.2;
+
+                if (dist < 3 && state.isJumping) {
+                    // Destroy ability box
+                    scene.remove(ability.mesh);
+                    state.objects.abilities.splice(i, 1);
+                    
+                    if (ability.type === 'speed') {
+                        state.velocity.multiplyScalar(2.0);
+                        showNotification("SPEED BOOST!");
+                    } else {
+                        state.velocity.y = 0.8;
+                        showNotification("SUPER JUMP!");
+                    }
+                    
+                    // Respawn
+                    createAbilityBox((Math.random()-0.5)*800, (Math.random()-0.5)*800, Math.random() > 0.5 ? 'speed' : 'jump');
+                }
+            }
 
             // --- LOOP LOGIC ---
             state.objects.loops.forEach(loop => {
