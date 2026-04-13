@@ -437,6 +437,7 @@
             <button class="action-btn" id="tornado-btn">🌪️ <span>STOP TORNADO</span></button>
             <button class="action-btn" id="meteor-btn">☄️ <span>METEOR SHOWER</span></button>
             <button class="action-btn" id="daynight-btn">🌙 <span>NIGHT MODE</span></button>
+            <button class="action-btn" id="cycle-btn">🌅 <span>DAY CYCLE</span></button>
             <button class="action-btn" id="reset-btn">🔄 <span>RESET</span></button>
         </div>
 
@@ -462,11 +463,15 @@
             constructor() {
                 this.escapeCount = 0;
                 this.isNightMode = false;
+                this.dayCycleActive = false;
+                this.dayPhase = 0; // 0=dawn,1=day,2=dusk,3=night
                 this.initThree();
                 this.initEnvironment();
                 this.initWeatherSystems();
                 this.initAudio();
                 this.initCar();
+                this.initRainbow();
+                this.initWindStreaks();
                 this.setupControls();
                 this.animate();
             }
@@ -805,6 +810,10 @@
                 $('tornado-btn').onclick = () => this.toggleTornado();
                 $('meteor-btn').onclick = () => this.weather.isMeteors = !this.weather.isMeteors;
                 $('daynight-btn').onclick = () => this.toggleDayNight();
+                $('cycle-btn').onclick = () => {
+                    this.dayCycleActive = !this.dayCycleActive;
+                    document.getElementById('cycle-btn').classList.toggle('active', this.dayCycleActive);
+                };
                 $('reset-btn').onclick = () => this.resetWeather();
                 $('start-btn').onclick = () => {
                     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
@@ -835,6 +844,38 @@
                     gsap.to(this.sunLight, { intensity: 1.0, duration: 2 });
                     if (this.moonLight) { this.scene.remove(this.moonLight); this.moonLight = null; }
                 }
+            }
+
+            initRainbow() {
+                // Semicircle rainbow using torus segments
+                const colors = [0xff0000, 0xff7700, 0xffff00, 0x00cc00, 0x0000ff, 0x8b00ff];
+                this.rainbowGroup = new THREE.Group();
+                colors.forEach((col, i) => {
+                    const ring = new THREE.Mesh(
+                        new THREE.TorusGeometry(80 + i * 8, 2, 8, 32, Math.PI),
+                        new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0 })
+                    );
+                    ring.rotation.z = Math.PI; // arch upward
+                    ring.position.set(0, 5, -150);
+                    this.rainbowGroup.add(ring);
+                });
+                this.scene.add(this.rainbowGroup);
+            }
+
+            initWindStreaks() {
+                const count = 200;
+                const pos = new Float32Array(count * 3);
+                for (let i = 0; i < count * 3; i += 3) {
+                    pos[i]   = (Math.random() - 0.5) * 600;
+                    pos[i+1] = Math.random() * 40;
+                    pos[i+2] = (Math.random() - 0.5) * 600;
+                }
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                this.windStreaks = new THREE.Points(geo, new THREE.PointsMaterial({
+                    color: 0xccddff, size: 0.8, transparent: true, opacity: 0
+                }));
+                this.scene.add(this.windStreaks);
             }
 
             toggleSnow() {
@@ -1097,6 +1138,46 @@
                     const camOffset = new THREE.Vector3(0, 20, 50).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.carInput.angle);
                     this.camera.position.lerp(this.car.position.clone().add(camOffset), 0.1);
                     this.camera.lookAt(this.car.position);
+                }
+
+                // Auto day/night cycle
+                if (this.dayCycleActive && !this.isNightMode) {
+                    const cycleT = (elapsed % 60) / 60; // 60-second full cycle
+                    let skyR, skyG, skyB, lightInt;
+                    if (cycleT < 0.15) { // Dawn
+                        skyR = 1.0; skyG = 0.5; skyB = 0.2; lightInt = 0.3;
+                    } else if (cycleT < 0.45) { // Day
+                        skyR = 0.53; skyG = 0.81; skyB = 0.92; lightInt = 1.0;
+                    } else if (cycleT < 0.6) { // Dusk
+                        skyR = 1.0; skyG = 0.35; skyB = 0.1; lightInt = 0.4;
+                    } else { // Night
+                        skyR = 0.03; skyG = 0.03; skyB = 0.12; lightInt = 0.1;
+                    }
+                    gsap.to(this.scene.background, { r: skyR, g: skyG, b: skyB, duration: 3 });
+                    gsap.to(this.ambientLight, { intensity: lightInt, duration: 3 });
+                }
+
+                // Rainbow — show when raining
+                if (this.rainbowGroup) {
+                    const rainbowTarget = this.weather.isRaining ? 0.5 : 0;
+                    this.rainbowGroup.children.forEach(r => {
+                        gsap.to(r.material, { opacity: rainbowTarget, duration: 3 });
+                    });
+                    // Rainbow follows car loosely
+                    this.rainbowGroup.position.x = this.car.position.x * 0.1;
+                }
+
+                // Wind streaks — appear during strong wind
+                if (this.windStreaks) {
+                    const windStrength = this.weather.windSpeed > 30 ? 0.6 : 0;
+                    gsap.to(this.windStreaks.material, { opacity: windStrength, duration: 1 });
+                    const wPos = this.windStreaks.geometry.attributes.position.array;
+                    for (let i = 0; i < wPos.length; i += 3) {
+                        wPos[i] += this.weather.windSpeed * dt * 2; // streak left-to-right
+                        if (wPos[i] > 300) wPos[i] = -300;
+                    }
+                    this.windStreaks.position.copy(this.car.position); // follow car
+                    this.windStreaks.geometry.attributes.position.needsUpdate = true;
                 }
 
                 // Snow animation
