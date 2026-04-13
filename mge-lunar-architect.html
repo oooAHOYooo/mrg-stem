@@ -334,319 +334,272 @@
     </div>
 
     <script>
-        // --- CONSTANTS & CONFIG ---
-        const G = 6.67430e-11;
-        const EARTH_RADIUS = 6371; // km
-        const MOON_RADIUS = 1737; // km
-        const EARTH_MASS = 5.97e24;
-        const MOON_MASS = 7.34e22;
-        const SCALE = 0.001; // km to three.js units
+        /**
+         * MGE: Lunar Architect - Core Module
+         * Logic is organized into distinct systems for modularity.
+         */
 
-        // Simplified for gameplay
-        const PHYS_SCALE = 1;
-        const EARTH_POS = new THREE.Vector3(0, 0, 0);
-        const MOON_POS = new THREE.Vector3(384.4, 0, 0); // Normalized distance
+        class LunarArchitect {
+            constructor() {
+                this.config = {
+                    G: 6.67430e-11,
+                    EARTH_RADIUS: 6371,
+                    MOON_RADIUS: 1737,
+                    EARTH_MASS: 5.97e24,
+                    MOON_MASS: 7.34e22,
+                    SCALE: 0.001,
+                    MOON_DIST: 384.4 // Scaled units
+                };
 
-        // --- STATE ---
-        let state = {
-            phase: 'VAB', // VAB, LAUNCH, SPACE, SUCCESS
-            fuel: 500,
-            maxFuel: 500,
-            thrustPower: 50,
-            stages: 1,
-            pos: new THREE.Vector3(0, EARTH_RADIUS * SCALE + 0.5, 0),
-            vel: new THREE.Vector3(0, 0, 0),
-            acc: new THREE.Vector3(0, 0, 0),
-            mass: 1000,
-            ignited: false,
-            trailPoints: [],
-            moonInfluence: false,
-            slingshotAchieved: false
-        };
+                this.state = {
+                    phase: 'VAB', // VAB, FLIGHT, SUCCESS
+                    fuel: 500,
+                    maxFuel: 500,
+                    thrustPower: 50,
+                    stages: 1,
+                    pos: new THREE.Vector3(0, (this.config.EARTH_RADIUS * this.config.SCALE) + 0.5, 0),
+                    vel: new THREE.Vector3(0, 0, 0),
+                    acc: new THREE.Vector3(0, 0, 0),
+                    ignited: false,
+                    slingshotEligible: false,
+                    moonInfluence: false,
+                    trailPoints: []
+                };
 
-        // --- THREE.JS SETUP ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
-
-        camera.position.set(0, 10, 30);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-        scene.add(ambientLight);
-
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        sunLight.position.set(100, 50, 100);
-        scene.add(sunLight);
-
-        // Starfield
-        function createStars() {
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 5000; i++) {
-                vertices.push(
-                    THREE.MathUtils.randFloatSpread(4000),
-                    THREE.MathUtils.randFloatSpread(4000),
-                    THREE.MathUtils.randFloatSpread(4000)
-                );
+                this.initThree();
+                this.initSystems();
+                this.setupUI();
+                this.animate();
             }
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 2 });
-            const stars = new THREE.Points(geometry, material);
-            scene.add(stars);
-        }
-        createStars();
 
-        // EARTH
-        const earthGroup = new THREE.Group();
-        const earthGeo = new THREE.SphereGeometry(EARTH_RADIUS * SCALE, 32, 32);
-        const earthMat = new THREE.MeshStandardMaterial({ 
-            color: 0x1a73e8, 
-            emissive: 0x0000ff,
-            emissiveIntensity: 0.1,
-            metalness: 0.5,
-            roughness: 0.4
-        });
-        const earth = new THREE.Mesh(earthGeo, earthMat);
-        earthGroup.add(earth);
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(this.renderer.domElement);
 
-        // Simple Continent Texture (Low Poly)
-        const continentMat = new THREE.MeshStandardMaterial({ color: 0x4ecdc4, wireframe: false });
-        for(let i=0; i<15; i++) {
-            const contGeo = new THREE.BoxGeometry(2, 2, 2);
-            const cont = new THREE.Mesh(contGeo, continentMat);
-            const phi = Math.random() * Math.PI * 2;
-            const theta = Math.random() * Math.PI;
-            const r = EARTH_RADIUS * SCALE;
-            cont.position.setFromSphericalCoords(r, theta, phi);
-            cont.lookAt(0,0,0);
-            earthGroup.add(cont);
-        }
-        scene.add(earthGroup);
+                this.camera.position.set(0, 10, 30);
+                
+                const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+                this.scene.add(ambient);
 
-        // MOON
-        const moonGroup = new THREE.Group();
-        const moonGeo = new THREE.SphereGeometry(MOON_RADIUS * SCALE, 16, 16);
-        const moonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.9 });
-        const moon = new THREE.Mesh(moonGeo, moonMat);
-        moonGroup.position.set(MOON_POS.x, MOON_POS.y, MOON_POS.z);
-        moonGroup.add(moon);
-        
-        // Craters
-        for(let i=0; i<10; i++) {
-            const crGeo = new THREE.CircleGeometry(0.3, 8);
-            const cr = new THREE.Mesh(crGeo, new THREE.MeshBasicMaterial({color: 0x888888, side: THREE.DoubleSide}));
-            const r = MOON_RADIUS * SCALE;
-            cr.position.setFromSphericalCoords(r + 0.01, Math.random()*Math.PI, Math.random()*Math.PI*2);
-            cr.lookAt(MOON_POS.x, MOON_POS.y, MOON_POS.z);
-            moonGroup.add(cr);
-        }
-        scene.add(moonGroup);
+                const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+                sun.position.set(100, 50, 100);
+                this.scene.add(sun);
 
-        // ROCKET
-        const rocket = new THREE.Group();
-        const bodyGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 8);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-        const rocketBody = new THREE.Mesh(bodyGeo, bodyMat);
-        rocket.add(rocketBody);
+                this.clock = new THREE.Clock();
 
-        const noseGeo = new THREE.ConeGeometry(0.5, 1, 8);
-        const noseMat = new THREE.MeshStandardMaterial({ color: var(--mge-primary) });
-        const nose = new THREE.Mesh(noseGeo, noseMat);
-        nose.position.y = 2;
-        rocket.add(nose);
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
 
-        // Fins
-        const finGeo = new THREE.BoxGeometry(0.1, 1, 1);
-        for(let i=0; i<4; i++) {
-            const fin = new THREE.Mesh(finGeo, noseMat);
-            fin.position.y = -1;
-            fin.rotation.y = (i * Math.PI) / 2;
-            fin.position.x = Math.cos(fin.rotation.y) * 0.5;
-            fin.position.z = Math.sin(fin.rotation.y) * -0.5;
-            rocket.add(fin);
-        }
+            initSystems() {
+                this.createEnvironment();
+                this.createRocket();
+                this.createTrail();
+            }
 
-        rocket.position.copy(state.pos);
-        scene.add(rocket);
-
-        // Trail
-        const trailMat = new THREE.LineDashedMaterial({ color: 0x00f2fe, dashSize: 0.5, gapSize: 0.2 });
-        const trailGeo = new THREE.BufferGeometry();
-        const trailLine = new THREE.Line(trailGeo, trailMat);
-        scene.add(trailLine);
-
-        // --- UI INTERACTION ---
-        const startBtn = document.getElementById('start-mission');
-        const overlay = document.getElementById('mission-overlay');
-        const igniteBtn = document.getElementById('ignite-btn');
-        
-        // VAB Inputs
-        const fuelIn = document.getElementById('fuel-input');
-        const thrustIn = document.getElementById('thrust-input');
-        const stagesIn = document.getElementById('stages-input');
-        
-        const fuelVal = document.getElementById('fuel-val');
-        const thrustVal = document.getElementById('thrust-val');
-        const stagesVal = document.getElementById('stages-val');
-
-        startBtn.onclick = () => {
-            gsap.to(overlay, { opacity: 0, duration: 1, onComplete: () => overlay.style.display = 'none' });
-            gsap.to(camera.position, { x: 5, y: 5, z: 15, duration: 2, ease: "power2.inOut" });
-            camera.lookAt(rocket.position);
-        };
-
-        fuelIn.oninput = (e) => {
-            state.fuel = state.maxFuel = parseInt(e.target.value);
-            fuelVal.innerText = state.fuel;
-            updateRocketModel();
-        };
-
-        thrustIn.oninput = (e) => {
-            state.thrustPower = parseInt(e.target.value);
-            thrustVal.innerText = state.thrustPower;
-        };
-
-        stagesIn.oninput = (e) => {
-            state.stages = parseInt(e.target.value);
-            stagesVal.innerText = state.stages;
-            updateRocketModel();
-        };
-
-        function updateRocketModel() {
-            // Visual feedback of VAB
-            rocket.scale.set(1 + (state.fuel/1000)*0.5, 1 + (state.stages-1)*0.3, 1 + (state.fuel/1000)*0.5);
-            rocketBody.material.color.setHSL(0, 0, 0.5 + (state.thrustPower/100)*0.5);
-        }
-
-        // TOUCH SUPPORT
-        igniteBtn.addEventListener('mousedown', () => state.ignited = true);
-        igniteBtn.addEventListener('mouseup', () => state.ignited = false);
-        igniteBtn.addEventListener('touchstart', (e) => { e.preventDefault(); state.ignited = true; igniteBtn.classList.add('ignite-active'); });
-        igniteBtn.addEventListener('touchend', (e) => { e.preventDefault(); state.ignited = false; igniteBtn.classList.remove('ignite-active'); });
-
-        // --- PHYSICS LOOP ---
-        const clock = new THREE.Clock();
-        
-        function updatePhysics(dt) {
-            if (state.phase === 'SUCCESS') return;
-
-            // 1. Gravity Forces
-            const distFromEarth = state.pos.distanceTo(EARTH_POS);
-            const distFromMoon = state.pos.distanceTo(MOON_POS);
-            
-            // Simpler gravity for fun gameplay
-            const gravityEarth = EARTH_POS.clone().sub(state.pos).normalize().multiplyScalar(10 / (distFromEarth * distFromEarth));
-            const gravityMoon = MOON_POS.clone().sub(state.pos).normalize().multiplyScalar(2 / (distFromMoon * distFromMoon));
-            
-            state.acc.set(0,0,0);
-            state.acc.add(gravityEarth);
-            state.acc.add(gravityMoon);
-
-            // 2. Thrust Force
-            if (state.ignited && state.fuel > 0) {
-                if (state.phase === 'VAB') {
-                    state.phase = 'SPACE';
-                    gsap.to(camera.position, { x: 40, y: 20, z: 100, duration: 5, ease: "power1.inOut" });
+            createEnvironment() {
+                // Starfield
+                const starGeo = new THREE.BufferGeometry();
+                const starVerts = [];
+                for (let i = 0; i < 6000; i++) {
+                    starVerts.push(THREE.MathUtils.randFloatSpread(5000), THREE.MathUtils.randFloatSpread(5000), THREE.MathUtils.randFloatSpread(5000));
                 }
+                starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+                this.scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 })));
+
+                // Earth
+                this.earth = new THREE.Group();
+                const eGeo = new THREE.SphereGeometry(this.config.EARTH_RADIUS * this.config.SCALE, 32, 32);
+                const eMat = new THREE.MeshStandardMaterial({ color: 0x1a73e8, emissive: 0x0000ff, emissiveIntensity: 0.1 });
+                this.earth.add(new THREE.Mesh(eGeo, eMat));
                 
-                // Thrust vector always points up relative to rocket (simplified to Y for start, then velocity)
-                const thrustDir = state.vel.length() > 0.1 ? state.vel.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                const thrustAmt = state.thrustPower * 0.05 / (state.fuel/200 + state.stages);
-                state.acc.add(thrustDir.multiplyScalar(thrustAmt));
+                // Earth Surface Detailing
+                const contMat = new THREE.MeshStandardMaterial({ color: 0x4ecdc4 });
+                for(let i=0; i<20; i++) {
+                    const c = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2.5, 2.5), contMat);
+                    c.position.setFromSphericalCoords(this.config.EARTH_RADIUS * this.config.SCALE, Math.random()*Math.PI, Math.random()*Math.PI*2);
+                    c.lookAt(0,0,0);
+                    this.earth.add(c);
+                }
+                this.scene.add(this.earth);
+
+                // Moon
+                this.moon = new THREE.Group();
+                const mGeo = new THREE.SphereGeometry(this.config.MOON_RADIUS * this.config.SCALE, 24, 24);
+                const mMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.9 });
+                this.moon.add(new THREE.Mesh(mGeo, mMat));
+                this.moon.position.set(this.config.MOON_DIST, 0, 0);
                 
-                state.fuel -= 1;
-                fuelVal.innerText = Math.max(0, Math.floor(state.fuel));
+                // Crater detailing
+                const crMat = new THREE.MeshBasicMaterial({ color: 0x888888 });
+                for(let i=0; i<15; i++) {
+                    const cr = new THREE.Mesh(new THREE.CircleGeometry(0.4, 8), crMat);
+                    cr.position.setFromSphericalCoords(this.config.MOON_RADIUS * this.config.SCALE + 0.01, Math.random()*Math.PI, Math.random()*Math.PI*2);
+                    cr.lookAt(this.config.MOON_DIST, 0, 0);
+                    this.moon.add(cr);
+                }
+                this.scene.add(this.moon);
             }
 
-            // 3. Integration
-            state.vel.add(state.acc);
-            state.pos.add(state.vel.clone().multiplyScalar(dt * 50)); // Speeded up for fun
-            
-            // Collision with Earth
-            if (distFromEarth < EARTH_RADIUS * SCALE) {
-                state.pos.copy(EARTH_POS).add(state.pos.clone().sub(EARTH_POS).normalize().multiplyScalar(EARTH_RADIUS * SCALE + 0.1));
-                state.vel.multiplyScalar(0);
+            createRocket() {
+                this.rocket = new THREE.Group();
+                this.rocketBody = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 3, 8), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                this.rocket.add(this.rocketBody);
+
+                const nose = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 8), new THREE.MeshStandardMaterial({ color: 0xff6b6b }));
+                nose.position.y = 2;
+                this.rocket.add(nose);
+
+                const finMat = new THREE.MeshStandardMaterial({ color: 0xff6b6b });
+                for(let i=0; i<4; i++) {
+                    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1, 1), finMat);
+                    fin.position.set(Math.cos(i*Math.PI/2)*0.5, -1, Math.sin(i*Math.PI/2)*0.5);
+                    fin.rotation.y = i*Math.PI/2;
+                    this.rocket.add(fin);
+                }
+                this.rocket.position.copy(this.state.pos);
+                this.scene.add(this.rocket);
             }
 
-            // Collision with Moon
-            if (distFromMoon < MOON_RADIUS * SCALE) {
-                state.pos.copy(MOON_POS).add(state.pos.clone().sub(MOON_POS).normalize().multiplyScalar(MOON_RADIUS * SCALE + 0.1));
-                state.vel.multiplyScalar(0);
+            createTrail() {
+                const trailMat = new THREE.LineDashedMaterial({ color: 0x00f2fe, dashSize: 0.5, gapSize: 0.3 });
+                this.trailGeo = new THREE.BufferGeometry();
+                this.trail = new THREE.Line(this.trailGeo, trailMat);
+                this.scene.add(this.trail);
             }
 
-            // Update Model
-            rocket.position.copy(state.pos);
-            if (state.vel.length() > 0.01) {
-                const lookTarget = state.pos.clone().add(state.vel);
-                rocket.lookAt(lookTarget);
-                rocket.rotateX(Math.PI/2);
+            setupUI() {
+                const $ = (id) => document.getElementById(id);
+                
+                $('start-mission').onclick = () => {
+                    gsap.to($('mission-overlay'), { opacity: 0, duration: 1, onComplete: () => $('mission-overlay').style.display = 'none' });
+                    gsap.to(this.camera.position, { x: 5, y: 5, z: 15, duration: 2, ease: "power2.inOut" });
+                    this.camera.lookAt(this.rocket.position);
+                };
+
+                $('fuel-input').oninput = (e) => {
+                    this.state.fuel = this.state.maxFuel = parseInt(e.target.value);
+                    $('fuel-val').innerText = this.state.fuel;
+                    this.updateRocketModel();
+                };
+
+                $('thrust-input').oninput = (e) => {
+                    this.state.thrustPower = parseInt(e.target.value);
+                    $('thrust-val').innerText = this.state.thrustPower;
+                };
+
+                $('stages-input').oninput = (e) => {
+                    this.state.stages = parseInt(e.target.value);
+                    $('stages-val').innerText = this.state.stages;
+                    this.updateRocketModel();
+                };
+
+                const ignite = $('ignite-btn');
+                const startIgnition = (e) => { if(e) e.preventDefault(); this.state.ignited = true; ignite.classList.add('ignite-active'); };
+                const stopIgnition = (e) => { if(e) e.preventDefault(); this.state.ignited = false; ignite.classList.remove('ignite-active'); };
+
+                ignite.addEventListener('mousedown', startIgnition);
+                ignite.addEventListener('mouseup', stopIgnition);
+                ignite.addEventListener('touchstart', startIgnition);
+                ignite.addEventListener('touchend', stopIgnition);
             }
 
-            // Trail
-            if (state.vel.length() > 0.01) {
-                state.trailPoints.push(state.pos.clone());
-                if (state.trailPoints.length > 500) state.trailPoints.shift();
-                trailGeo.setFromPoints(state.trailPoints);
-                trailLine.computeLineDistances();
+            updateRocketModel() {
+                const s = 1 + (this.state.fuel/1000)*0.4;
+                this.rocket.scale.set(s, 1 + (this.state.stages-1)*0.25, s);
+                this.rocketBody.material.color.setHSL(0.5, 0.5, 0.4 + (this.state.thrustPower/200));
             }
 
-            // Mission Success Trigger: Slingshot
-            if (distFromMoon < 15 && !state.slingshotAchieved) {
-                state.moonInfluence = true;
+            updatePhysics(dt) {
+                if (this.state.phase === 'SUCCESS') return;
+
+                const earthPos = new THREE.Vector3(0,0,0);
+                const moonPos = new THREE.Vector3(this.config.MOON_DIST, 0, 0);
+                const dEarth = this.state.pos.distanceTo(earthPos);
+                const dMoon = this.state.pos.distanceTo(moonPos);
+
+                this.state.acc.set(0,0,0);
+                
+                // Simple 1/r^2 Gravity
+                const gE = earthPos.clone().sub(this.state.pos).normalize().multiplyScalar(12 / (dEarth * dEarth));
+                const gM = moonPos.clone().sub(this.state.pos).normalize().multiplyScalar(3 / (dMoon * dMoon));
+                this.state.acc.add(gE).add(gM);
+
+                // Thrust
+                if (this.state.ignited && this.state.fuel > 0) {
+                    if (this.state.phase === 'VAB') {
+                        this.state.phase = 'FLIGHT';
+                        gsap.to(this.camera.position, { x: 50, y: 30, z: 120, duration: 6, ease: "power1.inOut" });
+                    }
+                    
+                    const thrustDir = this.state.vel.length() > 0.1 ? this.state.vel.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                    const massFactor = (this.state.fuel/200) + (this.state.stages * 0.5);
+                    const force = this.state.thrustPower * 0.08 / massFactor;
+                    this.state.acc.add(thrustDir.multiplyScalar(force));
+                    
+                    this.state.fuel -= dt * 60;
+                    document.getElementById('fuel-val').innerText = Math.max(0, Math.floor(this.state.fuel));
+                }
+
+                // Integration
+                this.state.vel.add(this.state.acc);
+                this.state.pos.add(this.state.vel.clone().multiplyScalar(dt * 40));
+
+                // Ground Safety
+                const eR = this.config.EARTH_RADIUS * this.config.SCALE;
+                if (dEarth < eR) {
+                    this.state.pos.copy(this.state.pos.clone().normalize().multiplyScalar(eR + 0.1));
+                    this.state.vel.multiplyScalar(0);
+                }
+
+                // Visual Update
+                this.rocket.position.copy(this.state.pos);
+                if (this.state.vel.length() > 0.01) {
+                    this.rocket.lookAt(this.state.pos.clone().add(this.state.vel));
+                    this.rocket.rotateX(Math.PI/2);
+                    
+                    this.state.trailPoints.push(this.state.pos.clone());
+                    if (this.state.trailPoints.length > 600) this.state.trailPoints.shift();
+                    this.trailGeo.setFromPoints(this.state.trailPoints);
+                    this.trail.computeLineDistances();
+                }
+
+                // HUD
+                document.getElementById('alt-val').innerText = (Math.max(0, dEarth - eR) * 100).toFixed(0) + " km";
+                document.getElementById('speed-val').innerText = (this.state.vel.length() * 1200).toFixed(0) + " m/s";
+                document.getElementById('moon-dist-val').innerText = (dMoon * 1000).toFixed(0) + " km";
+
+                // Mission Logic
+                if (dMoon < 10) this.state.slingshotEligible = true;
+                if (this.state.slingshotEligible && dEarth < 30 && dMoon > 40) this.triggerSuccess();
             }
-            if (state.moonInfluence && distFromEarth < 20 && distFromMoon > 30) {
-                triggerSuccess();
+
+            triggerSuccess() {
+                if (this.state.phase === 'SUCCESS') return;
+                this.state.phase = 'SUCCESS';
+                document.getElementById('success-screen').style.display = 'block';
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff6b6b', '#4ecdc4', '#ffe66d'] });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const dt = this.clock.getDelta();
+                this.updatePhysics(dt);
+                this.earth.rotation.y += 0.001;
+                this.moon.rotation.y += 0.002;
+                this.renderer.render(this.scene, this.camera);
             }
         }
 
-        function triggerSuccess() {
-            if (state.phase === 'SUCCESS') return;
-            state.phase = 'SUCCESS';
-            document.getElementById('success-screen').style.display = 'block';
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ff6b6b', '#4ecdc4', '#ffe66d']
-            });
-        }
-
-        function updateHUD() {
-            const distFromEarth = state.pos.distanceTo(EARTH_POS) - (EARTH_RADIUS * SCALE);
-            const distFromMoon = state.pos.distanceTo(MOON_POS);
-            const speed = state.vel.length() * 1000;
-
-            document.getElementById('alt-val').innerText = (distFromEarth * 100).toFixed(0) + " km";
-            document.getElementById('speed-val').innerText = speed.toFixed(0) + " m/s";
-            document.getElementById('moon-dist-val').innerText = (distFromMoon * 1000).toFixed(0) + " km";
-        }
-
-        // --- MAIN LOOP ---
-        function animate() {
-            requestAnimationFrame(animate);
-            const dt = clock.getDelta();
-            
-            updatePhysics(dt);
-            updateHUD();
-
-            // Rotate planets slowly
-            earthGroup.rotation.y += 0.001;
-            moonGroup.rotation.y += 0.002;
-
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
+        // Initialize App
+        const app = new LunarArchitect();
     </script>
 </body>
 </html>
