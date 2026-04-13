@@ -392,6 +392,8 @@
                 clocks: [],
                 enemies: [],
                 loops: [],
+                ramps: [],
+                dashPads: [],
                 particles: [],
                 trails: [],
                 studentModels: [],
@@ -544,6 +546,60 @@
             group.position.set(x, 1, z);
             scene.add(group);
             state.objects.abilities.push({ mesh: group, type: type });
+        }
+
+        // --- RAMPS ---
+        function createRamp(x, z, rotation, width = 10, height = 5, length = 15) {
+            const group = new THREE.Group();
+            const geo = new THREE.BoxBufferGeometry(width, 1, length);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
+            const mesh = new THREE.Mesh(geo, mat);
+            
+            // Tilt the ramp
+            const angle = Math.atan2(height, length);
+            mesh.rotation.x = -angle;
+            mesh.position.y = height / 2;
+            mesh.position.z = length / 2;
+            
+            group.add(mesh);
+            group.position.set(x, -0.5, z);
+            group.rotation.y = rotation;
+            scene.add(group);
+            state.objects.ramps.push({
+                mesh: group,
+                angle: angle,
+                height: height,
+                length: length,
+                width: width
+            });
+        }
+
+        // --- DASH PADS ---
+        function createDashPad(x, z, rotation) {
+            const geo = new THREE.PlaneBufferGeometry(6, 8);
+            const mat = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00, 
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.rotation.z = rotation;
+            mesh.position.set(x, 0.1, z);
+            
+            // Add arrows
+            const arrowGeo = new THREE.ConeBufferGeometry(1, 2, 4);
+            const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            for(let i=0; i<3; i++) {
+                const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+                arrow.position.set(0, 0, -2 + i*2);
+                arrow.rotation.x = -Math.PI / 2;
+                mesh.add(arrow);
+            }
+
+            scene.add(mesh);
+            state.objects.dashPads.push({ mesh: mesh, rotation: rotation });
         }
 
         // --- ASSET BUILDERS ---
@@ -828,6 +884,13 @@
         }
         createSonicLoop(40, -100, 20);
         createSonicLoop(-60, -200, 30);
+        
+        // Add ramps and Dash Pads
+        createRamp(0, -50, 0);
+        createRamp(50, -150, Math.PI / 4);
+        createDashPad(0, -20, 0);
+        createDashPad(40, -80, 0);
+        createDashPad(-40, -120, Math.PI / 2);
 
         // --- GAME LOOP ---
         function update() {
@@ -935,6 +998,37 @@
                 state.velocity.z *= ratio;
             }
             state.speed = horizontalSpeed;
+
+            // --- DASH PAD COLLISION ---
+            state.objects.dashPads.forEach(pad => {
+                const dist = pad.mesh.position.distanceTo(state.pos);
+                if(dist < 5) {
+                    const boostDir = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), pad.rotation);
+                    state.velocity.add(boostDir.multiplyScalar(0.4));
+                    showNotification("DASH!");
+                }
+            });
+
+            // --- RAMP PHYSICS ---
+            state.objects.ramps.forEach(ramp => {
+                const local = state.pos.clone().sub(ramp.mesh.position);
+                local.applyAxisAngle(new THREE.Vector3(0, 1, 0), -ramp.mesh.rotation.y);
+                
+                if (local.z > 0 && local.z < ramp.length && Math.abs(local.x) < ramp.width/2) {
+                    const targetY = (local.z / ramp.length) * ramp.height + 0.8;
+                    if (state.pos.y < targetY + 1) {
+                        state.pos.y = targetY;
+                        state.velocity.y = 0;
+                        state.onGround = true;
+                        
+                        // If near the end, launch!
+                        if (local.z > ramp.length - 1 && state.speed > 0.5) {
+                            state.velocity.y = (state.speed * 0.5) + 0.2;
+                            state.onGround = false;
+                        }
+                    }
+                }
+            });
 
             playerGroup.position.copy(state.pos);
 
@@ -1094,29 +1188,33 @@
             // --- LOOP LOGIC ---
             state.objects.loops.forEach(loop => {
                 const localPos = state.pos.clone().sub(loop.mesh.position);
-                // Check if player is within the loop's width and near the circle
+                
+                // Only if moving fast and aligned with loop X-plane
                 if (Math.abs(localPos.x) < 6) {
-                    const distFromCenter = Math.sqrt(localPos.y**2 + localPos.z**2);
-                    const angle = Math.atan2(localPos.z, localPos.y); // though our loop is oriented differently
-                    // Our loop is z-axis centered? Let's check the creation:
-                    // seg.position.set(0, cos(angle)*-R + R, sin(angle)*-R)
-                    // Wait, let's re-check the loop orientation.
-                    // Loop is in Y-Z plane at X=0 relative to group.
+                    const distToCenter = Math.sqrt(localPos.y**2 + localPos.z**2);
+                    const distToRing = Math.abs(distToCenter - loop.radius);
                     
-                    const distToRing = Math.abs(Math.sqrt(Math.pow(localPos.y - loop.radius, 2) + Math.pow(localPos.z, 2)) - loop.radius);
-                    
-                    if (distToRing < 3 && state.speed > 0.8) {
-                        // "Glue" to loop
+                    if (distToRing < 5 && state.speed > 0.6) {
                         const angle = Math.atan2(localPos.z, localPos.y - loop.radius);
-                        // Disable standard gravity if on top half
-                        if (Math.abs(angle) < Math.PI) {
+                        
+                        // Lock to loop circle
+                        const targetY = loop.radius + Math.cos(angle) * loop.radius;
+                        const targetZ = Math.sin(angle) * loop.radius;
+                        
+                        // If we are "entering" the loop or already in it
+                        if (localPos.z < 10) { 
+                            state.pos.y = loop.mesh.position.y + targetY + 0.8;
+                            state.pos.z = loop.mesh.position.z + targetZ;
+                            
+                            // Align player rotation
+                            playerGroup.rotation.x = -angle - Math.PI/2;
+                            
+                            // Prevent falling
                             state.onGround = true;
-                            // Fake upward force/stickiness
-                            const stickyForce = new THREE.Vector3(0, -Math.cos(angle), -Math.sin(angle)).multiplyScalar(0.05);
-                            // This is getting complex for a "basic" request. 
-                            // Let's just make it look cool and give a speed boost.
-                            state.velocity.y += 0.02; 
+                            state.velocity.y = 0;
                         }
+                    } else {
+                        playerGroup.rotation.x = THREE.MathUtils.lerp(playerGroup.rotation.x, 0, 0.1 * dt);
                     }
                 }
             });
@@ -1163,8 +1261,12 @@
         }
 
         function updateCamera(dt) {
+            // Field of view expansion based on speed
+            const targetFOV = 75 + (state.speed * 15);
+            camera.fov = THREE.MathUtils.lerp(camera.fov, targetFOV, 0.1 * dt);
+            camera.updateProjectionMatrix();
+
             // Smooth follow behind the player based on their yaw
-            const cameraHeight = 5;
             const cameraDistance = 12;
             
             const idealOffsetX = -Math.sin(state.yaw) * cameraDistance;
