@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MGE: Storm Chaser | 3D Weather Simulator</title>
+    <meta name="description" content="Experience the power of nature in MGE: Storm Chaser. A 3D STEM experiment where you control the weather, summon tornadoes, and learn about meteorology.">
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+            --mge-accent: #ffe66d;
+            --mge-purple: #a78bfa;
+            --mge-dark: #1a1a2e;
+            --mge-storm: #475569;
+            --mge-neon-blue: #00f2fe;
+            --mge-neon-yellow: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--mge-dark);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(26, 26, 46, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Weather Control Panel */
+        #control-panel {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            width: 300px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--mge-accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 22px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        .control-input {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .control-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--mge-neon-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
+            cursor: pointer;
+        }
+
+        .control-value {
+            font-weight: 700;
+            color: var(--mge-neon-blue);
+        }
+
+        /* Dashboard */
+        #dashboard {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            padding: 15px 40px;
+            border-radius: 50px;
+        }
+
+        .stat {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #aaa;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Action Buttons */
+        #action-panel {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: var(--mge-neon-blue);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+        }
+
+        .action-btn.active {
+            background: var(--mge-neon-blue);
+            color: var(--mge-dark);
+            border-color: white;
+        }
+
+        /* Tornado Button Special */
+        #tornado-btn:hover {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: var(--mge-neon-yellow);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
+        }
+        
+        #tornado-btn.active {
+            background: var(--mge-neon-yellow);
+            color: var(--mge-dark);
+        }
+
+        /* Intro Screen */
+        #intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(26, 26, 46, 0.9) 0%, rgba(10, 10, 20, 1) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .logo {
+            font-size: 5rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 30px rgba(0, 242, 254, 0.5));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        #intro-overlay h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        #intro-overlay p {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 40px;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .mge-btn {
+            pointer-events: auto;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, var(--mge-neon-blue), var(--mge-purple));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .mge-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 242, 254, 0.6);
+        }
+
+        /* Warnings */
+        #warning-box {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            background: rgba(255, 107, 107, 0.15);
+            border: 2px solid var(--mge-primary);
+            border-radius: 12px;
+            font-weight: 900;
+            color: var(--mge-primary);
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 50;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,107,107,0.3); }
+            50% { box-shadow: 0 0 30px rgba(255,107,107,0.6); }
+        }
+
+        /* Nav links */
+        .mge-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #aaa;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            #control-panel {
+                width: 240px;
+                top: auto;
+                bottom: 120px;
+            }
+            #action-panel {
+                width: auto;
+                flex-direction: row;
+                top: auto;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                right: auto;
+            }
+            .action-btn span { display: none; }
+            #dashboard {
+                width: 95%;
+                gap: 15px;
+                padding: 10px;
+            }
+            .stat-value { font-size: 1.1rem; }
+            .logo { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Container -->
+    <div id="canvas-container"></div>
+    
+    <!-- UI Layer -->
+    <div id="ui-layer">
+        <div class="mge-nav">
+            <a href="mge.html" class="nav-link">🧪 BACK TO MGE</a>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="panel">
+            <div class="stat">
+                <div class="stat-label">TEMP</div>
+                <div id="stat-temp" class="stat-value">72°F</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">WIND</div>
+                <div id="stat-wind" class="stat-value">5 MPH</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">HUMIDITY</div>
+                <div id="stat-hum" class="stat-value">40%</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">STORM LEVEL</div>
+                <div id="stat-level" class="stat-value">CLEAR</div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div id="control-panel" class="panel">
+            <div class="panel-title">🌡️ ATMOSPHERE</div>
+            
+            <div class="control-group">
+                <div class="control-label">TEMPERATURE <span class="control-value"><span id="val-temp">72</span>°F</span></div>
+                <input type="range" id="input-temp" class="control-input" min="0" max="110" value="72">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">HUMIDITY <span class="control-value"><span id="val-hum">40</span>%</span></div>
+                <input type="range" id="input-hum" class="control-input" min="0" max="100" value="40">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">AIR PRESSURE <span class="control-value"><span id="val-press">1013</span> hPa</span></div>
+                <input type="range" id="input-press" class="control-input" min="950" max="1050" value="1013">
+            </div>
+
+            <div style="font-size: 0.75rem; color: #888; margin-top: 10px; font-style: italic;">
+                * TIP: High Temp + High Humidity often causes heavy rain and storms!
+            </div>
+        </div>
+
+        <!-- Action Panel -->
+        <div id="action-panel">
+            <button class="action-btn" id="rain-btn">⛈️ <span>START RAIN</span></button>
+            <button class="action-btn" id="lightning-btn">⚡ <span>STRIKE LIGHTNING</span></button>
+            <button class="action-btn" id="tornado-btn">🌪️ <span>SUMMON TORNADO</span></button>
+            <button class="action-btn" id="reset-btn">🔄 <span>RESET WEATHER</span></button>
+        </div>
+
+        <!-- Warnings -->
+        <div id="warning-box">⚠️ SEVERE WEATHER WARNING: TORNADO DETECTED!</div>
+    </div>
+
+    <!-- Intro Overlay -->
+    <div id="intro-overlay">
+        <div class="logo">🌪️⛈️</div>
+        <h1>STORM CHASER</h1>
+        <p>Master the elements in this 3D STEM experiment. Control the temperature, manipulate air pressure, and generate massive storms. Can you create the perfect atmospheric conditions for a tornado?</p>
+        <button class="mge-btn" id="start-btn">BEGIN MISSION</button>
+    </div>
+
+    <script>
+        /**
+         * MGE: Storm Chaser - 3D Weather Simulator
+         * Built with Three.js
+         */
+
+        class StormChaser {
+            constructor() {
+                this.initThree();
+                this.initEnvironment();
+                this.initWeatherSystems();
+                this.initAudio();
+                this.setupControls();
+                this.animate();
+            }
+
+            initAudio() {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.audioInitialized = false;
+            }
+
+            playThunder() {
+                if (!this.audioInitialized) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(40, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, this.audioCtx.currentTime + 0.5);
+                
+                gain.gain.setValueAtTime(0.5, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 1.5);
+                
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + 1.5);
+            }
+
+            playWind(speed) {
+                if (!this.audioInitialized || speed < 10) return;
+                // Simple noise-like wind would need a buffer, but we can modulate an oscillator
+                // This is a placeholder for future synth work
+            }
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87ceeb); // Light sky blue
+                
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                this.camera.position.set(0, 50, 150);
+                this.camera.lookAt(0, 0, 0);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+
+                // Lighting
+                this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(this.ambientLight);
+
+                this.sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+                this.sunLight.position.set(100, 200, 100);
+                this.sunLight.castShadow = true;
+                this.sunLight.shadow.mapSize.width = 2048;
+                this.sunLight.shadow.mapSize.height = 2048;
+                this.scene.add(this.sunLight);
+
+                this.clock = new THREE.Clock();
+
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            initEnvironment() {
+                // Ground
+                const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+                const groundMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80 });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                this.scene.add(ground);
+
+                // Grid/City Base
+                const grid = new THREE.GridHelper(1000, 40, 0x00f2fe, 0x1a1a2e);
+                grid.position.y = 0.1;
+                this.scene.add(grid);
+
+                // Build tiny town
+                this.town = new THREE.Group();
+                for(let i=0; i<30; i++) {
+                    const h = 5 + Math.random() * 15;
+                    const house = new THREE.Mesh(
+                        new THREE.BoxGeometry(10, h, 10),
+                        new THREE.MeshStandardMaterial({ color: 0x242424 })
+                    );
+                    house.position.set(
+                        (Math.random()-0.5)*400,
+                        h/2,
+                        (Math.random()-0.5)*400
+                    );
+                    house.castShadow = true;
+                    house.receiveShadow = true;
+                    this.town.add(house);
+                    
+                    // Windows
+                    const win = new THREE.Mesh(
+                        new THREE.BoxGeometry(2, 2, 0.1),
+                        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+                    );
+                    win.position.set(0, h/2 - 2, 5.05);
+                    house.add(win.clone());
+                }
+                this.scene.add(this.town);
+
+                // Mountains in distance
+                const mntGeo = new THREE.ConeGeometry(100, 200, 4);
+                const mntMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
+                for(let i=0; i<8; i++) {
+                    const m = new THREE.Mesh(mntGeo, mntMat);
+                    m.position.set(
+                        Math.cos(i) * 600,
+                        0,
+                        Math.sin(i) * 600
+                    );
+                    this.scene.add(m);
+                }
+            }
+
+            initWeatherSystems() {
+                this.weather = {
+                    temp: 72,
+                    humidity: 40,
+                    pressure: 1013,
+                    windSpeed: 5,
+                    isRaining: false,
+                    isStorming: false,
+                    hasTornado: false,
+                    rainParticles: null,
+                    clouds: []
+                };
+
+                // Clouds
+                this.cloudGroup = new THREE.Group();
+                this.scene.add(this.cloudGroup);
+                this.createClouds();
+
+                // Rain System
+                this.initRain();
+                
+                // Tornado Model
+                this.initTornado();
+
+                // Lightning setup
+                this.lightningTimer = 0;
+            }
+
+            createClouds() {
+                const cloudGeo = new THREE.SphereGeometry(20, 8, 8);
+                for(let i=0; i<40; i++) {
+                    const c = new THREE.Mesh(
+                        cloudGeo,
+                        new THREE.MeshStandardMaterial({ 
+                            color: 0xffffff, 
+                            transparent: true, 
+                            opacity: 0.6 
+                        })
+                    );
+                    c.scale.set(1.5, 0.4, 1);
+                    c.position.set(
+                        (Math.random()-0.5)*1000,
+                        150 + Math.random()*50,
+                        (Math.random()-0.5)*1000
+                    );
+                    this.cloudGroup.add(c);
+                    this.weather.clouds.push(c);
+                }
+            }
+
+            initRain() {
+                const count = 5000;
+                const pos = new Float32Array(count * 3);
+                for(let i=0; i<count * 3; i+=3) {
+                    pos[i] = (Math.random()-0.5)*600;
+                    pos[i+1] = Math.random()*200;
+                    pos[i+2] = (Math.random()-0.5)*600;
+                }
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                const mat = new THREE.PointsMaterial({ 
+                    color: 0x00f2fe, 
+                    size: 0.5, 
+                    transparent: true, 
+                    opacity: 0 
+                });
+                this.rainParticles = new THREE.Points(geo, mat);
+                this.scene.add(this.rainParticles);
+            }
+
+            initTornado() {
+                this.tornado = new THREE.Group();
+                const count = 15;
+                for(let i=0; i<count; i++) {
+                    const r = 2 + i * 2;
+                    const ring = new THREE.Mesh(
+                        new THREE.TorusGeometry(r, 0.5 + i*0.1, 8, 16),
+                        new THREE.MeshStandardMaterial({ color: 0x475569, transparent: true, opacity: 0.7 })
+                    );
+                    ring.position.y = i * 6;
+                    ring.rotation.x = Math.PI / 2;
+                    this.tornado.add(ring);
+                }
+                this.tornado.position.set(0, 0, 0);
+                this.tornado.visible = false;
+                this.scene.add(this.tornado);
+            }
+
+            setupControls() {
+                const $ = (id) => document.getElementById(id);
+
+                // Range inputs
+                $('input-temp').oninput = (e) => this.updateValue('temp', e.target.value);
+                $('input-hum').oninput = (e) => this.updateValue('hum', e.target.value);
+                $('input-press').oninput = (e) => this.updateValue('press', e.target.value);
+
+                // Buttons
+                $('rain-btn').onclick = () => this.toggleRain();
+                $('lightning-btn').onclick = () => this.triggerLightning();
+                $('tornado-btn').onclick = () => this.toggleTornado();
+                $('reset-btn').onclick = () => this.resetWeather();
+                $('start-btn').onclick = () => {
+                    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    this.audioInitialized = true;
+                    gsap.to($('intro-overlay'), { opacity: 0, duration: 1, onComplete: () => $('intro-overlay').style.display = 'none' });
+                };
+            }
+
+            updateValue(type, val) {
+                const $ = (id) => document.getElementById(id);
+                switch(type) {
+                    case 'temp': 
+                        this.weather.temp = parseInt(val);
+                        $('val-temp').innerText = val;
+                        $('stat-temp').innerText = val + '°F';
+                        break;
+                    case 'hum': 
+                        this.weather.humidity = parseInt(val);
+                        $('val-hum').innerText = val;
+                        $('stat-hum').innerText = val + '%';
+                        break;
+                    case 'press': 
+                        this.weather.pressure = parseInt(val);
+                        $('val-press').innerText = val;
+                        break;
+                }
+                this.calculateStormLevel();
+            }
+
+            calculateStormLevel() {
+                const $ = (id) => document.getElementById(id);
+                let level = "CLEAR";
+                let color = 0x87ceeb;
+                let opacity = 0.6;
+
+                const score = (this.weather.temp - 60) + (this.weather.humidity - 30) + (1013 - this.weather.pressure);
+                
+                // Ground color change (Easy Win: Terrain Moisture)
+                const groundBaseColor = new THREE.Color(0x3d5a80);
+                const groundRainColor = new THREE.Color(0x1a3a5a);
+                const targetGroundColor = this.weather.isRaining ? groundRainColor : groundBaseColor;
+                gsap.to(this.scene.children.find(c => c instanceof THREE.Mesh && c.geometry instanceof THREE.PlaneGeometry).material.color, {
+                    r: targetGroundColor.r, g: targetGroundColor.g, b: targetGroundColor.b, duration: 5
+                });
+
+                if (score > 100) {
+                    level = "SEVERE";
+                    color = 0x1a1a2e;
+                    opacity = 0.95;
+                } else if (score > 60) {
+                    level = "STORMY";
+                    color = 0x475569;
+                    opacity = 0.85;
+                } else if (score > 30) {
+                    level = "CLOUDY";
+                    color = 0x708090;
+                    opacity = 0.75;
+                }
+
+                $('stat-level').innerText = level;
+                gsap.to(this.scene.background, { r: ((color >> 16) & 255) / 255, g: ((color >> 8) & 255) / 255, b: (color & 255) / 255, duration: 2 });
+                
+                this.weather.clouds.forEach(c => {
+                    gsap.to(c.material.color, { r: ((color >> 16) & 255) / 255, g: ((color >> 8) & 255) / 255, b: (color & 255) / 255, duration: 2 });
+                    c.material.opacity = opacity;
+                });
+
+                this.weather.windSpeed = 5 + (score > 0 ? score / 2 : 0);
+                $('stat-wind').innerText = Math.round(this.weather.windSpeed) + ' MPH';
+                
+                // Auto-start rain if severe
+                if (level === "SEVERE" && !this.weather.isRaining) this.toggleRain(true);
+            }
+
+            toggleRain(force = false) {
+                this.weather.isRaining = force || !this.weather.isRaining;
+                const btn = document.getElementById('rain-btn');
+                btn.classList.toggle('active', this.weather.isRaining);
+                btn.querySelector('span').innerText = this.weather.isRaining ? "STOP RAIN" : "START RAIN";
+                
+                gsap.to(this.rainParticles.material, { opacity: this.weather.isRaining ? 0.8 : 0, duration: 1 });
+            }
+
+            triggerLightning() {
+                if (this.weather.isStorming) return;
+                this.weather.isStorming = true;
+                this.playThunder(); // Easy Win: Sound
+
+                // Easy Win: Screen Shake
+                gsap.to(this.camera.position, { 
+                    x: "+=" + (Math.random()-0.5)*10, 
+                    y: "+=" + (Math.random()-0.5)*10, 
+                    duration: 0.05, 
+                    repeat: 5, 
+                    yoyo: true,
+                    onComplete: () => {
+                        this.camera.position.set(0, 50, 150); // Reset cam
+                        this.camera.lookAt(0, 0, 0);
+                    }
+                });
+
+                const flash = new THREE.PointLight(0xffffff, 0, 1000);
+                flash.position.set((Math.random()-0.5)*200, 200, (Math.random()-0.5)*200);
+                this.scene.add(flash);
+
+                const tl = gsap.timeline({ onComplete: () => {
+                    this.scene.remove(flash);
+                    this.weather.isStorming = false;
+                }});
+
+                tl.to(flash, { intensity: 1000, duration: 0.05 });
+                tl.to(flash, { intensity: 0, duration: 0.1 });
+                tl.to(flash, { intensity: 500, duration: 0.05 });
+                tl.to(flash, { intensity: 0, duration: 0.2 });
+
+                // Brighten scene for split second
+                gsap.to(this.ambientLight, { intensity: 5, duration: 0.05, yoyo: true, repeat: 1 });
+            }
+
+            toggleTornado() {
+                this.weather.hasTornado = !this.weather.hasTornado;
+                const btn = document.getElementById('tornado-btn');
+                btn.classList.toggle('active', this.weather.hasTornado);
+                btn.querySelector('span').innerText = this.weather.hasTornado ? "DISMISS TORNADO" : "SUMMON TORNADO";
+                
+                document.getElementById('warning-box').style.display = this.weather.hasTornado ? 'block' : 'none';
+                this.tornado.visible = this.weather.hasTornado;
+                
+                if(this.weather.hasTornado) {
+                    this.tornado.position.set(200, 0, 0);
+                    gsap.to(this.tornado.position, { x: -200, duration: 10, repeat: -1, yoyo: true, ease: "sine.inOut" });
+                }
+            }
+
+            resetWeather() {
+                this.updateValue('temp', 72);
+                this.updateValue('hum', 40);
+                this.updateValue('press', 1013);
+                document.getElementById('input-temp').value = 72;
+                document.getElementById('input-hum').value = 40;
+                document.getElementById('input-press').value = 1013;
+                if(this.weather.isRaining) this.toggleRain(false);
+                if(this.weather.hasTornado) this.toggleTornado();
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const dt = this.clock.getDelta();
+                const elapsed = this.clock.getElapsedTime();
+
+                // Move clouds
+                this.cloudGroup.children.forEach((c, i) => {
+                    c.position.x += dt * this.weather.windSpeed * 0.2;
+                    if (c.position.x > 500) c.position.x = -500;
+                    c.position.y += Math.sin(elapsed + i) * 0.05;
+                });
+
+                // Rain physics
+                if (this.weather.isRaining) {
+                    const pos = this.rainParticles.geometry.attributes.position.array;
+                    for (let i = 1; i < pos.length; i += 3) {
+                        pos[i] -= dt * 200;
+                        if (pos[i] < 0) pos[i] = 200;
+                    }
+                    this.rainParticles.geometry.attributes.position.needsUpdate = true;
+                }
+
+                // Tornado animation
+                if (this.weather.hasTornado) {
+                    this.tornado.children.forEach((ring, i) => {
+                        ring.rotation.z += dt * (10 - i * 0.5);
+                        ring.position.x = Math.sin(elapsed * 5 + i) * 2;
+                    });
+                    
+                    // Shake camera slightly
+                    this.camera.position.x += (Math.random()-0.5) * 0.5;
+                    this.camera.position.y += (Math.random()-0.5) * 0.5;
+                }
+
+                // Random auto-lightning in severe weather
+                if (this.weather.humidity > 80 && this.weather.temp > 80) {
+                    if (Math.random() < 0.005) this.triggerLightning();
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Initialize App
+        const app = new StormChaser();
+    </script>
+</body>
+</html>
