@@ -452,8 +452,66 @@
                 this.initEnvironment();
                 this.initWeatherSystems();
                 this.initAudio();
+                this.initCar();
                 this.setupControls();
                 this.animate();
+            }
+
+            initCar() {
+                this.car = new THREE.Group();
+                
+                // SUV body
+                const body = new THREE.Mesh(
+                    new THREE.BoxGeometry(4, 3, 8),
+                    new THREE.MeshStandardMaterial({ color: 0xff4757 })
+                );
+                body.position.y = 2;
+                this.car.add(body);
+
+                // Roof rack with lights
+                const rack = new THREE.Mesh(
+                    new THREE.BoxGeometry(3.5, 0.5, 4),
+                    new THREE.MeshStandardMaterial({ color: 0x2f3542 })
+                );
+                rack.position.y = 3.6;
+                this.car.add(rack);
+
+                const light = new THREE.Mesh(
+                    new THREE.BoxGeometry(3, 0.3, 0.3),
+                    new THREE.MeshBasicMaterial({ color: 0xffff00 })
+                );
+                light.position.set(0, 3.8, 2);
+                this.car.add(light);
+
+                // Wheels
+                const wheelGeo = new THREE.CylinderGeometry(1, 1, 1, 12);
+                const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e272e });
+                for(let i=0; i<4; i++) {
+                    const w = new THREE.Mesh(wheelGeo, wheelMat);
+                    w.rotation.z = Math.PI / 2;
+                    w.position.set(
+                        i < 2 ? 2.1 : -2.1,
+                        1,
+                        i % 2 === 0 ? 3 : -3
+                    );
+                    this.car.add(w);
+                }
+
+                this.car.position.set(0, 0, 100);
+                this.scene.add(this.car);
+                
+                this.carInput = {
+                    w: false, a: false, s: false, d: false,
+                    speed: 0,
+                    angle: 0
+                };
+                
+                window.addEventListener('keydown', (e) => {
+                    if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = true;
+                });
+                window.addEventListener('keyup', (e) => {
+                    if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = false;
+                });
             }
 
             initAudio() {
@@ -601,6 +659,16 @@
 
                 // Lightning setup
                 this.lightningTimer = 0;
+                
+                // Fujita Scale data
+                this.fujitaScale = [
+                    { min: 40, label: "F0: Light Damage", desc: "65-85 mph. Breaks tree branches." },
+                    { min: 86, label: "F1: Moderate Damage", desc: "86-110 mph. Peels surface off roofs." },
+                    { min: 111, label: "F2: Considerable Damage", desc: "111-135 mph. Roofs torn off houses." },
+                    { min: 136, label: "F3: Severe Damage", desc: "136-165 mph. Entire stories of houses destroyed." },
+                    { min: 166, label: "F4: Devastating Damage", desc: "166-200 mph. Well-constructed houses leveled." },
+                    { min: 201, label: "F5: Incredible Damage", desc: "201+ mph. Strong frame houses lifted off foundations." }
+                ];
             }
 
             createClouds() {
@@ -849,9 +917,50 @@
                         ring.position.x = Math.sin(elapsed * 5 + i) * 2;
                     });
                     
-                    // Shake camera slightly
-                    this.camera.position.x += (Math.random()-0.5) * 0.5;
-                    this.camera.position.y += (Math.random()-0.5) * 0.5;
+                    // Intensity effects based on car distance
+                    const dist = this.car.position.distanceTo(this.tornado.position);
+                    const intensity = Math.max(0, 1 - (dist / 300));
+                    
+                    if (intensity > 0) {
+                        this.camera.position.x += (Math.random()-0.5) * intensity * 5;
+                        this.camera.position.y += (Math.random()-0.5) * intensity * 5;
+                        
+                        // Show Fujita info
+                        const speed = Math.round(this.weather.windSpeed + (intensity * 100));
+                        let fInfo = this.fujitaScale[0];
+                        for(let f of this.fujitaScale) {
+                            if(speed >= f.min) fInfo = f;
+                        }
+                        
+                        document.getElementById('stat-level').innerHTML = `<span style="color: #fbbf24">${fInfo.label}</span>`;
+                        if(intensity > 0.8) document.getElementById('warning-box').innerText = "DANGER: EXTREME PROXIMITY!";
+                    } else {
+                        document.getElementById('warning-box').innerText = "⚠️ SEVERE WEATHER WARNING: TORNADO DETECTED!";
+                    }
+                }
+
+                // Car movement
+                if (this.carInput) {
+                    const moveSpeed = 100;
+                    const turnSpeed = 2;
+                    
+                    if (this.carInput.w) this.carInput.speed += moveSpeed * dt;
+                    if (this.carInput.s) this.carInput.speed -= moveSpeed * dt;
+                    this.carInput.speed *= 0.95; // Friction
+
+                    if (Math.abs(this.carInput.speed) > 1) {
+                        if (this.carInput.a) this.carInput.angle += turnSpeed * dt;
+                        if (this.carInput.d) this.carInput.angle -= turnSpeed * dt;
+                    }
+
+                    this.car.position.x += Math.sin(this.carInput.angle) * this.carInput.speed * dt;
+                    this.car.position.z += Math.cos(this.carInput.angle) * this.carInput.speed * dt;
+                    this.car.rotation.y = this.carInput.angle;
+
+                    // Camera follow
+                    const camOffset = new THREE.Vector3(0, 20, 50).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.carInput.angle);
+                    this.camera.position.lerp(this.car.position.clone().add(camOffset), 0.1);
+                    this.camera.lookAt(this.car.position);
                 }
 
                 // Random auto-lightning in severe weather
