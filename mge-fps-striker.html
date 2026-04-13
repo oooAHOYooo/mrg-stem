@@ -548,6 +548,10 @@
             <span>Fire Orb</span>
         </div>
         <div class="hint-item">
+            <span class="key-badge">RMB</span>
+            <span style="color:var(--mge-blue)">Energy Shield</span>
+        </div>
+        <div class="hint-item">
             <span class="key-badge">SPACE</span>
             <span>Jump High</span>
         </div>
@@ -580,6 +584,7 @@
             timer: 60,
             health: 300,
             maxHealth: 300,
+            isShielding: false,
             targets: [],
             cameraShake: 0,
             weaponRecoil: 0,
@@ -624,7 +629,24 @@
         // Player Light (Flashlight)
         const playerLight = new THREE.PointLight(0xffffff, 0, 40);
         camera.add(playerLight);
-        scene.add(camera); // Ensure camera (with light) is in scene
+
+        // Player Shield Visual
+        const shieldGeom = new THREE.SphereBufferGeometry(2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const shieldMat = new THREE.MeshStandardMaterial({
+            color: 0x00f2ff,
+            transparent: true,
+            opacity: 0,
+            side: THREE.BackSide,
+            emissive: 0x00f2ff,
+            emissiveIntensity: 1.0,
+            wireframe: true
+        });
+        const playerShield = new THREE.Mesh(shieldGeom, shieldMat);
+        playerShield.rotation.x = Math.PI / 2;
+        playerShield.position.z = -1;
+        camera.add(playerShield);
+
+        scene.add(camera); // Ensure camera (with light and shield) is in scene
 
         // --- TERRAIN ---
         const terrainSize = 300;
@@ -787,6 +809,30 @@
                 hbTex: texture_hb,
                 attackTimer: 0
             };
+
+            // Add Boss Rotating Targets
+            if (type === 'boss') {
+                group.userData.bossTargets = [];
+                for (let i = 0; i < 4; i++) {
+                    const tGeom = new THREE.SphereBufferGeometry(2.5, 8, 8);
+                    const tMat = new THREE.MeshStandardMaterial({ 
+                        color: 0xff4757, 
+                        emissive: 0xff4757, 
+                        emissiveIntensity: 1.0 
+                    });
+                    const tMesh = new THREE.Mesh(tGeom, tMat);
+                    tMesh.userData.isBossTarget = true;
+                    tMesh.userData.bossRef = group;
+                    
+                    const tPivot = new THREE.Group();
+                    tPivot.add(tMesh);
+                    tMesh.position.x = 12;
+                    tPivot.rotation.y = (i / 4) * Math.PI * 2;
+                    
+                    group.add(tPivot);
+                    group.userData.bossTargets.push(tPivot);
+                }
+            }
             
             updateEnemyHB(group);
             scene.add(group);
@@ -933,9 +979,19 @@
 
         window.addEventListener('mousedown', e => {
             if (state.mode === 'play' && state.isPlaying) {
-                if (e.button === 0 || e.button === 2) {
+                if (e.button === 0) {
                     shoot();
+                } else if (e.button === 2) {
+                    state.isShielding = true;
+                    playerShield.material.opacity = 0.4;
                 }
+            }
+        });
+
+        window.addEventListener('mouseup', e => {
+            if (e.button === 2) {
+                state.isShielding = false;
+                playerShield.material.opacity = 0;
             }
         });
 
@@ -1139,15 +1195,34 @@
             if (targetHits.length > 0) {
                 beamEnd.copy(targetHits[0].point);
                 let hitObj = targetHits[0].object;
+                
+                // Special check for Boss Targets
+                if (hitObj.userData.isBossTarget) {
+                    const boss = hitObj.userData.bossRef;
+                    boss.userData.hp -= 20; // High damage for hitting targets
+                    updateEnemyHB(boss);
+                    spawnImpactFX(beamEnd, false);
+                    playHitSound();
+                    
+                    hitObj.scale.setScalar(0.1); // Shrink target
+                    setTimeout(() => hitObj.scale.setScalar(1.0), 200);
+                    
+                    if (boss.userData.hp <= 0) {
+                        boss.visible = false;
+                        state.score += enemyDefs.boss.score;
+                        updateScoreUI();
+                    }
+                    return;
+                }
+
                 while (hitObj.parent && !hitObj.userData.isTarget) hitObj = hitObj.parent;
                 
                 if (hitObj.visible) {
                     // Damage Enemy - Priority Shield
                     if (hitObj.userData.shield > 0) {
-                        hitObj.userData.shield -= 15; // Shield goes down faster
+                        hitObj.userData.shield -= 15;
                         if (hitObj.userData.shield < 0) hitObj.userData.shield = 0;
                         
-                        // Flash Force Field
                         const ff = hitObj.getObjectByName("forcefield");
                         if (ff) {
                            ff.material.emissiveIntensity = 3.0;
@@ -1159,7 +1234,12 @@
                            }, 100);
                         }
                     } else {
-                        hitObj.userData.hp -= 5;
+                        // Regular hit on Boss is resisted
+                        if (hitObj.userData.type === 'boss') {
+                            hitObj.userData.hp -= 1; // Chip damage
+                        } else {
+                            hitObj.userData.hp -= 5;
+                        }
                     }
                     
                     updateEnemyHB(hitObj);
@@ -1425,6 +1505,17 @@
                     if (p.userData.isEnemyProjectile) {
                         const distToPlayer = p.position.distanceTo(fpControls.getObject().position);
                         if (distToPlayer < 5) {
+                            if (state.isShielding) {
+                                // Check if projectile is in front of camera
+                                const toProj = p.position.clone().sub(camera.position).normalize();
+                                const camDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+                                if (toProj.dot(camDir) > 0.5) {
+                                    // Shield block
+                                    spawnImpactFX(p.position, true);
+                                    p.userData.life = 0;
+                                    return;
+                                }
+                            }
                             takeDamage(10);
                             p.userData.life = 0; // Destroy on hit
                         }
@@ -1523,6 +1614,13 @@
                             ff.rotation.y += delta * 5;
                             ff.rotation.x += delta * 2;
                             ff.material.opacity = 0.2 + Math.sin(Date.now() * 0.01) * 0.1;
+                        }
+
+                        // Rotate Boss Targets
+                        if (t.userData.type === 'boss' && t.userData.bossTargets) {
+                            t.userData.bossTargets.forEach(p => {
+                                p.rotation.y += delta * 2;
+                            });
                         }
                     }
                 });
