@@ -295,9 +295,11 @@
         </div>
 
         <div class="controls-hint">
-            <div><span class="hint-key">W A S D</span> Move</div>
-            <div><span class="hint-key">SPACE</span> Jump</div>
-            <div><span class="hint-key">SHIFT</span> Dash Boost</div>
+            <div><span class="hint-key">W / UP</span> ACCELERATE</div>
+            <div><span class="hint-key">A / D / LEFT / RIGHT</span> STEER</div>
+            <div><span class="hint-key">S / DOWN</span> REVERSE</div>
+            <div><span class="hint-key">SPACE</span> JUMP</div>
+            <div><span class="hint-key">SHIFT</span> BOOST</div>
         </div>
 
         <div id="notification">GO SUPER!</div>
@@ -335,6 +337,8 @@
             onGround: true,
             superProgress: 0,
             keys: {},
+            yaw: 0,
+            targetYaw: 0,
             lastTime: performance.now(),
             objects: {
                 rings: [],
@@ -610,25 +614,38 @@
 
         function handleMovement(dt) {
             const accel = state.isSuper ? CONFIG.SUPER_ACCEL : CONFIG.PLAYER_ACCEL;
-            const maxSpeed = state.keys['ShiftLeft'] || state.keys['ShiftRight'] 
-                ? (state.isSuper ? CONFIG.SUPER_BOOST_MAX : CONFIG.PLAYER_BOOST_MAX)
-                : (state.isSuper ? CONFIG.SUPER_MAX_SPEED : CONFIG.PLAYER_MAX_SPEED);
+            const boostMult = (state.keys['ShiftLeft'] || state.keys['ShiftRight']) ? 1.5 : 1.0;
+            const maxSpeed = (state.isSuper ? CONFIG.SUPER_MAX_SPEED : CONFIG.PLAYER_MAX_SPEED) * boostMult;
 
-            const moveDir = new THREE.Vector3();
-            if(state.keys['KeyW']) moveDir.z -= 1;
-            if(state.keys['KeyS']) moveDir.z += 1;
-            if(state.keys['KeyA']) moveDir.x -= 1;
-            if(state.keys['KeyD']) moveDir.x += 1;
+            // Handle Rotation (A/D or Left/Right)
+            let turnInput = 0;
+            if (state.keys['KeyA'] || state.keys['ArrowLeft']) turnInput += 1;
+            if (state.keys['KeyD'] || state.keys['ArrowRight']) turnInput -= 1;
+            
+            const turnSpeed = 0.05;
+            state.yaw += turnInput * turnSpeed * dt;
 
-            if(moveDir.length() > 0) {
+            // Movement relative to Yaw
+            const moveDir = new THREE.Vector3(0, 0, 0);
+            if (state.keys['KeyW'] || state.keys['ArrowUp']) {
+                moveDir.x += Math.sin(state.yaw);
+                moveDir.z += Math.cos(state.yaw);
+            }
+            if (state.keys['KeyS'] || state.keys['ArrowDown']) {
+                moveDir.x -= Math.sin(state.yaw);
+                moveDir.z -= Math.cos(state.yaw);
+            }
+
+            if (moveDir.length() > 0) {
                 moveDir.normalize();
                 state.velocity.x += moveDir.x * accel * dt;
                 state.velocity.z += moveDir.z * accel * dt;
-                
-                // Rotate player to face movement
-                const targetRot = Math.atan2(moveDir.x, moveDir.z);
-                playerGroup.rotation.y = THREE.MathUtils.lerp(playerGroup.rotation.y, targetRot, 0.1 * dt);
             }
+
+            // Sync character rotation + Banking effect
+            playerGroup.rotation.y = THREE.MathUtils.lerp(playerGroup.rotation.y, state.yaw, 0.1 * dt);
+            const targetBank = turnInput * 0.4;
+            playerGroup.rotation.z = THREE.MathUtils.lerp(playerGroup.rotation.z, targetBank, 0.1 * dt);
 
             // Gravity
             if(!state.onGround) {
@@ -801,16 +818,15 @@
         }
 
         function updateCamera(dt) {
-            // Smooth follow
-            const idealOffset = new THREE.Vector3(0, 5, 12);
-            if(state.velocity.length() > 0.1) {
-                const dir = state.velocity.clone().normalize();
-                idealOffset.x = -dir.x * 12;
-                idealOffset.z = -dir.z * 12;
-            }
+            // Smooth follow behind the player based on their yaw
+            const cameraHeight = 5;
+            const cameraDistance = 12;
             
-            const targetPos = state.pos.clone().add(idealOffset);
-            camera.position.lerp(targetPos, 0.1 * dt);
+            const idealOffsetX = -Math.sin(state.yaw) * cameraDistance;
+            const idealOffsetZ = -Math.cos(state.yaw) * cameraDistance;
+            
+            const targetPos = state.pos.clone().add(new THREE.Vector3(idealOffsetX, cameraHeight, idealOffsetZ));
+            camera.position.lerp(targetPos, 0.08 * dt);
             camera.lookAt(state.pos.clone().add(new THREE.Vector3(0, 2, 0)));
         }
 

@@ -494,6 +494,10 @@
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-bottom:12px;">
                 <div style="font-weight:800;">Balance: 🪙 <span id="shop-balance">0</span></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:0.8rem; color:rgba(255,255,255,0.6);">PLATE:</span>
+                    <input type="text" id="plate-input" maxlength="8" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:white; padding:4px 8px; border-radius:6px; font-family:monospace; text-transform:uppercase; width:100px;">
+                </div>
                 <div style="font-size:0.8rem; color: rgba(255,255,255,0.6);">Tip: build ramps in BUILD mode, then test in PLAY mode.</div>
             </div>
             <div id="shop-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
@@ -584,7 +588,17 @@
             equippedHorn: 'none',
             equippedGlow: 'none',
             trailPoints: [],
-            lastTrailAt: 0
+            lastTrailAt: 0,
+
+            // License plate
+            licensePlate: "GONZALEZ",
+            
+            // Air Rotation
+            carPitch: 0, // for flips
+            carRoll: 0,
+            accumPitch: 0,
+            accumRoll: 0,
+            accumYaw: 0
         };
 
         // --- THREE.JS INITIALIZATION ---
@@ -748,6 +762,32 @@
         });
         car.visible = false;
         scene.add(car);
+
+        // License Plate Sprite
+        const plateCanvas = document.createElement('canvas');
+        plateCanvas.width = 128;
+        plateCanvas.height = 64;
+        const plateTex = new THREE.CanvasTexture(plateCanvas);
+        const plateMat = new THREE.SpriteMaterial({ map: plateTex });
+        const plateSprite = new THREE.Sprite(plateMat);
+        plateSprite.scale.set(0.6, 0.3, 1);
+        plateSprite.position.set(0, 0.1, 1.01);
+        car.add(plateSprite);
+
+        function updateLicensePlate() {
+            const ctx = plateCanvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 128, 64);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(2, 2, 124, 60);
+            ctx.fillStyle = '#000000';
+            ctx.font = 'bold 30px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(state.licensePlate || "MGE", 64, 32);
+            plateTex.needsUpdate = true;
+        }
 
         // --- SKATEBOARDER MODEL (simple) ---
         const skater = new THREE.Group();
@@ -1026,7 +1066,10 @@
             { id: 'starter', name: 'Starter Buggy', price: 0, color: 0xff4757, accel: 6.0, boostAccel: 15.0, turn: 1.8, grip: 0.98 },
             { id: 'rocket',  name: 'Rocket RC',      price: 250, color: 0x7bed9f, accel: 7.8, boostAccel: 19.0, turn: 1.6, grip: 0.985 },
             { id: 'drifter', name: 'Neon Drifter',   price: 400, color: 0x1e90ff, accel: 6.8, boostAccel: 16.5, turn: 2.35, grip: 0.965 },
-            { id: 'tank',    name: 'Mini Tank',      price: 600, color: 0x888888, accel: 5.6, boostAccel: 14.0, turn: 1.35, grip: 0.99 }
+            { id: 'tank',    name: 'Mini Tank',      price: 600, color: 0x888888, accel: 5.6, boostAccel: 14.0, turn: 1.35, grip: 0.99 },
+            { id: 'ufo',     name: 'UFO Rover',      price: 1200, color: 0x00ffff, accel: 9.0, boostAccel: 22.0, turn: 2.0, grip: 1.0, crazy: 'ufo' },
+            { id: 'monster', name: 'Monster Truck',  price: 1500, color: 0x00ff00, accel: 7.0, boostAccel: 18.0, turn: 1.5, grip: 0.99, crazy: 'monster' },
+            { id: 'dragon',  name: 'Dragon Car',     price: 2000, color: 0xff00ff, accel: 10.0, boostAccel: 25.0, turn: 2.5, grip: 0.98, crazy: 'dragon' }
         ];
 
         const cosmeticCatalog = [
@@ -1050,6 +1093,7 @@
                 if (typeof data.equippedTrail === 'string') state.equippedTrail = data.equippedTrail;
                 if (typeof data.equippedHorn === 'string') state.equippedHorn = data.equippedHorn;
                 if (typeof data.equippedGlow === 'string') state.equippedGlow = data.equippedGlow;
+                if (typeof data.licensePlate === 'string') state.licensePlate = data.licensePlate;
                 if (!state.ownedCars.has('starter')) state.ownedCars.add('starter');
                 if (!carCatalog.some(c => c.id === state.equippedCarId)) state.equippedCarId = 'starter';
             } catch (_) {
@@ -1064,7 +1108,8 @@
                 ownedCosmetics: Array.from(state.ownedCosmetics || []),
                 equippedTrail: state.equippedTrail,
                 equippedHorn: state.equippedHorn,
-                equippedGlow: state.equippedGlow
+                equippedGlow: state.equippedGlow,
+                licensePlate: state.licensePlate
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
@@ -1085,6 +1130,56 @@
         function applyCarAppearance() {
             const cfg = getEquippedCar();
             bodyMesh.material.color.setHex(cfg.color);
+            
+            // Special overrides for "crazy" cars
+            if (cfg.crazy === 'ufo') {
+                bodyMesh.scale.set(1.5, 0.2, 1.5);
+                cockpit.scale.set(0.8, 1.5, 0.8);
+                cockpit.position.y = 0.2;
+                wheels.forEach(w => w.visible = false);
+            } else if (cfg.crazy === 'monster') {
+                bodyMesh.scale.set(1.0, 1.2, 1.5);
+                bodyMesh.position.y = 0.6;
+                cockpit.position.y = 1.6;
+                wheels.forEach((w, i) => {
+                    w.visible = true;
+                    w.scale.set(2.5, 2.5, 2.5);
+                    // Adjust positions for larger wheels
+                    const ofs = wOffsets[i];
+                    w.position.set(ofs[0] * 1.5, ofs[1] - 0.5, ofs[2]);
+                });
+            } else if (cfg.crazy === 'dragon') {
+                bodyMesh.scale.set(0.8, 0.5, 2.2);
+                bodyMesh.material.color.setHex(0xaa00aa);
+                cockpit.visible = false;
+                wheels.forEach(w => {
+                    w.visible = true;
+                    w.scale.set(0.8, 0.8, 0.8);
+                });
+                // Add a "tail" if not exists
+                if (!car.getObjectByName('dragon_tail')) {
+                    const tail = new THREE.Mesh(new THREE.BoxBufferGeometry(0.4, 0.4, 1), new THREE.MeshStandardMaterial({color: 0xaa00aa}));
+                    tail.name = 'dragon_tail';
+                    tail.position.set(0, 0.2, -1.5);
+                    car.add(tail);
+                }
+            } else {
+                // reset to default
+                bodyMesh.scale.set(1.2, 0.6, 2);
+                bodyMesh.position.y = 0;
+                cockpit.scale.set(1, 1, 1);
+                cockpit.position.set(0, 0.5, -0.1);
+                cockpit.visible = true;
+                wheels.forEach((w, i) => {
+                    w.visible = true;
+                    w.scale.set(1, 1, 1);
+                    w.position.set(...wOffsets[i]);
+                });
+                const tail = car.getObjectByName('dragon_tail');
+                if (tail) car.remove(tail);
+            }
+
+            updateLicensePlate();
         }
 
         function ensureCosmetics() {
@@ -1353,6 +1448,17 @@
                 card.appendChild(btn);
                 list.appendChild(card);
             });
+
+            // Update plate input
+            const plateInput = document.getElementById('plate-input');
+            if (plateInput) {
+                plateInput.value = state.licensePlate;
+                plateInput.oninput = (e) => {
+                    state.licensePlate = e.target.value.toUpperCase();
+                    updateLicensePlate();
+                    saveNow();
+                };
+            }
         }
 
         function showShop(open) {
@@ -1426,14 +1532,42 @@
             car.position.y += carVel.y * delta;
 
             const groundY = findGround(car.position.x, car.position.z);
-            if(car.position.y < groundY + 0.4) {
+            const onGround = car.position.y < groundY + 0.55;
+
+            if (onGround) {
                 car.position.y = groundY + 0.4;
                 if(carVel.y < 0) carVel.y = 0;
+                
+                // Snap rotations back to ground
+                car.rotation.x = THREE.MathUtils.lerp(car.rotation.x, 0, 0.1);
+                car.rotation.z = THREE.MathUtils.lerp(car.rotation.z, 0, 0.1);
+                
+                if (keys['KeyA']) carYaw += turnSpeed * delta;
+                if (keys['KeyD']) carYaw -= turnSpeed * delta;
             } else {
                 carVel.y -= grav * delta;
+                
+                // AIR FLIGHT CONTROLS
+                const airRotSpeed = 5.0 * delta;
+                if (keys['KeyW']) {
+                    car.rotation.x -= airRotSpeed;
+                    state.accumPitch += airRotSpeed;
+                }
+                if (keys['KeyS']) {
+                    car.rotation.x += airRotSpeed;
+                    state.accumPitch -= airRotSpeed;
+                }
+                if (keys['KeyA']) {
+                    car.rotation.z += airRotSpeed;
+                    state.accumRoll += airRotSpeed;
+                }
+                if (keys['KeyD']) {
+                    car.rotation.z -= airRotSpeed;
+                    state.accumRoll -= airRotSpeed;
+                }
             }
 
-            if(keys['Space'] && car.position.y < groundY + 0.6) {
+            if(keys['Space'] && onGround) {
                 carVel.y = 20;
             }
 
@@ -1590,6 +1724,11 @@
                 // landed: payout
                 const air = state.airTimeSec;
                 if (air > 0.18) {
+                    // FLIP CALCULATION
+                    const pitchFlips = Math.floor(Math.abs(state.accumPitch) / (Math.PI * 1.8));
+                    const rollFlips = Math.floor(Math.abs(state.accumRoll) / (Math.PI * 1.8));
+                    const totalFlips = pitchFlips + rollFlips;
+
                     // landing combo: reward consecutive clean landings
                     const now = performance.now();
                     const comboWindowMs = 3200;
@@ -1597,18 +1736,29 @@
                     state.landingCombo = isCombo ? Math.min(10, state.landingCombo + 1) : 0;
                     state.lastLandingAt = now;
 
+                    let bonusText = "";
+                    let flipPay = 0;
+                    if (totalFlips > 0) {
+                        flipPay = totalFlips * 50;
+                        bonusText = ` ${totalFlips}x FLIP! +${flipPay}`;
+                    }
+
                     const basePay = Math.min(80, air * 14); // cap per jump
                     const mult = 1 + state.landingCombo * 0.12;
-                    const airPay = basePay * mult;
-                    addCurrency(airPay);
-                    if (state.landingCombo >= 1) {
-                        showTrickText(`COMBO x${state.landingCombo+1}! +${Math.floor(airPay)}`);
+                    const totalPay = (basePay + flipPay) * mult;
+                    
+                    addCurrency(totalPay);
+                    
+                    if (totalFlips > 0 || state.landingCombo >= 1) {
+                        showTrickText(`STUNT!${bonusText}${state.landingCombo > 0 ? ' COMBO x' + (state.landingCombo + 1) : ''}`);
                     }
 
                     // daily bonus check
                     maybeDailyFirstLandingBonus();
                 }
                 state.airTimeSec = 0;
+                state.accumPitch = 0;
+                state.accumRoll = 0;
                 saveNow();
             }
             state.isAirborne = airborne;
@@ -1752,6 +1902,8 @@
             state.minuteBonusGiven = false;
             state.landingCombo = 0;
             state.lastLandingAt = 0;
+            state.accumPitch = 0;
+            state.accumRoll = 0;
             setPlayerType(state.playerType);
             if (state.playerType === 'car') car.position.set(0, 10, 0);
             else skater.position.set(0, 10, 0);
@@ -1803,6 +1955,8 @@
             carYaw = 0;
             state.airTimeSec = 0;
             state.isAirborne = false;
+            state.accumPitch = 0;
+            state.accumRoll = 0;
             state.trailPoints.length = 0;
             showTrickText('RESPAWNED');
         }

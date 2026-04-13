@@ -137,7 +137,24 @@
             font-size: 1.5rem;
             font-weight: 900;
             color: white;
-            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.8), 0 0 20px rgba(0, 242, 254, 0.4);
+        }
+
+        /* New: Alerts */
+        #alert-box {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid var(--mge-primary);
+            border-radius: 10px;
+            font-weight: 900;
+            color: var(--mge-primary);
+            display: none;
+            backdrop-filter: blur(5px);
+            z-index: 50;
         }
 
         /* Ignite Button */
@@ -171,6 +188,86 @@
             transform: scale(0.9);
             box-shadow: 0 0 50px rgba(255, 75, 43, 0.8);
             background: radial-gradient(circle, #ff4b2b, #ff416c);
+        }
+
+        #restart-btn {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            margin-right: 20px;
+        }
+
+        #restart-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(-10deg) scale(1.1);
+        }
+
+        /* Path Selector */
+        .path-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .path-option:hover {
+            background: rgba(0, 242, 254, 0.2);
+            border-color: var(--mge-neon-blue);
+        }
+
+        .path-option.selected {
+            background: rgba(0, 242, 254, 0.3);
+            border-color: var(--mge-neon-blue);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        /* STEM Experiments Panel */
+        #experiment-panel {
+            display: none;
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            width: 300px;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .experiment-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .experiment-btn:hover {
+            transform: scale(1.02);
         }
 
         /* Notification/Mission Start */
@@ -272,6 +369,7 @@
 </head>
 <body>
     <div id="nebula"></div>
+    <div id="alert-box">CRITICAL FUEL LEVEL</div>
     <div id="ui-layer">
         <!-- Dashboard View -->
         <div id="dashboard" class="panel">
@@ -308,13 +406,40 @@
                 <input type="range" id="stages-input" class="control-input" min="1" max="3" value="1">
             </div>
 
+            <div class="control-group">
+                <label class="control-label">Trajectory Path</label>
+                <div id="path-direct" class="path-option selected" onclick="app.setPath('direct')">
+                    <b>Direct Ascent</b><br>
+                    <span style="font-size: 0.7rem; color: #aaa;">High thrust, straight to the moon!</span>
+                </div>
+                <div id="path-slingshot" class="path-option" onclick="app.setPath('slingshot')">
+                    <b>Gravity Slingshot</b><br>
+                    <span style="font-size: 0.7rem; color: #aaa;">Efficient orbit, multi-stage focus.</span>
+                </div>
+                <div id="path-orbit" class="path-option" onclick="app.setPath('orbit')">
+                    <b>Low Earth Orbit</b><br>
+                    <span style="font-size: 0.7rem; color: #aaa;">Stability first, then lunar transfer.</span>
+                </div>
+            </div>
+
             <div style="margin-top: 20px; font-size: 0.8rem; color: #888;">
                 * Higher mass needs more thrust!
             </div>
         </div>
 
-        <!-- Ignite Button -->
-        <div id="ignite-container">
+        <!-- Experiment Panel -->
+        <div id="experiment-panel" class="panel">
+            <div class="vab-title">🔬 LUNAR SCIENCE</div>
+            <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 15px;">Perform STEM experiments on the lunar surface!</p>
+            <button class="experiment-btn" onclick="app.runExperiment('gravity')">GRAVITY DROP ⚖️</button>
+            <button class="experiment-btn" onclick="app.runExperiment('vacuum')">VACUUM TEST 🪶</button>
+            <button class="experiment-btn" onclick="app.runExperiment('laser')">LASER ECHO 🔦</button>
+            <button class="experiment-btn" onclick="app.runExperiment('seismic')">MOONQUAKE 🌋</button>
+        </div>
+
+        <!-- Ignite & Restart Container -->
+        <div id="ignite-container" style="display: flex; align-items: center;">
+            <button id="restart-btn" onclick="location.reload()">Restart</button>
             <button id="ignite-btn">Ignite</button>
         </div>
     </div>
@@ -363,13 +488,67 @@
                     ignited: false,
                     slingshotEligible: false,
                     moonInfluence: false,
-                    trailPoints: []
+                    trailPoints: [],
+                    selectedPath: 'direct',
+                    experimentActive: false
                 };
 
                 this.initThree();
                 this.initSystems();
                 this.setupUI();
+                this.initParticles();
                 this.animate();
+            }
+
+            initParticles() {
+                this.particles = [];
+                this.pGroup = new THREE.Group();
+                this.scene.add(this.pGroup);
+            }
+
+            spawnExhaust() {
+                if (!this.state.ignited || this.state.fuel <= 0) return;
+                
+                for(let i=0; i<3; i++) {
+                    const p = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.3 + Math.random()*0.5, 4, 4),
+                        new THREE.MeshBasicMaterial({ 
+                            color: Math.random() > 0.5 ? 0xff4411 : 0xffaa00,
+                            transparent: true,
+                            opacity: 0.8
+                        })
+                    );
+                    
+                    const offset = new THREE.Vector3(
+                        (Math.random()-0.5)*0.5,
+                        -1.5,
+                        (Math.random()-0.5)*0.5
+                    );
+                    p.position.copy(this.rocket.position).add(offset.applyQuaternion(this.rocket.quaternion));
+                    
+                    const vel = new THREE.Vector3(0, -1, 0)
+                        .applyQuaternion(this.rocket.quaternion)
+                        .multiplyScalar(0.5 + Math.random())
+                        .add(new THREE.Vector3((Math.random()-0.5)*0.2, 0, (Math.random()-0.5)*0.2));
+                    
+                    this.particles.push({ mesh: p, vel: vel, life: 1.0 });
+                    this.pGroup.add(p);
+                }
+            }
+
+            updateParticles(dt) {
+                for(let i = this.particles.length-1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.mesh.position.add(p.vel.clone().multiplyScalar(dt * 30));
+                    p.life -= dt * 2.5;
+                    p.mesh.scale.multiplyScalar(0.95);
+                    p.mesh.material.opacity = p.life;
+                    
+                    if (p.life <= 0) {
+                        this.pGroup.remove(p.mesh);
+                        this.particles.splice(i, 1);
+                    }
+                }
             }
 
             initThree() {
@@ -576,9 +755,70 @@
                 document.getElementById('speed-val').innerText = (this.state.vel.length() * 1200).toFixed(0) + " m/s";
                 document.getElementById('moon-dist-val').innerText = (dMoon * 1000).toFixed(0) + " km";
 
-                // Mission Logic
+                // Show experiment panel when near moon
+                const experimentPanel = document.getElementById('experiment-panel');
+                if (dMoon < 30 && this.state.phase === 'FLIGHT') {
+                    experimentPanel.style.display = 'block';
+                } else {
+                    experimentPanel.style.display = 'none';
+                }
+
                 if (dMoon < 10) this.state.slingshotEligible = true;
                 if (this.state.slingshotEligible && dEarth < 30 && dMoon > 40) this.triggerSuccess();
+
+                // Fuel Alert
+                const alertBox = document.getElementById('alert-box');
+                if (this.state.fuel < 100 && this.state.fuel > 0) {
+                    alertBox.style.display = 'block';
+                    alertBox.style.opacity = Math.sin(Date.now() * 0.01) * 0.5 + 0.5;
+                } else {
+                    alertBox.style.display = 'none';
+                }
+
+                // Particle Spawning
+                if (this.state.ignited && this.state.fuel > 0) {
+                    this.spawnExhaust();
+                    // Shake camera during launch
+                    if (dEarth < 15) {
+                        this.camera.position.x += (Math.random()-0.5) * 0.2;
+                        this.camera.position.y += (Math.random()-0.5) * 0.2;
+                    }
+                }
+                
+                this.updateParticles(dt);
+
+                // Prediction Line (Future path)
+                this.updatePrediction();
+            }
+
+            updatePrediction() {
+                if (this.state.phase !== 'FLIGHT') return;
+                
+                const points = [];
+                let tempPos = this.state.pos.clone();
+                let tempVel = this.state.vel.clone();
+                const step = 0.5;
+                
+                for(let i=0; i<40; i++) {
+                    const dE = tempPos.distanceTo(new THREE.Vector3(0,0,0));
+                    const dM = tempPos.distanceTo(new THREE.Vector3(this.config.MOON_DIST,0,0));
+                    
+                    const gE = new THREE.Vector3(0,0,0).sub(tempPos).normalize().multiplyScalar(12 / (dE * dE));
+                    const gM = new THREE.Vector3(this.config.MOON_DIST,0,0).sub(tempPos).normalize().multiplyScalar(3 / (dM * dM));
+                    
+                    tempVel.add(gE.add(gM));
+                    tempPos.add(tempVel.clone().multiplyScalar(step * 40));
+                    points.push(tempPos.clone());
+                }
+                
+                const predGeo = new THREE.BufferGeometry().setFromPoints(points);
+                if (this.predLine) {
+                    this.scene.remove(this.predLine);
+                    this.predLine.geometry.dispose();
+                    this.predLine.material.dispose();
+                }
+                this.predLine = new THREE.Line(predGeo, new THREE.LineBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.3 }));
+                this.scene.add(this.predLine);
             }
 
             triggerSuccess() {
@@ -586,6 +826,111 @@
                 this.state.phase = 'SUCCESS';
                 document.getElementById('success-screen').style.display = 'block';
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff6b6b', '#4ecdc4', '#ffe66d'] });
+            }
+
+            setPath(type) {
+                this.state.selectedPath = type;
+                document.querySelectorAll('.path-option').forEach(el => el.classList.remove('selected'));
+                document.getElementById('path-' + type).classList.add('selected');
+                
+                // Visual feedback for path choice
+                if (type === 'direct') {
+                    this.state.thrustPower = Math.max(80, this.state.thrustPower);
+                    document.getElementById('thrust-input').value = this.state.thrustPower;
+                    document.getElementById('thrust-val').innerText = this.state.thrustPower;
+                } else if (type === 'slingshot') {
+                    this.state.stages = 3;
+                    document.getElementById('stages-input').value = 3;
+                    document.getElementById('stages-val').innerText = 3;
+                    this.updateRocketModel();
+                }
+            }
+
+            runExperiment(type) {
+                if (this.state.experimentActive) return;
+                this.state.experimentActive = true;
+                
+                const moonPos = this.moon.position.clone();
+                const surfacePos = moonPos.clone().add(new THREE.Vector3(0, this.config.MOON_RADIUS * this.config.SCALE + 2, 0));
+
+                switch(type) {
+                    case 'gravity':
+                        this.expGravity(surfacePos);
+                        break;
+                    case 'vacuum':
+                        this.expVacuum(surfacePos);
+                        break;
+                    case 'laser':
+                        this.expLaser();
+                        break;
+                    case 'seismic':
+                        this.expSeismic();
+                        break;
+                }
+                
+                setTimeout(() => { this.state.experimentActive = false; }, 4000);
+            }
+
+            expGravity(pos) {
+                const g1 = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff4444 }));
+                const g2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4444ff }));
+                g1.position.copy(pos).add(new THREE.Vector3(-2, 0, 0));
+                g2.position.copy(pos).add(new THREE.Vector3(2, 0, 0));
+                this.scene.add(g1, g2);
+
+                gsap.to([g1.position, g2.position], { 
+                    y: pos.y - 12, 
+                    duration: 2, 
+                    ease: "power2.in",
+                    onComplete: () => {
+                        this.scene.remove(g1, g2);
+                        confetti({ particleCount: 20, origin: { x: 0.8, y: 0.2 } });
+                    }
+                });
+            }
+
+            expVacuum(pos) {
+                // Simplified: text overlay explaining the hammer/feather
+                const overlay = document.createElement('div');
+                overlay.style.cssText = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); padding:20px; border-radius:10px; border:2px solid gold; text-align:center; z-index:1000;";
+                overlay.innerHTML = "<h2 style='color:gold'>VACUUM PHYSICS</h2><p>In a vacuum, all objects fall at the same rate regardless of mass!</p><p><i>- Galileo / Apollo 15</i></p>";
+                document.body.appendChild(overlay);
+                this.expGravity(pos); // Run gravity drop visually
+                setTimeout(() => overlay.remove(), 4000);
+            }
+
+            expLaser() {
+                const beam = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), this.moon.position]),
+                    new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 1 })
+                );
+                this.scene.add(beam);
+                gsap.to(beam.material, { opacity: 0, duration: 1.5, onComplete: () => this.scene.remove(beam) });
+                
+                const feedback = document.createElement('div');
+                feedback.style.cssText = "position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.8); padding:10px; border-radius:5px; border:1px solid #ff00ff; color:#ff00ff; font-weight:bold;";
+                feedback.innerText = "LUNAR RANGE: 384,400 KM | TIME: 1.28s";
+                document.body.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 3000);
+            }
+
+            expSeismic() {
+                gsap.to(this.camera.position, { 
+                    x: "+=" + (Math.random() - 0.5) * 5, 
+                    y: "+=" + (Math.random() - 0.5) * 5, 
+                    duration: 0.1, 
+                    repeat: 10, 
+                    yoyo: true 
+                });
+                const wave = new THREE.Mesh(
+                    new THREE.RingGeometry(0.1, 0.2, 32),
+                    new THREE.MeshBasicMaterial({ color: 0xff6b6b, transparent: true, side: THREE.DoubleSide })
+                );
+                wave.position.copy(this.moon.position).add(new THREE.Vector3(0, this.config.MOON_RADIUS * this.config.SCALE + 0.1, 0));
+                wave.rotation.x = Math.PI/2;
+                this.scene.add(wave);
+                gsap.to(wave.scale, { x: 50, y: 50, duration: 2 });
+                gsap.to(wave.material, { opacity: 0, duration: 2, onComplete: () => this.scene.remove(wave) });
             }
 
             animate() {
