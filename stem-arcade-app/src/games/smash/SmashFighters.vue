@@ -2,19 +2,42 @@
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
 import * as THREE from 'three';
 import HealthBar from './components/HealthBar.vue';
+import EscapeOverlay from '../../components/EscapeOverlay.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const container = ref<HTMLElement | null>(null);
 
+// Constants from original logic
+const GRAVITY = -0.015;
+const JUMP_FORCE = 0.45;
+const MOVE_SPEED = 0.08;
+const PLATFORM_TOP = 0.5;
+
 // Game State
 const players = reactive({
-  p1: { name: 'Player 1', health: 100, color: '#ff6b6b' },
-  p2: { name: 'Player 2', health: 100, color: '#4ecdc4' }
+  p1: { 
+    name: 'Player 1', 
+    health: 0, // percentage in Smash logic
+    color: '#ff6b6b',
+    position: new THREE.Vector3(-5, 5, 0),
+    velocity: new THREE.Vector3()
+  },
+  p2: { 
+    name: 'Player 2', 
+    health: 0, 
+    color: '#4ecdc4',
+    position: new THREE.Vector3(5, 5, 0),
+    velocity: new THREE.Vector3()
+  }
 });
 
 let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer;
 let animationId: number;
+const keys: Record<string, boolean> = {};
+
+// Mesh references
+let p1Mesh: THREE.Group, p2Mesh: THREE.Group;
 
 onMounted(() => {
   if (!container.value) return;
@@ -33,29 +56,82 @@ onMounted(() => {
   container.value.appendChild(renderer.domElement);
 
   // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-  scene.add(ambientLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const light = new THREE.DirectionalLight(0xffffff, 0.8);
+  light.position.set(10, 20, 10);
+  scene.add(light);
 
-  const solarLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  solarLight.position.set(10, 20, 10);
-  scene.add(solarLight);
-
-  // Add a placeholder platform
+  // Stage
   const stageGeo = new THREE.BoxGeometry(20, 1, 5);
   const stageMat = new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.3 });
   const stage = new THREE.Mesh(stageGeo, stageMat);
   scene.add(stage);
 
-  // Animation Loop
+  // Create Players
+  p1Mesh = createPlayerMesh(players.p1.color);
+  p2Mesh = createPlayerMesh(players.p2.color);
+  scene.add(p1Mesh);
+  scene.add(p2Mesh);
+
+  // Events
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+  window.addEventListener('resize', handleResize);
+
+  // Loop
   const animate = () => {
     animationId = requestAnimationFrame(animate);
+    updatePhysics();
     renderer.render(scene, camera);
   };
   animate();
-
-  // Resize handler
-  window.addEventListener('resize', handleResize);
 });
+
+const createPlayerMesh = (color: string) => {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.8), new THREE.MeshStandardMaterial({ color }));
+  body.position.y = 0.6;
+  group.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.4), new THREE.MeshStandardMaterial({ color: '#ffdbac' }));
+  head.position.y = 1.6;
+  group.add(head);
+  return group;
+};
+
+const handleKeyDown = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = true; if (e.key === 'Escape') router.push('/'); };
+const handleKeyUp = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = false; };
+
+const updatePhysics = () => {
+  // P1 controls
+  if (keys['a']) players.p1.velocity.x = -MOVE_SPEED;
+  else if (keys['d']) players.p1.velocity.x = MOVE_SPEED;
+  else players.p1.velocity.x *= 0.8;
+
+  if (keys['w'] && players.p1.position.y <= PLATFORM_TOP + 0.1) players.p1.velocity.y = JUMP_FORCE;
+
+  // P2 controls
+  if (keys['arrowleft']) players.p2.velocity.x = -MOVE_SPEED;
+  else if (keys['arrowright']) players.p2.velocity.x = MOVE_SPEED;
+  else players.p2.velocity.x *= 0.8;
+
+  if (keys['arrowup'] && players.p2.position.y <= PLATFORM_TOP + 0.1) players.p2.velocity.y = JUMP_FORCE;
+
+  // Apply velocity & gravity
+  [players.p1, players.p2].forEach((p, idx) => {
+    p.velocity.y += GRAVITY;
+    p.position.add(p.velocity);
+
+    // Platform collision
+    if (p.position.y < PLATFORM_TOP && Math.abs(p.position.x) < 10) {
+      p.position.y = PLATFORM_TOP;
+      p.velocity.y = 0;
+    }
+
+    // Update meshes
+    const mesh = idx === 0 ? p1Mesh : p2Mesh;
+    if (mesh) mesh.position.copy(p.position);
+  });
+};
 
 const handleResize = () => {
   if (!container.value) return;
@@ -66,6 +142,8 @@ const handleResize = () => {
 
 onUnmounted(() => {
   cancelAnimationFrame(animationId);
+  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('keyup', handleKeyUp);
   window.removeEventListener('resize', handleResize);
   renderer.dispose();
 });
@@ -74,16 +152,15 @@ onUnmounted(() => {
 <template>
   <div class="smash-stage">
     <div ref="container" class="game-container"></div>
+    <EscapeOverlay />
 
     <div class="ui-overlay">
-      <!-- HUD -->
       <nav class="hud glass">
         <button class="exit-btn" @click="router.push('/')">← EXIT</button>
-        <div class="match-info">ARENA MODE</div>
+        <div class="match-info">SUMMER SMASH: PORT</div>
         <div class="timer">99</div>
       </nav>
 
-      <!-- Health HUD -->
       <div class="health-hud">
         <HealthBar :name="players.p1.name" :health="players.p1.health" :color="players.p1.color" isPlayer1 />
         <HealthBar :name="players.p2.name" :health="players.p2.health" :color="players.p2.color" />
@@ -128,6 +205,12 @@ onUnmounted(() => {
   padding: 0.5rem 1.5rem;
   border-radius: 15px;
   pointer-events: auto;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.hud.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .exit-btn {
@@ -138,18 +221,25 @@ onUnmounted(() => {
   border-radius: 8px;
   font-weight: 800;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
-.match-info { font-weight: 900; letter-spacing: 2px; color: #94a3b8; }
-.timer { font-weight: 900; font-size: 1.5rem; color: var(--arcade-accent); }
+.exit-btn:hover { background: rgba(255,255,255,0.2); }
+
+.match-info { font-weight: 900; letter-spacing: 2px; color: #94a3b8; font-size: 0.8rem; }
+.timer { font-weight: 900; font-size: 1.5rem; color: #ffeb3b; }
 
 .health-hud {
   position: absolute;
-  top: 80px;
+  top: 90px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: space-between;
   width: 600px;
+}
+
+@media (max-width: 768px) {
+  .health-hud { width: 90%; }
 }
 </style>
