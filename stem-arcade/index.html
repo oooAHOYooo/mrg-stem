@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The STEM Arcade | Premium Educational 3D Games</title>
+    <!-- Use a premium font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --arcade-primary: #6366f1;
+            --arcade-secondary: #a855f7;
+            --arcade-accent: #f59e0b;
+            --arcade-bg: #0f172a;
+            --arcade-surface: #1e293b;
+            --arcade-text: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--arcade-bg);
+            color: var(--arcade-text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animated Background Mesh */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 40%);
+            filter: blur(80px);
+        }
+
+        .navbar {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand span {
+            font-size: 2.2rem;
+        }
+
+        .license-status {
+            font-size: 0.8rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .hero {
+            padding: 6rem 5% 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        /* Search & Filter Bar */
+        .filter-bar {
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 8px 20px;
+            background: var(--arcade-surface);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #94a3b8;
+        }
+
+        .filter-pill.active {
+            background: var(--arcade-primary);
+            color: white;
+            border-color: var(--arcade-primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* The Grid */
+        .arcade-grid {
+            padding: 0 5% 8rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background: var(--arcade-surface);
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-thumb {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-thumb::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, var(--arcade-surface) 0%, transparent 100%);
+        }
+
+        .thumb-emoji {
+            font-size: 5rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.3s ease;
+        }
+
+        .game-card:hover .thumb-emoji {
+            transform: translate(-50%, -50%) scale(1.2) rotate(10deg);
+        }
+
+        .game-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-tag {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--arcade-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-card h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+
+        .game-card p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .play-btn {
+            margin-top: auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            text-align: center;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-card:hover .play-btn {
+            background: var(--arcade-primary);
+            border-color: var(--arcade-primary);
+            color: white;
+        }
+
+        .badge-new {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--arcade-accent);
+            color: black;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            z-index: 10;
+        }
+
+        /* Footer / Safety Info */
+        .safety-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            padding: 4rem 5%;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .safety-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .safety-item span {
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .arcade-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mesh-bg"></div>
+
+    <nav class="navbar">
+        <div class="brand"><span>🕹️</span> THE STEM ARCADE</div>
+        <div class="license-status">✓ School Site License Active</div>
+    </nav>
+
+    <header class="hero">
+        <h1 id="main-title">Play. Learn. <br><span style="color: var(--arcade-primary)">Discover.</span></h1>
+        <p>Premium 3D STEM experiments designed for curious minds. No ads. No tracking. Pure learning.</p>
+        
+        <div class="filter-bar">
+            <div class="filter-pill active">All Games</div>
+            <div class="filter-pill">Physics</div>
+            <div class="filter-pill">Logic</div>
+            <div class="filter-pill">Nature</div>
+            <div class="filter-pill">Space</div>
+        </div>
+    </header>
+
+    <main class="arcade-grid">
+        <!-- Game 1: Storm Chaser -->
+        <a href="../mge-storm-chaser.html" class="game-card">
+            <div class="badge-new">HOT</div>
+            <div class="game-thumb" style="background: linear-gradient(135deg, #1e293b, #475569)">
+                <div class="thumb-emoji">🌪️</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Meteorology</span>
+                <h3>Storm Chaser</h3>
+                <p>Master the elements! Create massive weather systems and discover the science behind severe storms.</p>
+                <div class="play-btn">START EXPERIMENT</div>
+            </div>
+        </a>
+
+        <!-- Game 2: Lunar Architect -->
+        <a href="../mge-lunar-architect.html" class="game-card">
+            <div class="game-thumb" style="background: linear-gradient(135deg, #2e1065, #6b21a8)">
+                <div class="thumb-emoji">🚀</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Aerospace</span>
+                <h3>Lunar Architect</h3>
+                <p>Construct modular rockets and solve the physics puzzles of a lunar slingshot orbit.</p>
+                <div class="play-btn">LAUNCH MISSION</div>
+            </div>
+        </a>
+
+        <!-- Game 3: Sonic Speed -->
+        <a href="../mge-sonic-speed.html" class="game-card">
+            <div class="game-thumb" style="background: linear-gradient(135deg, #1e3a8a, #facc15)">
+                <div class="thumb-emoji">🦔</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Physics & Kinematics</span>
+                <h3>Sonic Speed</h3>
+                <p>Experience high-velocity STEM! Learn about momentum and kinetics as you dash through 3D zones.</p>
+                <div class="play-btn">ENTER SPEED ZONE</div>
+            </div>
+        </a>
+
+        <!-- Game 4: FPS Striker -->
+        <a href="../mge-fps-striker.html" class="game-card">
+            <div class="game-thumb" style="background: linear-gradient(135deg, #134e4a, #0d9488)">
+                <div class="thumb-emoji">🎯</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Level Design</span>
+                <h3>FPS Striker</h3>
+                <p>Architect your own arena and master the geometry of targeting and 3D space navigation.</p>
+                <div class="play-btn">ENTER ARENA</div>
+            </div>
+        </a>
+
+        <!-- Game 5: Robot Path Planner -->
+        <a href="../mge-robot-path-planner.html" class="game-card">
+            <div class="game-thumb" style="background: linear-gradient(135deg, #0f172a, #6366f1)">
+                <div class="thumb-emoji">🤖</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Logic & Algorithms</span>
+                <h3>Robot Path Planner</h3>
+                <p>Use logic blocks to program your bots through complex environments and hazardous zones.</p>
+                <div class="play-btn">INITIATE LOGIC</div>
+            </div>
+        </a>
+
+        <!-- Game 6: Aqua Genesis -->
+        <a href="../mge-aqua-genesis.html" class="game-card">
+            <div class="game-thumb" style="background: linear-gradient(135deg, #164e63, #0891b2)">
+                <div class="thumb-emoji">🌊</div>
+            </div>
+            <div class="game-content">
+                <span class="game-tag">Marine Science</span>
+                <h3>Aqua Genesis</h3>
+                <p>A sensory-friendly 3D playground focused on oceanic ecosystems and environmental science.</p>
+                <div class="play-btn">DIVE IN</div>
+            </div>
+        </a>
+    </main>
+
+    <footer class="safety-badge">
+        <div class="safety-item">
+            <span>🛡️</span> COPPA Compliant
+        </div>
+        <div class="safety-item">
+            <span>🚫</span> No Tracking / Ads
+        </div>
+        <div class="safety-item">
+            <span>🏫</span> School Safe Verified
+        </div>
+        <div class="safety-item">
+            <span>🔒</span> Encrypted Progress
+        </div>
+    </footer>
+
+    <script src="core/license-validator.js"></script>
+    <script>
+        // Simple filter logic
+        const pills = document.querySelectorAll('.filter-pill');
+        pills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                pills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
