@@ -5,8 +5,12 @@ import { useRouter } from 'vue-router';
 const store = useArcadeStore();
 const router = useRouter();
 
-const play = (gameId: string) => {
-  router.push({ name: 'play', params: { id: gameId } });
+const play = (game: any) => {
+  if (game.native) {
+    router.push({ name: game.id });
+  } else {
+    router.push({ name: 'play', params: { id: game.id } });
+  }
 };
 </script>
 
@@ -22,7 +26,7 @@ const play = (gameId: string) => {
         v-for="game in store.games" 
         :key="game.id" 
         class="glass-card game-card"
-        @click="play(game.id)"
+        @click="play(game)"
       >
         <div class="emoji">{{ game.emoji }}</div>
         <div class="content">

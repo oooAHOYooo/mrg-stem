@@ -5,6 +5,7 @@ export const useArcadeStore = defineStore('arcade', {
     license: JSON.parse(localStorage.getItem('arcade_license') || 'null'),
     stemXp: parseInt(localStorage.getItem('arcade_xp') || '0'),
     games: [
+      { id: 'smash', title: 'Super Smash Fighters', emoji: '⚔️', category: 'Fighting', native: true },
       { id: 'storm-chaser', title: 'Storm Chaser', emoji: '🌪️', category: 'Nature', path: '../mge-storm-chaser.html' },
       { id: 'lunar-architect', title: 'Lunar Architect', emoji: '🚀', category: 'Space', path: '../mge-lunar-architect.html' },
       { id: 'sonic-speed', title: 'Sonic Speed', emoji: '🦔', category: 'Physics', path: '../mge-sonic-speed.html' },
