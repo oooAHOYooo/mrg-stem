@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Aldo 63 | MGE</title>
+    <title>Super Aldo 63 | MGE Castle World</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #facc15;
             --secondary: #a78bfa;
             --accent: #ef4444;
-            --bg-dark: #0f172a;
-            --ui-glass: rgba(15, 23, 42, 0.7);
+            --bg-deep: #0ea5e9;
+            --ui-glass: rgba(15, 23, 42, 0.75);
         }
 
         body, html {
@@ -22,7 +22,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: var(--bg-dark);
+            background: #000;
             font-family: 'Outfit', sans-serif;
             color: white;
         }
@@ -42,90 +42,99 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 10;
+            z-index: 100;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 2rem;
+            padding: 24px;
             box-sizing: border-box;
         }
 
         .hud-top {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            pointer-events: auto;
         }
 
         .badge {
             background: var(--ui-glass);
-            backdrop-filter: blur(10px);
-            padding: 0.5rem 1.5rem;
+            backdrop-filter: blur(12px);
+            padding: 10px 24px;
             border-radius: 99px;
-            border: 2px solid rgba(250, 204, 21, 0.5);
-            font-weight: 900;
-            letter-spacing: 1px;
+            border: 2px solid var(--primary);
+            font-weight: 950;
             color: var(--primary);
             text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.2);
-            pointer-events: auto;
+            box-shadow: 0 0 30px rgba(250, 204, 21, 0.4);
+            text-decoration: none;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .controls-hint {
             background: var(--ui-glass);
             backdrop-filter: blur(10px);
-            padding: 1rem;
-            border-radius: 1rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 0.95rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
         }
 
+        /* Mobile Controls */
         .joystick-container {
             position: absolute;
-            bottom: 3rem;
-            left: 3rem;
+            bottom: 50px;
+            left: 50px;
             width: 120px;
             height: 120px;
+            display: none;
             pointer-events: auto;
-            display: none; /* Only on mobile */
         }
 
         .jump-btn {
             position: absolute;
-            bottom: 3rem;
-            right: 3rem;
-            width: 80px;
-            height: 80px;
+            bottom: 50px;
+            right: 50px;
+            width: 90px;
+            height: 90px;
             background: var(--primary);
             color: #000;
             border-radius: 50%;
-            display: none; /* Only on mobile */
+            display: none;
             justify-content: center;
             align-items: center;
             font-weight: 900;
             font-size: 1.2rem;
-            box-shadow: 0 10px 30px rgba(250, 204, 21, 0.4);
-            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(250, 204, 21, 0.5);
             pointer-events: auto;
             user-select: none;
+            border: 4px solid rgba(255,255,255,0.3);
         }
 
+        /* STEM Facts */
         #stem-fact-popup {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            width: min(400px, 90vw);
+            width: 450px;
+            max-width: 95vw;
             background: var(--ui-glass);
-            backdrop-filter: blur(20px);
-            border: 3px solid var(--primary);
-            padding: 2.5rem;
-            border-radius: 2rem;
+            backdrop-filter: blur(30px);
+            border: 4px solid var(--primary);
+            padding: 40px;
+            border-radius: 40px;
             text-align: center;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 500;
+            pointer-events: auto;
         }
 
         #stem-fact-popup.visible {
@@ -134,35 +143,22 @@
             transform: translate(-50%, -50%) scale(1);
         }
 
-        #stem-fact-popup h3 {
-            margin: 0 0 1rem 0;
-            color: var(--primary);
-            font-size: 1.8rem;
-            font-weight: 900;
-        }
-
-        #stem-fact-popup p {
-            margin: 0;
-            line-height: 1.6;
-            font-size: 1.1rem;
-        }
-
-        #stem-fact-popup .close-btn {
-            margin-top: 2rem;
-            padding: 0.5rem 2rem;
+        .close-btn {
+            margin-top: 30px;
+            padding: 12px 48px;
             background: var(--primary);
             color: #000;
             border-radius: 99px;
-            font-weight: 800;
+            font-weight: 900;
             cursor: pointer;
             display: inline-block;
-            pointer-events: auto;
+            transition: transform 0.2s;
         }
 
+        .close-btn:hover { transform: scale(1.05); }
+
         @media (max-width: 768px) {
-            .joystick-container, .jump-btn {
-                display: flex;
-            }
+            .joystick-container, .jump-btn { display: flex; }
         }
     </style>
 </head>
@@ -171,56 +167,46 @@
     
     <div id="ui-layer">
         <div class="hud-top">
-            <div class="badge">Super Aldo 63</div>
-            <a href="mge.html" class="badge" style="border-color: rgba(255,255,255,0.3); color: white; text-decoration: none;">🏠 Hub</a>
+            <div class="badge">🏰 SUPER ALDO 63</div>
+            <a href="mge.html" class="badge" style="color: white; border-color: rgba(255,255,255,0.4)">🏠 HUB</a>
         </div>
-
         <div class="hud-bottom" style="display: flex; justify-content: center;">
             <div class="controls-hint">
-                <span style="color: var(--primary)">WASD / ARROWS</span> to Move • <span style="color: var(--primary)">SPACE</span> to Jump • <span style="color: var(--primary)">STOMP</span> to Learn
+                <span style="color: var(--primary)">WASD / ARROWS</span> Move • <span style="color: var(--primary)">SPACE</span> Jump • Bounce on Enemies!
             </div>
         </div>
     </div>
 
-    <!-- Mobile Controls -->
+    <!-- Mobile UI -->
     <div class="joystick-container" id="joystick"></div>
     <div class="jump-btn" id="mobile-jump">JUMP</div>
 
-    <!-- STEM Fact Popup -->
+    <!-- STEM Facts -->
     <div id="stem-fact-popup">
-        <div id="fact-content">
-            <h3>🔬 STEM Fact!</h3>
-            <p id="fact-text">Did you know that gravity on the Moon is only 1/6th as strong as on Earth?</p>
-        </div>
-        <div class="close-btn" id="close-popup">CONTINUE</div>
+        <h2 style="color: var(--primary); margin-top: 0; font-weight: 900;">⭐ STEM POWER! ⭐</h2>
+        <p id="fact-text" style="font-size: 1.3rem; line-height: 1.5; color: #fff;"></p>
+        <div class="close-btn" id="close-popup">GOT IT!</div>
     </div>
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
-            }
-        }
-    </script>
-
+    <!-- Legacy Scripts for Maximum Compatibility on file:/// -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import * as CANNON from 'cannon-es';
+    <script>
+        /**
+         * SUPER ALDO 63 - CASTLE LEVEL
+         * Powered by Three.js & Cannon.js
+         */
 
-        // --- Configuration ---
         const CONFIG = {
-            gravity: -25,
-            jumpForce: 12,
-            moveSpeed: 10,
-            rotationSpeed: 0.2,
-            pedestalCount: 10,
-            portalLinks: [
+            gravity: -30,
+            jumpForce: 15,
+            speed: 12,
+            rotSpeed: 0.15,
+            portals: [
                 { name: "Sonic Speed", url: "mge-sonic-speed.html", icon: "🦔" },
                 { name: "Storm Chaser", url: "mge-storm-chaser.html", icon: "🌪️" },
                 { name: "Lunar Architect", url: "mge-lunar-architect.html", icon: "🚀" },
@@ -232,568 +218,279 @@
                 { name: "3D Paint", url: "mge-3d-paint.html", icon: "🎨" },
                 { name: "Vibe Champion", url: "mge-vibe-champion.html", icon: "⌨️" }
             ],
-            stemFacts: [
-                "Momentum is the product of an object's mass and its velocity.",
-                "In a vacuum, all objects fall at the same rate regardless of mass.",
-                "Air resistance opposes the motion of an object through the atmosphere.",
-                "Newton's Third Law: For every action, there is an equal and opposite reaction.",
-                "Potential energy is the energy stored in an object due to its position."
+            facts: [
+                "Momentum = Mass × Velocity. Jump higher to land with more STOMP force!",
+                "Potential Energy is stored when Aldo is at the top of a jump.",
+                "In a vacuum, a hammer and a feather fall at the same rate!",
+                "Friction between your feet and the ground is what starts you moving.",
+                "Gravity pulls all objects toward the center of mass—on Earth, that's down!"
             ]
         };
 
-        // --- Entity System ---
-        class Entity {
-            constructor(scene, world, position, config) {
-                this.scene = scene;
-                this.world = world;
-                this.config = config || {};
-                
-                this.mesh = this.createMesh();
-                this.body = this.createBody(position);
-                
-                this.scene.add(this.mesh);
-                this.world.addBody(this.body);
+        let scene, camera, renderer, world, controls, clock = new THREE.Clock();
+        let player, playerBody, keys = {}, isPaused = false;
+        let pLinks = [], enemies = [], joyData = null;
 
-                this.isStomped = false;
-            }
-
-            createMesh() {
-                const group = new THREE.Group();
-                // "Goomba" / Student Model Placeholder
-                const geo = new THREE.IcosahedronGeometry(1, 0);
-                const mat = new THREE.MeshStandardMaterial({ 
-                    color: 0x9333ea, 
-                    flatShading: true,
-                    emissive: 0x9333ea,
-                    emissiveIntensity: 0.2
-                });
-                const mesh = new THREE.Mesh(geo, mat);
+        class EnemyEntity {
+            constructor(x, z) {
+                this.stomped = false;
+                const mat = new THREE.MeshStandardMaterial({ color: 0x9333ea, flatShading: true });
+                const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 0), mat);
                 mesh.castShadow = true;
-                group.add(mesh);
+                scene.add(mesh);
                 
-                // Add some cute eyes to the placeholder model
-                const eyeGeo = new THREE.SphereGeometry(0.1, 4, 4);
-                const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-                const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-                leftEye.position.set(0.4, 0.4, 0.8);
-                const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-                rightEye.position.set(-0.4, 0.4, 0.8);
-                group.add(leftEye, rightEye);
+                // Cute angry eyes
+                const eye = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3), new THREE.MeshBasicMaterial({color:0}));
+                eye.position.set(0.5, 0.4, 0.8);
+                mesh.add(eye);
+                const eye2 = eye.clone(); eye2.position.x = -0.5;
+                mesh.add(eye2);
 
-                return group;
+                this.mesh = mesh;
+                this.body = new CANNON.Body({ mass: 0.2, position: new CANNON.Vec3(x, 10, z), shape: new CANNON.Sphere(1.2) });
+                world.addBody(this.body);
             }
-
-            createBody(position) {
-                const shape = new CANNON.Sphere(1);
-                const body = new CANNON.Body({
-                    mass: 0.1, // Lightweight so Aldo can jump on it
-                    position: new CANNON.Vec3(position.x, position.y, position.z)
-                });
-                body.addShape(shape);
-                return body;
-            }
-
             update() {
-                if (this.isStomped) return;
-                this.mesh.position.copy(this.body.position);
-                this.mesh.quaternion.copy(this.body.quaternion);
+                if(!this.stomped) {
+                    this.mesh.position.copy(this.body.position);
+                    this.mesh.quaternion.copy(this.body.quaternion);
+                }
             }
-
             stomp() {
-                if (this.isStomped) return;
-                this.isStomped = true;
-                this.world.removeBody(this.body);
-
-                // Squash animation
-                gsap.to(this.mesh.scale, {
-                    y: 0.1,
-                    x: 1.5,
-                    z: 1.5,
-                    duration: 0.3,
-                    ease: "bounce.out",
-                    onComplete: () => {
-                        window.triggerStomp();
-                        // Optional: Fade away after facts
-                        gsap.to(this.mesh.scale, {
-                            x: 0, y: 0, z: 0,
-                            delay: 2,
-                            duration: 0.5,
-                            onComplete: () => this.scene.remove(this.mesh)
-                        });
-                    }
-                });
+                if(this.stomped) return;
+                this.stomped = true;
+                world.remove(this.body);
+                gsap.to(this.mesh.scale, { y: 0.1, x: 2, z: 2, duration: 0.3, ease: "elastic.out(1,0.3)", onComplete: () => {
+                    showFact();
+                    gsap.to(this.mesh.scale, { x: 0, y: 0, z: 0, delay: 1.5, duration: 0.5, onComplete: () => scene.remove(this.mesh) });
+                }});
             }
         }
 
-        // --- Core Engine ---
-        let scene, camera, renderer, world, controls;
-        let player, playerBody;
-        let portals = [], entities = [];
-        let keys = {};
-        let isPaused = false;
-        const clock = new THREE.Clock();
-
         function init() {
-            // Three.js Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a);
-            scene.fog = new THREE.FogExp2(0x0f172a, 0.008);
+            scene.background = new THREE.Color(0x0ea5e9);
+            scene.fog = new THREE.FogExp2(0x0ea5e9, 0.006);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 10, 15);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 20, 40);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Cannon-es Physics
             world = new CANNON.World();
             world.gravity.set(0, CONFIG.gravity, 0);
-            
-            // Default contact settings
-            const defaultMaterial = new CANNON.Material("default");
-            const defaultContactMaterial = new CANNON.ContactMaterial(
-                defaultMaterial,
-                defaultMaterial,
-                {
-                    friction: 0.5,
-                    restitution: 0.3
-                }
-            );
-            world.addContactMaterial(defaultContactMaterial);
 
-            // Lighting (Vibrant & Deep)
-            const ambient = new THREE.AmbientLight(0x60a5fa, 0.4);
-            scene.add(ambient);
-
-            const sun = new THREE.DirectionalLight(0xffffff, 1.8);
-            sun.position.set(30, 60, 30);
+            // Lighting
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(50, 100, 50);
             sun.castShadow = true;
-            sun.shadow.camera.left = -60;
-            sun.shadow.camera.right = 60;
-            sun.shadow.camera.top = 60;
-            sun.shadow.camera.bottom = -60;
             sun.shadow.mapSize.set(2048, 2048);
+            sun.shadow.camera.left = sun.shadow.camera.bottom = -100;
+            sun.shadow.camera.right = sun.shadow.camera.top = 100;
             scene.add(sun);
 
-            // Sky Sphere (Beautiful Gradient)
-            const skyGeo = new THREE.SphereGeometry(200, 32, 32);
-            const skyMat = new THREE.MeshBasicMaterial({ 
-                color: 0x0ea5e9, 
-                side: THREE.BackSide 
-            });
-            const sky = new THREE.Mesh(skyGeo, skyMat);
-            // Simple gradient-ish effect via vertex colors or just fog
-            scene.add(sky);
-
-            createLevel();
-            createPlayer();
+            buildWorld();
+            spawnPlayer();
             initControls();
-            
-            // Initial Entities
-            for(let i = 0; i < 8; i++) {
-                const x = (Math.random() - 0.5) * 60;
-                const z = (Math.random() - 0.5) * 60;
-                entities.push(new Entity(scene, world, {x, y: 10, z}));
-            }
+
+            // Initial enemies
+            for(let i=0; i<8; i++) enemies.push(new EnemyEntity((Math.random()-0.5)*100, (Math.random()-0.5)*100));
 
             animate();
         }
 
-        // --- Level Building ---
-        function createLevel() {
+        function buildWorld() {
             // Main Island
-            const groundGeo = new THREE.CircleGeometry(60, 32);
-            const groundMat = new THREE.MeshStandardMaterial({ 
-                color: 0x22c55e, 
-                flatShading: true,
-                roughness: 0.9
-            });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
+            const island = new THREE.Mesh(new THREE.CylinderGeometry(100, 105, 10, 32), new THREE.MeshStandardMaterial({ color: 0x22c55e, flatShading: true }));
+            island.position.y = -5;
+            island.receiveShadow = true; island.castShadow = true;
+            scene.add(island);
 
-            const groundShape = new CANNON.Cylinder(60, 60, 0.1, 32);
-            const groundBody = new CANNON.Body({ mass: 0 });
-            groundBody.addShape(groundShape);
-            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+            const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Cylinder(100, 105, 10, 32) });
+            groundBody.position.y = -5;
+            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
             world.addBody(groundBody);
 
-            // Underwater / Fall Zone (Beautiful Blue Abyss)
-            const abyssGeo = new THREE.CircleGeometry(300, 32);
-            const abyssMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
-            const abyss = new THREE.Mesh(abyssGeo, abyssMat);
-            abyss.rotation.x = -Math.PI / 2;
-            abyss.position.y = -20;
-            scene.add(abyss);
+            // Water
+            const water = new THREE.Mesh(new THREE.CircleGeometry(500, 32), new THREE.MeshStandardMaterial({ color: 0x0369a1, roughness: 0.1, transparent: true, opacity: 0.8 }));
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -8;
+            scene.add(water);
 
-            // Floating Islands Decor
-            for(let i = 0; i < 15; i++) {
-                createFloatingIsland(
-                    (Math.random() - 0.5) * 120,
-                    5 + Math.random() * 20,
-                    (Math.random() - 0.5) * 120
-                );
-            }
+            // CASTLE
+            buildCastle();
 
-            // Beautiful Low-Poly Details
-            for(let i = 0; i < 40; i++) {
-                createTree(
-                    (Math.random() - 0.5) * 100,
-                    (Math.random() - 0.5) * 100
-                );
-            }
-
-            // Pedestals (Portals)
-            const radius = 35;
-            CONFIG.portalLinks.forEach((portalData, index) => {
-                const angle = (index / CONFIG.portalLinks.length) * Math.PI * 2;
-                const x = Math.cos(angle) * radius;
-                const z = Math.sin(angle) * radius;
-                createPedestal(x, z, portalData);
+            // Portals
+            const rad = 60;
+            CONFIG.portals.forEach((p, i) => {
+                const angle = (i/CONFIG.portals.length) * Math.PI * 2;
+                createPedestal(Math.cos(angle)*rad, Math.sin(angle)*rad, p);
             });
         }
 
-        function createFloatingIsland(x, y, z) {
+        function buildCastle() {
             const group = new THREE.Group();
-            const size = 2 + Math.random() * 5;
-            const geo = new THREE.IcosahedronGeometry(size, 0);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x475569, flatShading: true });
-            const island = new THREE.Mesh(geo, mat);
-            island.scale.y = 0.4;
-            island.castShadow = true;
-            island.receiveShadow = true;
-            group.add(island);
+            const stone = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, flatShading: true });
+            const roof = new THREE.MeshStandardMaterial({ color: 0xef4444, flatShading: true });
 
-            // Add grass top
-            const grassGeo = new THREE.IcosahedronGeometry(size * 1.05, 0);
-            const grassMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, flatShading: true });
-            const grass = new THREE.Mesh(grassGeo, grassMat);
-            grass.scale.y = 0.1;
-            grass.position.y = size * 0.1;
-            group.add(grass);
+            // Keep
+            const keep = new THREE.Mesh(new THREE.BoxGeometry(25, 20, 25), stone);
+            keep.position.y = 10; keep.receiveShadow = true; keep.castShadow = true;
+            group.add(keep);
+            world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 10, 0), shape: new CANNON.Box(new CANNON.Vec3(12.5, 10, 12.5)) }));
 
-            group.position.set(x, y, z);
-            scene.add(group);
-            
-            // Animation for floating
-            gsap.to(group.position, {
-                y: y + 2,
-                duration: 2 + Math.random() * 2,
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut"
+            // 4 Towers
+            const pos = [[12.5,12.5], [12.5,-12.5], [-12.5,12.5], [-12.5,-12.5]];
+            pos.forEach(p => {
+                const t = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 30, 12), stone);
+                t.position.set(p[0], 15, p[1]); t.castShadow = true;
+                group.add(t);
+                const r = new THREE.Mesh(new THREE.ConeGeometry(5, 10, 12), roof);
+                r.position.set(p[0], 35, p[1]);
+                group.add(r);
+                world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(p[0], 15, p[1]), shape: new CANNON.Cylinder(4, 4, 30, 12) }));
             });
-        }
 
-        function createTree(x, z) {
-            const group = new THREE.Group();
-            
-            const trunkGeo = new THREE.CylinderGeometry(0.3, 0.5, 3, 6);
-            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true });
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = 1.5;
-            trunk.castShadow = true;
-            group.add(trunk);
+            // Drawbridge
+            const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 15), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            bridge.position.set(0, 0.5, 20); bridge.rotation.x = 0.05;
+            group.add(bridge);
+            const brB = new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 0.5, 20), shape: new CANNON.Box(new CANNON.Vec3(5, 0.5, 7.5)) });
+            brB.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), 0.05);
+            world.addBody(brB);
 
-            const leafColors = [0x10b981, 0x059669, 0x047857];
-            const leavesGeo = new THREE.ConeGeometry(2, 4, 6);
-            const leavesMat = new THREE.MeshStandardMaterial({ 
-                color: leafColors[Math.floor(Math.random()*leafColors.length)], 
-                flatShading: true 
-            });
-            const leaves = new THREE.Mesh(leavesGeo, leavesMat);
-            leaves.position.y = 4.5;
-            leaves.castShadow = true;
-            group.add(leaves);
-
-            group.position.set(x, 0, z);
             scene.add(group);
         }
 
         function createPedestal(x, z, data) {
-            const group = new THREE.Group();
+            const p = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(2, 3, 2, 8), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+            base.position.y = 1;
+            p.add(base);
+
+            const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = 'white'; ctx.font = '80px Arial'; ctx.textAlign = 'center';
+            ctx.fillText(data.icon, 64, 95);
             
-            // Base
-            const baseGeo = new THREE.CylinderGeometry(2, 2.5, 1, 8);
-            const baseMat = new THREE.MeshStandardMaterial({ color: 0x334155, flatShading: true });
-            const base = new THREE.Mesh(baseGeo, baseMat);
-            base.position.y = 0.5;
-            base.castShadow = true;
-            base.receiveShadow = true;
-            group.add(base);
+            const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+            spr.scale.set(6, 6, 1); spr.position.y = 6;
+            p.add(spr);
 
-            // Glow Top
-            const topGeo = new THREE.CylinderGeometry(1.8, 1.8, 0.2, 8);
-            const topMat = new THREE.MeshStandardMaterial({ 
-                color: CONFIG.portalLinks.indexOf(data) % 2 === 0 ? 0xfacc15 : 0xa78bfa,
-                emissive: CONFIG.portalLinks.indexOf(data) % 2 === 0 ? 0xfacc15 : 0xa78bfa,
-                emissiveIntensity: 2
-            });
-            const top = new THREE.Mesh(topGeo, topMat);
-            top.position.y = 1.1;
-            group.add(top);
-
-            // Icon/Text (Sprite for performance/simplicity)
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 80px Outfit';
-            ctx.textAlign = 'center';
-            ctx.fillText(data.icon, 128, 128);
-            ctx.font = 'bold 40px Outfit';
-            ctx.fillText(data.name, 128, 180);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-            const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(4, 4, 1);
-            sprite.position.y = 4;
-            group.add(sprite);
-
-            group.position.set(x, 0, z);
-            group.userData = { isPortal: true, url: data.url };
-            scene.add(group);
-            portals.push(group);
-
-            // Physics body for pedestal
-            const pbShape = new CANNON.Cylinder(2.5, 2.5, 1.2, 8);
-            const pbBody = new CANNON.Body({ mass: 0 });
-            pbBody.addShape(pbShape);
-            pbBody.position.set(x, 0.6, z);
-            world.addBody(pbBody);
+            p.userData = { url: data.url };
+            p.position.set(x, 0, z);
+            scene.add(p);
+            pLinks.push(p);
+            world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(x, 1, z), shape: new CANNON.Cylinder(3, 3, 2, 8) }));
         }
 
-        // --- Player ---
-        function createPlayer() {
+        function spawnPlayer() {
             player = new THREE.Group();
-            
-            // Stylized Low-Poly Aldo
-            const bodyGeo = new THREE.CapsuleGeometry(0.5, 0.8, 4, 8);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, flatShading: true });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.9;
-            body.castShadow = true;
+            player.name = "Aldo_Character";
+            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.6, 1.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+            body.position.y = 1.2; body.castShadow = true;
             player.add(body);
-
-            // Head & Hat
-            const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffd1a4, flatShading: true });
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = 1.7;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd1a4 }));
+            head.position.y = 2.4;
             player.add(head);
 
-            const hatGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.2, 8);
-            const hatMat = new THREE.MeshStandardMaterial({ color: 0xef4444, flatShading: true });
-            const hat = new THREE.Mesh(hatGeo, hatMat);
-            hat.position.y = 1.95;
-            player.add(hat);
-
-            const brimGeo = new THREE.BoxGeometry(0.6, 0.05, 0.3);
-            const brim = new THREE.Mesh(brimGeo, hatMat);
-            brim.position.set(0, 1.9, 0.3);
-            player.add(brim);
-
             scene.add(player);
-
-            // Physics
-            const shape = new CANNON.Capsule(0.5, 0.8);
-            playerBody = new CANNON.Body({
-                mass: 1,
-                fixedRotation: true
-            });
-            playerBody.addShape(shape);
-            playerBody.position.set(0, 5, 0);
+            playerBody = new CANNON.Body({ mass: 1, position: new CANNON.Vec3(0, 10, 30), shape: new CANNON.Box(new CANNON.Vec3(0.6, 1.2, 0.6)), fixedRotation: true });
             world.addBody(playerBody);
         }
 
-        // --- Controls ---
         function initControls() {
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
 
-            // Camera Controls
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enablePan = false;
-            controls.maxPolarAngle = Math.PI / 2.1;
-            controls.minDistance = 5;
-            controls.maxDistance = 20;
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enablePan = false; controls.maxPolarAngle = Math.PI / 2.1;
+            controls.minDistance = 10; controls.maxDistance = 40;
 
-            // Mobile Joystick
-            const joystick = nipplejs.create({
-                zone: document.getElementById('joystick'),
-                mode: 'static',
-                position: { left: '60px', bottom: '60px' },
-                color: 'white'
-            });
+            const joy = nipplejs.create({ zone: document.getElementById('joystick'), mode: 'static', position: {left: '60px', bottom: '60px'}, color: 'white' });
+            joy.on('move', (e, d) => joyData = d);
+            joy.on('end', () => joyData = null);
 
-            let joystickData = null;
-            joystick.on('move', (evt, data) => joystickData = data);
-            joystick.on('end', () => joystickData = null);
-
-            // Mobile Jump
-            document.getElementById('mobile-jump').addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                keys['Space'] = true;
-            });
+            document.getElementById('mobile-jump').addEventListener('touchstart', e => { e.preventDefault(); keys['Space'] = true; });
             document.getElementById('mobile-jump').addEventListener('touchend', () => keys['Space'] = false);
-
-            // Fact Popup
-            document.getElementById('close-popup').addEventListener('click', () => {
-                isPaused = false;
-                document.getElementById('stem-fact-popup').classList.remove('visible');
-            });
-
-            // Expose joystick to movement logic
-            window.getJoystick = () => joystickData;
+            document.getElementById('close-popup').addEventListener('click', () => { isPaused = false; document.getElementById('stem-fact-popup').classList.remove('visible'); });
         }
 
-        // --- Game Loop ---
+        function showFact() {
+            isPaused = true;
+            document.getElementById('fact-text').innerText = CONFIG.facts[Math.floor(Math.random()*CONFIG.facts.length)];
+            document.getElementById('stem-fact-popup').classList.add('visible');
+        }
+
         function animate() {
             requestAnimationFrame(animate);
-            const delta = Math.min(clock.getDelta(), 0.1);
+            const dt = Math.min(clock.getDelta(), 0.1);
 
-            if (!isPaused) {
-                updatePhysics(delta);
-                updatePlayer(delta);
-                updateEntities(delta);
-                updatePortals(delta);
-                updateCamera();
+            if(!isPaused) {
+                world.step(1/60, dt);
+
+                let mx = 0, mz = 0;
+                if(keys.KeyW || keys.ArrowUp) mz += 1;
+                if(keys.KeyS || keys.ArrowDown) mz -= 1;
+                if(keys.KeyA || keys.ArrowLeft) mx += 1;
+                if(keys.KeyD || keys.ArrowRight) mx -= 1;
+                if(joyData) { mx = joyData.vector.x; mz = joyData.vector.y; }
+
+                if(mx !== 0 || mz !== 0) {
+                    const camYaw = Math.atan2(camera.position.x - player.position.x, camera.position.z - player.position.z);
+                    const moveAngle = camYaw + Math.atan2(mx, mz);
+                    playerBody.velocity.x = Math.sin(moveAngle) * CONFIG.speed;
+                    playerBody.velocity.z = Math.cos(moveAngle) * CONFIG.speed;
+                    player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, moveAngle, CONFIG.rotSpeed);
+                } else {
+                    playerBody.velocity.x *= 0.8; playerBody.velocity.z *= 0.8;
+                }
+
+                if(keys.Space && Math.abs(playerBody.velocity.y) < 0.5) playerBody.velocity.y = CONFIG.jumpForce;
+
+                // Sync
+                player.position.set(playerBody.position.x, playerBody.position.y - 1.2, playerBody.position.z);
+                controls.target.copy(player.position).add(new THREE.Vector3(0, 2, 0));
+                controls.update();
+
+                enemies.forEach(e => {
+                    e.update();
+                    if(!e.stomped) {
+                        const d = player.position.distanceTo(e.mesh.position);
+                        if(d < 2 && player.position.y > e.mesh.position.y + 0.8 && playerBody.velocity.y < -1) {
+                            e.stomp(); playerBody.velocity.y = CONFIG.jumpForce * 0.6;
+                        }
+                    }
+                });
+
+                pLinks.forEach(p => {
+                    p.children[1].rotation.y += dt * 3;
+                    p.children[1].position.y = 6 + Math.sin(Date.now()*0.003) * 0.8;
+                    if(player.position.distanceTo(p.position) < 4) window.location.href = p.userData.url;
+                });
+
+                if(playerBody.position.y < -30) playerBody.position.set(0, 10, 30);
             }
 
             renderer.render(scene, camera);
         }
 
-        function updatePortals(delta) {
-            portals.forEach(portal => {
-                // Find the sprite child (index 2 based on createPedestal)
-                const sprite = portal.children.find(child => child instanceof THREE.Sprite);
-                if (sprite) {
-                    sprite.rotation.y += delta;
-                    // Gentle floating for the sprite too
-                    sprite.position.y = 4 + Math.sin(Date.now() * 0.003) * 0.3;
-                }
-            });
-        }
-
-        function updatePhysics(delta) {
-            world.step(1/60, delta);
-            
-            // Sync Three.js with Cannon-es
-            player.position.copy(playerBody.position);
-            // Height adjust for capsule center
-            player.position.y -= 0.4;
-        }
-
-        function updateEntities(delta) {
-            entities.forEach(entity => {
-                entity.update();
-                
-                // Stomp Detection
-                if (!entity.isStomped) {
-                    const dist = player.position.distanceTo(entity.mesh.position);
-                    
-                    // If Aldo is above the entity and moving down
-                    const isAbove = player.position.y > entity.mesh.position.y + 0.8;
-                    const isFalling = playerBody.velocity.y < -1;
-
-                    if (dist < 1.8 && isAbove && isFalling) {
-                        entity.stomp();
-                        playerBody.velocity.y = CONFIG.jumpForce * 0.8; // Bounce up
-                    } else if (dist < 1.2 && !isAbove) {
-                        // Normal collision "push back"
-                        const dir = new THREE.Vector3().subVectors(player.position, entity.mesh.position).normalize();
-                        playerBody.velocity.x += dir.x * 5;
-                        playerBody.velocity.z += dir.z * 5;
-                    }
-                }
-            });
-        }
-
-        function updatePlayer(delta) {
-            const joystick = window.getJoystick();
-            let moveX = 0;
-            let moveZ = 0;
-
-            if (keys['KeyW'] || keys['ArrowUp']) moveZ += 1;
-            if (keys['KeyS'] || keys['ArrowDown']) moveZ -= 1;
-            if (keys['KeyA'] || keys['ArrowLeft']) moveX += 1;
-            if (keys['KeyD'] || keys['ArrowRight']) moveX -= 1;
-
-            if (joystick) {
-                moveX = joystick.vector.x;
-                moveZ = joystick.vector.y;
-            }
-
-            if (moveX !== 0 || moveZ !== 0) {
-                // Determine direction relative to camera
-                const angle = Math.atan2(camera.position.x - player.position.x, camera.position.z - player.position.z);
-                const moveAngle = Math.atan2(moveX, moveZ);
-                const totalAngle = angle + moveAngle;
-
-                playerBody.velocity.x = Math.sin(totalAngle) * CONFIG.moveSpeed;
-                playerBody.velocity.z = Math.cos(totalAngle) * CONFIG.moveSpeed;
-
-                // Smooth rotation
-                const targetRotation = totalAngle;
-                player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, targetRotation, CONFIG.rotationSpeed);
-            } else {
-                playerBody.velocity.x *= 0.9;
-                playerBody.velocity.z *= 0.9;
-            }
-
-            // Jump
-            if (keys['Space'] && Math.abs(playerBody.velocity.y) < 0.5) {
-                playerBody.velocity.y = CONFIG.jumpForce;
-            }
-
-            // Portal Check
-            portals.forEach(portal => {
-                const dist = player.position.distanceTo(portal.position);
-                if (dist < 4) {
-                    // Interaction: proximity based
-                    if (dist < 2.5) {
-                        window.location.href = portal.userData.url;
-                    }
-                }
-            });
-
-            // World Bound reset
-            if (playerBody.position.y < -15) {
-                playerBody.position.set(0, 10, 0);
-                playerBody.velocity.set(0, 0, 0);
-            }
-        }
-
-
-        function updateCamera() {
-            controls.target.copy(player.position).add(new THREE.Vector3(0, 1.5, 0));
-            controls.update();
-        }
-
-        // Initial setup
-        init();
-
-        // Responsive handling
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // --- Helper Function for STEM Stomp (Demo Trigger) ---
-        window.triggerStomp = () => {
-            isPaused = true;
-            const fact = CONFIG.stemFacts[Math.floor(Math.random() * CONFIG.stemFacts.length)];
-            document.getElementById('fact-text').innerText = fact;
-            document.getElementById('stem-fact-popup').classList.add('visible');
+        // Auto-initialize robustly
+        if (document.readyState === 'complete') {
+            init();
+        } else {
+            window.addEventListener('load', init);
         }
+
     </script>
 </body>
 </html>
