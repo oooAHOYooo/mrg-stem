@@ -13,8 +13,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #1a1a2e;
+            background-color: #FFFDD0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #4a4a4a;
         }
 
         #canvas-container {
@@ -40,7 +41,7 @@
         }
 
         .header-bar {
-            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 100%);
             padding: 20px;
             display: flex;
             justify-content: space-between;
@@ -74,35 +75,37 @@
         }
 
         h1 {
-            color: white;
+            color: #4a4a4a;
             margin: 0;
             font-size: 24px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background: linear-gradient(90deg, #ff4757, #2ed573);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .controls-panel {
-            background: rgba(26, 26, 46, 0.9);
-            border-top: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 2px solid rgba(0,0,0,0.05);
             backdrop-filter: blur(10px);
             padding: 20px;
             pointer-events: auto;
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 20px;
         }
 
         .tool-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: #4a4a4a;
             padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
             transition: all 0.2s;
+            font-weight: 600;
         }
 
         .tool-btn:hover {
@@ -111,10 +114,10 @@
         }
 
         .tool-btn.active {
-            background: #4ecdc4;
-            color: #1a1a2e;
-            border-color: #4ecdc4;
-            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+            background: #2ed573;
+            color: white;
+            border-color: #2ed573;
+            box-shadow: 0 4px 10px rgba(46, 213, 115, 0.3);
         }
 
         .color-display {
@@ -136,6 +139,52 @@
         @keyframes popIn {
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* Micro Tutorial Styles */
+        .tutorial-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            pointer-events: none;
+            text-align: center;
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        .mouse-icon {
+            width: 80px;
+            height: 80px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+            animation: mouseAction 4s infinite ease-in-out;
+        }
+
+        .tutorial-text {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #ff4757;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes mouseAction {
+            0% { transform: translate(-100px, 0) scale(1); }
+            /* Draw action (Left Click) */
+            20% { transform: translate(0, 0) scale(0.8); opacity: 1; }
+            30% { transform: translate(100px, 50px) scale(0.8); }
+            40% { transform: translate(0, 100px) scale(0.8); }
+            50% { transform: translate(-100px, 0) scale(1); opacity: 0.5; }
+            /* Rotate action (Right Click) */
+            60% { transform: translate(0, 0) rotate(20deg) scale(1); opacity: 1; }
+            80% { transform: translate(50px, -50px) rotate(360deg) scale(1); }
+            100% { transform: translate(-100px, 0) scale(1); }
         }
 
         .color-hex {
@@ -181,13 +230,62 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(255,255,255,0.8);
             padding: 15px;
             border-radius: 10px;
-            color: white;
+            color: #4a4a4a;
             font-size: 14px;
             pointer-events: none;
-            border-left: 4px solid #f472b6;
+            border-left: 4px solid #ff4757;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .rotation-hint {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4757;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3);
+            pointer-events: auto;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .rotation-hint:hover {
+            transform: translateX(-50%) scale(1.05);
+            background: #ff6b81;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
+            40% {transform: translateX(-50%) translateY(-10px);}
+            60% {transform: translateX(-50%) translateY(-5px);}
+        }
+
+        .rotation-progress {
+            width: 150px;
+            height: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .rotation-progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #2ed573;
+            transition: width 0.3s;
         }
 
         .clear-btn {
@@ -207,6 +305,15 @@
     <div id="canvas-container"></div>
 
     <div id="ui-layer">
+        <div id="tutorial-overlay" class="tutorial-overlay">
+            <svg class="mouse-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.686 2 6 4.686 6 8V16C6 19.314 8.686 22 12 22C15.314 22 18 19.314 18 16V8C18 4.686 15.314 2 12 2Z" stroke="#ff4757" stroke-width="2"/>
+                <path id="mouse-button" d="M12 2V10" stroke="#ff4757" stroke-width="2"/>
+                <path d="M6 10H18" stroke="#ff4757" stroke-width="2"/>
+            </svg>
+            <div id="tutorial-text" class="tutorial-text">Draw with Left Click</div>
+        </div>
+
         <div class="header-bar">
             <div class="title-group">
                 <a href="mge.html" class="back-btn">⬅ MGE Hub</a>
@@ -218,11 +325,18 @@
         <div class="instructions">
             <strong>Controls:</strong><br>
             Left Click: Draw 3D Paint<br>
-            Right Click + Drag: Rotate Camera<br>
+            <strong>Right Click + Drag: Rotate Camera</strong><br>
             Scroll: Zoom In/Out<br>
             C Key: Change Background Color<br>
             Any Key: Button Smash for Random Bursts!<br><br>
-            <em>Draw furiously to fuse colors!</em>
+            <em>Explore the whole 3D space!</em>
+        </div>
+
+        <div id="rotation-hint" class="rotation-hint">
+            <span>🔄 Try Rotating the view!</span>
+            <div class="rotation-progress">
+                <div id="rotation-progress-bar" class="rotation-progress-bar"></div>
+            </div>
         </div>
 
         <div class="color-display" id="color-fact-panel">
@@ -271,8 +385,8 @@
         function init() {
             // Setup Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
-            scene.fog = new THREE.FogExp2(0x1a1a2e, 0.015);
+            scene.background = new THREE.Color(0xFFFDD0);
+            scene.fog = new THREE.FogExp2(0xFFFDD0, 0.015);
 
             // Setup Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -289,7 +403,9 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.enablePan = false;
-            // Only rotate on right click
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            // Only rotate on right click (or auto-rotate)
             controls.mouseButtons = {
                 LEFT: null,
                 MIDDLE: THREE.MOUSE.DOLLY,
@@ -328,8 +444,47 @@
             document.getElementById('tool-spray').onclick = () => setTool('spray');
             document.getElementById('tool-shape').onclick = () => setTool('shape');
             document.getElementById('btn-clear').onclick = clearCanvas;
+            document.getElementById('rotation-hint').onclick = () => {
+                controls.autoRotate = !controls.autoRotate;
+            };
+
+            // Tutorial Logic
+            let mouseActionIdx = 0;
+            const mouseTexts = ["Draw with Left Click", "Rotate with Right Click"];
+            setInterval(() => {
+                mouseActionIdx = (mouseActionIdx + 1) % 2;
+                document.getElementById('tutorial-text').textContent = mouseTexts[mouseActionIdx];
+                const btn = document.getElementById('mouse-button');
+                btn.setAttribute('stroke', mouseActionIdx === 0 ? '#ff4757' : '#2ed573');
+            }, 2000);
+
+            const hideTutorial = () => {
+                document.getElementById('tutorial-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('tutorial-overlay').remove(), 1000);
+                window.removeEventListener('pointerdown', hideTutorial);
+            };
+            window.addEventListener('pointerdown', hideTutorial);
 
             animate();
+        }
+
+        let totalRotation = 0;
+        let lastAzimuth = 0;
+        function updateRotationProgress() {
+            const azimuth = controls.getAzimuthalAngle();
+            const diff = Math.abs(azimuth - lastAzimuth);
+            if (diff < 1) { // Avoid jumps
+                totalRotation += diff;
+            }
+            lastAzimuth = azimuth;
+            
+            const progress = Math.min((totalRotation / (Math.PI * 4)) * 100, 100);
+            document.getElementById('rotation-progress-bar').style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                document.getElementById('rotation-hint').style.opacity = '0.3';
+                document.getElementById('rotation-hint').style.pointerEvents = 'none';
+            }
         }
 
         function onKeyDown(event) {
@@ -363,10 +518,7 @@
                 currentTool = toolTypes[Math.floor(Math.random() * toolTypes.length)];
                 
                 drawStroke(pos);
-                
                 currentTool = prevTool; // Restore selected UI tool
-                
-                checkFusionEvent();
             }
         }
 
@@ -429,12 +581,8 @@
                     drawStroke(pos);
                     lastDrawPos.copy(pos);
                     
-                    // FUSION MECHANIC!
-                    // Drawing fast or a lot increases fusion
                     fusionMeter += dist * 2;
                     hueCursor = (hueCursor + dist * 5) % 360;
-                    
-                    checkFusionEvent();
                 }
             }
         }
@@ -560,12 +708,7 @@
             requestAnimationFrame(animate);
             controls.update(); // required if controls.enableDamping or controls.autoRotate are set
             
-            // Slowly rotate the whole drawing
-            if(paintMeshes.length > 0 && !isDrawing && document.getElementById('color-fact-panel').style.display !== 'block') {
-               // Optional: subtle slow spin
-               // const center = new THREE.Vector3();
-               // controls.target.lerp(center, 0.05);
-            }
+            updateRotationProgress();
             
             renderer.render(scene, camera);
         }

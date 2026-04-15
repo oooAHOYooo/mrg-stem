@@ -11,17 +11,18 @@
 const mgeChangelog = [
     {
         date: '2026-04-15',
-        title: 'Terrain Builder: Keyboard Update',
-        gameId: 'terrain-builder',
-        icon: '⌨️',
-        description: 'New interactive keyboard overlay and control refinements.',
+        title: 'New Hub: Super Aldo 63!',
+        gameId: 'super-aldo-63',
+        icon: '⭐',
+        description: 'Complete rebranding and transformation into a beautiful SM64-style hub.',
         updates: [
-            'Added a dynamic on-screen keyboard overlay for better control mapping',
-            'Integrated "ESC" key premium overlay for exiting play-test mode',
-            'Smarter UI scaling for Chromebooks and iPads',
-            'Full commit to the MGE Hub experiments grid'
+            'Implemented a full Third-Person "Aldo" controller with jump mechanics',
+            'Beautiful low-poly environment with 10 interactive portal pedestals',
+            'Physics-based stomp detection for interactive entities',
+            'Optimized for iPad and Chromebooks with NippleJS controls',
+            'Replaced the legacy Terrain Builder with this new immersive hub'
         ],
-        category: 'update'
+        category: 'major'
     },
     {
         date: '2026-04-01',
