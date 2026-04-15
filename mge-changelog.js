@@ -10,6 +10,20 @@
 
 const mgeChangelog = [
     {
+        date: '2026-04-15',
+        title: 'Terrain Builder: Keyboard Update',
+        gameId: 'terrain-builder',
+        icon: '⌨️',
+        description: 'New interactive keyboard overlay and control refinements.',
+        updates: [
+            'Added a dynamic on-screen keyboard overlay for better control mapping',
+            'Integrated "ESC" key premium overlay for exiting play-test mode',
+            'Smarter UI scaling for Chromebooks and iPads',
+            'Full commit to the MGE Hub experiments grid'
+        ],
+        category: 'update'
+    },
+    {
         date: '2026-04-01',
         title: 'New Game: Sonic Speed!',
         gameId: 'sonic-speed',
