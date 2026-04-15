@@ -1247,6 +1247,22 @@
         ];
 
         // Player stats
+        // Cosmetics system with localStorage
+        function loadCosmetics() {
+            const saved = localStorage.getItem('smashGameCosmetics');
+            return saved ? JSON.parse(saved) : {
+                unlockedHats: [],
+                roundsWon: 0,
+                baseColor: { p1: 0xff6b6b, p2: 0x4ecdc4 }
+            };
+        }
+
+        function saveCosmetics(cosmetics) {
+            localStorage.setItem('smashGameCosmetics', JSON.stringify(cosmetics));
+        }
+
+        let gameCosmetics = loadCosmetics();
+
         const players = {
             p1: {
                 percentage: 0,  // Smash Bros style - starts at 0%
@@ -1260,6 +1276,7 @@
                 attackCooldown: 0,
                 specialCooldown: 0,
                 color: 0xff6b6b,
+                baseColor: 0xff6b6b,
                 invulnerable: 0,
                 isDead: false,
                 powerups: {},
@@ -1269,7 +1286,9 @@
                 attackAnimation: 0,
                 specialAnimation: 0,
                 backflipAnimation: 0,
-                flipType: 'back'
+                flipType: 'back',
+                hat: null,
+                hatMesh: null
             },
             p2: {
                 percentage: 0,
@@ -1283,6 +1302,7 @@
                 attackCooldown: 0,
                 specialCooldown: 0,
                 color: 0x4ecdc4,
+                baseColor: 0x4ecdc4,
                 invulnerable: 0,
                 isDead: false,
                 powerups: {},
@@ -1292,7 +1312,9 @@
                 attackAnimation: 0,
                 specialAnimation: 0,
                 backflipAnimation: 0,
-                flipType: 'back'
+                flipType: 'back',
+                hat: null,
+                hatMesh: null
             },
             p3: {
                 percentage: 0,
@@ -1306,6 +1328,7 @@
                 attackCooldown: 0,
                 specialCooldown: 0,
                 color: 0x95a5a6,
+                baseColor: 0x95a5a6,
                 invulnerable: 0,
                 isDead: false,
                 powerups: {},
@@ -1316,7 +1339,9 @@
                 specialAnimation: 0,
                 backflipAnimation: 0,
                 flipType: 'back',
-                isRobot: true
+                isRobot: true,
+                hat: null,
+                hatMesh: null
             }
         };
 
@@ -1618,12 +1643,110 @@
             }
         }
 
+        // Hat system for cosmetics
+        function createHatMesh(playerKey, type) {
+            const hatGroup = new THREE.Group();
+            if(type === 'crown') {
+                const baseMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+                const base = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.3, 8), baseMat);
+                base.position.y = 1.2;
+                hatGroup.add(base);
+                for(let i=0; i<5; i++) {
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 4), baseMat);
+                    spike.position.set(Math.cos(i*Math.PI*2/5)*0.3, 1.4, Math.sin(i*Math.PI*2/5)*0.3);
+                    hatGroup.add(spike);
+                }
+            } else if(type === 'champion') {
+                const champMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.9, emissive: 0xffaa00, emissiveIntensity: 0.6 });
+                const halo = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 8, 32), champMat);
+                halo.position.y = 1.1;
+                halo.rotation.x = Math.PI / 2.5;
+                hatGroup.add(halo);
+                const star = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.05), champMat);
+                star.position.y = 1.35;
+                hatGroup.add(star);
+            } else if(type === 'warrior') {
+                const warMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.7, emissive: 0xff2222, emissiveIntensity: 0.4 });
+                const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), warMat);
+                helmet.position.y = 1.0;
+                hatGroup.add(helmet);
+                const horns = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.4, 4), warMat);
+                horns.position.set(-0.25, 1.4, 0);
+                hatGroup.add(horns);
+                const horns2 = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.4, 4), warMat);
+                horns2.position.set(0.25, 1.4, 0);
+                hatGroup.add(horns2);
+            }
+            return hatGroup;
+        }
+
+        function updatePlayerHat(playerKey, playerMesh) {
+            if(!playerMesh) return;
+
+            // Remove existing hat
+            if(players[playerKey].hatMesh) {
+                playerMesh.remove(players[playerKey].hatMesh);
+            }
+
+            // Add new hat if unlocked
+            if(gameCosmetics.unlockedHats.length > 0) {
+                const hatIndex = Math.floor(Date.now() / 3000) % gameCosmetics.unlockedHats.length;
+                const hatType = gameCosmetics.unlockedHats[hatIndex];
+                const newHat = createHatMesh(playerKey, hatType);
+                newHat.position.set(0, 0.1, 0);
+                playerMesh.add(newHat);
+                players[playerKey].hatMesh = newHat;
+                players[playerKey].hat = hatType;
+            }
+        }
+
+        function updatePlayerColor(playerKey) {
+            const player = players[playerKey];
+            if(!player) return;
+
+            // Color changes based on percentage/power state
+            const percentage = player.percentage;
+            let color = new THREE.Color(player.baseColor);
+
+            if(percentage > 150) {
+                // High damage - red/danger
+                color.setHex(0xff1744);
+            } else if(percentage > 100) {
+                // Medium-high - orange
+                color.setHex(0xffa726);
+            } else if(percentage > 50) {
+                // Medium - yellow
+                color.setHex(0xfdd835);
+            } else if(percentage > 25) {
+                // Light damage - green
+                color.setHex(0x66bb6a);
+            }
+
+            // Update all materials in the player mesh
+            let playerMesh = player1;
+            if(playerKey === 'p2') playerMesh = player2;
+            else if(playerKey === 'p3') playerMesh = player3;
+
+            if(playerMesh) {
+                playerMesh.traverse((child) => {
+                    if(child.material && !child.material.emissive) {
+                        // Update base material color but skip special parts
+                        if(child.geometry && child.geometry.type !== 'TorusGeometry' && child.geometry.type !== 'BoxGeometry') {
+                            try {
+                                child.material.color.copy(color);
+                            } catch(e) {}
+                        }
+                    }
+                });
+            }
+        }
+
         function createBackground() {
             // Floating platforms (Interactable)
             bonusPlatforms = [];
             for (let i = 0; i < 4; i++) {
                 const px = (Math.random() - 0.5) * 18;
-                const py = 4 + i * 3;
+                const py = 2.5 + i * 3;  // Lowered first platform from 4 to 2.5 for easier jumping
                 const smallPlatform = new THREE.Mesh(
                     new THREE.BoxGeometry(6, 0.5, 4), // Much bigger/easier to land on
                     new THREE.MeshStandardMaterial({
@@ -3111,6 +3234,19 @@
             // Update match score display
             updateMatchScore();
 
+            // Unlock cosmetics on win
+            gameCosmetics.roundsWon++;
+            if(gameCosmetics.roundsWon >= 1 && !gameCosmetics.unlockedHats.includes('crown')) {
+                gameCosmetics.unlockedHats.push('crown');
+            }
+            if(gameCosmetics.roundsWon >= 3 && !gameCosmetics.unlockedHats.includes('champion')) {
+                gameCosmetics.unlockedHats.push('champion');
+            }
+            if(gameCosmetics.roundsWon >= 5 && !gameCosmetics.unlockedHats.includes('warrior')) {
+                gameCosmetics.unlockedHats.push('warrior');
+            }
+            saveCosmetics(gameCosmetics);
+
             // Check if best of 3 is complete
             if (matchScore.p1 >= 2 || matchScore.p2 >= 2) {
                 const overallWinner = matchScore.p1 >= 2 ? 'Player 1' : 'Player 2';
@@ -3274,6 +3410,12 @@
             updatePowerupDisplay();
             updateMatchScore();
             updateGameCode();
+
+            // Apply hats to players at match start
+            updatePlayerHat('p1', player1);
+            updatePlayerHat('p2', player2);
+            updatePlayerHat('p3', player3);
+
             document.getElementById('game-over').classList.remove('show');
             gameRunning = true;
 
@@ -3369,6 +3511,14 @@
                 updatePlayer('p1', p1Controls, player1);
                 updatePlayer('p2', p2Controls, player2);
                 updatePlayer('p3', p3Controls, player3);
+
+                // Update player colors and hats based on state
+                updatePlayerColor('p1');
+                updatePlayerColor('p2');
+                updatePlayerColor('p3');
+                updatePlayerHat('p1', player1);
+                updatePlayerHat('p2', player2);
+                updatePlayerHat('p3', player3);
 
                 // Check for deaths continuously
                 checkGameOver();

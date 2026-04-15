@@ -580,10 +580,97 @@
                 font-size: 1rem;
             }
         }
+
+        /* Secret Hacker Easter Egg Overlay */
+        #hacker-glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #0f0;
+            font-family: 'Fira Code', monospace, 'Courier New', Courier;
+            overflow: hidden;
+        }
+
+        .glitch-text {
+            font-size: clamp(2rem, 8vw, 5rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+                        -0.025em -0.05em 0 rgba(0, 255, 0, 0.75),
+                        0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+            animation: glitch 500ms infinite;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes glitch {
+            0% {
+                text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            14% {
+                text-shadow: 0.05em 0 0 rgba(255, 0, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            15% {
+                text-shadow: -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            49% {
+                text-shadow: -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            50% {
+                text-shadow: 0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+                            0.05em 0 0 rgba(0, 255, 0, 0.75),
+                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            99% {
+                text-shadow: 0.025em 0.05em 0 rgba(255, 0, 0, 0.75),
+                            0.05em 0 0 rgba(0, 255, 0, 0.75),
+                            0 -0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+            100% {
+                text-shadow: -0.025em 0 0 rgba(255, 0, 0, 0.75),
+                            -0.025em -0.025em 0 rgba(0, 255, 0, 0.75),
+                            -0.025em -0.05em 0 rgba(0, 0, 255, 0.75);
+            }
+        }
+
+        .terminal-override {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            margin-top: 2rem;
+            letter-spacing: 2px;
+            animation: pulse-green 1s infinite alternate;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @keyframes pulse-green {
+            from { opacity: 0.5; }
+            to { opacity: 1; color: #fff; text-shadow: 0 0 10px #0f0; }
+        }
     </style>
 </head>
 
 <body>
+    <div id="hacker-glitch-overlay">
+        <div class="glitch-text" data-text="SYSTEM OVERRIDE">SYSTEM OVERRIDE</div>
+        <div class="terminal-override" id="hacker-status-text">INITIALIZING VIBE_HACK...</div>
+    </div>
     <div class="background"></div>
 
     <!-- Top Navbar -->
@@ -1127,6 +1214,67 @@
 
     <script type="module" src="mge-screensaver.js"></script>
     <script src="mge-changelog.js"></script>
+    <script>
+        // Secret Hacker Easter Egg
+        (function() {
+            let sequence = "";
+            const target = "hacker";
+            const overlay = document.getElementById('hacker-glitch-overlay');
+            const statusText = document.getElementById('hacker-status-text');
+            
+            window.addEventListener('keydown', (e) => {
+                // Ignore if we're in an input or textarea
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                
+                if (e.repeat) return;
+                
+                sequence += e.key.toLowerCase();
+                
+                // If the sequence doesn't match the target prefix, reset
+                if (!target.startsWith(sequence)) {
+                    sequence = e.key.toLowerCase();
+                    // If even the reset doesn't match, clear it
+                    if (!target.startsWith(sequence)) sequence = "";
+                }
+                
+                if (sequence === target) {
+                    triggerHackerMode();
+                }
+            });
+
+            function triggerHackerMode() {
+                if (overlay.style.display === 'flex') return;
+                
+                overlay.style.display = 'flex';
+                sequence = ""; 
+
+                const statuses = [
+                    "OVERRIDING HUB SECURITY...",
+                    "BYPASSING FIREWALL...",
+                    "ESTABLISHING NEON UP-LINK...",
+                    "INJECTING VIBE PROTOCOL...",
+                    "ACCESS GRANTED."
+                ];
+
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < statuses.length) {
+                        statusText.innerText = statuses[i];
+                        // Add some random noise to status text occasionally
+                        if (Math.random() > 0.7) {
+                            statusText.innerText += " [" + Math.random().toString(16).substring(2, 6).toUpperCase() + "]";
+                        }
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            window.location.href = "mge-journey-hacker.html";
+                        }, 800);
+                    }
+                }, 500);
+            }
+        })();
+    </script>
 </body>
 
 </html>

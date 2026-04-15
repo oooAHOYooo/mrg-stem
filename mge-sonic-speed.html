@@ -314,10 +314,11 @@
         <div class="header">
             <div class="mge-badge">SONIC SPEED</div>
             <div class="super-status">
-                <span class="hud-label">Super Meter</span>
+                <span class="hud-label" id="super-label">Super Meter</span>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="super-bar"></div>
                 </div>
+                <div id="super-timer-hud" style="color: var(--mge-gold); font-weight: 800; display: none;">30s</div>
             </div>
             <div class="super-status">
                 <span class="hud-label">Cosmetics</span>
@@ -341,6 +342,7 @@
             <div><span class="hint-key">A / D / LEFT / RIGHT</span> STEER</div>
             <div><span class="hint-key">S / DOWN</span> REVERSE</div>
             <div><span class="hint-key">SPACE</span> JUMP</div>
+            <div><span class="hint-key">K</span> BACKFLIP TRICK</div>
             <div><span class="hint-key">SHIFT</span> BOOST</div>
         </div>
 
@@ -374,17 +376,18 @@
             PLAYER_MAX_SPEED: 1.0,
             PLAYER_BOOST_MAX: 2.0,
             SUPER_ACCEL: 0.08,
-            SUPER_MAX_SPEED: 3.0,
-            SUPER_BOOST_MAX: 4.5,
+            SUPER_MAX_SPEED: 3.5, // Increased
+            SUPER_BOOST_MAX: 5.0, // Increased
             DRAG: 0.97,
             GRAVITY: -0.015,
-            JUMP_FORCE: 0.4,
+            JUMP_FORCE: 0.65, // Higher jump
             RINGS_FOR_SUPER: 50,
             RING_ROT_SPEED: 0.08,
             CLOCK_COUNT: 30,
             RING_COUNT: 300,
-            TERRAIN_SIZE: 1000,
-            BOSS_SPEED: 0.04
+            TERRAIN_SIZE: 1500, // Larger terrain for more ramps
+            BOSS_SPEED: 0.04,
+            SUPER_DURATION: 30 // Seconds
         };
 
         // Load cosmetics from localStorage
@@ -405,11 +408,15 @@
             started: false,
             rings: 0,
             isSuper: false,
+            superTimer: 0,
             speed: 0,
             velocity: new THREE.Vector3(),
             pos: new THREE.Vector3(0, 1, 0),
             isJumping: false,
             onGround: true,
+            isTricking: false,
+            trickProgress: 0,
+            shakeIntensity: 0,
             superProgress: 0,
             keys: {},
             yaw: 0,
@@ -1006,30 +1013,46 @@
             });
         }
 
-        // Spawn some initial Knuckles and Loops
-        for(let i=0; i<5; i++) {
+        // Spawn many Knuckles and Loops
+        for(let i=0; i<20; i++) {
             createKnuckles(
-                (Math.random()-0.5) * 800,
-                (Math.random()-0.5) * 800
+                (Math.random()-0.5) * 1200,
+                (Math.random()-0.5) * 1200
             );
         }
-        for(let i=0; i<10; i++) {
+        for(let i=0; i<25; i++) {
             createAbilityBox(
-                (Math.random()-0.5) * 800,
-                (Math.random()-0.5) * 800,
+                (Math.random()-0.5) * 1000,
+                (Math.random()-0.5) * 1000,
                 Math.random() > 0.5 ? 'speed' : 'jump'
             );
         }
+        
+        // Populate with many Ramps and Dash Pads
+        for(let i=0; i<15; i++) {
+            createRamp(
+                (Math.random()-0.5) * 1000,
+                (Math.random()-0.5) * 1000,
+                Math.random() * Math.PI * 2,
+                8 + Math.random() * 8, // width
+                4 + Math.random() * 6, // height
+                12 + Math.random() * 10 // length
+            );
+        }
+
+        for(let i=0; i<15; i++) {
+            createDashPad(
+                (Math.random()-0.5) * 1100,
+                (Math.random()-0.5) * 1100,
+                Math.random() * Math.PI * 2
+            );
+        }
+
         createSonicLoop(40, -100, 12);
         createSonicLoop(-60, -200, 15);
         createSonicLoop(80, -40, 10);
-        
-        // Add ramps and Dash Pads
-        createRamp(0, -50, 0);
-        createRamp(50, -150, Math.PI / 4);
-        createDashPad(0, -20, 0);
-        createDashPad(40, -80, 0);
-        createDashPad(-40, -120, Math.PI / 2);
+        createSonicLoop(-150, 150, 18);
+        createSonicLoop(200, -300, 14);
 
         // --- GAME LOOP ---
         function update() {
@@ -1043,9 +1066,21 @@
             handleObjects(dt);
             handleBoss(dt);
             handleTails(dt);
+            updateTricks(dt);
             updateCamera(dt);
             updateUI();
             updatePlayerColor();
+
+            if (state.isSuper) {
+                state.superTimer -= (1/60) * dt;
+                if (state.superTimer <= 0) {
+                    loseSuper();
+                }
+            }
+
+            if (state.shakeIntensity > 0) {
+                state.shakeIntensity -= 0.02 * dt;
+            }
         }
 
         function handleTails(dt) {
@@ -1113,6 +1148,14 @@
                 state.velocity.y = CONFIG.JUMP_FORCE;
                 state.onGround = false;
                 state.isJumping = true;
+                state.shakeIntensity = 0.1;
+            }
+
+            // Trick Input (Key K)
+            if(state.keys['KeyK'] && !state.onGround && !state.isTricking) {
+                state.isTricking = true;
+                state.trickProgress = 0;
+                showNotification("BACKFLIP!");
             }
 
             // Drag
@@ -1248,8 +1291,11 @@
 
         function goSuper() {
             state.isSuper = true;
+            state.superTimer = CONFIG.SUPER_DURATION;
             state.cosmetics.superModeCount++;
             document.body.classList.add('super-active');
+            document.getElementById('super-timer-hud').style.display = 'block';
+            document.getElementById('super-label').innerText = "SUPER SONIC";
             playerBody.material.color.setHex(0xfff700);
             playerBody.material.emissive.setHex(0xfff700);
             playerBody.material.emissiveIntensity = 1.0;
@@ -1262,9 +1308,41 @@
             }
 
             showNotification("SUPER SONIC ACTIVATED!");
+            state.shakeIntensity = 0.8;
 
             // Super speed burst
             state.velocity.multiplyScalar(2);
+        }
+
+        function loseSuper() {
+            state.isSuper = false;
+            state.rings = 0;
+            state.superTimer = 0;
+            document.body.classList.remove('super-active');
+            document.getElementById('super-timer-hud').style.display = 'none';
+            document.getElementById('super-label').innerText = "Super Meter";
+            playerBody.material.emissive.setHex(0x000000);
+            playerBody.material.emissiveIntensity = 0;
+            updatePlayerColor();
+            showNotification("SUPER SONIC EXPIRED!");
+            state.shakeIntensity = 0.5;
+        }
+
+        function updateTricks(dt) {
+            if (state.isTricking) {
+                state.trickProgress += 0.1 * dt;
+                playerGroup.rotation.x = -state.trickProgress * Math.PI * 2;
+                
+                if (state.trickProgress >= 1) {
+                    state.isTricking = false;
+                    playerGroup.rotation.x = 0;
+                    state.rings += 50;
+                    showNotification("TRICK BONUS! +50");
+                    state.shakeIntensity = 0.3;
+                }
+            } else if (state.onGround) {
+                playerGroup.rotation.x = THREE.MathUtils.lerp(playerGroup.rotation.x, 0, 0.1 * dt);
+            }
         }
 
         function handleBoss(dt) {
@@ -1313,6 +1391,7 @@
                         scene.remove(enemy.mesh);
                         state.objects.enemies.splice(idx, 1);
                         state.rings += 50;
+                        state.shakeIntensity = 0.4;
                         showNotification("Enemy defeated!");
                         // Respawn
                         createKnuckles((Math.random()-0.5)*800, (Math.random()-0.5)*800);
@@ -1409,7 +1488,7 @@
             if(state.speed > 0.4) {
                 const trailGeo = new THREE.SphereBufferGeometry(0.5, 8, 8);
                 const trailMat = new THREE.MeshBasicMaterial({ 
-                    color: state.isSuper ? 0xfff700 : 0x0047ff, 
+                    color: state.isSuper ? 0xfff700 : (state.isTricking ? 0xff00ff : 0x0047ff), 
                     transparent: true, 
                     opacity: 0.5 
                 });
@@ -1445,6 +1524,14 @@
             const idealOffsetZ = -Math.cos(state.yaw) * cameraDistance;
             
             const targetPos = state.pos.clone().add(new THREE.Vector3(idealOffsetX, cameraHeight, idealOffsetZ));
+            
+            // Apply shake
+            if (state.shakeIntensity > 0) {
+                targetPos.x += (Math.random() - 0.5) * state.shakeIntensity;
+                targetPos.y += (Math.random() - 0.5) * state.shakeIntensity;
+                targetPos.z += (Math.random() - 0.5) * state.shakeIntensity;
+            }
+
             camera.position.lerp(targetPos, 0.08 * dt);
             camera.lookAt(state.pos.clone().add(new THREE.Vector3(0, 2, 0)));
         }
@@ -1455,8 +1542,13 @@
 
             const progress = Math.min(100, (state.rings / CONFIG.RINGS_FOR_SUPER) * 100);
             document.getElementById('super-bar').style.width = progress + '%';
-
-            // Update cosmetics display
+            
+            if (state.isSuper) {
+                document.getElementById('super-timer-hud').innerText = Math.ceil(state.superTimer) + 's';
+                document.getElementById('super-bar').style.background = 'linear-gradient(90deg, #fff, #ffcc00)';
+            } else {
+                document.getElementById('super-bar').style.background = 'linear-gradient(90deg, #f1c40f, #ffcc00)';
+            }
             const cosmeticIcons = {
                 'crown': '👑',
                 'halo': '✨',
