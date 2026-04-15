@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE STEM Arcade | The Future of Classroom Gaming</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #ff00ff;
+            --dark: #020617;
+            --bg: #030a1c;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, transparent 70%);
+            filter: blur(80px);
+            border-radius: 50%;
+            animation: move 20s infinite alternate;
+        }
+        .blob-2 {
+            right: -100px;
+            top: -100px;
+            background: radial-gradient(circle, rgba(255, 0, 255, 0.15) 0%, transparent 70%);
+            animation-duration: 25s;
+        }
+        @keyframes move {
+            from { transform: translate(0, 0); }
+            to { transform: translate(100px, 100px); }
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            z-index: 10;
+            max-width: 1000px;
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            line-height: 0.9;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+            background: linear-gradient(to bottom, #fff 50%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            font-weight: 400;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-bottom: 5rem;
+        }
+
+        .btn {
+            padding: 1.2rem 2.8rem;
+            border-radius: 50px;
+            font-weight: 850;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--dark);
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--border);
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        /* --- IMAGE SHOWCASE --- */
+        .showcase-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            border-radius: 30px;
+            padding: 10px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+        }
+
+        .showcase-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 24px;
+            transition: transform 0.5s;
+        }
+
+        .showcase-badge {
+            position: absolute;
+            bottom: -30px;
+            right: 40px;
+            background: #fff;
+            color: #000;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .showcase-badge span {
+            color: #64748b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        /* --- FEATURES --- */
+        .features {
+            padding: 10rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            border-radius: 30px;
+            transition: all 0.4s;
+        }
+
+        .feature-card:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: #94a3b8;
+        }
+
+        /* --- LITTLE MARKET BRANDING --- */
+        .lm-section {
+            padding: 5rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .lm-logo {
+            font-weight: 900;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            opacity: 0.5;
+        }
+
+        .lm-logo span { color: var(--primary); }
+
+        /* --- MOBILE --- */
+        @media (max-width: 768px) {
+            .cta-group { flex-direction: column; padding: 0 2rem; }
+            .showcase-badge { right: 50%; transform: translateX(50%); width: 90%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="category-tag">MGE STEM ARCADE v1.0</div>
+            <h1>The New Standard of Learning.</h1>
+            <p class="hero-subtitle">Premium, high-fidelity STEM gaming tools for modern classrooms. Built by educators, powered by cutting-edge web technology.</p>
+            
+            <div class="cta-group">
+                <a href="mge.html" class="btn btn-primary">ENTER THE ARCADE</a>
+                <a href="#features" class="btn btn-outline">EXPLORE FEATURES</a>
+            </div>
+
+            <div class="showcase-wrapper">
+                <img src="stem_arcade_hero.png" alt="STEM Arcade Showcase" class="showcase-img">
+                <div class="showcase-badge">
+                    ⚡ CURRENT VERSION: SMASH PORT
+                    <span>Ready for Deployment</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="feature-card">
+            <span class="feature-icon">🎮</span>
+            <h3>Native Performance</h3>
+            <p>Experience zero-latency gaming with the new Vue-based Arcade engine. Isolated and optimized for any device.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🛡️</span>
+            <h3>Student Safety</h3>
+            <p>Built-in Escape instructional modules ensure students can always navigate safely back to their learning dashboard.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📂</span>
+            <h3>Isolated Integration</h3>
+            <p>Packaged for seamless hosting on platforms like <span>littlemarket.org</span> without affecting existing systems.</p>
+        </div>
+    </section>
+
+    <footer class="lm-section">
+        <div class="lm-logo">PART OF THE <span>LITTLEMARKET.ORG</span> NETWORK</div>
+        <p style="color: #475569; font-size: 0.9rem;">&copy; 2026 Mr. Gonzalez STEM Lab. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

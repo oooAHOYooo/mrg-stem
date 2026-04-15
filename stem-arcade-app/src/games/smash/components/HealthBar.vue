@@ -1,12 +1,3 @@
-<script setup lang="ts">
-const props = defineProps<{
-  name: string;
-  health: number;
-  color: string;
-  isPlayer1?: boolean;
-}>();
-</script>
-
 <template>
   <div class="health-panel" :class="{ 'p1': isPlayer1, 'p2': !isPlayer1 }">
     <div class="name">{{ name }}</div>
@@ -14,15 +5,33 @@ const props = defineProps<{
       <div 
         class="bar-fill" 
         :style="{ 
-          width: `${health}%`, 
-          background: color,
-          boxShadow: `0 0 20px ${color}`
+          width: `${Math.min(health, 100)}%`, 
+          background: getHealthColor(health),
+          boxShadow: `0 0 20px ${getHealthColor(health)}`
         }"
       ></div>
-      <div class="health-txt">{{ Math.ceil(health) }}%</div>
+      <div class="health-txt" :style="{ color: health > 100 ? '#ff1744' : 'white' }">
+        {{ Math.ceil(health) }}%
+      </div>
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  name: string;
+  health: number;
+  color: string;
+  isPlayer1?: boolean;
+}>();
+
+const getHealthColor = (h: number) => {
+  if (h < 50) return '#4caf50'; // Green
+  if (h < 100) return '#ffeb3b'; // Yellow
+  if (h < 150) return '#ff9800'; // Orange
+  return '#ff1744'; // Red
+};
+</script>
 
 <style scoped>
 .health-panel {
