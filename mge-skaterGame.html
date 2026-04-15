@@ -134,7 +134,7 @@
         
         #trick-display {
             position: fixed;
-            bottom: 1rem;
+            bottom: 4rem;
             left: 50%;
             transform: translateX(-50%);
             font-size: 1.5rem;
@@ -143,6 +143,38 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             opacity: 0;
             transition: opacity 0.5s;
+        }
+
+        #p2-score-display {
+            position: fixed;
+            top: 4rem;
+            left: 15rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        #two-player-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 30rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #4ecdc4;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 20;
+            transition: all 0.3s;
+        }
+
+        #two-player-toggle:hover {
+            transform: scale(1.05);
+            background: #4ecdc4;
+            color: white;
         }
         
         #bail-display {
@@ -232,7 +264,10 @@
         <a href="mge.html" class="back-button">← Back to MGE</a>
         <div class="title">🔬 STEM SKATER 🛹</div>
         
-        <div id="score-display">Score: 0</div>
+        <div id="score-display">P1 Score: 0</div>
+        <div id="p2-score-display">P2 Score: 0</div>
+        
+        <button id="two-player-toggle" onclick="toggleTwoPlayer()">🎮 Enable 2-Player</button>
         
         <div id="boss-panel" style="position: fixed; top: 1rem; right: 20rem; background: rgba(0,0,0,0.8); border: 2px solid #ff1744; padding: 1rem; border-radius: 10px; color: white; text-align: center; font-weight: bold; z-index: 5;">
             👾 GLITCH BOSS<br>
@@ -269,20 +304,20 @@
 
         <div class="controls-panel ui-panel">
             <h2>Controls</h2>
-            <div class="controls-info">
+            <div class="controls-info" id="controls-text">
                 <strong>W/A/S/D</strong> - Move/Turn<br>
                 <strong>Space</strong> - Ollie<br>
                 <strong>E / Q / Left / Right</strong> - Kickflip / Heelflip<br>
                 <strong>Up / Down Arrow</strong> - Pop Shuvits<br>
-                <strong>Up+Right Arrow</strong> - Varial Heelflip<br>
-                <strong>Down+Right Arrow</strong> - 360 Flip<br>
-                <strong>Up+Left Arrow</strong> - Hardflip<br>
-                <strong>Down+Left Arrow</strong> - Inward Heelflip<br>
-                <strong>T</strong> - Board Slide (Hold in air)<br>
-                <strong>Y</strong> - Blunt Slide (Hold in air)<br>
-                <strong>C / V</strong> - Set Mark / Go to Mark<br>
+                <strong>T / Y</strong> - Slides<br>
                 <strong>X</strong> - Run Auto-Trick Sequence!<br>
-                <strong style="color: #4ecdc4; margin-top: 5px; display: block;">Collect Atoms for Science Bonuses!</strong>
+            </div>
+            <div class="controls-info" id="p2-controls-text" style="display:none; border-top: 1px solid #ddd; margin-top: 10px; padding-top: 10px;">
+                <strong>PLAYER 2 (Robot)</strong><br>
+                <strong>Arrows</strong> - Move/Turn<br>
+                <strong>Enter</strong> - Ollie<br>
+                <strong>I / O</strong> - Kickflip / Heelflip<br>
+                <strong>K / L</strong> - Pop Shuvit / FS Shuvit
             </div>
         </div>
     </div>
@@ -533,6 +568,18 @@
         rHeadGroup.position.set(0, 1.6, 0);
         rHeadGroup.add(rHead);
         rSkaterGroup.add(rHeadGroup);
+
+        // Robot Arms
+        const rArmGeo = new THREE.BoxGeometry(0.2, 0.8, 0.2);
+        const rArmMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
+        const rArmL = new THREE.Mesh(rArmGeo, rArmMat);
+        const rArmR = new THREE.Mesh(rArmGeo, rArmMat);
+        const rArmLGroup = new THREE.Group();
+        const rArmRGroup = new THREE.Group();
+        rArmLGroup.position.set(-0.5, 1.2, 0); rArmL.position.set(0, -0.3, 0);
+        rArmRGroup.position.set(0.5, 1.2, 0); rArmR.position.set(0, -0.3, 0);
+        rArmLGroup.add(rArmL); rArmRGroup.add(rArmR);
+        rSkaterGroup.add(rArmLGroup); rSkaterGroup.add(rArmRGroup);
         
         rSkaterGroup.rotation.y = Math.PI / 2;
         rHeadGroup.rotation.y = -Math.PI / 2;
@@ -576,18 +623,54 @@
             markPosition: new THREE.Vector3(0, 0, 0),
             markRotation: 0,
             bossHealth: 1000,
-            bossMaxHealth: 1000
+            bossMaxHealth: 1000,
+            twoPlayerMode: false
         };
 
         const robotState = {
-            flipSpin: 0,
-            shuvitSpin: 0,
+            velocity: 0,
+            rotation: 0,
             yVelocity: 0,
             isJumping: false,
-            baseY: 0
+            score: 0,
+            flipSpin: 0,
+            shuvitSpin: 0,
+            isBailing: false,
+            bailTimer: 0,
+            currentTrick: null,
+            comboPoints: 0
         };
 
-        const keys = { w: false, a: false, s: false, d: false, space: false, e: false, q: false, r: false, t: false, y: false, c: false, v: false, x: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
+        const keys = { 
+            w: false, a: false, s: false, d: false, space: false, 
+            e: false, q: false, r: false, t: false, y: false, f: false,
+            c: false, v: false, x: false,
+            arrowup: false, arrowdown: false, arrowleft: false, arrowright: false,
+            enter: false, u: false, i: false, o: false, p: false, k: false, l: false
+        };
+
+        window.toggleTwoPlayer = function() {
+            state.twoPlayerMode = !state.twoPlayerMode;
+            const btn = document.getElementById('two-player-toggle');
+            const p2Score = document.getElementById('p2-score-display');
+            const p2Controls = document.getElementById('p2-controls-text');
+            const p1ScoreText = document.getElementById('score-display');
+            
+            if (state.twoPlayerMode) {
+                btn.innerText = "🎮 Disable 2-Player";
+                btn.style.borderColor = "#ff6b6b";
+                p2Score.style.display = "block";
+                p2Controls.style.display = "block";
+                p1ScoreText.innerText = "P1 Score: " + state.score;
+                showTrick("2rd Player Joined!", 0);
+            } else {
+                btn.innerText = "🎮 Enable 2-Player";
+                btn.style.borderColor = "#4ecdc4";
+                p2Score.style.display = "none";
+                p2Controls.style.display = "none";
+                p1ScoreText.innerText = "Score: " + state.score;
+            }
+        };
 
         // --- Auto-Trick Block Editor Logic ---
         const mySequence = [];
@@ -694,12 +777,15 @@
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
+            const code = e.code.toLowerCase();
+            
+            // Map keys
             if (key === ' ') keys.space = true;
+            else if (key === 'enter') keys.enter = true;
             else if (keys.hasOwnProperty(key)) keys[key] = true;
+            else if (keys.hasOwnProperty(code)) keys[code] = true;
 
-            if (key === 'x') {
-                executeSequence();
-            }
+            if (key === 'x') executeSequence();
 
             if (key === 'c') {
                 state.markPosition.copy(boardGroup.position);
@@ -709,15 +795,16 @@
                 td.style.opacity = 1;
                 setTimeout(() => { td.style.opacity = 0; }, 1000);
             }
-            if (key === 'v') {
-                teleportToMark();
-            }
+            if (key === 'v') teleportToMark();
         });
 
         window.addEventListener('keyup', (e) => {
             const key = e.key.toLowerCase();
+            const code = e.code.toLowerCase();
             if (key === ' ') keys.space = false;
+            else if (key === 'enter') keys.enter = false;
             else if (keys.hasOwnProperty(key)) keys[key] = false;
+            else if (keys.hasOwnProperty(code)) keys[code] = false;
         });
 
         function teleportToMark() {
@@ -743,6 +830,21 @@
             document.getElementById('trick-display').style.opacity = 0;
             state.currentTrick = null;
             state.comboPoints = 0;
+
+            // Reset P2 as well
+            robotGroup.position.copy(state.markPosition);
+            robotGroup.position.x += 4;
+            robotState.rotation = state.markRotation;
+            robotGroup.rotation.y = robotState.rotation;
+            robotState.velocity = 0;
+            robotState.yVelocity = 0;
+            robotState.isJumping = false;
+            robotState.isBailing = false;
+            robotState.flipSpin = 0;
+            robotState.shuvitSpin = 0;
+            robotDeckGroup.rotation.set(0,0,0);
+            rSkaterGroup.rotation.x = 0;
+            rSkaterGroup.position.y = 0.25;
         }
 
         function resetAtoms() {
@@ -755,35 +857,57 @@
             state.comboPoints += pts;
             state.currentTrick = name;
             const td = document.getElementById('trick-display');
-            td.innerText = `${name}! +${pts}`;
+            td.innerText = `P1: ${name}! +${pts}`;
             td.style.opacity = 1;
+            td.style.color = "#ffe66d";
+        }
+
+        function showP2Trick(name, pts) {
+            robotState.comboPoints += pts;
+            robotState.currentTrick = name;
+            const td = document.getElementById('trick-display');
+            td.innerText = `P2: ${name}! +${pts}`;
+            td.style.opacity = 1;
+            td.style.color = "#4ecdc4";
         }
 
         function finishLanding() {
-            // Check bail
             if (state.flipSpin > 0 || state.shuvitSpin > 0) {
-                // BAIL!
                 state.isBailing = true;
                 state.bailTimer = 1.0;
+                document.getElementById('bail-display').innerText = "P1 BAIL!";
                 document.getElementById('bail-display').style.opacity = 1;
-
-                // Instantly teleport on bad landing after short delay or immediately
-                setTimeout(() => {
-                    teleportToMark();
-                }, 500);
-                
-                // Animate bail
+                setTimeout(() => { teleportToMark(); }, 500);
                 skaterGroup.rotation.x = Math.PI / 2;
                 skaterGroup.position.y = -0.5;
                 state.velocity = 0;
             } else {
-                // Landed successfully
                 state.score += state.comboPoints;
-                document.getElementById('score-display').innerText = `Score: ${state.score}`;
-                setTimeout(() => { document.getElementById('trick-display').style.opacity = 0; }, 1000);
+                document.getElementById('score-display').innerText = state.twoPlayerMode ? `P1 Score: ${state.score}` : `Score: ${state.score}`;
+                setTimeout(() => { if(!robotState.currentTrick) document.getElementById('trick-display').style.opacity = 0; }, 1000);
             }
             state.comboPoints = 0;
             state.currentTrick = null;
+        }
+
+        function finishP2Landing() {
+            if (robotState.flipSpin > 0 || robotState.shuvitSpin > 0) {
+                robotState.isBailing = true;
+                robotState.bailTimer = 1.0;
+                document.getElementById('bail-display').innerText = "P2 BAIL!";
+                document.getElementById('bail-display').style.opacity = 1;
+                
+                // Animate robot bail
+                rSkaterGroup.rotation.x = Math.PI / 2;
+                rSkaterGroup.position.y = -0.5;
+                robotState.velocity = 0;
+            } else {
+                robotState.score += robotState.comboPoints;
+                document.getElementById('p2-score-display').innerText = `P2 Score: ${robotState.score}`;
+                setTimeout(() => { if(!state.currentTrick) document.getElementById('trick-display').style.opacity = 0; }, 1000);
+            }
+            robotState.comboPoints = 0;
+            robotState.currentTrick = null;
         }
 
         const clock = new THREE.Clock();
@@ -843,6 +967,7 @@
             }
 
             // Handle bailing wait
+            // Handle bailing mechanics
             if (state.isBailing) {
                 state.bailTimer -= delta;
                 if (state.bailTimer <= 0) {
@@ -855,13 +980,27 @@
                     state.flipSpin = 0;
                     state.shuvitSpin = 0;
                 }
-            } else {
+            }
+            if (robotState.isBailing) {
+                robotState.bailTimer -= delta;
+                if (robotState.bailTimer <= 0) {
+                    robotState.isBailing = false;
+                    document.getElementById('bail-display').style.opacity = 0;
+                    document.getElementById('trick-display').style.opacity = 0;
+                    rSkaterGroup.rotation.x = 0;
+                    rSkaterGroup.position.y = 0.25;
+                    robotDeckGroup.rotation.set(0,0,0);
+                    robotState.flipSpin = 0;
+                    robotState.shuvitSpin = 0;
+                }
+            }
 
-                // Movement logic
+            // Movement and Physics for Player 1
+            if (!state.isBailing) {
+                // --- PLAYER 1 PHYSICS ---
                 if (keys.w) state.velocity = Math.min(state.velocity + 20 * delta, 20);
                 else if (keys.s) state.velocity = Math.max(state.velocity - 20 * delta, -10);
                 else {
-                    // Friction
                     if (state.velocity > 0) state.velocity = Math.max(state.velocity - 10 * delta, 0);
                     if (state.velocity < 0) state.velocity = Math.min(state.velocity + 10 * delta, 0);
                 }
@@ -870,128 +1009,77 @@
                 if (keys.d) state.rotation -= 2 * delta;
 
                 boardGroup.rotation.y = state.rotation;
-                
-                // Move forward
                 boardGroup.position.x += Math.sin(state.rotation) * state.velocity * delta;
                 boardGroup.position.z += Math.cos(state.rotation) * state.velocity * delta;
-
-                // Apply strict world boundaries
                 boardGroup.position.x = Math.max(-88, Math.min(88, boardGroup.position.x));
                 boardGroup.position.z = Math.max(-88, Math.min(88, boardGroup.position.z));
 
-                // Raycast downwards to find surface height
                 const raycaster = new THREE.Raycaster(new THREE.Vector3(boardGroup.position.x, boardGroup.position.y + 10, boardGroup.position.z), new THREE.Vector3(0, -1, 0));
                 const intersects = raycaster.intersectObjects(collidables, true);
-                let targetY = 0;
-                if (intersects.length > 0) {
-                    targetY = intersects[0].point.y;
-                }
+                let targetY = intersects.length > 0 ? intersects[0].point.y : 0;
 
                 if (!state.isJumping) {
                     if (boardGroup.position.y > targetY + 0.2) {
-                        // Went off an edge, so start falling
                         state.isJumping = true;
                         state.yVelocity = 0;
                     } else {
-                        // Stick to surface
                         boardGroup.position.y = targetY;
                     }
                 }
 
-                // Jumping
                 if (keys.space && !state.isJumping) {
-                    // Slight boost to normal horizontal velocity could happen, but we'll do yVelocity
-                    state.yVelocity = 20; // higher ollie for ramps
+                    state.yVelocity = 20;
                     state.isJumping = true;
                     showTrick('Ollie', 50);
                 }
 
                 if (state.isJumping) {
-                    // Tricks only when jumping
-                    if (keys.arrowup && keys.arrowright && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = -Math.PI * 2;
-                        state.shuvitSpin = Math.PI * 2;
-                        showTrick('Varial Heelflip', 250);
-                    } else if (keys.arrowdown && keys.arrowright && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = Math.PI * 2;
-                        state.shuvitSpin = Math.PI * 2;
-                        showTrick('360 Flip', 300);
-                    } else if (keys.arrowup && keys.arrowleft && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = Math.PI * 2;
-                        state.shuvitSpin = -Math.PI * 2;
-                        showTrick('Hardflip', 250);
-                    } else if (keys.arrowdown && keys.arrowleft && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = -Math.PI * 2;
-                        state.shuvitSpin = -Math.PI * 2;
-                        showTrick('Inward Heelflip', 250);
-                    } else if ((keys.e || keys.arrowright) && !keys.arrowup && !keys.arrowdown && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = Math.PI * 2;
-                        showTrick('Kickflip', 100);
-                    } else if ((keys.q || keys.arrowleft) && !keys.arrowup && !keys.arrowdown && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = -Math.PI * 2;
-                        showTrick('Heelflip', 100);
-                    } else if (keys.r && state.flipSpin === 0 && state.shuvitSpin === 0) {
-                        state.flipSpin = Math.PI * 2;
-                        state.shuvitSpin = Math.PI * 2;
-                        showTrick('360 Flip', 300);
-                    } else if (keys.arrowup && !keys.arrowleft && !keys.arrowright && state.shuvitSpin === 0 && state.flipSpin === 0) {
-                        state.shuvitSpin = Math.PI * 2;
-                        showTrick('Pop Shuvit', 150);
-                    } else if (keys.arrowdown && !keys.arrowleft && !keys.arrowright && state.shuvitSpin === 0 && state.flipSpin === 0) {
-                        state.shuvitSpin = -Math.PI * 2;
-                        showTrick('FS Shuvit', 150);
+                    // P1 Trick mapping
+                    if (!state.twoPlayerMode) {
+                        // Standard controls
+                        if (keys.arrowup && keys.arrowright && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = -Math.PI * 2; state.shuvitSpin = Math.PI * 2; showTrick('Varial Heelflip', 250);
+                        } else if (keys.arrowdown && keys.arrowright && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = Math.PI * 2; state.shuvitSpin = Math.PI * 2; showTrick('360 Flip', 300);
+                        } else if (keys.arrowup && keys.arrowleft && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = Math.PI * 2; state.shuvitSpin = -Math.PI * 2; showTrick('Hardflip', 250);
+                        } else if (keys.arrowdown && keys.arrowleft && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = -Math.PI * 2; state.shuvitSpin = -Math.PI * 2; showTrick('Inward Heelflip', 250);
+                        } else if ((keys.e || keys.arrowright) && !keys.arrowup && !keys.arrowdown && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = Math.PI * 2; showTrick('Kickflip', 100);
+                        } else if ((keys.q || keys.arrowleft) && !keys.arrowup && !keys.arrowdown && state.flipSpin === 0 && state.shuvitSpin === 0) {
+                            state.flipSpin = -Math.PI * 2; showTrick('Heelflip', 100);
+                        } else if (keys.arrowup && !keys.arrowleft && !keys.arrowright && state.shuvitSpin === 0 && state.flipSpin === 0) {
+                            state.shuvitSpin = Math.PI * 2; showTrick('Pop Shuvit', 150);
+                        } else if (keys.arrowdown && !keys.arrowleft && !keys.arrowright && state.shuvitSpin === 0 && state.flipSpin === 0) {
+                            state.shuvitSpin = -Math.PI * 2; showTrick('FS Shuvit', 150);
+                        }
+                    } else {
+                        // 2P controls: P1 uses Q/E/R/F
+                        if (keys.e && state.flipSpin === 0) { state.flipSpin = Math.PI * 2; showTrick('Kickflip', 100); }
+                        else if (keys.q && state.flipSpin === 0) { state.flipSpin = -Math.PI * 2; showTrick('Heelflip', 100); }
+                        else if (keys.r && state.flipSpin === 0 && state.shuvitSpin === 0) { state.flipSpin = Math.PI * 2; state.shuvitSpin = Math.PI * 2; showTrick('360 Flip', 300); }
+                        else if (keys.f && state.shuvitSpin === 0) { state.shuvitSpin = Math.PI * 2; showTrick('Pop Shuvit', 150); }
                     }
-                    
-                    // Slides logic (just visuals and points if held)
+
                     if (keys.t && state.currentTrick !== 'Board Slide') {
-                        deckGroup.rotation.y = Math.PI / 2;
-                        showTrick('Board Slide', 200);
+                        deckGroup.rotation.y = Math.PI / 2; showTrick('Board Slide', 200);
                     } else if (keys.y && state.currentTrick !== 'Blunt Slide') {
-                        deckGroup.rotation.x = -Math.PI / 4;
-                        showTrick('Blunt Slide', 250);
+                        deckGroup.rotation.x = -Math.PI / 4; showTrick('Blunt Slide', 250);
                     }
 
-                    // Release slide keys
-                    if (!keys.t && state.currentTrick === 'Board Slide') {
-                        deckGroup.rotation.y = 0;
-                        state.currentTrick = null;
-                        document.getElementById('trick-display').style.opacity = 0;
-                    }
-                    if (!keys.y && state.currentTrick === 'Blunt Slide') {
-                        deckGroup.rotation.x = 0;
-                        state.currentTrick = null;
-                        document.getElementById('trick-display').style.opacity = 0;
-                    }
+                    if (!keys.t && state.currentTrick === 'Board Slide') { deckGroup.rotation.y = 0; state.currentTrick = null; document.getElementById('trick-display').style.opacity = 0; }
+                    if (!keys.y && state.currentTrick === 'Blunt Slide') { deckGroup.rotation.x = 0; state.currentTrick = null; document.getElementById('trick-display').style.opacity = 0; }
 
-                    // Apply gravity
                     state.yVelocity -= 35 * delta;
                     boardGroup.position.y += state.yVelocity * delta;
 
-                    // Animate flip spins
-                    if (state.flipSpin > 0) {
-                        const step = Math.min(Math.PI * 5 * delta, state.flipSpin); // slowed down flip
-                        deckGroup.rotation.z += step;
-                        state.flipSpin -= step;
-                    } else if (state.flipSpin < 0) {
-                        const step = Math.max(-Math.PI * 5 * delta, state.flipSpin);
-                        deckGroup.rotation.z += step;
-                        state.flipSpin -= step;
-                    }
-                    
-                    // Animate shuvit spins
-                    if (state.shuvitSpin > 0) {
-                        const step = Math.min(Math.PI * 5 * delta, state.shuvitSpin);
-                        deckGroup.rotation.y += step;
-                        state.shuvitSpin -= step;
-                    }
+                    if (state.flipSpin > 0) { const step = Math.min(Math.PI * 5 * delta, state.flipSpin); deckGroup.rotation.z += step; state.flipSpin -= step; }
+                    else if (state.flipSpin < 0) { const step = Math.max(-Math.PI * 5 * delta, state.flipSpin); deckGroup.rotation.z += step; state.flipSpin -= step; }
+                    if (state.shuvitSpin > 0) { const step = Math.min(Math.PI * 5 * delta, state.shuvitSpin); deckGroup.rotation.y += step; state.shuvitSpin -= step; }
 
                     if (boardGroup.position.y <= targetY && state.yVelocity <= 0) {
-                        boardGroup.position.y = targetY;
-                        state.isJumping = false;
-                        state.yVelocity = 0;
-                        deckGroup.rotation.set(0,0,0);
-                        
-                        finishLanding();
+                        boardGroup.position.y = targetY; state.isJumping = false; state.yVelocity = 0; deckGroup.rotation.set(0,0,0); finishLanding();
                     }
                 }
             }
@@ -1005,64 +1093,87 @@
                 bossGroup.position.lerp(new THREE.Vector3(0, 10, -70), 0.1);
             }
 
-            // Robot Follow Logic
-            if (!isAutoTricking) {
-                // Follow the player
+            // --- PLAYER 2 (ROBOT) LOGIC ---
+            const robotRaycaster = new THREE.Raycaster(new THREE.Vector3(robotGroup.position.x, robotGroup.position.y + 10, robotGroup.position.z), new THREE.Vector3(0, -1, 0));
+            const rIntersects = robotRaycaster.intersectObjects(collidables, true);
+            let rTargetY = rIntersects.length > 0 ? rIntersects[0].point.y : 0;
+
+            if (state.twoPlayerMode && !isAutoTricking) {
+                // CONTROLLABLE P2
+                if (keys.arrowup) robotState.velocity = Math.min(robotState.velocity + 20 * delta, 20);
+                else if (keys.arrowdown) robotState.velocity = Math.max(robotState.velocity - 20 * delta, -10);
+                else {
+                    if (robotState.velocity > 0) robotState.velocity = Math.max(robotState.velocity - 10 * delta, 0);
+                    if (robotState.velocity < 0) robotState.velocity = Math.min(robotState.velocity + 10 * delta, 0);
+                }
+
+                if (keys.arrowleft) robotState.rotation += 2 * delta;
+                if (keys.arrowright) robotState.rotation -= 2 * delta;
+
+                robotGroup.rotation.y = robotState.rotation;
+                robotGroup.position.x += Math.sin(robotState.rotation) * robotState.velocity * delta;
+                robotGroup.position.z += Math.cos(robotState.rotation) * robotState.velocity * delta;
+                robotGroup.position.x = Math.max(-88, Math.min(88, robotGroup.position.x));
+                robotGroup.position.z = Math.max(-88, Math.min(88, robotGroup.position.z));
+
+                if (!robotState.isJumping) {
+                    if (robotGroup.position.y > rTargetY + 0.2) { robotState.isJumping = true; robotState.yVelocity = 0; }
+                    else { robotGroup.position.y = rTargetY; }
+                }
+
+                if (keys.enter && !robotState.isJumping) {
+                    robotState.yVelocity = 20; robotState.isJumping = true;
+                    showP2Trick('Ollie', 50);
+                }
+
+                if (robotState.isJumping) {
+                    if (keys.i && robotState.flipSpin === 0) { robotState.flipSpin = Math.PI * 2; showP2Trick('Kickflip', 100); }
+                    else if (keys.o && robotState.flipSpin === 0) { robotState.flipSpin = -Math.PI * 2; showP2Trick('Heelflip', 100); }
+                    else if (keys.p && robotState.flipSpin === 0 && robotState.shuvitSpin === 0) { robotState.flipSpin = Math.PI * 2; robotState.shuvitSpin = Math.PI * 2; showP2Trick('360 Flip', 300); }
+                    else if (keys.k && robotState.shuvitSpin === 0) { robotState.shuvitSpin = Math.PI * 2; showP2Trick('Pop Shuvit', 150); }
+                    else if (keys.l && robotState.shuvitSpin === 0) { robotState.shuvitSpin = -Math.PI * 2; showP2Trick('FS Shuvit', 150); }
+
+                    robotState.yVelocity -= 35 * delta;
+                    robotGroup.position.y += robotState.yVelocity * delta;
+
+                    if (robotState.flipSpin > 0) { const step = Math.min(Math.PI * 5 * delta, robotState.flipSpin); robotDeckGroup.rotation.z += step; robotState.flipSpin -= step; }
+                    else if (robotState.flipSpin < 0) { const step = Math.max(-Math.PI * 5 * delta, robotState.flipSpin); robotDeckGroup.rotation.z += step; robotState.flipSpin -= step; }
+                    if (robotState.shuvitSpin > 0) { const step = Math.min(Math.PI * 5 * delta, robotState.shuvitSpin); robotDeckGroup.rotation.y += step; robotState.shuvitSpin -= step; }
+
+                    if (robotGroup.position.y <= rTargetY && robotState.yVelocity <= 0) {
+                        robotGroup.position.y = rTargetY; robotState.isJumping = false; robotState.yVelocity = 0; robotDeckGroup.rotation.set(0,0,0); finishP2Landing();
+                    }
+                }
+            } else if (!isAutoTricking) {
+                // NORMAL FOLLOW LOGIC
                 const targetPos = new THREE.Vector3().copy(boardGroup.position);
                 const offset = new THREE.Vector3(-4, 0, 4);
                 offset.applyAxisAngle(new THREE.Vector3(0,1,0), state.rotation);
                 targetPos.add(offset);
                 robotGroup.position.lerp(targetPos, 5 * delta);
-                // Turn towards direction of movement
-                const targetRot = state.rotation;
-                robotGroup.rotation.y += (targetRot - robotGroup.rotation.y) * 5 * delta;
+                robotGroup.rotation.y += (state.rotation - robotGroup.rotation.y) * 5 * delta;
+                robotGroup.position.y = rTargetY;
             } else {
-                // If auto tricking and boss not dead, robot races toward boss!
+                // AUTO TRICKING RACING TOWARD BOSS
                 if(state.bossHealth > 0) {
                     const dirToBoss = new THREE.Vector3().subVectors(bossGroup.position, robotGroup.position);
-                    dirToBoss.y = 0;
-                    dirToBoss.normalize();
-                    robotGroup.position.addScaledVector(dirToBoss, 30 * delta); // Race speed
+                    dirToBoss.y = 0; dirToBoss.normalize();
+                    robotGroup.position.addScaledVector(dirToBoss, 30 * delta);
                     robotGroup.lookAt(robotGroup.position.x + dirToBoss.x, robotGroup.position.y, robotGroup.position.z + dirToBoss.z);
                 }
-            }
-
-            // Robot Jump Logic
-            const robotRaycaster = new THREE.Raycaster(new THREE.Vector3(robotGroup.position.x, robotGroup.position.y + 10, robotGroup.position.z), new THREE.Vector3(0, -1, 0));
-            const rIntersects = robotRaycaster.intersectObjects(collidables, true);
-            let rTargetY = 0;
-            if (rIntersects.length > 0) rTargetY = rIntersects[0].point.y;
-
-            if (robotState.isJumping) {
-                robotState.yVelocity -= 35 * delta;
-                robotGroup.position.y += robotState.yVelocity * delta;
-
-                // Flip Spin
-                if (robotState.flipSpin > 0) {
-                    const step = Math.min(Math.PI * 5 * delta, robotState.flipSpin);
-                    robotDeckGroup.rotation.z += step;
-                    robotState.flipSpin -= step;
-                } else if (robotState.flipSpin < 0) {
-                    const step = Math.max(-Math.PI * 5 * delta, robotState.flipSpin);
-                    robotDeckGroup.rotation.z += step;
-                    robotState.flipSpin -= step;
-                }
                 
-                // Shuvit Spin
-                if (robotState.shuvitSpin > 0) {
-                    const step = Math.min(Math.PI * 5 * delta, robotState.shuvitSpin);
-                    robotDeckGroup.rotation.y += step;
-                    robotState.shuvitSpin -= step;
-                }
-
-                if (robotGroup.position.y <= rTargetY && robotState.yVelocity <= 0) {
+                if (robotState.isJumping) {
+                    robotState.yVelocity -= 35 * delta;
+                    robotGroup.position.y += robotState.yVelocity * delta;
+                    if (robotState.flipSpin > 0) { const step = Math.min(Math.PI * 5 * delta, robotState.flipSpin); robotDeckGroup.rotation.z += step; robotState.flipSpin -= step; }
+                    else if (robotState.flipSpin < 0) { const step = Math.max(-Math.PI * 5 * delta, robotState.flipSpin); robotDeckGroup.rotation.z += step; robotState.flipSpin -= step; }
+                    if (robotState.shuvitSpin > 0) { const step = Math.min(Math.PI * 5 * delta, robotState.shuvitSpin); robotDeckGroup.rotation.y += step; robotState.shuvitSpin -= step; }
+                    if (robotGroup.position.y <= rTargetY && robotState.yVelocity <= 0) {
+                        robotGroup.position.y = rTargetY; robotState.isJumping = false; robotState.yVelocity = 0; robotDeckGroup.rotation.set(0,0,0);
+                    }
+                } else {
                     robotGroup.position.y = rTargetY;
-                    robotState.isJumping = false;
-                    robotState.yVelocity = 0;
-                    robotDeckGroup.rotation.set(0,0,0);
                 }
-            } else {
-                robotGroup.position.y = rTargetY;
             }
 
             // --- ANIMATE CHARACTER HEAD AND ARMS ---
@@ -1107,13 +1218,34 @@
                 }
             }
 
-            // Camera follow
-            const idealOffset = new THREE.Vector3(0, 5, -10);
-            idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.rotation);
-            idealOffset.add(boardGroup.position);
-            
-            camera.position.lerp(idealOffset, 0.1);
-            camera.lookAt(boardGroup.position);
+            // --- ANIMATE ROBOT (P2) HEAD AND ARMS ---
+            if (robotState.isBailing) {
+                rArmLGroup.rotation.z = Math.sin(Date.now() * 0.012) * 2;
+                rArmRGroup.rotation.z = Math.sin(Date.now() * 0.012 + 1) * 2;
+            } else if (robotState.isJumping) {
+                rArmLGroup.rotation.z = Math.PI / 1.5;
+                rArmRGroup.rotation.z = -Math.PI / 1.5;
+            } else {
+                rArmLGroup.rotation.z = Math.PI / 4;
+                rArmRGroup.rotation.z = -Math.PI / 4;
+                rHeadGroup.rotation.y = -Math.PI / 2 + (keys.arrowleft ? 0.5 : (keys.arrowright ? -0.5 : 0));
+            }
+            let cameraTarget = boardGroup.position.clone();
+            if (state.twoPlayerMode) {
+                // Midpoint between players
+                cameraTarget.add(robotGroup.position).multiplyScalar(0.5);
+                const dist = boardGroup.position.distanceTo(robotGroup.position);
+                const idealOffset = new THREE.Vector3(0, 5 + dist * 0.2, -10 - dist * 0.5);
+                idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.rotation);
+                idealOffset.add(cameraTarget);
+                camera.position.lerp(idealOffset, 0.1);
+            } else {
+                const idealOffset = new THREE.Vector3(0, 5, -10);
+                idealOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.rotation);
+                idealOffset.add(boardGroup.position);
+                camera.position.lerp(idealOffset, 0.1);
+            }
+            camera.lookAt(cameraTarget);
 
             renderer.render(scene, camera);
         }

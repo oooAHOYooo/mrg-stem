@@ -177,6 +177,106 @@
             background: url("https://mrg-stem.netlify.app/static/imgs/mrg-stem-hd.png") center/cover no-repeat;
             opacity: 0.15; z-index: -1; pointer-events: none;
         }
+        #day-clock {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.55); border-radius: 30px;
+            padding: 6px 20px; color: white; font-weight: 800; font-size: 14px;
+            z-index: 100; display: flex; align-items: center; gap: 10px;
+            border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            transition: border-color 0.5s;
+        }
+        #day-clock-icon { font-size: 18px; transition: all 0.5s; }
+        #day-clock-label { letter-spacing: 1px; }
+        #day-progress-bar {
+            width: 100px; height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden;
+        }
+        #day-progress-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, #fbbf24, #f97316);
+            transition: width 0.5s linear, background 2s;
+        }
+
+        /* Premium Escape Overlay */
+        #esc-overlay {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 14px 28px;
+            border-radius: 20px;
+            border: 2px solid #4ecdc4;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            z-index: 3000;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        #esc-overlay.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .keycap-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keycap {
+            background: linear-gradient(135deg, #3d4452, #242933);
+            border: 2px solid #57606f;
+            border-bottom: 6px solid #161a21;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 850;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: inline-block;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        .keycap-pulse {
+            position: absolute;
+            inset: -4px;
+            border: 2px solid #4ecdc4;
+            border-radius: 14px;
+            opacity: 0;
+            animation: key-pulse-anim 2s infinite;
+        }
+
+        @keyframes key-pulse-anim {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        .esc-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .esc-main-text {
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .esc-sub-text {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            font-weight: 500;
+        }
     </style>
     <!-- Import map for Three.js -->
     <script type="importmap">
@@ -188,8 +288,13 @@
         }
     </script>
 </head>
-<body style="background-color: #87CEEB;">
+<body style="background-color: #87CEEB; transition: background-color 3s;">
     <div id="bg-image"></div>
+    <div id="day-clock">
+        <span id="day-clock-icon">☀️</span>
+        <span id="day-clock-label">DAY</span>
+        <div id="day-progress-bar"><div id="day-progress-fill" style="width:50%"></div></div>
+    </div>
     <a href="mge.html" class="back-btn">⬅️ Back to Dashboard</a>
     
     <div id="boss-health-container">
@@ -271,6 +376,19 @@
             <p style="margin-top: 30px; font-weight: 800; font-size: 24px; color: #4ecdc4; animation: pulse 2s infinite;">Click Anywhere to Start Play</p>
         </div>
     </div>
+
+    <!-- Premium Escape Overlay -->
+    <div id="esc-overlay">
+        <div class="keycap-container">
+            <div class="keycap">ESC</div>
+            <div class="keycap-pulse"></div>
+        </div>
+        <div class="esc-text-container">
+            <div class="esc-main-text">Press Escape to Exit</div>
+            <div class="esc-sub-text">Unlock mouse to return to PAUSE menu</div>
+        </div>
+    </div>
+
     <div id="crosshair">十</div>
     
     <div class="color-picker" id="colorPicker">
@@ -329,6 +447,21 @@
             }
         } );
 
+        // Pointer Lock Interface Logic
+        document.addEventListener('pointerlockchange', () => {
+            const overlay = document.getElementById('esc-overlay');
+            if (document.pointerLockElement === document.body) {
+                overlay.classList.add('visible');
+                setTimeout(() => {
+                    if (document.pointerLockElement === document.body) {
+                        overlay.classList.remove('visible');
+                    }
+                }, 4000);
+            } else {
+                overlay.classList.remove('visible');
+            }
+        });
+
         scene.add( controls.getObject() );
 
         // Lighting
@@ -349,12 +482,136 @@
         dirLight.shadow.mapSize.height = 2048;
         scene.add( dirLight );
 
+        // Sun
+        const sunGeo = new THREE.SphereGeometry(25, 32, 32);
+        const sunMat = new THREE.MeshBasicMaterial({color: 0xfff176});
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        sun.position.set(300, 250, -300);
+        scene.add(sun);
+
+        // Sun glow sprite
+        const sunGlowGeo = new THREE.SphereGeometry(38, 32, 32);
+        const sunGlowMat = new THREE.MeshBasicMaterial({color: 0xffd54f, transparent: true, opacity: 0.25});
+        const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
+        sun.add(sunGlow);
+
         // Moon
-        const moonGeo = new THREE.SphereGeometry(30, 32, 32);
-        const moonMat = new THREE.MeshBasicMaterial({color: 0xffffee});
+        const moonGeo = new THREE.SphereGeometry(20, 32, 32);
+        const moonMat = new THREE.MeshBasicMaterial({color: 0xe0e8ff});
         const moon = new THREE.Mesh(moonGeo, moonMat);
-        moon.position.set(-100, 200, -200);
+        moon.position.set(-300, -200, -300);
         scene.add(moon);
+
+        // Stars group (visible at night)
+        const starsGroup = new THREE.Group();
+        scene.add(starsGroup);
+        const starGeo = new THREE.SphereGeometry(1.5, 6, 6);
+        const starMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+        for(let s=0; s<200; s++) {
+            const star = new THREE.Mesh(starGeo, starMat.clone());
+            const phi = Math.acos(2 * Math.random() - 1);
+            const theta = 2 * Math.PI * Math.random();
+            const r = 450;
+            star.position.set(
+                r * Math.sin(phi) * Math.cos(theta),
+                Math.abs(r * Math.cos(phi)) * 0.5 + 50,
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+            star.material.opacity = 0;
+            star.material.transparent = true;
+            starsGroup.add(star);
+        }
+
+        // ========== DAY / NIGHT CYCLE SYSTEM ==========
+        // One full day = 120 seconds (day 60s, dusk/dawn 10s each, night 40s)
+        const DAY_CYCLE_DURATION = 120; // seconds
+        // Background palettes: [sky color, fog color, label, icon, fillGradient, borderColor]
+        const skyPhases = [
+            { t: 0.00, sky: '#87CEEB', fog: 0x87CEEB, label: 'MORNING',   icon: '🌅', fill: 'linear-gradient(90deg,#fde68a,#fb923c)', border: 'rgba(251,146,60,0.7)',  sunAlt: 0.3,  moonAlt: -0.5, ambI: 0.5,  dirI: 0.6,  hemiG: '#777', time: 'dawn' },
+            { t: 0.15, sky: '#56b4de', fog: 0x56b4de, label: 'DAY',        icon: '☀️', fill: 'linear-gradient(90deg,#fbbf24,#f97316)', border: 'rgba(251,191,36,0.7)',  sunAlt: 0.7,  moonAlt: -0.8, ambI: 0.9,  dirI: 1.0,  hemiG: '#444', time: 'day' },
+            { t: 0.50, sky: '#3a8fbf', fog: 0x3a8fbf, label: 'AFTERNOON',  icon: '🌤', fill: 'linear-gradient(90deg,#f59e0b,#ef4444)', border: 'rgba(245,158,11,0.6)',  sunAlt: 0.6,  moonAlt: -0.6, ambI: 0.7,  dirI: 0.85, hemiG: '#555', time: 'day' },
+            { t: 0.65, sky: '#e8855a', fog: 0xe8855a, label: 'SUNSET',      icon: '🌇', fill: 'linear-gradient(90deg,#f97316,#dc2626)', border: 'rgba(249,115,22,0.8)',  sunAlt: 0.05, moonAlt: 0.1,  ambI: 0.35, dirI: 0.4,  hemiG: '#663322', time: 'dusk' },
+            { t: 0.75, sky: '#1a1a2e', fog: 0x1a1a2e, label: 'NIGHT',       icon: '🌙', fill: 'linear-gradient(90deg,#6366f1,#1e1b4b)', border: 'rgba(99,102,241,0.7)',  sunAlt: -0.8, moonAlt: 0.55, ambI: 0.15, dirI: 0.1,  hemiG: '#112233', time: 'night' },
+            { t: 0.90, sky: '#0f172a', fog: 0x0f172a, label: 'MIDNIGHT',   icon: '⭐', fill: 'linear-gradient(90deg,#1e1b4b,#312e81)', border: 'rgba(79,70,229,0.5)',   sunAlt: -0.9, moonAlt: 0.75, ambI: 0.08, dirI: 0.05, hemiG: '#0a1122', time: 'night' }
+        ];
+
+        let dayTime = 0; // 0.0 to 1.0 normalized
+        let lastBgSwitch = 0;
+        const BG_SWITCH_INTERVAL = 30; // seconds
+
+        function lerpColor(hexA, hexB, t) {
+            // Simple linear interpolation of two CSS hex/named colors
+            const ca = new THREE.Color(hexA);
+            const cb = new THREE.Color(hexB);
+            ca.lerp(cb, t);
+            return ca;
+        }
+
+        function getCurrentPhase(t) {
+            for(let i = skyPhases.length - 1; i >= 0; i--) {
+                if(t >= skyPhases[i].t) return { a: skyPhases[i], b: skyPhases[(i+1) % skyPhases.length], frac: (t - skyPhases[i].t) / ((skyPhases[(i+1) % skyPhases.length].t || 1.0) - skyPhases[i].t) };
+            }
+            return { a: skyPhases[0], b: skyPhases[1], frac: 0 };
+        }
+
+        function updateDayNight(elapsedSec) {
+            dayTime = (elapsedSec % DAY_CYCLE_DURATION) / DAY_CYCLE_DURATION;
+
+            const { a, b, frac } = getCurrentPhase(dayTime);
+            const safeT = Math.min(Math.max(frac, 0), 1);
+
+            // Background color
+            const skyC = lerpColor(a.sky, b.sky, safeT);
+            const skyHex = '#' + skyC.getHexString();
+            document.body.style.backgroundColor = skyHex;
+
+            // Fog
+            const fogC = new THREE.Color(a.fog).lerp(new THREE.Color(b.fog), safeT);
+            if(scene.fog) { scene.fog.color.copy(fogC); }
+
+            // Sun arc (rises in east, sets in west)
+            const sunAngle = dayTime * Math.PI * 2 - Math.PI / 2;
+            const sunR = 400;
+            sun.position.set(
+                Math.cos(sunAngle) * sunR,
+                Math.sin(sunAngle) * sunR * 0.8 + 50,
+                -200
+            );
+
+            // Moon follows opposite arc
+            moon.position.set(
+                Math.cos(sunAngle + Math.PI) * sunR,
+                Math.sin(sunAngle + Math.PI) * sunR * 0.8 + 50,
+                -200
+            );
+
+            // Lighting
+            const ambInt = a.ambI + (b.ambI - a.ambI) * safeT;
+            const dirInt = a.dirI + (b.dirI - a.dirI) * safeT;
+            hemiLight.intensity = ambInt;
+            dirLight.intensity = dirInt;
+            dirLight.position.copy(sun.position);
+
+            // Stars opacity (visible at night)
+            const isNight = a.time === 'night' || b.time === 'night';
+            const starOpacity = a.time === 'night' ? (b.time === 'night' ? 1 : 1 - safeT) : (b.time === 'night' ? safeT : 0);
+            if(a.time === 'dusk') { }
+            starsGroup.children.forEach(s => { s.material.opacity = Math.max(0, Math.min(1, starOpacity)); });
+
+            // UI clock
+            const clockIcon = document.getElementById('day-clock-icon');
+            const clockLabel = document.getElementById('day-clock-label');
+            const progressFill = document.getElementById('day-progress-fill');
+            const clockEl = document.getElementById('day-clock');
+            if(clockIcon) clockIcon.textContent = a.icon;
+            if(clockLabel) clockLabel.textContent = a.label;
+            if(progressFill) {
+                progressFill.style.width = (dayTime * 100).toFixed(1) + '%';
+                progressFill.style.background = a.fill;
+            }
+            if(clockEl) clockEl.style.borderColor = a.border;
+        }
+        // ========== END DAY / NIGHT CYCLE ==========
 
         // Objects (voxels)
         const objects = [];
@@ -541,12 +798,57 @@
             objects.push(topLeaf);
         };
 
-        for(let i=0; i<15; i++) {
-            const tx = Math.floor(Math.random() * 80 - 40) * 5;
-            const tz = Math.floor(Math.random() * 80 - 40) * 5;
-            if (tz < -20 && tx > -40 && tx < 40) continue; // avoid boss area
-            createTree(tx, tz);
+        for(let i=0; i<30; i++) {
+            const tx = Math.floor(Math.random() * 120 - 60) * 5;
+            const tz = Math.floor(Math.random() * 120 - 60) * 5;
+            if (tz < -20 && tx > -40 && tx < 40) continue; 
+            
+            // Random tree variants
+            const type = Math.random();
+            if (type < 0.2) {
+                // Tall Pine
+                const pineMat = new THREE.MeshLambertMaterial({color: 0x064e3b});
+                for(let y=0; y<6; y++) {
+                    const trunk = new THREE.Mesh(boxGeometry, woodMat);
+                    trunk.position.set(tx, y*5 + 2.5, tz);
+                    scene.add(trunk); objects.push(trunk);
+                }
+                for(let y=2; y<8; y++) {
+                    const r = 8 - y;
+                    const leaf = new THREE.Mesh(new THREE.ConeGeometry(r*2, 6, 4), pineMat);
+                    leaf.position.set(tx, y*5 + 2.5, tz);
+                    scene.add(leaf); objects.push(leaf);
+                }
+            } else {
+                createTree(tx, tz);
+            }
         }
+
+        // --- FLOATING ISLANDS ---
+        const floatingIslands = [];
+        function createFloatingIsland(x, y, z, size = 30) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshLambertMaterial({color: 0x34d399});
+            const dirtMat = new THREE.MeshLambertMaterial({color: 0x78350f});
+            
+            const surface = new THREE.Mesh(new THREE.BoxGeometry(size, 5, size), mat);
+            surface.position.y = 0;
+            group.add(surface); objects.push(surface);
+
+            const bottom = new THREE.Mesh(new THREE.ConeGeometry(size/2, 20, 4), dirtMat);
+            bottom.rotation.x = Math.PI;
+            bottom.position.y = -10;
+            group.add(bottom); objects.push(bottom);
+
+            group.position.set(x, y, z);
+            scene.add(group);
+            floatingIslands.push(group);
+            return group;
+        }
+
+        const island1 = createFloatingIsland(150, 80, -150, 50);
+        const island2 = createFloatingIsland(-150, 100, -150, 50);
+        const island3 = createFloatingIsland(0, 120, -250, 60);
         
         // --- INFINITE HORDE BOSSES ---
         let bossHealth = 150;
@@ -777,12 +1079,12 @@
                 };
 
                 const optCode = document.createElement('button');
-                optCode.textContent = 'Block Code';
+                optCode.textContent = 'Program & Release';
                 optCode.style.padding = '5px 10px'; optCode.style.background = '#8b5cf6'; optCode.style.color = 'white';
                 optCode.style.border='none'; optCode.style.borderRadius='4px'; optCode.style.cursor='pointer';
                 optCode.onclick = () => {
                     menu.style.display = 'none';
-                    openBlockCoding(dr);
+                    openBlockCoding(dr, true); // true = fight mode
                 };
 
                 menu.appendChild(optFollow);
@@ -804,19 +1106,27 @@
             { id: "destroy()", label: "Robot.Destroy()", color: "#ef4444" },
             { id: "set_friend_mode(true)", label: "FriendMode = true", color: "#ec4899" },
             { id: "follow_player()", label: "Player.Follow()", color: "#8b5cf6" },
-            { id: "on_catch", label: "Event: On Catch", color: "#f59e0b" }
+            { id: "on_catch", label: "Event: On Catch", color: "#f59e0b" },
+            { id: "on_release", label: "Event: On Release", color: "#3b82f6" },
+            { id: "target_boss()", label: "Target: Nearest Boss", color: "#ef4444" },
+            { id: "attack_heavy()", label: "Attack: Heavy Fire", color: "#dc2626" }
         ];
 
-        function openBlockCoding(target) {
+        function openBlockCoding(target, forFight = false) {
             if(inBlockCoding || inRiddle || inMenu) return;
             controls.unlock();
             setTimeout(() => {
                 inBlockCoding = true;
                 inMenu = true;
                 codingTarget = target;
+                codingTarget.userData.forFight = forFight;
                 document.getElementById('blocker').style.display = 'block';
                 document.getElementById('instructions').style.display = 'none';
                 document.getElementById('block-coding-container').style.display = 'block';
+                
+                const title = document.querySelector('#block-coding-container h2');
+                title.textContent = forFight ? "Combat Command: Train to Fight!" : "Friendship Logic: Program a Friend!";
+                
                 resetWorkspace();
             }, 100);
         }
@@ -953,6 +1263,8 @@
 
         document.getElementById('clear-code-btn').onclick = resetWorkspace;
         document.getElementById('cancel-code-btn').onclick = closeBlockCoding;
+
+
 
         function closeBlockCoding() {
             document.getElementById('block-coding-container').style.display = 'none';
@@ -1602,6 +1914,12 @@
             bossGroup.rotation.z = 0;
             isBossDefeated = false;
             let type = index % 4;
+
+            // Islands positions for specific bosses
+            if (index === 1) bossGroup.position.set(150, 85, -150);
+            else if (index === 2) bossGroup.position.set(-150, 105, -150);
+            else if (index === 3) bossGroup.position.set(0, 125, -250);
+            else bossGroup.position.set(0, 0, -60);
             
             if (type === 0) {
                 activeBossModel = createDinosaur();
@@ -2230,14 +2548,26 @@
                 for(let i=0; i < capturableEntities.length; i++) {
                     const ce = capturableEntities[i];
                     if(ce.visible) {
-                        if (ce.userData.isFriend) {
-                            const pPos = controls.getObject().position;
-                            const dist = ce.position.distanceTo(pPos);
-                            if (dist > 15) {
-                                ce.lookAt(pPos.x, ce.position.y, pPos.z);
-                                ce.translateZ(10.0 * delta);
-                            }
-                        } else {
+                        if (ce.userData.mode === 'FIGHTER' && activeBossModel && !isBossDefeated) {
+                                const bPos = bossGroup.position;
+                                const dist = ce.position.distanceTo(bPos);
+                                if (dist > 30) {
+                                    ce.lookAt(bPos.x, ce.position.y, bPos.z);
+                                    ce.translateZ(20.0 * delta);
+                                } else {
+                                    if (Math.random() < 0.02) {
+                                        createExplosion(ce.position);
+                                        damageBoss(5);
+                                    }
+                                }
+                            } else if (ce.userData.isFriend) {
+                                const pPos = controls.getObject().position;
+                                const dist = ce.position.distanceTo(pPos);
+                                if (dist > 15) {
+                                    ce.lookAt(pPos.x, ce.position.y, pPos.z);
+                                    ce.translateZ(10.0 * delta);
+                                }
+                            } else {
                             ce.translateZ(ce.userData.isSlime ? 2.0 * delta : 5.0 * delta);
                             if(Math.random() < 0.03) {
                                 ce.rotation.y += (Math.random() - 0.5) * 2.0;
@@ -2477,6 +2807,9 @@
                     }
                 }
             }
+
+            // Day/Night cycle update
+            updateDayNight(time / 1000);
 
             prevTime = time;
 

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Gonzalez Experiments (MGE) - STEM Lab</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mge-screensaver.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+            --mge-accent: #ffe66d;
+            --mge-purple: #a78bfa;
+            --mge-pink: #f472b6;
+            --mge-orange: #fb923c;
+            --mge-green: #34d399;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .mge-hero {
+            background: linear-gradient(135deg,
+                    var(--mge-primary) 0%,
+                    var(--mge-secondary) 25%,
+                    var(--mge-accent) 50%,
+                    var(--mge-purple) 75%,
+                    var(--mge-pink) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 30px;
+            margin: 2rem auto;
+            max-width: 1200px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mge-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .mge-hero h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 900;
+            color: white;
+            text-shadow:
+                0 0 10px rgba(78, 205, 196, 0.8),
+                0 0 20px rgba(255, 107, 107, 0.6),
+                0 0 30px rgba(167, 139, 250, 0.4);
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .mge-hero .subtitle {
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            color: white;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+        }
+
+        .mge-logo {
+            font-size: clamp(3rem, 8vw, 6rem);
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .experiments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .experiment-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .experiment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.4),
+                    transparent);
+            transition: left 0.5s;
+        }
+
+        .experiment-card:hover::before {
+            left: 100%;
+        }
+
+        .experiment-card:nth-child(1) {
+            border-color: var(--mge-primary);
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(1):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 107, 107, 0.4);
+            border-color: var(--mge-primary);
+        }
+
+        .experiment-card:nth-child(2) {
+            border-color: var(--mge-secondary);
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(2):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(78, 205, 196, 0.4);
+            border-color: var(--mge-secondary);
+        }
+
+        .experiment-card:nth-child(3) {
+            border-color: var(--mge-purple);
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(3):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(167, 139, 250, 0.4);
+            border-color: var(--mge-purple);
+        }
+
+        .experiment-card:nth-child(3) {
+            border-color: var(--mge-green);
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(3):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(52, 211, 153, 0.4);
+            border-color: var(--mge-green);
+        }
+
+        .experiment-card:nth-child(4) {
+            border-color: var(--mge-orange);
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(4):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(251, 146, 60, 0.4);
+            border-color: var(--mge-orange);
+        }
+
+        .experiment-card:nth-child(5) {
+            border-color: var(--mge-accent);
+            background: linear-gradient(135deg, rgba(255, 230, 109, 0.1), rgba(255, 255, 255, 0.95));
+        }
+
+        .experiment-card:nth-child(5):hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 230, 109, 0.4);
+            border-color: var(--mge-accent);
+        }
+
+        .experiment-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-10px) rotate(-5deg);
+            }
+
+            75% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        .experiment-card h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #1a1a2e;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .experiment-card p {
+            color: #475569;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .experiment-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--mge-primary), var(--mge-secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .experiment-link:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, var(--mge-secondary), var(--mge-primary));
+        }
+
+        .coming-soon {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #94a3b8, #64748b) !important;
+        }
+
+        .coming-soon:hover {
+            transform: none !important;
+        }
+
+        .mge-tagline {
+            text-align: center;
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #64748b;
+            margin: 2rem auto;
+            max-width: 800px;
+            padding: 0 2rem;
+            font-style: italic;
+        }
+
+        /* Dark mode support */
+        body.dark-mode .experiment-card {
+            background: rgba(15, 15, 26, 0.95);
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .experiment-card h2 {
+            color: #60a5fa;
+            text-shadow: 0 0 15px rgba(96, 165, 250, 0.6);
+        }
+
+        body.dark-mode .experiment-card p {
+            color: #c7d2fe;
+        }
+
+        body.dark-mode .mge-tagline {
+            color: #a5b4fc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background"></div>
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-top">
+        <div class="navbar-container">
+            <a href="index.html" class="navbar-brand">🏠 Mr. Gonzalez STEM</a>
+            <div class="navbar-menu">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="dashboard-container" id="dashboard-container">
+        <aside class="sidebar" id="sidebar-left">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">🧪 Experiments</h3>
+                <nav class="sidebar-nav">
+                    <a href="mge-storm-chaser.html" class="sidebar-link">🌪️ Storm Chaser</a>
+                    <a href="#agent-genesis" class="sidebar-link">🤖 Agent Genesis</a>
+                    <a href="#mge-dash" class="sidebar-link">⚡ MGE Dash</a>
+                    <a href="#aqua-genesis" class="sidebar-link">🌊 Aqua Genesis</a>
+                    <a href="#skating" class="sidebar-link">⛸️ Skating Game</a>
+                    <a href="#skaterGame" class="sidebar-link">🛹 SkaterGame</a>
+                    <a href="#smash" class="sidebar-link">⚔️ Super Smash Fighters</a>
+
+                    <a href="#ice-ring" class="sidebar-link">🌌 Ice Ring Sky</a>
+
+                    <a href="#quantum-chess" class="sidebar-link">♟️ Cosmic Chess</a>
+                    <a href="#minecraft-clone" class="sidebar-link">⛏️ Minecraft Clone</a>
+                    <a href="#typing-racer" class="sidebar-link">🐾 Typing Animal Race</a>
+                    <a href="#bot-creator" class="sidebar-link">🤖 Bot Creator Deluxe</a>
+
+                    <a href="#scratch-block-lab" class="sidebar-link">🧩 Scratch Block Lab</a>
+                    <a href="#terrain-editor" class="sidebar-link">🌏 Terrain Editor</a>
+                    <a href="#robot-mon" class="sidebar-link">🤖 Robot-Mon: Logic Battle</a>
+                    <a href="#robot-path-planner" class="sidebar-link">⭐ Robot Path Planner</a>
+                    <a href="#gamemaker-4000" class="sidebar-link">🕹️ GAMEMAKER 4000</a>
+                    <a href="#sketch-animator" class="sidebar-link">🎨 Sketch Animator</a>
+                    <a href="#face-master" class="sidebar-link">🎭 Face Master 3D</a>
+                    <a href="#coming-soon" class="sidebar-link" style="opacity: 0.5;">🔬 More Coming...</a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <div class="main-content-scroll">
+                <!-- Hero Section -->
+                <div class="mge-hero" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%);">
+                    <div class="mge-logo">📦</div>
+                    <h1>Misc experiments</h1>
+                    <div class="subtitle">The Archive of Curious Creations</div>
+                    <a href="mge.html" class="experiment-link" style="margin-top: 1rem; background: rgba(255,255,255,0.2); border: 1px solid white;">← Back to Main MGE</a>
+                </div>
+
+                <p class="mge-tagline">
+                    This is where we keep our older experiments, experimental prototypes, and miscellaneous tools. 
+                    They might be a bit dusty, but they're still full of STEM magic!
+                </p>
+
+                <!-- Experiments Grid -->
+                <div class="experiments-grid">
+                    <!-- Storm Chaser -->
+                    <div class="experiment-card" id="storm-chaser" style="border-color: #fbbf24; background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🌪️</span>
+                        <h2 style="color: #475569;">Storm Chaser</h2>
+                        <p>
+                            Control the atmosphere! Manipulate temperature and pressure to create supercell storms and tornadoes in this 3D STEM simulator.
+                        </p>
+                        <a href="mge-storm-chaser.html" class="experiment-link" style="background: linear-gradient(135deg, #fbbf24, #1a1a2e);">Launch Experiment 🌪️</a>
+                    </div>
+
+                    <!-- Agent Genesis -->
+                    <div class="experiment-card" id="agent-genesis" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🤖</span>
+                        <h2 style="color: #6d28d9;">Agent Genesis</h2>
+                        <p>
+                            Talk to your super-smart robot friend and build your very own game! 
+                            Use magic words to create basic fighting games or jump-and-run levels like Geometry Dash. Let your imagination run wild!
+                        </p>
+                        <a href="mge-llm-maker.html" class="experiment-link" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Start Magic ⚡</a>
+                    </div>
+
+                    <!-- Face Master 3D -->
+                    <div class="experiment-card" id="face-master" style="border-color: #7c4dff; background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), rgba(255, 255, 255, 0.95)); border-width: 4px;">
+                        <span class="experiment-icon">🎭</span>
+                        <h2 style="color: #6d28d9;">Face Master 3D</h2>
+                        <p>
+                            Master the art of portraiture using the Loomis Method! Use our interactive 3D mannequin head to understand facial planes, volumes, and proportions. A guided studio for future character artists!
+                        </p>
+                        <a href="mge-face-master.html" class="experiment-link" style="background: linear-gradient(135deg, #7c4dff, #00e5ff);">Start Drawing 🎨</a>
+                    </div>
+
+                    <!-- Skating Game -->
+                    <div class="experiment-card" id="skating">
+                        <span class="experiment-icon">⛸️</span>
+                        <h2>Skating Game <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
+                        <p>
+                            Glide across the ice in this super colorful 2-player skating adventure!
+                            Control your skater with keyboard keys, perform tricks, collect gems,
+                            and race with a friend. Built with Three.js for stunning 3D graphics!
+                        </p>
+                        <a href="mge-skating.html" class="experiment-link">Play Now 🎮</a>
+                    </div>
+
+                    <!-- Robot-Mon: Logic Battle -->
+                    <div class="experiment-card" id="robot-mon" style="border-color: #00f0ff; background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🤖⚡</span>
+                        <h2 style="color: #0891b2;">Robot-Mon: Logic Battle <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">UPDATED!</span></h2>
+                        <p>
+                            The ultimate 1v1 robot showdown! Build a team of 6 badass bots and program their battle sequences. Solve conditional programming puzzles in real-time to execute your commands. Master IF/ELSE logic in a 3D world with retro vibes!
+                        </p>
+                        <a href="mge-robot-battler.html" class="experiment-link" style="background: linear-gradient(135deg, #0891b2, #00f0ff);">Battle Now 🤖</a>
+                    </div>
+
+                    <!-- Scratch STEM Block Lab -->
+                    <div class="experiment-card" id="scratch-block-lab" style="border-color: #34d399; background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🧩</span>
+                        <h2 style="color: #10b981;">Scratch Block Lab</h2>
+                        <p>
+                            Build sequences, plan paths, design algorithms, assemble blocks, code a character, and debug a bug.
+                            It’s Scratch-like Blockly fun—inside a STEM robot adventure.
+                        </p>
+                        <a href="mge-scratch-stem-block-lab.html" class="experiment-link" style="background: linear-gradient(135deg, #34d399, #a78bfa);">Start Building ▶</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="sidebar sidebar-right" id="sidebar-right">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">ℹ️ Info</h3>
+                <div style="color: #64748b; font-size: 0.85rem; line-height: 1.6;">
+                    <p><strong>What is MGE?</strong></p>
+                    <p>Mr. Gonzalez Experiments is a collection of interactive coding projects and games.</p>
+                    <p style="margin-top: 1rem;"><strong>Technologies Used:</strong></p>
+                    <ul style="margin-left: 1rem; margin-top: 0.5rem;">
+                        <li>Three.js (3D Graphics)</li>
+                        <li>JavaScript</li>
+                        <li>HTML5 Canvas</li>
+                        <li>WebGL</li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Collapse buttons -->
+    <button class="sidebar-collapse-btn left" id="collapse-left-btn" aria-label="Toggle left sidebar">◀</button>
+    <button class="sidebar-collapse-btn right" id="collapse-right-btn" aria-label="Toggle right sidebar">▶</button>
+
+    <!-- Bottom Navbar -->
+    <nav class="navbar navbar-bottom">
+        <div class="navbar-container">
+            <!-- Desktop Menu -->
+            <div class="navbar-menu" id="navbar-menu">
+                <div class="dropdown">
+                    <button class="navbar-link dropdown-toggle" id="quick-links-dropdown" aria-haspopup="true"
+                        aria-expanded="false">
+                        🚀 Quick Links ▼
+                    </button>
+                    <div class="dropdown-menu" id="quick-links-menu">
+                        <a href="/minecraft.html" class="dropdown-item">⛏️ Minecraft</a>
+                        <a href="/scratch-tutorials.html" class="dropdown-item">📚 Scratch Tutorials</a>
+                        <a href="/featured-tutorials-archive.html" class="dropdown-item">⭐ Featured Archive</a>
+                        <a href="/lesson-plans.html" class="dropdown-item">🏠 Take Home Projects</a>
+                        <a href="/portfolio" class="dropdown-item">🏫 Class Portfolios</a>
+                        <a href="/submit-portfolio.html" class="dropdown-item">📮 Submit Project</a>
+                        <a href="/unreal-engine-level-design.html" class="dropdown-item">🎮 Unreal Engine 5</a>
+                        <a href="/learn-html.html" class="dropdown-item">👑 Build Empire (HTML)</a>
+                        <a href="/expectations.html" class="dropdown-item">⭐ Expectations</a>
+                        <a href="/coverage.html" class="dropdown-item">📝 Coverage</a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.4); font-weight: 700;">🎨
+                    Student Work</a>
+
+                <a href="/mge.html" class="navbar-link"
+                    style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(126, 34, 206, 0.2)); border-color: rgba(147, 51, 234, 0.4); font-weight: 700;">🧪
+                    Mr Gonzalez Experiments</a>
+            </div>
+
+            <!-- Mobile Menu Grid -->
+            <div class="mobile-menu-grid">
+                <div class="mobile-menu-item mobile-dropdown" id="mobile-quick-links-dropdown">
+                    <span class="icon">🚀</span>
+                    <span class="label">Links</span>
+                    <div class="mobile-dropdown-menu" id="mobile-quick-links-menu">
+                        <a href="/minecraft.html" class="mobile-dropdown-item">
+                            <span class="icon">⛏️</span> Minecraft
+                        </a>
+                        <a href="/scratch-tutorials.html" class="mobile-dropdown-item">
+                            <span class="icon">📚</span> Scratch
+                        </a>
+                        <a href="/featured-tutorials-archive.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Archive
+                        </a>
+                        <a href="/lesson-plans.html" class="mobile-dropdown-item">
+                            <span class="icon">🏠</span> Projects
+                        </a>
+                        <a href="/portfolio" class="mobile-dropdown-item">
+                            <span class="icon">🏫</span> Portfolios
+                        </a>
+                        <a href="/submit-portfolio.html" class="mobile-dropdown-item">
+                            <span class="icon">📮</span> Submit
+                        </a>
+                        <a href="/unreal-engine-level-design.html" class="mobile-dropdown-item">
+                            <span class="icon">🎮</span> Unreal
+                        </a>
+                        <a href="/learn-html.html" class="mobile-dropdown-item">
+                            <span class="icon">👑</span> HTML
+                        </a>
+                        <a href="/expectations.html" class="mobile-dropdown-item">
+                            <span class="icon">⭐</span> Rules
+                        </a>
+                        <a href="/coverage.html" class="mobile-dropdown-item">
+                            <span class="icon">📝</span> Coverage
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/student-work.html" class="mobile-menu-item featured-orange">
+                    <span class="icon">🎨</span>
+                    <span class="label">Work</span>
+                </a>
+
+                <a href="/mge.html" class="mobile-menu-item featured-mge">
+                    <span class="icon">🧪</span>
+                    <span class="label">Experiments</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        // Theme toggle
+        (function () {
+            const themeToggle = document.getElementById('theme-toggle');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            let isDark = localStorage.getItem('darkMode') === 'true' ||
+                (localStorage.getItem('darkMode') === null && prefersDark);
+
+            function applyTheme() {
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                    themeToggle.textContent = '☀️';
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    themeToggle.textContent = '🌙';
+                }
+            }
+
+            applyTheme();
+
+            themeToggle.addEventListener('click', function () {
+                isDark = !isDark;
+                localStorage.setItem('darkMode', isDark);
+                applyTheme();
+            });
+        })();
+
+        // Sidebar collapse functionality
+        (function () {
+            var leftBtn = document.getElementById('collapse-left-btn');
+            var rightBtn = document.getElementById('collapse-right-btn');
+            var leftSidebar = document.getElementById('sidebar-left');
+            var rightSidebar = document.getElementById('sidebar-right');
+            var dashboard = document.getElementById('dashboard-container');
+
+            var leftCollapsed = false;
+            var rightCollapsed = false;
+
+            function updateDashboardClass() {
+                dashboard.classList.remove('left-collapsed', 'right-collapsed', 'both-collapsed');
+                if (leftCollapsed && rightCollapsed) {
+                    dashboard.classList.add('both-collapsed');
+                } else if (leftCollapsed) {
+                    dashboard.classList.add('left-collapsed');
+                } else if (rightCollapsed) {
+                    dashboard.classList.add('right-collapsed');
+                }
+            }
+
+            function applyLeftState() {
+                if (leftCollapsed) {
+                    leftSidebar.classList.add('collapsed');
+                    leftBtn.innerHTML = '▶';
+                    leftBtn.classList.add('collapsed');
+                } else {
+                    leftSidebar.classList.remove('collapsed');
+                    leftBtn.innerHTML = '◀';
+                    leftBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+
+            function applyRightState() {
+                if (rightCollapsed) {
+                    rightSidebar.classList.add('collapsed');
+                    rightBtn.innerHTML = '◀';
+                    rightBtn.classList.add('collapsed');
+                } else {
+                    rightSidebar.classList.remove('collapsed');
+                    rightBtn.innerHTML = '▶';
+                    rightBtn.classList.remove('collapsed');
+                }
+                updateDashboardClass();
+            }
+
+            applyLeftState();
+            applyRightState();
+
+            if (leftBtn) {
+                leftBtn.addEventListener('click', function () {
+                    leftCollapsed = !leftCollapsed;
+                    applyLeftState();
+                });
+            }
+
+            if (rightBtn) {
+                rightBtn.addEventListener('click', function () {
+                    rightCollapsed = !rightCollapsed;
+                    applyRightState();
+                });
+            }
+        })();
+    </script>
+
+    <script>
+        // Universal Dropdown Toggles and Mobile Logic
+        (function () {
+            var dropdowns = [
+                { toggle: 'quick-links-dropdown', menu: 'quick-links-menu' }
+            ];
+
+            dropdowns.forEach(function (dropdown) {
+                var toggle = document.getElementById(dropdown.toggle);
+                var menu = document.getElementById(dropdown.menu);
+
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        // Close other dropdowns if any (for future proofing)
+                        menu.classList.toggle('show');
+                    });
+                }
+            });
+
+            // Mobile logic handled by existing script
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function (e) {
+                dropdowns.forEach(function (dropdown) {
+                    var toggle = document.getElementById(dropdown.toggle);
+                    var menu = document.getElementById(dropdown.menu);
+                    if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                    }
+                });
+
+                if (mobileDropdown && mobileMenu && !mobileDropdown.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    mobileDropdown.classList.remove('active');
+                    mobileMenu.classList.remove('show');
+                }
+            });
+        })();
+    </script>
+
+    <script type="module" src="mge-screensaver.js"></script>
+</body>
+
+</html>

@@ -340,6 +340,246 @@
         body.dark-mode .mge-tagline {
             color: #a5b4fc;
         }
+
+        /* Highlight styles for top games */
+        .featured-highlight {
+            border-width: 5px !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+            position: relative;
+        }
+
+        .featured-highlight::after {
+            content: 'TOP PICK';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ffeb3b;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        /* What's New / Changelog Styles */
+        .whats-new-section {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 3rem 2rem;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 5;
+        }
+
+        .whats-new-header-main {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .whats-new-header-main h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--mge-primary), var(--mge-purple), var(--mge-secondary));
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+            text-shadow: none;
+            animation: textFlow 10s linear infinite;
+            background-size: 200%;
+        }
+
+        @keyframes textFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .whats-new-subtitle {
+            color: #64748b;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        #whats-new-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .changelog-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 30px;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .changelog-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at top right, rgba(0, 242, 255, 0.1), transparent);
+            pointer-events: none;
+        }
+
+        .changelog-item:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            border-color: var(--mge-secondary);
+            background: #fff;
+        }
+
+        .changelog-header {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .changelog-icon {
+            font-size: 2.5rem;
+            background: rgba(var(--mge-secondary), 0.1);
+            padding: 0.5rem;
+            border-radius: 12px;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
+            transition: transform 0.3s ease;
+        }
+
+        .changelog-item:hover .changelog-icon {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .changelog-title-group {
+            flex: 1;
+        }
+
+        .changelog-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .changelog-date {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .changelog-badge {
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .badge-major { background: linear-gradient(135deg, #ff4757, #ff6b81); color: white; }
+        .badge-update { background: linear-gradient(135deg, #54a0ff, #00d2ff); color: white; }
+        .badge-polish { background: linear-gradient(135deg, #1dd1a1, #10ac84); color: white; }
+
+        .changelog-description {
+            font-size: 1.05rem;
+            color: #475569;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .changelog-updates {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            flex: 1;
+        }
+
+        .changelog-updates li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .changelog-updates li::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--mge-primary);
+            font-weight: bold;
+        }
+
+        .changelog-link {
+            margin-top: 1.5rem;
+            align-self: flex-start;
+            font-weight: 700;
+            color: var(--mge-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .changelog-link:hover {
+            color: var(--mge-primary);
+            transform: translateX(5px);
+        }
+
+        /* Dark Mode adjustments for Changelog */
+        body.dark-mode .whats-new-section {
+            background: rgba(15, 15, 26, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .changelog-item {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark-mode .changelog-title { color: #f1f5f9; }
+        body.dark-mode .changelog-description { color: #cbd5e1; }
+        body.dark-mode .changelog-updates li { color: #94a3b8; }
+        body.dark-mode .changelog-item::after {
+            background: radial-gradient(circle at top right, rgba(0, 242, 255, 0.05), transparent);
+        }
+
+        @media (max-width: 768px) {
+            .whats-new-section {
+                padding: 2rem 1rem;
+                margin: 2rem 1rem;
+            }
+            .whats-new-header-main h2 {
+                font-size: 2.2rem;
+            }
+            .whats-new-subtitle {
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -362,27 +602,31 @@
             <div class="sidebar-content">
                 <h3 class="sidebar-title">🧪 Experiments</h3>
                 <nav class="sidebar-nav">
-                    <a href="#agent-genesis" class="sidebar-link">🤖 Agent Genesis</a>
-                    <a href="#mge-dash" class="sidebar-link">⚡ MGE Dash</a>
-                    <a href="#aqua-genesis" class="sidebar-link">🌊 Aqua Genesis</a>
-                    <a href="#skating" class="sidebar-link">⛸️ Skating Game</a>
-                    <a href="#skaterGame" class="sidebar-link">🛹 SkaterGame</a>
-                    <a href="#smash" class="sidebar-link">⚔️ Super Smash Fighters</a>
-                    <a href="#magic-game" class="sidebar-link">🎈 Aero Rangers</a>
-                    <a href="#ice-ring" class="sidebar-link">🌌 Ice Ring Sky</a>
-                    <a href="#journey-hacker" class="sidebar-link">💻 Journey Hacker</a>
-                    <a href="#quantum-chess" class="sidebar-link">♟️ Cosmic Chess</a>
+                    <a href="#sonic-speed" class="sidebar-link">🦔 Sonic Speed</a>
+                    <a href="#easter-hunt" class="sidebar-link">🐰 Easter Egg Hunt</a>
                     <a href="#minecraft-clone" class="sidebar-link">⛏️ Minecraft Clone</a>
+                    <a href="#terrain-editor" class="sidebar-link">🌏 Terrain Editor</a>
+                    <a href="#fps-striker" class="sidebar-link">🎯 FPS Striker</a>
+                    <a href="#smash" class="sidebar-link">⚔️ Super Smash Fighters</a>
+                    <a href="#aqua-genesis" class="sidebar-link">🌊 Aqua Genesis</a>
+                    <a href="mge-storm-chaser.html" class="sidebar-link" style="color: var(--mge-neon-yellow); font-weight: bold;">🌪️ Storm Chaser</a>
+                    <a href="mge-lunar-architect.html" class="sidebar-link" style="color: var(--mge-accent); font-weight: bold;">🚀 Lunar Architect</a>
+                    <hr style="opacity: 0.2; margin: 10px 0;">
+                    <a href="#mge-dash" class="sidebar-link">⚡ MGE Dash</a>
+                    <a href="#skaterGame" class="sidebar-link">🛹 SkaterGame</a>
+
+                    <a href="#ice-ring" class="sidebar-link">🌌 Ice Ring Sky</a>
+
+                    <a href="#quantum-chess" class="sidebar-link">♟️ Cosmic Chess</a>
+                    <a href="#3d-paint" class="sidebar-link">🎨 3D Paint</a>
                     <a href="#typing-racer" class="sidebar-link">🐾 Typing Animal Race</a>
                     <a href="#bot-creator" class="sidebar-link">🤖 Bot Creator Deluxe</a>
-                    <a href="#pips-island" class="sidebar-link">🏝️ Pips Island</a>
-                    <a href="#scratch-block-lab" class="sidebar-link">🧩 Scratch Block Lab</a>
-                    <a href="#terrain-editor" class="sidebar-link">🌏 Terrain Editor</a>
-                    <a href="#robot-mon" class="sidebar-link">🤖 Robot-Mon: Logic Battle</a>
+
                     <a href="#robot-path-planner" class="sidebar-link">⭐ Robot Path Planner</a>
                     <a href="#gamemaker-4000" class="sidebar-link">🕹️ GAMEMAKER 4000</a>
                     <a href="#sketch-animator" class="sidebar-link">🎨 Sketch Animator</a>
-                    <a href="#face-master" class="sidebar-link">🎭 Face Master 3D</a>
+                    <hr style="opacity: 0.2; margin: 10px 0;">
+                    <a href="mge-misc.html" class="sidebar-link" style="color: var(--mge-primary);">📦 Misc Experiments</a>
                     <a href="#coming-soon" class="sidebar-link" style="opacity: 0.5;">🔬 More Coming...</a>
                 </nav>
             </div>
@@ -403,93 +647,80 @@
                     designed to be fun, colorful, and educational. Dive in and explore!
                 </p>
 
-                <!-- Experiments Grid -->
+                <!-- Featured: Easter Egg Hunt -->
                 <div class="experiments-grid">
-                    <!-- Experiment 0: Agent Genesis (LLM Game Maker) -->
-                    <div class="experiment-card" id="agent-genesis" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🤖</span>
-                        <h2 style="color: #6d28d9;">Agent Genesis</h2>
+                    <!-- NEW TOP PICK: Storm Chaser -->
+                    <div class="experiment-card featured-highlight" id="storm-chaser" style="border-color: #fbbf24; background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(71, 85, 105, 0.3), rgba(255, 255, 255, 0.95)); order: -30; box-shadow: 0 20px 50px rgba(251, 191, 36, 0.4);">
+                        <span class="experiment-icon">🌪️⛈️</span>
+                        <h2 style="background: linear-gradient(135deg, #fbbf24, #475569); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE: Storm Chaser <span style="background: #ffeb3b; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.6);">NEW!</span></h2>
                         <p>
-                            Talk to your super-smart robot friend and build your very own game! 
-                            Use magic words to create basic fighting games or jump-and-run levels like Geometry Dash. Let your imagination run wild!
+                            <b>UNLEASH THE ELEMENTS!</b> Control temperature, humidity, and air pressure to create massive storms. Summon 3D tornadoes, strike lightning, and master the meteorology of a severe weather cell!
                         </p>
-                        <a href="mge-llm-maker.html" class="experiment-link" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Start Magic ⚡</a>
+                        <a href="mge-storm-chaser.html" class="experiment-link" style="background: linear-gradient(135deg, #fbbf24, #475569); color: #fff;">Chase the Storm 🌪️</a>
                     </div>
 
-                    <!-- Experiment 0: MGE Dash (Geometry Dash Clone) -->
-                    <div class="experiment-card" id="mge-dash" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">⚡</span>
-                        <h2 style="color: #009688;">MGE Dash <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
+                    <!-- NEW TOP PICK: Lunar Architect -->
+                    <div class="experiment-card featured-highlight" id="lunar-architect" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(167, 139, 250, 0.2), rgba(255, 255, 255, 0.95)); order: -25; box-shadow: 0 20px 50px rgba(0, 242, 254, 0.4);">
+                        <span class="experiment-icon">🚀🌕</span>
+                        <h2 style="background: linear-gradient(135deg, #00f2fe, #a78bfa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE: Lunar Architect <span style="background: #ffeb3b; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.6);">NEW!</span></h2>
                         <p>
-                            The ultimate test of timing and logic! Guide Mr. Gonzalez through a high-speed STEM obstacle course. Jump over rotating gears and navigate scientific hazards in this neon-charged rhythm game. 
+                            <b>3, 2, 1... BLAST OFF!</b> Build your own modular rocket in the VAB, launch into the cosmos, and master the orbital mechanics of a <b>Lunar Slingshot</b>. A high-stakes STEM mission to the Moon!
                         </p>
-                        <a href="mge-dash.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">Initiate Dash ⚡</a>
+                        <a href="mge-lunar-architect.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2fe, #a78bfa); color: #000;">Launch Mission 🚀</a>
                     </div>
 
-                    <!-- Experiment 0b: Aqua Genesis -->
-                    <div class="experiment-card" id="aqua-genesis" style="border-color: #0a9396; background: linear-gradient(135deg, rgba(10, 147, 150, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🌊</span>
-                        <h2 style="color: #005f73;">Aqua Genesis</h2>
+                    <!-- NEW TOP PICK: Easter Egg Hunt -->
+                    <div class="experiment-card featured-highlight" id="easter-hunt" style="border-color: #fca5a5; background: linear-gradient(135deg, rgba(254, 219, 219, 0.4), rgba(209, 250, 229, 0.4), rgba(255, 255, 255, 0.95)); order: -10; box-shadow: 0 20px 50px rgba(252, 165, 165, 0.3);">
+                        <span class="experiment-icon">🐰🥚</span>
+                        <h2 style="background: linear-gradient(135deg, #f87171, #34d399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE Easter Egg Hunt <span style="background: #fbbf24; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(251,191,36,0.6);">SPECIAL!</span></h2>
                         <p>
-                            Dive into the deep blue world of Aqua Genesis! A sensory-friendly 3D playground built with high contrast oceanic colors and big visual buttons. Perfectly designed for underwater exploration and building beautiful 3D worlds.
+                            Hop into the spring season with the magical Easter Egg Hunt! Explore a beautiful low-poly forest as a cute rabbit. You have 60 seconds to find all the hidden eggs. Use your hopping skills and find them all!
                         </p>
-                    <a href="mge-aqua-genesis.html" class="experiment-link" style="background: linear-gradient(135deg, #0a9396, #94d2bd);">Start Diving 🌊</a>
+                        <a href="mge-easter-egg-hunt.html" class="experiment-link" style="background: linear-gradient(135deg, #f87171, #fbbf24);">Start the Hunt 🐰</a>
                     </div>
 
-                    <!-- Experiment 0c: GAMEMAKER 4000 -->
-                    <div class="experiment-card" id="gamemaker-4000" style="border-color: #00f2ff; background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🕹️</span>
-                        <h2 style="color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">GAMEMAKER 4000 <span style="background: #ff007b; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255, 0, 123, 0.5);">PRO STUDIO</span></h2>
+                    <!-- TOP PICK: Terrain Editor -->
+                    <div class="experiment-card featured-highlight" id="terrain-editor" style="border-color: #ff4757; background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 255, 255, 0.95)); order: -5;">
+                        <span class="experiment-icon">🌏</span>
+                        <h2 style="color: #ff4757;">MGE Terrain Editor</h2>
                         <p>
-                            Enter the high-tech world of game development! Use the GAMEMAKER 4000 Studio to build complex 3D levels. Work with your AI Producer to place heroes, enemies, and logic blocks. Switch from Edit to Play mode instantly and test your creation!
+                            Become a world architect! Sculpt mountains, plant lush grass, and paint diverse landscape layers. Then, take your custom-built RC car for a high-speed spin or block-program its path!
                         </p>
-                        <a href="mge-gamemaker-4000.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2ff, #7000ff);">Open Studio 🚀</a>
+                        <a href="mge-terrain-editor.html" class="experiment-link" style="background: linear-gradient(135deg, #ff4757, #ff6b81);">Open Editor 🌏</a>
                     </div>
 
-                    <!-- Experiment 0d: Sketch Animator Pro -->
-                    <div class="experiment-card" id="sketch-animator" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🎨</span>
-                        <h2 style="color: #db2777;">Sketch Animator Pro <span style="background: #00f2ff; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">MAGIC 2D→3D</span></h2>
+                    <!-- NEW TOP PICK: FPS Striker -->
+                    <div class="experiment-card featured-highlight" id="fps-striker" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(255, 255, 255, 0.95)); order: -4;">
+                        <span class="experiment-icon">🎯💥</span>
+                        <h2 style="color: #009688;">MGE FPS Striker <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
                         <p>
-                            Draw your own characters and watch them come to life! Our "Magic Inflation" engine turns your 2D sketches into bouncy 3D lifeforms. Learn about Squash & Stretch, keyframes, and character physics in this creative studio!
+                            The ultimate arena builder! Sculpt your own custom terrain, place floating targets, and then jump into the action as a first-person shooter. Race against the big timer to clear the arena! 
                         </p>
-                        <a href="mge-sketch-animator.html" class="experiment-link" style="background: linear-gradient(135deg, #f472b6, #fb7185);">Bring to Life ✨</a>
+                        <a href="mge-fps-striker.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">Enter Arena 🎯</a>
                     </div>
 
-                    <!-- Experiment 0e: Face Master 3D -->
-                    <div class="experiment-card" id="face-master" style="border-color: #7c4dff; background: linear-gradient(135deg, rgba(124, 77, 255, 0.1), rgba(255, 255, 255, 0.95)); border-width: 4px;">
-                        <span class="experiment-icon">🎭</span>
-                        <h2 style="color: #6d28d9;">Face Master 3D <span style="background: #00e5ff; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);">NEW!</span></h2>
+                    <!-- NEW TOP PICK: Sonic Speed -->
+                    <div class="experiment-card featured-highlight" id="sonic-speed" style="border-color: #facc15; background: linear-gradient(135deg, rgba(0, 71, 255, 0.2), rgba(250, 204, 21, 0.2), rgba(255, 255, 255, 0.95)); order: -20; box-shadow: 0 20px 50px rgba(0, 71, 255, 0.4);">
+                        <span class="experiment-icon">🦔⚡</span>
+                        <h2 style="background: linear-gradient(135deg, #0047ff, #facc15); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE Sonic Speed <span style="background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(239,68,68,0.6);">SPECIAL FEATURE!</span></h2>
                         <p>
-                            Master the art of portraiture using the Loomis Method! Use our interactive 3D mannequin head to understand facial planes, volumes, and proportions. A guided studio for future character artists!
+                            <b>GOTTA GO FAST!</b> Dash through a vibrant 3D world in this high-speed physics adventure. Collect 500 rings to go Super Sonic and take down the robotic drone army! 
                         </p>
-                        <a href="mge-face-master.html" class="experiment-link" style="background: linear-gradient(135deg, #7c4dff, #00e5ff);">Start Drawing 🎨</a>
+                        <a href="mge-sonic-speed.html" class="experiment-link" style="background: linear-gradient(135deg, #0047ff, #facc15); color: #000;">Enter the Speed Zone 🦔</a>
                     </div>
 
-                    <!-- Experiment 1: Skating Game -->
-                    <div class="experiment-card" id="skating">
-                        <span class="experiment-icon">⛸️</span>
-                        <h2>Skating Game <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
+                    <!-- TOP PICK: Minecraft Clone -->
+                    <div class="experiment-card featured-highlight" id="minecraft-clone" style="border-color: #34d399; background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95)); order: -3;">
+                        <span class="experiment-icon">⛏️</span>
+                        <h2 style="color: #047857;">MGE Minecraft Clone <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
                         <p>
-                            Glide across the ice in this super colorful 2-player skating adventure!
-                            Control your skater with keyboard keys, perform tricks, collect gems,
-                            and race with a friend. Built with Three.js for stunning 3D graphics!
+                            Step into a fully functional 3D voxel sandbox built entirely in Three.js! Explore the world, build structures using colorful blocks, break them down, and jump around. Experience the power of 3D web development.
                         </p>
-                        <a href="mge-skating.html" class="experiment-link">Play Now 🎮</a>
+                        <a href="mge-minecraft.html" class="experiment-link" style="background: linear-gradient(135deg, #10b981, #34d399);">Start Building 🚀</a>
                     </div>
 
-                    <!-- Experiment 1b: SkaterGame -->
-                    <div class="experiment-card" id="skaterGame" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🛹</span>
-                        <h2 style="color: #be185d;">SkaterGame <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
-                        <p>
-                            Drop into the mini skatepark and shred! Perform insane kickflips and heelflips in true 3rd-person 3D action. Built with Three.js to give that authentic SkaterGame feel right in your browser!
-                        </p>
-                        <a href="mge-skaterGame.html" class="experiment-link" style="background: linear-gradient(135deg, #ec4899, #db2777);">Play Now 🎮</a>
-                    </div>
-
-                    <!-- Experiment 2: Super Smash Fighters -->
-                    <div class="experiment-card" id="smash">
+                    <!-- TOP PICK: Super Smash Fighters -->
+                    <div class="experiment-card featured-highlight" id="smash" style="order: -2;">
                         <span class="experiment-icon">⚔️</span>
                         <h2>Super Smash Fighters <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
                         <p>
@@ -500,19 +731,39 @@
                         <a href="mge-smash.html" class="experiment-link">Play Now 🎮</a>
                     </div>
 
-
-
-                    <!-- Experiment 6: Aero Rangers -->
-                    <div class="experiment-card" id="magic-game" style="border-color: #ff69b4; background: linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🎈</span>
-                        <h2 style="color: #ff1493;">Aero Rangers</h2>
+                    <!-- TOP PICK: Aqua Genesis -->
+                    <div class="experiment-card featured-highlight" id="aqua-genesis" style="border-color: #0a9396; background: linear-gradient(135deg, rgba(10, 147, 150, 0.1), rgba(255, 255, 255, 0.95)); order: -1;">
+                        <span class="experiment-icon">🌊</span>
+                        <h2 style="color: #005f73;">Aqua Genesis</h2>
                         <p>
-                            Use Balloon Magic in this Minecraft-like creative sandbox! Spawn crates, construct towers, and make enemies, rocks, or trees float into the sky using your magic balloons!
+                            Dive into the deep blue world of Aqua Genesis! A sensory-friendly 3D playground built with high contrast oceanic colors and big visual buttons. Perfectly designed for underwater exploration and building beautiful 3D worlds.
                         </p>
-                        <a href="mge-magic.html" class="experiment-link" style="background: linear-gradient(135deg, #ff1493, #ff69b4);">Launch Map 🎈</a>
+                        <a href="mge-aqua-genesis.html" class="experiment-link" style="background: linear-gradient(135deg, #0a9396, #94d2bd);">Start Diving 🌊</a>
                     </div>
 
-                    <!-- Experiment 7: Ice Ring Sky Discovery -->
+                    <!-- MGE Dash -->
+                    <div class="experiment-card" id="mge-dash" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">⚡</span>
+                        <h2 style="color: #009688;">MGE Dash <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
+                        <p>
+                            The ultimate test of timing and logic! Guide Mr. Gonzalez through a high-speed STEM obstacle course. Jump over rotating gears and navigate scientific hazards in this neon-charged rhythm game. 
+                        </p>
+                        <a href="mge-dash.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">Initiate Dash ⚡</a>
+                    </div>
+
+                    <!-- SkaterGame -->
+                    <div class="experiment-card" id="skaterGame" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🛹</span>
+                        <h2 style="color: #be185d;">SkaterGame <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
+                        <p>
+                            Drop into the mini skatepark and shred! Perform insane kickflips and heelflips in true 3rd-person 3D action. Built with Three.js to give that authentic SkaterGame feel right in your browser!
+                        </p>
+                        <a href="mge-skaterGame.html" class="experiment-link" style="background: linear-gradient(135deg, #ec4899, #db2777);">Play Now 🎮</a>
+                    </div>
+
+
+
+                    <!-- Ice Ring Sky Discovery -->
                     <div class="experiment-card" id="ice-ring">
                         <span class="experiment-icon">🌌</span>
                         <h2>Ice Ring: Sky STEM</h2>
@@ -524,21 +775,9 @@
                         <a href="mge-ice-ring.html" class="experiment-link">Discover Now 🔭</a>
                     </div>
 
-                    <!-- Experiment 8: Journey Hacker -->
-                    <div class="experiment-card" id="journey-hacker">
-                        <span class="experiment-icon">💻</span>
-                        <h2>Journey Hacker: C:\ <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
-                        <p>
-                            Become a master hacker and explore the inner workings of the C: Drive! 
-                            Solve math equations to bypass security, navigate folders like Windows and Users, 
-                            and learn how PCs think. A high-tech educational mission!
-                        </p>
-                        <a href="mge-journey-hacker.html" class="experiment-link">Initiate Hack ⚡</a>
-                    </div>
 
 
-
-                    <!-- Experiment 10: Cosmic Chess -->
+                    <!-- Cosmic Chess -->
                     <div class="experiment-card" id="quantum-chess">
                         <span class="experiment-icon">♟️</span>
                         <h2>Cosmic Chess</h2>
@@ -550,7 +789,7 @@
                         <a href="mge-3d-chess.html" class="experiment-link">Enter Dimension 🌀</a>
                     </div>
 
-                    <!-- Experiment 11: 3D Paint & Color Fusion -->
+                    <!-- 3D Paint & Color Fusion -->
                     <div class="experiment-card" id="3d-paint">
                         <span class="experiment-icon">🎨</span>
                         <h2>3D Paint & Color Fusion</h2>
@@ -559,20 +798,8 @@
                         </p>
                         <a href="mge-3d-paint.html" class="experiment-link">Start Painting 🖌️</a>
                     </div>
-
-
                     
-                    <!-- Experiment 14: Minecraft Clone -->
-                    <div class="experiment-card" id="minecraft-clone" style="border-color: #34d399; background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">⛏️</span>
-                        <h2 style="color: #047857;">MGE Minecraft Clone <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
-                        <p>
-                            Step into a fully functional 3D voxel sandbox built entirely in Three.js! Explore the world, build structures using colorful blocks, break them down, and jump around. Experience the power of 3D web development.
-                        </p>
-                        <a href="mge-minecraft.html" class="experiment-link" style="background: linear-gradient(135deg, #10b981, #34d399);">Start Building 🚀</a>
-                    </div>
-
-                    <!-- Experiment 15: Typing Racer -->
+                    <!-- Typing Racer -->
                     <div class="experiment-card" id="typing-racer" style="border-color: #4CAF50; background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(255, 255, 255, 0.95));">
                         <span class="experiment-icon">🐾</span>
                         <h2 style="color: #388E3C;">Typing Animal Race</h2>
@@ -582,7 +809,7 @@
                         <a href="mge-typing-racer.html" class="experiment-link" style="background: linear-gradient(135deg, #4CAF50, #388E3C);">Start Race 🐾</a>
                     </div>
 
-                    <!-- Experiment 16: Bot Creator Deluxe -->
+                    <!-- Bot Creator Deluxe -->
                     <div class="experiment-card" id="bot-creator" style="border-color: #ff007f; background: linear-gradient(135deg, rgba(255, 0, 127, 0.1), rgba(255, 255, 255, 0.95));">
                         <span class="experiment-icon">🤖</span>
                         <h2 style="color: #d10068;">Bot Creator Deluxe</h2>
@@ -592,50 +819,7 @@
                         </p>
                         <a href="mge-bot-creator-deluxe.html" class="experiment-link" style="background: linear-gradient(135deg, #ff007f, #d10068);">Work in Progress 🚧</a>
                     </div>
-
-                    <!-- Experiment 16: Pips Island -->
-                    <div class="experiment-card" id="pips-island" style="border-color: #0ea5e9; background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🏝️</span>
-                        <h2 style="color: #0369a1;">Pips Island</h2>
-                        <p>
-                            Set sail to Pips Island and explore a bright, interactive world full of discovery and fun.
-                            Jump in and start your island adventure!
-                        </p>
-                        <a href="https://pipsandme.netlify.app/" class="experiment-link" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #0ea5e9, #22d3ee);">Visit Island 🌊</a>
-                    </div>
-
-                    <!-- Experiment 17: Scratch STEM Block Lab -->
-                    <div class="experiment-card" id="scratch-block-lab" style="border-color: #34d399; background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🧩</span>
-                        <h2 style="color: #10b981;">Scratch Block Lab</h2>
-                        <p>
-                            Build sequences, plan paths, design algorithms, assemble blocks, code a character, and debug a bug.
-                            It’s Scratch-like Blockly fun—inside a STEM robot adventure.
-                        </p>
-                        <a href="mge-scratch-stem-block-lab.html" class="experiment-link" style="background: linear-gradient(135deg, #34d399, #a78bfa);">Start Building ▶</a>
-                    </div>
-
-                    <!-- Experiment 18: Terrain Editor -->
-                    <div class="experiment-card" id="terrain-editor" style="border-color: #ff4757; background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🌏</span>
-                        <h2 style="color: #ff4757;">MGE Terrain Editor <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
-                        <p>
-                            Become a world architect! Sculpt mountains, plant lush grass, and paint diverse landscape layers. Then, take your custom-built RC car for a high-speed spin or block-program its path!
-                        </p>
-                        <a href="mge-terrain-editor.html" class="experiment-link" style="background: linear-gradient(135deg, #ff4757, #ff6b81);">Open Editor 🌏</a>
-                    </div>
-
-                    <!-- Experiment 19: Robot-Mon: Logic Battle -->
-                    <div class="experiment-card" id="robot-mon" style="border-color: #00f0ff; background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(255, 255, 255, 0.95));">
-                        <span class="experiment-icon">🤖⚡</span>
-                        <h2 style="color: #0891b2;">Robot-Mon: Logic Battle <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">UPDATED!</span></h2>
-                        <p>
-                            The ultimate 1v1 robot showdown! Build a team of 6 badass bots and program their battle sequences. Solve conditional programming puzzles in real-time to execute your commands. Master IF/ELSE logic in a 3D world with retro vibes!
-                        </p>
-                        <a href="mge-robot-battler.html" class="experiment-link" style="background: linear-gradient(135deg, #0891b2, #00f0ff);">Battle Now 🤖</a>
-                    </div>
-
-                    <!-- Experiment 20: ROBO-PATH CHAOS -->
+                    <!-- ROBO-PATH CHAOS -->
                     <div class="experiment-card" id="robot-path-planner" style="border-color: #00e5ff; background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(255, 255, 255, 0.95)); border-width: 5px; box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);">
                         <span class="experiment-icon">🤖💥</span>
                         <h2 style="color: #0097a7;">ROBO-PATH CHAOS <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.5);">SUMMER HUB FEATURED!</span></h2>
@@ -643,6 +827,36 @@
                             <b>ULTIMATE 2-PLAYER LOGIC BATTLE!</b> Program your bots through a glitchy, chaotic neon world. Features double robot sequences, drifting chaos particles, and competition mode. Reach the star first to win!
                         </p>
                         <a href="mge-robot-path-planner.html" class="experiment-link" style="background: linear-gradient(135deg, #0097a7, #00e5ff); color: #000;">Enter Chaos 🤖⚡</a>
+                    </div>
+
+                    <!-- GAMEMAKER 4000 -->
+                    <div class="experiment-card" id="gamemaker-4000" style="border-color: #00f2ff; background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🕹️</span>
+                        <h2 style="color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">GAMEMAKER 4000 <span style="background: #ff007b; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255, 0, 123, 0.5);">PRO STUDIO</span></h2>
+                        <p>
+                            Enter the high-tech world of game development! Use the GAMEMAKER 4000 Studio to build complex 3D levels. Work with your AI Producer to place heroes, enemies, and logic blocks. Switch from Edit to Play mode instantly and test your creation!
+                        </p>
+                        <a href="mge-gamemaker-4000.html" class="experiment-link" style="background: linear-gradient(135deg, #00f2ff, #7000ff);">Open Studio 🚀</a>
+                    </div>
+
+                    <!-- Sketch Animator Pro -->
+                    <div class="experiment-card" id="sketch-animator" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">🎨</span>
+                        <h2 style="color: #db2777;">Sketch Animator Pro <span style="background: #00f2ff; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">MAGIC 2D→3D</span></h2>
+                        <p>
+                            Draw your own characters and watch them come to life! Our "Magic Inflation" engine turns your 2D sketches into bouncy 3D lifeforms. Learn about Squash & Stretch, keyframes, and character physics in this creative studio!
+                        </p>
+                        <a href="mge-sketch-animator.html" class="experiment-link" style="background: linear-gradient(135deg, #f472b6, #fb7185);">Bring to Life ✨</a>
+                    </div>
+
+                    <!-- Misc Games Archive -->
+                    <div class="experiment-card" id="misc-archive" style="border-color: #64748b; background: linear-gradient(135deg, rgba(100, 116, 139, 0.1), rgba(255, 255, 255, 0.95));">
+                        <span class="experiment-icon">📦</span>
+                        <h2 style="color: #475569;">Misc experiments</h2>
+                        <p>
+                            Looking for Agent Genesis, Logic Battle, or Scratch Blocks? We've moved our miscellaneous and experimental projects to a separate archive page.
+                        </p>
+                        <a href="mge-misc.html" class="experiment-link" style="background: linear-gradient(135deg, #64748b, #475569);">View Archive 📦</a>
                     </div>
 
                     <!-- Experiment 4: Coming Soon -->
@@ -656,6 +870,17 @@
                         <a href="#" class="experiment-link coming-soon">Coming Soon</a>
                     </div>
                 </div>
+
+                <!-- What's New Section -->
+                <section class="whats-new-section" id="whats-new">
+                    <div class="whats-new-header-main">
+                        <h2>🚀 What's New in MGE?</h2>
+                        <p class="whats-new-subtitle">Explore the latest upgrades, features, and fixes in our experiments!</p>
+                    </div>
+                    <div id="whats-new-container">
+                        <!-- Changelog items will be injected here by mge-changelog.js -->
+                    </div>
+                </section>
             </div>
         </main>
 
@@ -901,6 +1126,7 @@
     </script>
 
     <script type="module" src="mge-screensaver.js"></script>
+    <script src="mge-changelog.js"></script>
 </body>
 
 </html>
