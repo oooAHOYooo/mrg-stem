@@ -297,6 +297,83 @@
         #file-input {
             display: none;
         }
+
+        /* Keyboard Overlay */
+        .mge-keyboard-wrapper {
+            position: absolute;
+            bottom: 40px;
+            right: 250px;
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            pointer-events: none;
+            align-items: flex-end;
+            transform: scale(0.85);
+            transition: opacity 0.3s;
+        }
+
+        .keyboard-cluster {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .key-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .key {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 1rem;
+            transition: all 0.1s ease;
+            box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .key.active {
+            background: var(--mge-primary);
+            color: white;
+            transform: translateY(2px);
+            box-shadow: 0 0 20px var(--mge-primary), inset 0 0 0 rgba(0, 0, 0, 0.3);
+            border-color: white;
+        }
+
+        .wide-key .key {
+            width: 90px;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        .extra-wide-key .key {
+            width: 120px;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 1200px) {
+            .mge-keyboard-wrapper {
+                right: 20px;
+                bottom: 180px;
+                transform: scale(0.7);
+            }
+        }
     </style>
 </head>
 <body>
@@ -364,11 +441,69 @@
             </div>
             <input type="file" id="file-input" accept=".obj" style="display: none;">
         </div>
+
+        <!-- Interactive Keyboard Overlay -->
+        <div id="mge-keyboard-overlay" class="mge-keyboard-wrapper">
+            <div class="keyboard-cluster modifier">
+                <div class="key-row wide-key">
+                    <div class="key" data-key="ShiftLeft">SHIFT (BOOST)</div>
+                </div>
+            </div>
+            <div class="keyboard-cluster wasd">
+                <div class="key-row">
+                    <div class="key" data-key="KeyW">W</div>
+                </div>
+                <div class="key-row">
+                    <div class="key" data-key="KeyA">A</div>
+                    <div class="key" data-key="KeyS">S</div>
+                    <div class="key" data-key="KeyD">D</div>
+                </div>
+            </div>
+            <div class="keyboard-cluster action">
+                <div class="key-row extra-wide-key">
+                    <div class="key space" data-key="Space">SPACE (JUMP)</div>
+                </div>
+                <div class="key-row">
+                    <div class="key" data-key="KeyK">K (TRICK)</div>
+                </div>
+            </div>
+            <div class="keyboard-cluster arrows">
+                <div class="key-row">
+                    <div class="key" data-key="ArrowUp">↑</div>
+                </div>
+                <div class="key-row">
+                    <div class="key" data-key="ArrowLeft">←</div>
+                    <div class="key" data-key="ArrowDown">↓</div>
+                    <div class="key" data-key="ArrowRight">→</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+
+    <script>
+        function initKeyboardOverlay() {
+            const keys = document.querySelectorAll('#mge-keyboard-overlay .key');
+            const keyMap = {};
+            keys.forEach(k => {
+                keyMap[k.dataset.key] = k;
+            });
+
+            window.addEventListener('keydown', (e) => {
+                const key = keyMap[e.code];
+                if (key) key.classList.add('active');
+            });
+
+            window.addEventListener('keyup', (e) => {
+                const key = keyMap[e.code];
+                if (key) key.classList.remove('active');
+            });
+        }
+        initKeyboardOverlay();
+    </script>
     <script>
         // --- GAME CONFIG & STATE ---
         const CONFIG = {
