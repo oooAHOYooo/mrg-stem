@@ -826,7 +826,22 @@
         }
 
         scene.add(playerGroup);
-        playerGroup.position.y = 1;
+        playerGroup.position.set(200, 100, -800); // Start on the Mega Ramp!
+
+        // Trick Deconstruction Mesh
+        const deconstructionParts = [];
+        function initDeconstruction() {
+            for(let i=0; i<15; i++) {
+                const part = new THREE.Mesh(
+                    new THREE.BoxBufferGeometry(0.3, 0.3, 0.3),
+                    new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff })
+                );
+                part.visible = false;
+                scene.add(part);
+                deconstructionParts.push(part);
+            }
+        }
+        initDeconstruction();
 
         // --- TAILS COMPANION ---
         function createTails() {
@@ -969,6 +984,76 @@
         }
         initSonicWorld();
 
+        // --- MEGA RAMP ---
+        function createMegaRamp() {
+            const startX = 200, startY = 100, startZ = -800;
+            const segments = 100;
+            const width = 30;
+            const length = 1200;
+            
+            for(let i=0; i<segments; i++) {
+                const t = i / segments;
+                // A massive downward slope then a giant kick upward
+                const z = startZ + t * length;
+                let y;
+                if(t < 0.6) {
+                    y = startY * (1 - (t/0.6)); // Downward
+                } else {
+                    const kickT = (t - 0.6) / 0.4;
+                    y = kickT * kickT * 150; // Exponentially upward launch
+                }
+
+                createSonicPlatform(startX, y, z, width, 2, length/segments + 1);
+                
+                // Add some dash pads on the ramp
+                if(i % 10 === 0) createDashPad(startX, y + 0.5, z, 0);
+            }
+
+            // Sky Battle Arena at the end of launch
+            const arenaX = startX, arenaY = 250, arenaZ = startZ + length + 200;
+            createSonicPlatform(arenaX, arenaY, arenaZ, 100, 5, 100);
+            createGiantBoss(arenaX, arenaY + 30, arenaZ + 30);
+        }
+
+        function createGiantBoss(x, y, z) {
+            const group = new THREE.Group();
+            
+            // Giant Main Body
+            const body = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(15, 32, 32),
+                new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9, roughness: 0.1 })
+            );
+            group.add(body);
+
+            // Glowing Core
+            const core = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(6, 16, 16),
+                new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            core.position.z = 12;
+            group.add(core);
+
+            // Giant Mechanical Arms
+            const armGeo = new THREE.CylinderBufferGeometry(2, 2, 40);
+            const armMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            
+            const armL = new THREE.Mesh(armGeo, armMat);
+            armL.position.set(-25, 0, 0);
+            armL.rotation.z = Math.PI / 4;
+            group.add(armL);
+
+            const armR = new THREE.Mesh(armGeo, armMat);
+            armR.position.set(25, 0, 0);
+            armR.rotation.z = -Math.PI / 4;
+            group.add(armR);
+
+            group.position.set(x, y, z);
+            scene.add(group);
+            state.boss.mesh = group;
+            state.boss.hp = 25; // Massive HP
+            state.boss.isGiant = true;
+        }
+
         // --- RAMPS ---
         function createRamp(x, z, rotation, width = 10, height = 5, length = 15) {
             const group = new THREE.Group();
@@ -1022,6 +1107,8 @@
             scene.add(mesh);
             state.objects.dashPads.push({ mesh: mesh, rotation: rotation });
         }
+
+        createMegaRamp();
 
         // --- ASSET BUILDERS ---
         
@@ -1685,15 +1772,36 @@
 
         function updateTricks(dt) {
             if (state.isTricking) {
-                state.trickProgress += 0.1 * dt;
-                playerGroup.rotation.x = -state.trickProgress * Math.PI * 2;
+                state.trickProgress += 0.05 * dt;
                 
+                // Hogwarts Legacy Deconstruction Effect
+                // Split the player's rotation while flying parts out
+                playerGroup.rotation.y += 0.2 * dt;
+                
+                const cycle = Math.sin(state.trickProgress * Math.PI); // 0 -> 1 -> 0
+                
+                playerBody.scale.setScalar(1 - cycle * 0.8);
+                
+                deconstructionParts.forEach((part, i) => {
+                    part.visible = true;
+                    const angle = (i / deconstructionParts.length) * Math.PI * 2 + state.trickProgress * 5;
+                    const dist = cycle * 8;
+                    part.position.set(
+                        state.pos.x + Math.cos(angle) * dist,
+                        state.pos.y + Math.sin(state.trickProgress * 10 + i) * dist * 0.5,
+                        state.pos.z + Math.sin(angle) * dist
+                    );
+                    part.rotation.set(angle, angle, angle);
+                });
+
                 if (state.trickProgress >= 1) {
                     state.isTricking = false;
                     playerGroup.rotation.x = 0;
-                    state.rings += 50;
-                    showNotification("TRICK BONUS! +50");
-                    state.shakeIntensity = 0.3;
+                    playerBody.scale.setScalar(1);
+                    deconstructionParts.forEach(p => p.visible = false);
+                    state.rings += 100;
+                    showNotification("MAGICAL TRICK! +100");
+                    state.shakeIntensity = 0.5;
                 }
             } else if (state.onGround) {
                 playerGroup.rotation.x = THREE.MathUtils.lerp(playerGroup.rotation.x, 0, 0.1 * dt);
