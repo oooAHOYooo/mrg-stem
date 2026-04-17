@@ -1267,37 +1267,61 @@
         function createBoss() {
             const group = new THREE.Group();
             
-            // Sphere body
-            const body = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(2, 32, 32),
-                new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 })
-            );
-            group.add(body);
-            
-            // Red eyes
-            const eyeGeo = new THREE.SphereBufferGeometry(0.3, 16, 16);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeL.position.set(-0.8, 0.5, 1.5);
-            group.add(eyeL);
-            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeR.position.set(0.8, 0.5, 1.5);
-            group.add(eyeR);
+            // Eggmobile Pod (Grey hemisphere)
+            const podGeo = new THREE.SphereBufferGeometry(2.5, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2);
+            const podMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.2 });
+            const pod = new THREE.Mesh(podGeo, podMat);
+            pod.rotation.x = Math.PI; // Flip it to be a bowl
+            group.add(pod);
 
-            // Drone props
-            const propGeo = new THREE.BoxBufferGeometry(3, 0.1, 0.2);
-            const propMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-            for(let i=0; i<4; i++) {
-                const prop = new THREE.Mesh(propGeo, propMat);
-                const angle = (i / 4) * Math.PI * 2;
-                prop.position.set(Math.cos(angle)*2.5, 1, Math.sin(angle)*2.5);
-                group.add(prop);
-                prop.userData.isProp = true;
-            }
+            // Eggmobile Bottom Engine
+            const engineGeo = new THREE.CylinderBufferGeometry(1.5, 0.8, 1, 16);
+            const engineMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const engine = new THREE.Mesh(engineGeo, engineMat);
+            engine.position.y = 1.0;
+            group.add(engine);
 
-            group.position.set(50, 10, 50);
+            // Robotnik Body (Red)
+            const robotBodyGeo = new THREE.SphereBufferGeometry(1.2, 16, 16);
+            const robotBodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const robotBody = new THREE.Mesh(robotBodyGeo, robotBodyMat);
+            robotBody.position.set(0, -0.5, 0);
+            group.add(robotBody);
+
+            // Robotnik Head (Flesh)
+            const headGeo = new THREE.SphereBufferGeometry(0.6, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0, 0.2, 0);
+            group.add(head);
+
+            // ICONIC MUSTACHE (Brown long box)
+            const stacheGeo = new THREE.BoxBufferGeometry(1.8, 0.3, 0.3);
+            const stacheMat = new THREE.MeshStandardMaterial({ color: 0x4b3621 });
+            const stache = new THREE.Mesh(stacheGeo, stacheMat);
+            stache.position.set(0, 0, 0.5);
+            group.add(stache);
+
+            // Wrecking Ball Arm (Visual)
+            const armGeo = new THREE.CylinderBufferGeometry(0.2, 0.2, 8);
+            const armMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+            const arm = new THREE.Mesh(armGeo, armMat);
+            arm.position.set(0, 2, 0);
+            arm.rotation.z = Math.PI / 2;
+            group.add(arm);
+
+            const ballGeo = new THREE.SphereBufferGeometry(1.5, 16, 16);
+            const ballMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
+            const ball = new THREE.Mesh(ballGeo, ballMat);
+            ball.position.set(6, 2, 0);
+            group.add(ball);
+            group.userData.ball = ball;
+
+            group.position.set(0, 8, 0); // Middle of the map!
             scene.add(group);
             state.boss.mesh = group;
+            state.boss.hp = 10;
+            state.boss.active = true;
         }
 
         // Initialize World
@@ -1901,41 +1925,40 @@
         }
 
         function handleBoss(dt) {
-            if(!state.boss.active) return;
+            if(!state.boss.mesh || !state.boss.active) return;
+            
+            // Smaller Robotnik logic - chase Tails or Player
             const boss = state.boss.mesh;
+            const target = (state.tails.mesh && !state.tails.isDead) ? state.tails.mesh.position : state.pos;
             
-            // Hover logic
+            // Hover logic + Rotation
             boss.position.y = 10 + Math.sin(performance.now() * 0.002) * 2;
-            
-            // Rotate props
-            boss.children.forEach(c => {
-                if(c.userData.isProp) c.rotation.y += 0.5 * dt;
-            });
+            boss.rotation.y += 0.03 * dt;
 
-            // Follow Tails slowly
-            const dir = new THREE.Vector3().subVectors(state.tails.mesh.position, boss.position);
-            dir.y = 0;
-            if(dir.length() > 5) {
-                dir.normalize();
-                boss.position.add(dir.multiplyScalar(CONFIG.BOSS_SPEED * dt));
-                boss.lookAt(state.tails.mesh.position.x, boss.position.y, state.tails.mesh.position.z);
+            const dist = boss.position.distanceTo(target);
+            const chaseRange = state.boss.isGiant ? 500 : 100;
+            
+            if(dist < chaseRange) {
+                const dir = target.clone().sub(boss.position).normalize();
+                boss.position.add(dir.multiplyScalar(CONFIG.BOSS_SPEED * 2.0 * dt));
+                boss.lookAt(target.x, boss.position.y, target.z);
             }
 
             // Boss attacks Tails
-            const distToTailsBoss = boss.position.distanceTo(state.tails.mesh.position);
-            if(distToTailsBoss < 6) {
-                state.tails.health -= 0.2 * dt; 
-                if(state.tails.health <= 0 && !state.tails.isDead) {
-                    state.tails.isDead = true;
-                    restartGame();
+            if(state.tails.mesh && !state.tails.isDead) {
+                const tailsDist = boss.position.distanceTo(state.tails.mesh.position);
+                if(tailsDist < 6) {
+                    state.tails.health -= 0.6 * dt;
+                    state.shakeIntensity = 0.2;
                 }
             }
 
-            // Collision with player (Player still attacks boss)
-            const dist = boss.position.distanceTo(state.pos);
-            if(dist < 5 && state.isJumping) {
+             // Collision with player (Player still attacks boss)
+            const playerDist = boss.position.distanceTo(state.pos);
+            if(playerDist < 7 && (state.isJumping || state.isSuper)) {
                 damageBoss();
             }
+        }
 
             // --- ENEMY LOGIC ---
             state.objects.enemies.forEach((enemy, idx) => {
