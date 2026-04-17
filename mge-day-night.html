@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MGE: Day & Night Subject | STEM Experiment</title>
+    <meta name="description" content="Explore the science of Day and Night in this interactive 3D STEM experiment. Master the Earth's rotation and light cycles.">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --mge-primary: #6366f1;
+            --mge-secondary: #a855f7;
+            --mge-accent: #ffe66d;
+            --mge-dark: #0f172a;
+            --mge-day: #fbbf24;
+            --mge-night: #312e81;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--mge-dark);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            transition: background 2s ease;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+            z-index: 10;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .mge-nav {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-link:hover {
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        #control-panel {
+            position: absolute;
+            right: 30px;
+            top: 100px;
+            width: 320px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--mge-accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .slider-input {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--mge-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .slider-input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .control-value {
+            font-weight: 700;
+            color: var(--mge-primary);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #dashboard {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            padding: 15px 50px;
+            border-radius: 60px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        #fact-box {
+            position: absolute;
+            left: 30px;
+            bottom: 30px;
+            width: 350px;
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 5px solid var(--mge-primary);
+        }
+
+        .fact-title {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--mge-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .fact-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--mge-dark);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .intro-logo {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        #intro-overlay h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff, var(--mge-primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        #intro-overlay p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .start-btn {
+            pointer-events: auto;
+            padding: 20px 60px;
+            background: linear-gradient(135deg, var(--mge-primary), var(--mge-secondary));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.6);
+        }
+
+        #time-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--mge-primary);
+        }
+
+        .time-btn.active {
+            background: var(--mge-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="intro-overlay">
+        <div class="intro-logo">☀️🌎🌙</div>
+        <h1>DAY & NIGHT SUBJECT</h1>
+        <p>Step into the cosmic classroom! Discover how Earth's rotation and tilt create the fundamental rhythms of life. Master the cycle of light and dark in this interactive STEM experiment.</p>
+        <button class="start-btn" id="start-btn">BEGIN EXPLORATION</button>
+    </div>
+
+    <div id="ui-layer">
+        <div class="mge-nav">
+            <a href="mge.html" class="nav-link">🧪 BACK TO HUB</a>
+        </div>
+
+        <div id="dashboard" class="panel">
+            <div class="stat">
+                <div class="stat-label">CURRENT PHASE</div>
+                <div id="stat-phase" class="stat-value">HIGH NOON</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">SUN ELEVATION</div>
+                <div id="stat-ele" class="stat-value">90°</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">LOCAL TIMESTAMP</div>
+                <div id="stat-time" class="stat-value">12:00 PM</div>
+            </div>
+        </div>
+
+        <div id="control-panel" class="panel">
+            <div class="panel-title">🕒 TIME CONTROL</div>
+            
+            <div class="control-group">
+                <div class="control-label">TIME OF DAY <span class="control-value"><span id="val-time">12:00</span></span></div>
+                <input type="range" id="time-slider" class="slider-input" min="0" max="1440" value="720">
+                <div id="time-buttons">
+                    <button class="time-btn" data-time="360">6 AM</button>
+                    <button class="time-btn active" data-time="720">NOON</button>
+                    <button class="time-btn" data-time="1080">6 PM</button>
+                    <button class="time-btn" data-time="0">MIDNIGHT</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">ROTATION SPEED <span class="control-value"><span id="val-speed">1</span>x</span></div>
+                <input type="range" id="speed-slider" class="slider-input" min="0" max="10" step="0.1" value="1">
+            </div>
+
+            <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; font-style: italic;">
+                * Earth rotates at approx. 1,000 mph at the equator!
+            </div>
+        </div>
+
+        <div id="fact-box" class="panel">
+            <div class="fact-title">💡 STEM INSIGHT</div>
+            <div id="fact-content" class="fact-content">
+                Day and night are caused by Earth's rotation on its axis. As Earth turns, one half faces the Sun (Day) while the other half faces away into space (Night).
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DayNightExperiment {
+            constructor() {
+                this.time = 720; // 0 to 1440 minutes (24 hours)
+                this.speed = 1;
+                this.isAutoRotating = true;
+                
+                this.initThree();
+                this.initEarth();
+                this.initStars();
+                this.initAtmosphere();
+                this.setupControls();
+                this.animate();
+            }
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x020617);
+                
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                this.camera.position.set(0, 10, 25);
+                this.camera.lookAt(0, 0, 0);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                this.renderer.shadowMap.enabled = true;
+                document.body.appendChild(this.renderer.domElement);
+
+                // Sun Light
+                this.sunPivot = new THREE.Group();
+                this.scene.add(this.sunPivot);
+
+                this.sun = new THREE.DirectionalLight(0xffffff, 2);
+                this.sun.position.set(0, 0, 50);
+                this.sun.castShadow = true;
+                this.sun.shadow.mapSize.width = 2048;
+                this.sun.shadow.mapSize.height = 2048;
+                this.sunPivot.add(this.sun);
+
+                // Sun Visual
+                const sunGeo = new THREE.SphereGeometry(2, 32, 32);
+                const sunMat = new THREE.MeshBasicMaterial({ color: 0xffe66d });
+                this.sunMesh = new THREE.Mesh(sunGeo, sunMat);
+                this.sunMesh.position.set(0, 0, 50);
+                this.sunPivot.add(this.sunMesh);
+
+                // Moon Visual
+                this.moonPivot = new THREE.Group();
+                this.scene.add(this.moonPivot);
+                
+                const moonGeo = new THREE.SphereGeometry(1, 32, 32);
+                const moonMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1 });
+                this.moonMesh = new THREE.Mesh(moonGeo, moonMat);
+                this.moonMesh.position.set(0, 0, -50);
+                this.moonPivot.add(this.moonMesh);
+
+                this.ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                this.scene.add(this.ambientLight);
+
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            initEarth() {
+                this.earth = new THREE.Group();
+                this.scene.add(this.earth);
+
+                // Earth Body
+                const earthGeo = new THREE.SphereGeometry(8, 64, 64);
+                const earthMat = new THREE.MeshStandardMaterial({ 
+                    color: 0x1d4ed8,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                this.earthBody = new THREE.Mesh(earthGeo, earthMat);
+                this.earthBody.castShadow = true;
+                this.earthBody.receiveShadow = true;
+                this.earth.add(this.earthBody);
+
+                // Continents (simplified simple meshes)
+                const contMat = new THREE.MeshStandardMaterial({ color: 0x15803d });
+                for(let i=0; i<40; i++) {
+                    const c = new THREE.Mesh(
+                        new THREE.SphereGeometry(Math.random()*2+1, 8, 8),
+                        contMat
+                    );
+                    const phi = Math.random() * Math.PI * 2;
+                    const theta = Math.random() * Math.PI;
+                    c.position.set(
+                        8.1 * Math.sin(theta) * Math.cos(phi),
+                        8.1 * Math.cos(theta),
+                        8.1 * Math.sin(theta) * Math.sin(phi)
+                    );
+                    this.earthBody.add(c);
+                }
+
+                // Clouds
+                this.clouds = new THREE.Group();
+                const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 });
+                for(let i=0; i<30; i++) {
+                    const c = new THREE.Mesh(
+                        new THREE.SphereGeometry(Math.random()*1.5+0.5, 8, 8),
+                        cloudMat
+                    );
+                    const phi = Math.random() * Math.PI * 2;
+                    const theta = Math.random() * Math.PI;
+                    c.position.set(
+                        8.8 * Math.sin(theta) * Math.cos(phi),
+                        8.8 * Math.cos(theta),
+                        8.8 * Math.sin(theta) * Math.sin(phi)
+                    );
+                    this.clouds.add(c);
+                }
+                this.earth.add(this.clouds);
+                
+                // Tilt local axis
+                this.earth.rotation.z = THREE.MathUtils.degToRad(23.5);
+            }
+
+            initStars() {
+                const starGeo = new THREE.BufferGeometry();
+                const starCount = 2000;
+                const starPos = new Float32Array(starCount * 3);
+                for(let i=0; i<starCount * 3; i++) {
+                    starPos[i] = (Math.random() - 0.5) * 1000;
+                }
+                starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+                const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8 });
+                const stars = new THREE.Points(starGeo, starMat);
+                this.scene.add(stars);
+            }
+
+            initAtmosphere() {
+                // Outer Glow / Atmosphere
+                const atmoGeo = new THREE.SphereGeometry(8.5, 64, 64);
+                const atmoMat = new THREE.MeshPhongMaterial({
+                    color: 0x60a5fa,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.BackSide
+                });
+                const atmosphere = new THREE.Mesh(atmoGeo, atmoMat);
+                this.scene.add(atmosphere);
+            }
+
+            setupControls() {
+                const slider = document.getElementById('time-slider');
+                const speedSlider = document.getElementById('speed-slider');
+                const timeValue = document.getElementById('val-time');
+                const speedValue = document.getElementById('val-speed');
+                const startBtn = document.getElementById('start-btn');
+                const intro = document.getElementById('intro-overlay');
+
+                startBtn.addEventListener('click', () => {
+                    gsap.to(intro, { opacity: 0, duration: 1, onComplete: () => intro.style.display = 'none' });
+                });
+
+                slider.addEventListener('input', (e) => {
+                    this.time = parseInt(e.target.value);
+                    this.isAutoRotating = false;
+                    this.updateTimeDisplay();
+                });
+
+                speedSlider.addEventListener('input', (e) => {
+                    this.speed = parseFloat(e.target.value);
+                    speedValue.innerText = this.speed.toFixed(1);
+                    this.isAutoRotating = true;
+                });
+
+                document.querySelectorAll('.time-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.time = parseInt(btn.dataset.time);
+                        slider.value = this.time;
+                        this.isAutoRotating = false;
+                        this.updateTimeDisplay();
+                    });
+                });
+            }
+
+            updateTimeDisplay() {
+                const hours = Math.floor(this.time / 60);
+                const mins = this.time % 60;
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHours = hours % 12 || 12;
+                const displayMins = mins.toString().padStart(2, '0');
+                
+                document.getElementById('val-time').innerText = `${displayHours}:${displayMins} ${ampm}`;
+                document.getElementById('stat-time').innerText = `${displayHours}:${displayMins} ${ampm}`;
+                
+                // Update Phase
+                let phase = "";
+                if(hours >= 5 && hours < 8) phase = "DAWN";
+                else if(hours >= 8 && hours < 17) phase = "DAYLIGHT";
+                else if(hours >= 17 && hours < 20) phase = "DUSK";
+                else phase = "NIGHT";
+                
+                if(hours === 12 && mins < 30) phase = "HIGH NOON";
+                if(hours === 0 && mins < 30) phase = "MIDNIGHT";
+                
+                document.getElementById('stat-phase').innerText = phase;
+                
+                // Update elevation (dummy mapping)
+                const elevation = Math.sin((this.time - 360) / 1440 * Math.PI * 2) * 90;
+                document.getElementById('stat-ele').innerText = Math.round(Math.max(0, elevation)) + "°";
+                
+                // Update Background Color
+                let bgColor = new THREE.Color(0x020617); // Night
+                if(phase === "DAYLIGHT" || phase === "HIGH NOON") bgColor = new THREE.Color(0x0ea5e9);
+                else if(phase === "DAWN" || phase === "DUSK") bgColor = new THREE.Color(0x4338ca);
+                
+                document.body.style.background = `radial-gradient(circle at center, ${bgColor.getStyle()} 0%, #020617 100%)`;
+                
+                // Update Facts
+                const facts = [
+                    "Earth rotates from West to East, which is why the Sun appears to rise in the East and set in the West.",
+                    "The transition between day and night is called the 'terminator' line.",
+                    "Because Earth is tilted at 23.5°, day length changes throughout the year as we orbit the Sun.",
+                    "At the Equator, day and night are almost exactly 12 hours each all year round.",
+                    "The atmosphere scatters blue light more than other colors, creating our blue sky during the day."
+                ];
+                const factIndex = Math.floor(this.time / 300) % facts.length;
+                document.getElementById('fact-content').innerText = facts[factIndex];
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                if (this.isAutoRotating) {
+                    this.time = (this.time + this.speed) % 1440;
+                    document.getElementById('time-slider').value = this.time;
+                    this.updateTimeDisplay();
+                }
+
+                // Update Earth Rotation
+                this.earthBody.rotation.y += 0.005;
+                this.clouds.rotation.y += 0.007;
+
+                // Update Sun/Moon Positions based on time
+                const angle = (this.time / 1440) * Math.PI * 2 - Math.PI/2;
+                this.sunPivot.rotation.x = -angle;
+                this.moonPivot.rotation.x = -angle;
+
+                // Dynamic light intensity
+                const sunIntensity = Math.max(0.2, Math.sin(angle) * 3);
+                this.sun.intensity = sunIntensity;
+                this.ambientLight.intensity = Math.max(0.1, Math.sin(angle) * 0.5 + 0.2);
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        window.onload = () => {
+            new DayNightExperiment();
+        };
+    </script>
+</body>
+</html>

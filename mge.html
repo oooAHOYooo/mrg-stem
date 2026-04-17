@@ -28,6 +28,40 @@
 
         body {
             overflow-x: hidden;
+            transition: background 1s ease;
+        }
+
+        .background-cycle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            animation: dayNightCycle 30s linear infinite;
+        }
+
+        @keyframes dayNightCycle {
+            0%, 100% { background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%); } /* Day */
+            40% { background: linear-gradient(180deg, #f093fb 0%, #f5576c 100%); } /* Sunset */
+            50%, 90% { background: linear-gradient(180deg, #09203f 0%, #537895 100%); } /* Night */
+            95% { background: linear-gradient(180deg, #ff9a9e 0%, #fad0c4 100%); } /* Sunrise */
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            opacity: 0;
+            transition: opacity 2s ease;
+            pointer-events: none;
+        }
+
+        .night-active .stars {
+            opacity: 1;
         }
 
         .mge-hero {
@@ -671,7 +705,9 @@
         <div class="glitch-text" data-text="SYSTEM OVERRIDE">SYSTEM OVERRIDE</div>
         <div class="terminal-override" id="hacker-status-text">INITIALIZING VIBE_HACK...</div>
     </div>
-    <div class="background"></div>
+    <div class="background-cycle">
+        <div class="stars" id="hub-stars"></div>
+    </div>
 
     <!-- Top Navbar -->
     <nav class="navbar navbar-top">
@@ -695,6 +731,7 @@
                     <a href="#terrain-editor" class="sidebar-link">🌏 Terrain Editor</a>
                     <a href="#fps-striker" class="sidebar-link">🎯 FPS Striker</a>
                     <a href="#smash" class="sidebar-link">⚔️ Super Smash Fighters</a>
+                    <a href="#day-night" class="sidebar-link" style="color: #6366f1; font-weight: bold;">☀️ Day & Night</a>
                     <a href="#aqua-genesis" class="sidebar-link">🌊 Aqua Genesis</a>
                     <a href="mge-storm-chaser.html" class="sidebar-link" style="color: var(--mge-neon-yellow); font-weight: bold;">🌪️ Storm Chaser</a>
                     <a href="mge-lunar-architect.html" class="sidebar-link" style="color: var(--mge-accent); font-weight: bold;">🚀 Lunar Architect</a>
@@ -737,7 +774,7 @@
                 <!-- Featured: Easter Egg Hunt -->
                 <div class="experiments-grid">
                     <!-- NEW TOP PICK: Storm Chaser -->
-                    <div class="experiment-card featured-highlight" id="storm-chaser" style="border-color: #fbbf24; background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(71, 85, 105, 0.3), rgba(255, 255, 255, 0.95)); order: -30; box-shadow: 0 20px 50px rgba(251, 191, 36, 0.4);">
+                    <div class="experiment-card featured-highlight" id="storm-chaser" style="border-color: #fbbf24; background: linear-gradient(135deg, #fefce8, #ffffff); order: -30; box-shadow: 0 20px 50px rgba(251, 191, 36, 0.2);">
                         <span class="experiment-icon">🌪️⛈️</span>
                         <h2 style="background: linear-gradient(135deg, #fbbf24, #475569); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE: Storm Chaser <span style="background: #ffeb3b; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.6);">NEW!</span></h2>
                         <p>
@@ -747,7 +784,7 @@
                     </div>
 
                     <!-- NEW TOP PICK: Lunar Architect -->
-                    <div class="experiment-card featured-highlight" id="lunar-architect" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(167, 139, 250, 0.2), rgba(255, 255, 255, 0.95)); order: -25; box-shadow: 0 20px 50px rgba(0, 242, 254, 0.4);">
+                    <div class="experiment-card featured-highlight" id="lunar-architect" style="border-color: #00f2fe; background: linear-gradient(135deg, #ecfeff, #ffffff); order: -25; box-shadow: 0 20px 50px rgba(0, 242, 254, 0.2);">
                         <span class="experiment-icon">🚀🌕</span>
                         <h2 style="background: linear-gradient(135deg, #00f2fe, #a78bfa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE: Lunar Architect <span style="background: #ffeb3b; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.6);">NEW!</span></h2>
                         <p>
@@ -757,7 +794,7 @@
                     </div>
 
                     <!-- NEW TOP PICK: Easter Egg Hunt -->
-                    <div class="experiment-card featured-highlight" id="easter-hunt" style="border-color: #fca5a5; background: linear-gradient(135deg, rgba(254, 219, 219, 0.4), rgba(209, 250, 229, 0.4), rgba(255, 255, 255, 0.95)); order: -10; box-shadow: 0 20px 50px rgba(252, 165, 165, 0.3);">
+                    <div class="experiment-card featured-highlight" id="easter-hunt" style="border-color: #fca5a5; background: linear-gradient(135deg, #fff1f1, #ffffff); order: -10; box-shadow: 0 20px 50px rgba(252, 165, 165, 0.2);">
                         <span class="experiment-icon">🐰🥚</span>
                         <h2 style="background: linear-gradient(135deg, #f87171, #34d399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE Easter Egg Hunt <span style="background: #fbbf24; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(251,191,36,0.6);">SPECIAL!</span></h2>
                         <p>
@@ -766,8 +803,18 @@
                         <a href="mge-easter-egg-hunt.html" class="experiment-link" style="background: linear-gradient(135deg, #f87171, #fbbf24);">Start the Hunt 🐰</a>
                     </div>
 
+                    <!-- NEW: Day & Night Subject -->
+                    <div class="experiment-card featured-highlight" id="day-night" style="border-color: #6366f1; background: linear-gradient(135deg, #eef2ff, #ffffff); order: -15; box-shadow: 0 20px 50px rgba(99, 102, 241, 0.2);">
+                        <span class="experiment-icon">☀️🌙</span>
+                        <h2 style="background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Day & Night Subject <span style="background: #6366f1; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle;">NEW!</span></h2>
+                        <p>
+                            <b>MASTER THE RHYTHM!</b> Explore how the Earth's rotation creates the cycle of light and dark. Watch the MGE Hub transition through sunrise and star-filled night every 30 seconds!
+                        </p>
+                        <a href="mge-day-night.html" class="experiment-link" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">Explore the Cycle 🌌</a>
+                    </div>
+
                     <!-- TOP PICK: Terrain Editor -->
-                    <div class="experiment-card featured-highlight" id="terrain-editor" style="border-color: #ff4757; background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 255, 255, 0.95)); order: -5;">
+                    <div class="experiment-card featured-highlight" id="terrain-editor" style="border-color: #ff4757; background: linear-gradient(135deg, #fff1f2, #ffffff); order: -5; box-shadow: 0 20px 50px rgba(255, 71, 87, 0.2);">
                         <span class="experiment-icon">🌏</span>
                         <h2 style="color: #ff4757;">MGE Terrain Editor</h2>
                         <p>
@@ -777,7 +824,7 @@
                     </div>
 
                     <!-- NEW TOP PICK: FPS Striker -->
-                    <div class="experiment-card featured-highlight" id="fps-striker" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(255, 255, 255, 0.95)); order: -4;">
+                    <div class="experiment-card featured-highlight" id="fps-striker" style="border-color: #00f2fe; background: linear-gradient(135deg, #ecfeff, #ffffff); order: -4; box-shadow: 0 20px 50px rgba(0, 242, 254, 0.2);">
                         <span class="experiment-icon">🎯💥</span>
                         <h2 style="color: #009688;">MGE FPS Striker <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
                         <p>
@@ -787,7 +834,7 @@
                     </div>
 
                     <!-- NEW TOP PICK: Super Aldo 63 -->
-                    <div class="experiment-card featured-highlight" id="super-aldo-63" style="border-color: #facc15; background: linear-gradient(135deg, rgba(250, 204, 21, 0.2), rgba(167, 139, 250, 0.2), rgba(255, 255, 255, 0.95)); order: -22; box-shadow: 0 20px 50px rgba(250, 204, 21, 0.3);">
+                    <div class="experiment-card featured-highlight" id="super-aldo-63" style="border-color: #facc15; background: linear-gradient(135deg, #fefce8, #ffffff); order: -22; box-shadow: 0 20px 50px rgba(250, 204, 21, 0.2);">
                         <span class="experiment-icon">👨🏻‍🔧⭐</span>
                         <h2 style="background: linear-gradient(135deg, #facc15, #a78bfa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Super Aldo 63 <span style="background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(250,204,21,0.6);">HOT!</span></h2>
                         <p>
@@ -797,7 +844,7 @@
                     </div>
 
                     <!-- NEW TOP PICK: Sonic Speed -->
-                    <div class="experiment-card featured-highlight" id="sonic-speed" style="border-color: #facc15; background: linear-gradient(135deg, rgba(0, 71, 255, 0.2), rgba(250, 204, 21, 0.2), rgba(255, 255, 255, 0.95)); order: -20; box-shadow: 0 20px 50px rgba(0, 71, 255, 0.4);">
+                    <div class="experiment-card featured-highlight" id="sonic-speed" style="border-color: #0047ff; background: linear-gradient(135deg, #eff6ff, #ffffff); order: -20; box-shadow: 0 20px 50px rgba(0, 71, 255, 0.2);">
                         <span class="experiment-icon">🦔⚡</span>
                         <h2 style="background: linear-gradient(135deg, #0047ff, #facc15); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MGE Sonic Speed <span style="background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(239,68,68,0.6);">SPECIAL FEATURE!</span></h2>
                         <p>
@@ -807,7 +854,7 @@
                     </div>
 
                     <!-- TOP PICK: Minecraft Clone -->
-                    <div class="experiment-card featured-highlight" id="minecraft-clone" style="border-color: #34d399; background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(255, 255, 255, 0.95)); order: -3;">
+                    <div class="experiment-card featured-highlight" id="minecraft-clone" style="border-color: #34d399; background: linear-gradient(135deg, #f0fdf4, #ffffff); order: -3; box-shadow: 0 20px 50px rgba(52, 211, 153, 0.2);">
                         <span class="experiment-icon">⛏️</span>
                         <h2 style="color: #047857;">MGE Minecraft Clone <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
                         <p>
@@ -817,7 +864,7 @@
                     </div>
 
                     <!-- TOP PICK: Super Smash Fighters -->
-                    <div class="experiment-card featured-highlight" id="smash" style="order: -2;">
+                    <div class="experiment-card featured-highlight" id="smash" style="border-color: #a78bfa; background: linear-gradient(135deg, #f5f3ff, #ffffff); order: -2; box-shadow: 0 20px 50px rgba(167, 139, 250, 0.2);">
                         <span class="experiment-icon">⚔️</span>
                         <h2>Super Smash Fighters <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
                         <p>
@@ -829,7 +876,7 @@
                     </div>
 
                     <!-- TOP PICK: Aqua Genesis -->
-                    <div class="experiment-card featured-highlight" id="aqua-genesis" style="border-color: #0a9396; background: linear-gradient(135deg, rgba(10, 147, 150, 0.1), rgba(255, 255, 255, 0.95)); order: -1;">
+                    <div class="experiment-card featured-highlight" id="aqua-genesis" style="border-color: #0a9396; background: linear-gradient(135deg, #f0fdfa, #ffffff); order: -1; box-shadow: 0 20px 50px rgba(10, 147, 150, 0.2);">
                         <span class="experiment-icon">🌊</span>
                         <h2 style="color: #005f73;">Aqua Genesis</h2>
                         <p>
@@ -839,7 +886,7 @@
                     </div>
 
                     <!-- MGE Dash -->
-                    <div class="experiment-card" id="mge-dash" style="border-color: #00f2fe; background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="mge-dash" style="border-color: #00f2fe; background: linear-gradient(135deg, #ecfeff, #ffffff); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.1);">
                         <span class="experiment-icon">⚡</span>
                         <h2 style="color: #009688;">MGE Dash <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">NEW!</span></h2>
                         <p>
@@ -849,7 +896,7 @@
                     </div>
 
                     <!-- SkaterGame -->
-                    <div class="experiment-card" id="skaterGame" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="skaterGame" style="border-color: #f472b6; background: linear-gradient(135deg, #fff1f2, #ffffff); box-shadow: 0 10px 30px rgba(244, 114, 182, 0.1);">
                         <span class="experiment-icon">🛹</span>
                         <h2 style="color: #be185d;">SkaterGame <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 5px rgba(255,235,59,0.5);">WORK ON IPAD</span></h2>
                         <p>
@@ -861,7 +908,7 @@
 
 
                     <!-- Ice Ring Sky Discovery -->
-                    <div class="experiment-card" id="ice-ring">
+                    <div class="experiment-card" id="ice-ring" style="border-color: #6366f1; background: linear-gradient(135deg, #eef2ff, #ffffff); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.1);">
                         <span class="experiment-icon">🌌</span>
                         <h2>Ice Ring: Sky STEM</h2>
                         <p>
@@ -875,7 +922,7 @@
 
 
                     <!-- Cosmic Chess -->
-                    <div class="experiment-card" id="quantum-chess">
+                    <div class="experiment-card" id="quantum-chess" style="border-color: #a78bfa; background: linear-gradient(135deg, #f5f3ff, #ffffff); box-shadow: 0 10px 30px rgba(167, 139, 250, 0.1);">
                         <span class="experiment-icon">♟️</span>
                         <h2>Cosmic Chess</h2>
                         <p>
@@ -887,7 +934,7 @@
                     </div>
 
                     <!-- 3D Paint & Color Fusion -->
-                    <div class="experiment-card" id="3d-paint">
+                    <div class="experiment-card" id="3d-paint" style="border-color: #fb923c; background: linear-gradient(135deg, #fff7ed, #ffffff); box-shadow: 0 10px 30px rgba(251, 146, 60, 0.1);">
                         <span class="experiment-icon">🎨</span>
                         <h2>3D Paint & Color Fusion</h2>
                         <p>
@@ -897,7 +944,7 @@
                     </div>
                     
                     <!-- Typing Racer -->
-                    <div class="experiment-card" id="typing-racer" style="border-color: #4CAF50; background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="typing-racer" style="border-color: #4CAF50; background: linear-gradient(135deg, #f0fdf4, #ffffff); box-shadow: 0 10px 30px rgba(76, 175, 80, 0.1);">
                         <span class="experiment-icon">🐾</span>
                         <h2 style="color: #388E3C;">Typing Animal Race</h2>
                         <p>
@@ -907,7 +954,7 @@
                     </div>
 
                     <!-- Bot Creator Deluxe -->
-                    <div class="experiment-card" id="bot-creator" style="border-color: #ff007f; background: linear-gradient(135deg, rgba(255, 0, 127, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="bot-creator" style="border-color: #ff007f; background: linear-gradient(135deg, #fff1f2, #ffffff); box-shadow: 0 10px 30px rgba(255, 0, 127, 0.1);">
                         <span class="experiment-icon">🤖</span>
                         <h2 style="color: #d10068;">Bot Creator Deluxe</h2>
                         <p>
@@ -917,7 +964,7 @@
                         <a href="mge-bot-creator-deluxe.html" class="experiment-link" style="background: linear-gradient(135deg, #ff007f, #d10068);">Work in Progress 🚧</a>
                     </div>
                     <!-- ROBO-PATH CHAOS -->
-                    <div class="experiment-card" id="robot-path-planner" style="border-color: #00e5ff; background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(255, 255, 255, 0.95)); border-width: 5px; box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);">
+                    <div class="experiment-card" id="robot-path-planner" style="border-color: #00e5ff; background: linear-gradient(135deg, #ecfeff, #ffffff); border-width: 5px; box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);">
                         <span class="experiment-icon">🤖💥</span>
                         <h2 style="color: #0097a7;">ROBO-PATH CHAOS <span style="background: #ffeb3b; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255,235,59,0.5);">SUMMER HUB FEATURED!</span></h2>
                         <p>
@@ -927,7 +974,7 @@
                     </div>
 
                     <!-- GAMEMAKER 4000 -->
-                    <div class="experiment-card" id="gamemaker-4000" style="border-color: #00f2ff; background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="gamemaker-4000" style="border-color: #00f2ff; background: linear-gradient(135deg, #ecfeff, #ffffff); box-shadow: 0 10px 30px rgba(0, 242, 255, 0.1);">
                         <span class="experiment-icon">🕹️</span>
                         <h2 style="color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">GAMEMAKER 4000 <span style="background: #ff007b; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(255, 0, 123, 0.5);">PRO STUDIO</span></h2>
                         <p>
@@ -937,7 +984,7 @@
                     </div>
 
                     <!-- Sketch Animator Pro -->
-                    <div class="experiment-card" id="sketch-animator" style="border-color: #f472b6; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="sketch-animator" style="border-color: #f472b6; background: linear-gradient(135deg, #fff1f2, #ffffff); box-shadow: 0 10px 30px rgba(244, 114, 182, 0.1);">
                         <span class="experiment-icon">🎨</span>
                         <h2 style="color: #db2777;">Sketch Animator Pro <span style="background: #00f2ff; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.5em; font-weight: bold; margin-left: 10px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">MAGIC 2D→3D</span></h2>
                         <p>
@@ -947,7 +994,7 @@
                     </div>
 
                     <!-- Misc Games Archive -->
-                    <div class="experiment-card" id="misc-archive" style="border-color: #64748b; background: linear-gradient(135deg, rgba(100, 116, 139, 0.1), rgba(255, 255, 255, 0.95));">
+                    <div class="experiment-card" id="misc-archive" style="border-color: #64748b; background: linear-gradient(135deg, #f8fafc, #ffffff); box-shadow: 0 10px 30px rgba(100, 116, 139, 0.1);">
                         <span class="experiment-icon">📦</span>
                         <h2 style="color: #475569;">Misc experiments</h2>
                         <p>
@@ -1284,6 +1331,40 @@
                 }, 500);
             }
         })();
+    </script>
+
+    <script>
+        // Simple script to toggle stars during the night phase of the 30s cycle
+        const background = document.querySelector('.background-cycle');
+        const starsContainer = document.getElementById('hub-stars');
+        
+        // Generate stars
+        for (let i = 0; i < 200; i++) {
+            const star = document.createElement('div');
+            star.style.position = 'absolute';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.background = 'white';
+            star.style.borderRadius = '50%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.boxShadow = '0 0 5px white';
+            starsContainer.appendChild(star);
+        }
+
+        function updateCycleEffects() {
+            const now = Date.now();
+            const cyclePos = (now % 30000) / 30000;
+            
+            // From 45% to 95% of cycle is "night"
+            if (cyclePos > 0.45 && cyclePos < 0.95) {
+                document.body.classList.add('night-active');
+            } else {
+                document.body.classList.remove('night-active');
+            }
+            requestAnimationFrame(updateCycleEffects);
+        }
+        updateCycleEffects();
     </script>
 </body>
 

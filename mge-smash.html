@@ -1381,6 +1381,25 @@
             FACT: { icon: '🎓', name: 'STEM Fact', color: 0x4ecdc4 }
         };
 
+        // Global Three.js variables
+        let scene, camera, renderer, platform;
+        let player1, player2, player3;
+        let directionalLight, ambientLight, pLight1, pLight2;
+        let skyTime = 0;
+        let backgroundObjects = [];
+        let factObjects = [];
+        let bonusPlatforms = [];
+        let powerups = [];
+        let mainParticleMaterial;
+        let gameRunning = true;
+        let isPaused = false;
+        let matchEnded = false;
+        let powerupSpawnTimer = 0;
+        let comboCount = { p1: 0, p2: 0 };
+        let comboDisplayTimer = 0;
+        let inTrainingCenter = false;
+        let shakeOffset = { x: 0, y: 0 };
+
         // Initialize Three.js scene
         function init() {
             const container = document.getElementById('game-container');
@@ -1405,10 +1424,10 @@
             container.appendChild(renderer.domElement);
 
             // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            
+            directionalLight = new THREE.DirectionalLight(0xffffff, 1);
             directionalLight.position.set(10, 20, 10);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
@@ -3522,6 +3541,35 @@
 
                 // Check for deaths continuously
                 checkGameOver();
+
+                // Day/Night Cycle
+                skyTime += 0.016;
+                const cycleDuration = 30; // 30 seconds
+                const dayProgress = (skyTime % cycleDuration) / cycleDuration;
+                
+                // Color transitions
+                let skyColor, lightInt;
+                if (dayProgress < 0.45) { // Day
+                    skyColor = new THREE.Color(0x4facfe).lerp(new THREE.Color(0x00f2fe), dayProgress * 2);
+                    lightInt = 1.0;
+                } else if (dayProgress < 0.55) { // Sunset
+                    const sunsetFactor = (dayProgress - 0.45) * 10;
+                    skyColor = new THREE.Color(0x00f2fe).lerp(new THREE.Color(0xf5576c), sunsetFactor);
+                    lightInt = 1.0 - sunsetFactor * 0.5;
+                } else if (dayProgress < 0.9) { // Night
+                    const nightFactor = (dayProgress - 0.55) * (1/0.35);
+                    skyColor = new THREE.Color(0xf5576c).lerp(new THREE.Color(0x09203f), Math.min(nightFactor * 2, 1));
+                    lightInt = 0.5;
+                } else { // Sunrise
+                    const sunriseFactor = (dayProgress - 0.9) * 10;
+                    skyColor = new THREE.Color(0x09203f).lerp(new THREE.Color(0x4facfe), sunriseFactor);
+                    lightInt = 0.5 + sunriseFactor * 0.5;
+                }
+                
+                scene.background = skyColor;
+                if (directionalLight) directionalLight.intensity = lightInt;
+                if (window.pLight1) pLight1.intensity = lightInt;
+                if (window.pLight2) pLight2.intensity = lightInt;
 
                 // Build code / timer
                 updateGameCode();
