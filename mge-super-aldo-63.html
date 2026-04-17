@@ -236,12 +236,23 @@
         <div class="loader-content">
             <div class="loader-logo">🏰</div>
             <h1 class="loader-title">SUPER ALDO 63</h1>
-            <div class="loader-bar-container">
-                <div class="loader-fill" id="loader-fill"></div>
-            </div>
-            <div class="loader-status" id="loader-status">Initializing Quantum Bricks...</div>
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" style="position: absolute; top:0; left:0; width:100%; height:100%; background:#000; z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#facc15; font-family:'Outfit',sans-serif; transition: opacity 0.5s ease;">
+        <h1 style="font-size:3rem; margin-bottom:20px; text-transform:uppercase; letter-spacing:2px; text-align:center;">Loading Super Aldo 63</h1>
+        <div style="width:70%; max-width:400px; height:20px; background:#1e293b; border-radius:10px; overflow:hidden; border:2px solid #facc15; box-shadow: 0 0 20px rgba(250,204,21,0.3);">
+            <div id="loading-bar" style="width:10%; height:100%; background:linear-gradient(90deg, #facc15, #fbbf24); transition:width 0.3s ease;"></div>
         </div>
+        <p id="loading-text" style="margin-top:15px; font-weight:700; color:#fbbf24;">Downloading Assets...</p>
     </div>
+    <script>
+        // Simulate progress until engine kicks in
+        let initLoadingInterval = setInterval(() => {
+            const bar = document.getElementById('loading-bar');
+            if (bar && parseFloat(bar.style.width) < 85) {
+                bar.style.width = (parseFloat(bar.style.width) + Math.random() * 10) + '%';
+            }
+        }, 400);
+    </script>
 
     <div id="canvas-container"></div>
     
@@ -270,7 +281,6 @@
 
     <!-- Legacy Scripts for Maximum Compatibility on file:/// -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -307,7 +317,7 @@
             ]
         };
 
-        let scene, camera, renderer, world, controls, clock = new THREE.Clock();
+        let scene, camera, renderer, world, clock = new THREE.Clock();
         let player, playerBody, keys = {}, isPaused = false;
         let pLinks = [], enemies = [], joyData = null;
 
@@ -348,34 +358,6 @@
         }
 
         function init() {
-            // Loading Simulator
-            const loaderFill = document.getElementById('loader-fill');
-            const loaderStatus = document.getElementById('loader-status');
-            const statuses = [
-                "Powering Up Aldo...",
-                "Bouncing Mushrooms...",
-                "Optimizing Castle Bricks...",
-                "Loading STEM Facts...",
-                "Ready to Play!"
-            ];
-            
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.random() * 8;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(progressInterval);
-                    setTimeout(() => {
-                        document.getElementById('loading-screen').style.opacity = '0';
-                        setTimeout(() => {
-                            if(document.getElementById('loading-screen')) document.getElementById('loading-screen').remove();
-                        }, 800);
-                    }, 400);
-                }
-                loaderFill.style.width = progress + '%';
-                loaderStatus.innerText = statuses[Math.floor(progress / 21)] || statuses[statuses.length - 1];
-            }, 60);
-
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0ea5e9);
             scene.fog = new THREE.FogExp2(0x0ea5e9, 0.006);
@@ -410,6 +392,21 @@
             for(let i=0; i<8; i++) enemies.push(new EnemyEntity((Math.random()-0.5)*100, (Math.random()-0.5)*100));
 
             animate();
+            
+            // Clear Loading Screen
+            clearInterval(initLoadingInterval);
+            const bar = document.getElementById('loading-bar');
+            const text = document.getElementById('loading-text');
+            if(bar) bar.style.width = '100%';
+            if(text) text.innerText = 'Ready!';
+            
+            setTimeout(() => {
+                const ls = document.getElementById('loading-screen');
+                if (ls) {
+                    ls.style.opacity = '0';
+                    setTimeout(() => ls.remove(), 500);
+                }
+            }, 600);
         }
 
         function buildWorld() {
@@ -500,14 +497,12 @@
             player = new THREE.Group();
             player.name = "Aldo_Character";
             
-            // Fix: Replace CapsuleGeometry (r139+) with CylinderGeometry (all versions)
             const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 1.2, 12);
             const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, flatShading: true });
             const body = new THREE.Mesh(bodyGeo, bodyMat);
             body.position.y = 1.1; body.castShadow = true;
             player.add(body);
             
-            // Shoes
             const shoeGeo = new THREE.BoxGeometry(0.4, 0.3, 0.6);
             const shoeMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
             const lShoe = new THREE.Mesh(shoeGeo, shoeMat);
@@ -515,18 +510,15 @@
             const rShoe = lShoe.clone(); rShoe.position.x = 0.35;
             player.add(rShoe);
 
-            // Head
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffd1a4 }));
             head.position.y = 2.0;
             player.add(head);
 
-            // Moustache!
             const mMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
             const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.1), mMat);
             m.position.set(0, 1.85, 0.5);
             player.add(m);
 
-            // Red Hat
             const hatBase = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
             hatBase.position.y = 2.45;
             player.add(hatBase);
@@ -535,7 +527,6 @@
             player.add(hatBrim);
 
             scene.add(player);
-            // Cannon body matching the scale
             playerBody = new CANNON.Body({ mass: 1, position: new CANNON.Vec3(0, 10, 30), shape: new CANNON.Box(new CANNON.Vec3(0.6, 1.2, 0.6)), fixedRotation: true });
             world.addBody(playerBody);
         }
@@ -543,21 +534,6 @@
         function initControls() {
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
-
-            if (THREE.OrbitControls) {
-                controls = new THREE.OrbitControls(camera, renderer.domElement);
-            } else {
-                console.warn("OrbitControls not found on THREE namespace, attempting fallback...");
-                // Fallback for some CDN versions
-                if (window.OrbitControls) {
-                    controls = new window.OrbitControls(camera, renderer.domElement);
-                }
-            }
-            
-            if (controls) {
-                controls.enablePan = false; controls.maxPolarAngle = Math.PI / 2.1;
-                controls.minDistance = 10; controls.maxDistance = 40;
-            }
 
             const joy = nipplejs.create({ zone: document.getElementById('joystick'), mode: 'static', position: {left: '60px', bottom: '60px'}, color: 'white' });
             joy.on('move', (e, d) => joyData = d);
@@ -582,18 +558,20 @@
                 world.step(1/60, dt);
 
                 let mx = 0, mz = 0;
-                if(keys.KeyW || keys.ArrowUp) mz += 1;
-                if(keys.KeyS || keys.ArrowDown) mz -= 1;
-                if(keys.KeyA || keys.ArrowLeft) mx += 1;
-                if(keys.KeyD || keys.ArrowRight) mx -= 1;
-                if(joyData) { mx = joyData.vector.x; mz = joyData.vector.y; }
+                if(keys.KeyW || keys.ArrowUp) mz -= 1;
+                if(keys.KeyS || keys.ArrowDown) mz += 1;
+                if(keys.KeyA || keys.ArrowLeft) mx -= 1;
+                if(keys.KeyD || keys.ArrowRight) mx += 1;
+                if(joyData) { mx = joyData.vector.x; mz = -joyData.vector.y; }
 
                 if(mx !== 0 || mz !== 0) {
-                    const camYaw = Math.atan2(camera.position.x - player.position.x, camera.position.z - player.position.z);
-                    const moveAngle = camYaw + Math.atan2(mx, mz);
-                    playerBody.velocity.x = Math.sin(moveAngle) * CONFIG.speed;
-                    playerBody.velocity.z = Math.cos(moveAngle) * CONFIG.speed;
-                    player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, moveAngle, CONFIG.rotSpeed);
+                    const camYaw = camera.rotation.y;
+                    const finalAngle = camYaw + Math.atan2(mx, mz);
+                    playerBody.velocity.x = Math.sin(finalAngle) * CONFIG.speed;
+                    playerBody.velocity.z = Math.cos(finalAngle) * CONFIG.speed;
+                    
+                    const diff = ((finalAngle - player.rotation.y) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+                    player.rotation.y += diff * CONFIG.rotSpeed;
                 } else {
                     playerBody.velocity.x *= 0.8; playerBody.velocity.z *= 0.8;
                 }
@@ -603,11 +581,24 @@
                 // Sync
                 player.position.set(playerBody.position.x, playerBody.position.y - 1.2, playerBody.position.z);
                 
-                // Camera Framing
-                if (controls) {
-                    controls.target.copy(player.position).add(new THREE.Vector3(0, 5, 0));
-                    controls.update();
-                }
+                // Smooth Third Person Camera
+                const offsetDist = 20;
+                const offsetHeight = 8;
+                const sx = Math.sin(player.rotation.y);
+                const sz = Math.cos(player.rotation.y);
+                
+                const idealPos = new THREE.Vector3(
+                    player.position.x - sx * offsetDist,
+                    player.position.y + offsetHeight,
+                    player.position.z - sz * offsetDist
+                );
+
+                camera.position.lerp(idealPos, 0.08);
+
+                const lookAtTarget = player.position.clone().add(new THREE.Vector3(0, 3, 0));
+                if(!window.currentLookat) window.currentLookat = player.position.clone();
+                window.currentLookat.lerp(lookAtTarget, 0.15);
+                camera.lookAt(window.currentLookat);
 
                 enemies.forEach(e => {
                     e.update();
