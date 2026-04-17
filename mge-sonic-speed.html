@@ -141,6 +141,28 @@
             font-weight: 800;
         }
 
+        #tails-hud {
+            top: 180px;
+            left: 20px;
+            border-color: #f39c12;
+        }
+
+        .tails-hp-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .tails-hp-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         #notification {
             position: absolute;
             top: 30%;
@@ -409,6 +431,14 @@
             <div class="big-text rings-val" id="rings-count">0</div>
         </div>
 
+        <div id="tails-hud" class="game-hud">
+            <div class="hud-label">Tails Health</div>
+            <div class="big-text" id="tails-hp-text" style="color: #f39c12; font-size: 1.8rem;">100%</div>
+            <div class="tails-hp-bg">
+                <div class="tails-hp-fill" id="tails-hp-bar"></div>
+            </div>
+        </div>
+
         <div id="speed-hud" class="game-hud">
             <div class="hud-label">Current Speed</div>
             <div class="big-text speed-val" id="speed-display">0</div>
@@ -575,12 +605,15 @@
             tails: {
                 mesh: null,
                 pos: new THREE.Vector3(),
-                targetOffset: new THREE.Vector3(-3, 1, -2)
+                targetOffset: new THREE.Vector3(-3, 1, -2),
+                health: 100,
+                maxHealth: 100,
+                isDead: false
             },
             boss: {
                 mesh: null,
                 target: new THREE.Vector3(),
-                hp: 5,
+                hp: 10,
                 active: true
             }
         };
@@ -864,6 +897,36 @@
             createSonicPlatform(0, 5, 0, 20, 2, 20);
             createSonicPlatform(0, 15, 0, 15, 2, 15);
             createSonicPlatform(0, 30, 0, 10, 2, 10);
+
+            // Spawn THE ROLLERCOASTER in the middle
+            createRollerCoaster(0, -100);
+        }
+
+        function createRollerCoaster(startX, startZ) {
+            const segments = 40;
+            const radius = 20;
+            const step = 8;
+            
+            for(let i=0; i<segments; i++) {
+                const angle = (i / segments) * Math.PI * 6; // Spiral 3 times
+                const x = startX + Math.sin(angle) * radius;
+                const z = startZ + i * step;
+                const y = 2 + (radius) + Math.cos(angle) * radius;
+                
+                // Track segment
+                createSonicPlatform(x, y, z, 15, 1, 15);
+                
+                // Add rings on the rollercoaster
+                if(i % 2 === 0) createRing(x, y + 2.5, z);
+                
+                // Speed boost periodically
+                if(i % 8 === 0) {
+                    createDashPad(x, y + 0.2, z, 0); // Need to align rotation better really
+                }
+            }
+            
+            // End platform
+            createSonicPlatform(startX, 0, startZ + segments * step + 20, 40, 2, 40);
         }
         initSonicWorld();
 
@@ -1306,23 +1369,52 @@
         }
 
         function handleTails(dt) {
-            if(!state.tails.mesh) return;
+            if(!state.tails.mesh || state.tails.isDead) return;
             
             // Calculate target position relative to player
-            const offset = new THREE.Vector3(-2.5, 1.5, -2.5);
+            const offset = new THREE.Vector3(-3.5, 2.0, -3.5);
             offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.yaw);
             const targetPos = state.pos.clone().add(offset);
             
             // Smoothed follow
-            state.tails.mesh.position.lerp(targetPos, 0.05 * dt);
+            state.tails.mesh.position.lerp(targetPos, 0.04 * dt);
             state.tails.mesh.lookAt(state.pos.x, state.tails.mesh.position.y, state.pos.z);
             
             // Rotation animation (tails spinning)
             state.tails.mesh.children.forEach(c => {
-                if(c.geometry.type === 'ConeBufferGeometry') {
-                    c.rotation.z += 0.5 * dt;
+                if(c.geometry && c.geometry.type === 'ConeBufferGeometry') {
+                    c.rotation.z += (0.8 + state.speed * 2) * dt;
                 }
             });
+
+            // Update Tails Health HUD
+            const hpPercent = Math.max(0, Math.ceil(state.tails.health));
+            document.getElementById('tails-hp-text').innerText = hpPercent + "%";
+            document.getElementById('tails-hp-bar').style.width = hpPercent + "%";
+            
+            if(hpPercent < 30) {
+                document.getElementById('tails-hp-text').style.color = "#ff0000";
+            } else {
+                document.getElementById('tails-hp-text').style.color = "#f39c12";
+            }
+        }
+
+        function restartGame() {
+            state.tails.health = state.tails.maxHealth;
+            state.tails.isDead = false;
+            state.rings = 0;
+            state.pos.set(0, 1, 0);
+            state.velocity.set(0, 0, 0);
+            state.yaw = 0;
+            state.isSuper = false;
+            document.body.classList.remove('super-active');
+            
+            showNotification("TAILS FAILED! RESTARTING...");
+            
+            // Reset Tails position
+            if(state.tails.mesh) {
+                state.tails.mesh.position.set(-5, 2, -5);
+            }
         }
 
         function handleMovement(dt) {
@@ -1579,36 +1671,48 @@
                 if(c.userData.isProp) c.rotation.y += 0.5 * dt;
             });
 
-            // Follow player slowly
-            const dir = new THREE.Vector3().subVectors(state.pos, boss.position);
+            // Follow Tails slowly
+            const dir = new THREE.Vector3().subVectors(state.tails.mesh.position, boss.position);
             dir.y = 0;
             if(dir.length() > 5) {
                 dir.normalize();
                 boss.position.add(dir.multiplyScalar(CONFIG.BOSS_SPEED * dt));
-                boss.lookAt(state.pos.x, boss.position.y, state.pos.z);
+                boss.lookAt(state.tails.mesh.position.x, boss.position.y, state.tails.mesh.position.z);
             }
 
-            // Collision with player (Spin attack)
+            // Boss attacks Tails
+            const distToTailsBoss = boss.position.distanceTo(state.tails.mesh.position);
+            if(distToTailsBoss < 6) {
+                state.tails.health -= 0.2 * dt; 
+                if(state.tails.health <= 0 && !state.tails.isDead) {
+                    state.tails.isDead = true;
+                    restartGame();
+                }
+            }
+
+            // Collision with player (Player still attacks boss)
             const dist = boss.position.distanceTo(state.pos);
-            if(dist < 4 && state.isJumping) {
+            if(dist < 5 && state.isJumping) {
                 damageBoss();
             }
 
             // --- ENEMY LOGIC ---
             state.objects.enemies.forEach((enemy, idx) => {
-                const distEnemy = enemy.mesh.position.distanceTo(state.pos);
-                
-                if (distEnemy < 60) {
-                    // Chase player
-                    const chaseDir = new THREE.Vector3().subVectors(state.pos, enemy.mesh.position);
+                const distToTails = enemy.mesh.position.distanceTo(state.tails.mesh.position);
+                const distToPlayer = enemy.mesh.position.distanceTo(state.pos);
+
+                if (distToTails < 80) {
+                    // Chase Tails
+                    const chaseDir = new THREE.Vector3().subVectors(state.tails.mesh.position, enemy.mesh.position);
                     chaseDir.y = 0;
                     chaseDir.normalize();
-                    enemy.mesh.position.add(chaseDir.multiplyScalar(0.3 * dt));
-                    enemy.mesh.lookAt(state.pos.x, 0, state.pos.z);
+                    enemy.mesh.position.add(chaseDir.multiplyScalar(0.28 * dt));
+                    enemy.mesh.lookAt(state.tails.mesh.position.x, 0, state.tails.mesh.position.z);
                 }
 
-                if (distEnemy < 3) {
-                    if (state.isJumping || state.speed > 1.2) {
+                // Player can still kill enemies
+                if (distToPlayer < 4) {
+                    if (state.isJumping || state.speed > 1.2 || state.isSuper) {
                         // Kill enemy
                         scene.remove(enemy.mesh);
                         state.objects.enemies.splice(idx, 1);
@@ -1616,16 +1720,16 @@
                         state.shakeIntensity = 0.4;
                         showNotification("Enemy defeated!");
                         // Respawn
-                        createKnuckles((Math.random()-0.5)*800, (Math.random()-0.5)*800);
-                    } else if (state.rings > 0) {
-                        // Player hit - lose rings
-                        state.rings = Math.max(0, state.rings - 20);
-                        state.velocity.set(
-                            (enemy.mesh.position.x - state.pos.x) * -0.5,
-                            0.2,
-                            (enemy.mesh.position.z - state.pos.z) * -0.5
-                        );
-                        showNotification("OUCH! LOST RINGS!");
+                        createKnuckles((Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
+                    }
+                }
+
+                // Enemy attacks Tails
+                if (distToTails < 4) {
+                    state.tails.health -= 0.5 * dt;
+                    if(state.tails.health <= 0 && !state.tails.isDead) {
+                        state.tails.isDead = true;
+                        restartGame();
                     }
                 }
             });
