@@ -956,7 +956,8 @@
                 x: x,
                 z: z,
                 isPlatform: true,
-                isMegaLaunch: isLaunch
+                isMegaLaunch: isLaunch,
+                slope: 0 // Will be set by MegaRamp call
             });
         }
 
@@ -1023,6 +1024,7 @@
             // Starting Platform
             createSonicPlatform(startX, startY, startZ, width + 20, 5, 100);
             
+            let lastY = startY;
             for(let i=0; i<segments; i++) {
                 const t = i / segments;
                 const z = startZ + 50 + t * length;
@@ -1030,20 +1032,23 @@
                 
                 // Skate Ramp Curve (Downward then flat-ish)
                 if(t < 0.5) {
-                    // Steep drop (Cosine curve for smooth entry)
                     y = startY * (0.5 + 0.5 * Math.cos(t * Math.PI * 2)); 
                 } else if (t < 0.8) {
-                    y = 5; // Flat section for speed gathering
+                    y = 5; 
                 } else {
-                    // The "Off another ramp" kicker!
                     const kickT = (t - 0.8) / 0.2;
                     y = 5 + kickT * kickT * 80; 
                 }
 
-                // Create the track segment
-                // If it's near the end, mark it as the mega launch platform
+                // Calculate slope (y diff)
+                const slope = (lastY - y) * 0.05; // Force mult
+                lastY = y;
+
                 const isFinalKick = t > 0.95;
                 createSonicPlatform(startX, y, z, width, 3, length/segments + 2, isFinalKick);
+                
+                // Set slope on the last added platform
+                state.objects.ramps[state.objects.ramps.length - 1].slope = slope;
                 
                 // Add lots of dash pads on the drop and flat section
                 if(i % 6 === 0 && t < 0.8) {
@@ -1711,6 +1716,15 @@
                                 state.velocity.y = 1.4;
                                 state.onGround = false;
                                 showNotification("MEGA LAUNCH!");
+                            }
+
+                            // ROLLING PHYSICS (Apply Slope Force)
+                            if (ramp.slope !== 0) {
+                                state.velocity.z += ramp.slope * dt;
+                                // Add a bit of camera shake if rolling fast
+                                if (Math.abs(ramp.slope) > 0.5 && state.speed > 1.0) {
+                                    state.shakeIntensity = Math.min(0.2, state.shakeIntensity + 0.01);
+                                }
                             }
                         }
                     }
