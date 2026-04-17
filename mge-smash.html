@@ -1013,13 +1013,46 @@
 
     <script>
         // Game state
-        let scene, camera, renderer;
+        // Global Three.js variables
+        let scene, camera, renderer, platform;
         let player1, player2, player3;
-        let platform;
+        let directionalLight, ambientLight, pLight1, pLight2;
         let keys = {};
         let gameRunning = true;
         let isPaused = false;
         let inTrainingCenter = false;
+        let skyTime = 0;
+        let backgroundObjects = [];
+        let factObjects = [];
+        let bonusPlatforms = [];
+        let powerups = [];
+        let mainParticleMaterial;
+        let matchEnded = false;
+        let powerupSpawnTimer = 0;
+        let comboCount = { p1: 0, p2: 0 };
+        let comboDisplayTimer = 0;
+        let shakeOffset = { x: 0, y: 0 };
+        let currentCodeLine = 0;
+        let p1CodeLines = 0;
+        let p2CodeLines = 0;
+        let lastCodeUpdate = 0;
+        let matchScore = { p1: 0, p2: 0 };
+        let currentMatch = 1;
+        let lastHitTime = { p1: 0, p2: 0 };
+        let restartTimer = null;
+        let restartCountdownValue = 5;
+        let currentEnvIndex = 0;
+        let targetEnv = null;
+        let envTransitionProgress = 1;
+        let activeBlockSequences = {
+            p1: [],
+            p2: []
+        };
+        let blockSequenceTimers = {
+            p1: null,
+            p2: null
+        };
+
         const SOURCE_CODE = [
             "function initSmashEngine() {",
             "  // System Initialization",
@@ -1082,31 +1115,6 @@
             "}",
             "// CONSOLE LOG: ROUND OVER"
         ];
-        let currentCodeLine = 0;
-        let p1CodeLines = 0;
-        let p2CodeLines = 0;
-        let lastCodeUpdate = 0;
-        let matchScore = { p1: 0, p2: 0 };
-        let currentMatch = 1;
-        let matchEnded = false;
-        let powerups = [];
-        
-        // Environment variables
-        let pLight1, pLight2;
-        let mainParticleMaterial;
-        let currentEnvIndex = 0;
-        let targetEnv = null;
-        let envTransitionProgress = 1;
-
-        // Block Coding Logic
-        let activeBlockSequences = {
-            p1: [],
-            p2: []
-        };
-        let blockSequenceTimers = {
-            p1: null,
-            p2: null
-        };
         
         let easterEggClickCounter = 0;
         function addBlock(action) {
@@ -1218,15 +1226,6 @@
             { name: "Quantum Realm", bg: 0x000000, light1: 0xffffff, light2: 0xaaaaaa, pColor: 0xcccccc }
         ];
 
-        let powerupSpawnTimer = 0;
-        let lastHitTime = { p1: 0, p2: 0 };
-        let comboCount = { p1: 0, p2: 0 };
-        let comboDisplayTimer = 0;
-        let restartTimer = null;
-        let restartCountdownValue = 5;
-        let backgroundObjects = [];
-        let factObjects = [];
-        let bonusPlatforms = [];
 
         const STEM_FACTS = [
             "The human brain has about 86 billion neurons!",
@@ -1381,24 +1380,6 @@
             FACT: { icon: '🎓', name: 'STEM Fact', color: 0x4ecdc4 }
         };
 
-        // Global Three.js variables
-        let scene, camera, renderer, platform;
-        let player1, player2, player3;
-        let directionalLight, ambientLight, pLight1, pLight2;
-        let skyTime = 0;
-        let backgroundObjects = [];
-        let factObjects = [];
-        let bonusPlatforms = [];
-        let powerups = [];
-        let mainParticleMaterial;
-        let gameRunning = true;
-        let isPaused = false;
-        let matchEnded = false;
-        let powerupSpawnTimer = 0;
-        let comboCount = { p1: 0, p2: 0 };
-        let comboDisplayTimer = 0;
-        let inTrainingCenter = false;
-        let shakeOffset = { x: 0, y: 0 };
 
         // Initialize Three.js scene
         function init() {
@@ -3170,7 +3151,6 @@
             }
         }
 
-        let shakeOffset = { x: 0, y: 0 };
         function screenShake(intensity) {
             shakeOffset.x += (Math.random() - 0.5) * intensity * 2;
             shakeOffset.y += (Math.random() - 0.5) * intensity * 2;

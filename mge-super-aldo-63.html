@@ -85,6 +85,74 @@
             color: rgba(255,255,255,0.9);
         }
 
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-content {
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .loader-logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));
+        }
+
+        .loader-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .loader-bar-container {
+            width: 320px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 99px;
+            padding: 3px;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        }
+
+        .loader-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 99px;
+            box-shadow: 0 0 15px var(--primary);
+            transition: width 0.1s ease;
+        }
+
+        .loader-status {
+            margin-top: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
         /* Mobile Controls */
         .joystick-container {
             position: absolute;
@@ -163,6 +231,18 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">🏰</div>
+            <h1 class="loader-title">SUPER ALDO 63</h1>
+            <div class="loader-bar-container">
+                <div class="loader-fill" id="loader-fill"></div>
+            </div>
+            <div class="loader-status" id="loader-status">Initializing Quantum Bricks...</div>
+        </div>
+    </div>
+
     <div id="canvas-container"></div>
     
     <div id="ui-layer">
@@ -268,6 +348,34 @@
         }
 
         function init() {
+            // Loading Simulator
+            const loaderFill = document.getElementById('loader-fill');
+            const loaderStatus = document.getElementById('loader-status');
+            const statuses = [
+                "Powering Up Aldo...",
+                "Bouncing Mushrooms...",
+                "Optimizing Castle Bricks...",
+                "Loading STEM Facts...",
+                "Ready to Play!"
+            ];
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 8;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.opacity = '0';
+                        setTimeout(() => {
+                            if(document.getElementById('loading-screen')) document.getElementById('loading-screen').remove();
+                        }, 800);
+                    }, 400);
+                }
+                loaderFill.style.width = progress + '%';
+                loaderStatus.innerText = statuses[Math.floor(progress / 21)] || statuses[statuses.length - 1];
+            }, 60);
+
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0ea5e9);
             scene.fog = new THREE.FogExp2(0x0ea5e9, 0.006);
@@ -277,7 +385,7 @@
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
@@ -391,14 +499,43 @@
         function spawnPlayer() {
             player = new THREE.Group();
             player.name = "Aldo_Character";
-            const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.6, 1.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
-            body.position.y = 1.2; body.castShadow = true;
+            
+            // Fix: Replace CapsuleGeometry (r139+) with CylinderGeometry (all versions)
+            const bodyGeo = new THREE.CylinderGeometry(0.6, 0.6, 1.2, 12);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xef4444, flatShading: true });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 1.1; body.castShadow = true;
             player.add(body);
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd1a4 }));
-            head.position.y = 2.4;
+            
+            // Shoes
+            const shoeGeo = new THREE.BoxGeometry(0.4, 0.3, 0.6);
+            const shoeMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+            const lShoe = new THREE.Mesh(shoeGeo, shoeMat);
+            lShoe.position.set(-0.35, 0.15, 0.1); player.add(lShoe);
+            const rShoe = lShoe.clone(); rShoe.position.x = 0.35;
+            player.add(rShoe);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffd1a4 }));
+            head.position.y = 2.0;
             player.add(head);
 
+            // Moustache!
+            const mMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.1), mMat);
+            m.position.set(0, 1.85, 0.5);
+            player.add(m);
+
+            // Red Hat
+            const hatBase = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.2, 12), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+            hatBase.position.y = 2.45;
+            player.add(hatBase);
+            const hatBrim = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.05, 0.4), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+            hatBrim.position.set(0, 2.35, 0.4);
+            player.add(hatBrim);
+
             scene.add(player);
+            // Cannon body matching the scale
             playerBody = new CANNON.Body({ mass: 1, position: new CANNON.Vec3(0, 10, 30), shape: new CANNON.Box(new CANNON.Vec3(0.6, 1.2, 0.6)), fixedRotation: true });
             world.addBody(playerBody);
         }
@@ -407,9 +544,20 @@
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
 
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enablePan = false; controls.maxPolarAngle = Math.PI / 2.1;
-            controls.minDistance = 10; controls.maxDistance = 40;
+            if (THREE.OrbitControls) {
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+            } else {
+                console.warn("OrbitControls not found on THREE namespace, attempting fallback...");
+                // Fallback for some CDN versions
+                if (window.OrbitControls) {
+                    controls = new window.OrbitControls(camera, renderer.domElement);
+                }
+            }
+            
+            if (controls) {
+                controls.enablePan = false; controls.maxPolarAngle = Math.PI / 2.1;
+                controls.minDistance = 10; controls.maxDistance = 40;
+            }
 
             const joy = nipplejs.create({ zone: document.getElementById('joystick'), mode: 'static', position: {left: '60px', bottom: '60px'}, color: 'white' });
             joy.on('move', (e, d) => joyData = d);
@@ -455,9 +603,11 @@
                 // Sync
                 player.position.set(playerBody.position.x, playerBody.position.y - 1.2, playerBody.position.z);
                 
-                // Camera Framing: Offset target higher to push Aldo lower on screen
-                controls.target.copy(player.position).add(new THREE.Vector3(0, 5, 0));
-                controls.update();
+                // Camera Framing
+                if (controls) {
+                    controls.target.copy(player.position).add(new THREE.Vector3(0, 5, 0));
+                    controls.update();
+                }
 
                 enemies.forEach(e => {
                     e.update();
@@ -470,8 +620,10 @@
                 });
 
                 pLinks.forEach(p => {
-                    p.children[1].rotation.y += dt * 3;
-                    p.children[1].position.y = 6 + Math.sin(Date.now()*0.003) * 0.8;
+                    if (p.children[1]) {
+                        p.children[1].rotation.y += dt * 3;
+                        p.children[1].position.y = 6 + Math.sin(Date.now()*0.003) * 0.8;
+                    }
                     if(player.position.distanceTo(p.position) < 4) window.location.href = p.userData.url;
                 });
 

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGE - Sonic Speed | Mr. Gonzalez STEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>Sonic Speed | MGE STEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --mge-primary: #3498db;
@@ -35,6 +35,73 @@
             left: 0;
             width: 100%;
             height: 100%;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0047ff 0%, #002b99 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-content {
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .loader-logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(0, 162, 255, 0.6));
+        }
+
+        .loader-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .loader-bar-container {
+            width: 320px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            padding: 3px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .loader-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #0047ff);
+            border-radius: 99px;
+            box-shadow: 0 0 15px #0047ff;
+            transition: width 0.1s ease;
+        }
+
+        .loader-status {
+            margin-top: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
 
         /* --- UI OVERLAY --- */
@@ -437,7 +504,19 @@
     <div id="canvas-container"></div>
     <div id="super-overlay"></div>
 
-    <div id="start-screen">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">🦔</div>
+            <h1 class="loader-title">SONIC SPEED</h1>
+            <div class="loader-bar-container">
+                <div class="loader-fill" id="loader-fill"></div>
+            </div>
+            <div class="loader-status" id="loader-status">Initializing Loop-De-Loops...</div>
+        </div>
+    </div>
+
+    <div id="start-screen" style="display: none; opacity: 0;">
         <h1 style="font-size: 4rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--mge-blue);">SONIC SPEED</h1>
         <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Collect 50 rings to go SUPER!</p>
         <button class="start-btn" id="start-btn">GO FAST!</button>
@@ -580,33 +659,39 @@
             PLAYER_MAX_SPEED: 1.0,
             PLAYER_BOOST_MAX: 2.0,
             SUPER_ACCEL: 0.08,
-            SUPER_MAX_SPEED: 3.5, // Increased
-            SUPER_BOOST_MAX: 5.0, // Increased
+            SUPER_MAX_SPEED: 3.5,
+            SUPER_BOOST_MAX: 5.0,
             DRAG: 0.97,
             GRAVITY: -0.015,
-            JUMP_FORCE: 0.65, // Higher jump
+            JUMP_FORCE: 0.65,
             RINGS_FOR_SUPER: 50,
             RING_ROT_SPEED: 0.08,
             CLOCK_COUNT: 30,
             RING_COUNT: 300,
-            TERRAIN_SIZE: 1500, // Larger terrain for more ramps
+            TERRAIN_SIZE: 1500,
             BOSS_SPEED: 0.04,
-            SUPER_DURATION: 30, // Seconds
+            SUPER_DURATION: 30,
             SPAWN_POINT: new THREE.Vector3(200, 158, -920)
         };
 
         // Load cosmetics from localStorage
         function loadCosmetics() {
-            const saved = localStorage.getItem('sonicGameCosmetics');
-            return saved ? JSON.parse(saved) : {
-                unlockedHats: [],
-                maxRingsEver: 0,
-                superModeCount: 0
-            };
+            try {
+                const saved = localStorage.getItem('sonicGameCosmetics');
+                return saved ? JSON.parse(saved) : {
+                    unlockedHats: [],
+                    maxRingsEver: 0,
+                    superModeCount: 0
+                };
+            } catch (e) {
+                return { unlockedHats: [], maxRingsEver: 0, superModeCount: 0 };
+            }
         }
 
         function saveCosmetics(cosmetics) {
-            localStorage.setItem('sonicGameCosmetics', JSON.stringify(cosmetics));
+            try {
+                localStorage.setItem('sonicGameCosmetics', JSON.stringify(cosmetics));
+            } catch (e) {}
         }
 
         const state = {
@@ -658,184 +743,170 @@
             }
         };
 
-        // --- THREE.JS SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb); // Sky blue
-        scene.fog = new THREE.Fog(0x87ceeb, 200, 800);
+        let scene, camera, renderer, sun, floor;
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        function init() {
+            // Loading Simulator
+            const loaderFill = document.getElementById('loader-fill');
+            const loaderStatus = document.getElementById('loader-status');
+            const statuses = [
+                "Powering Up Sonic...",
+                "Bouncing Rings...",
+                "Optimizing Mega Ramp...",
+                "Loading Student Models...",
+                "Ready to Go Fast!"
+            ];
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 8;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        const ls = document.getElementById('loading-screen');
+                        if(ls) ls.style.opacity = '0';
+                        setTimeout(() => {
+                            if(ls) ls.remove();
+                            // Reveal Start Screen
+                            const ss = document.getElementById('start-screen');
+                            if(ss) {
+                                ss.style.display = 'flex';
+                                setTimeout(() => ss.style.opacity = '1', 50);
+                            }
+                        }, 800);
+                    }, 400);
+                }
+                if(loaderFill) loaderFill.style.width = progress + '%';
+                if(loaderStatus) loaderStatus.innerText = statuses[Math.floor(progress / 21)] || statuses[statuses.length - 1];
+            }, 60);
 
-        // Lights
-        const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-        scene.add(ambient);
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.Fog(0x87ceeb, 200, 1500); // Expanded fog
 
-        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-        sun.position.set(100, 200, 100);
-        sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
-        sun.shadow.camera.left = -500;
-        sun.shadow.camera.right = 500;
-        sun.shadow.camera.top = 500;
-        sun.shadow.camera.bottom = -500;
-        scene.add(sun);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            const container = document.getElementById('canvas-container');
+            if(container) container.appendChild(renderer.domElement);
 
-        // --- TERRAIN ---
-        const checkeredTex = createCheckeredTexture();
-        const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.TERRAIN_SIZE, CONFIG.TERRAIN_SIZE, 32, 32);
-        const floorMat = new THREE.MeshStandardMaterial({ 
-            map: checkeredTex,
-            roughness: 0.8
-        });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        scene.add(floor);
+            // Lights
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6)); // Brighter ambient
+            sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(500, 1000, 500); // Further out
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.left = -2000;
+            sun.shadow.camera.right = 2000;
+            sun.shadow.camera.top = 2000;
+            sun.shadow.camera.bottom = -2000;
+            scene.add(sun);
+
+            createTerrain();
+            createPlayer();
+            initDeconstruction();
+            createTails();
+            initSonicWorld();
+            createMegaRamp();
+            
+            // Spawn initial world objects
+            for(let i=0; i<CONFIG.RING_COUNT; i++) {
+                createRing((Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8, (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8);
+            }
+            for(let i=0; i<CONFIG.CLOCK_COUNT; i++) {
+                createClock((Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.9, (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.9);
+            }
+            createBoss();
+            
+            // Extra stuff
+            for(let i=0; i<20; i++) createKnuckles((Math.random()-0.5) * 1200, (Math.random()-0.5) * 1200);
+            for(let i=0; i<25; i++) createAbilityBox((Math.random()-0.5) * 1000, (Math.random()-0.5) * 1000, Math.random() > 0.5 ? 'speed' : 'jump');
+            for(let i=0; i<15; i++) createRamp((Math.random()-0.5) * 1000, (Math.random()-0.5) * 1000, Math.random() * Math.PI * 2, 8 + Math.random() * 8, 4 + Math.random() * 6, 12 + Math.random() * 10);
+            for(let i=0; i<15; i++) createDashPad( (Math.random()-0.5) * 1100, 0.5, (Math.random()-0.5) * 1100, Math.random() * Math.PI * 2);
+
+            // Set Initial Camera Position so it's not blank
+            updateCamera(1); 
+
+            animate();
+        }
+
+        function createTerrain() {
+            const checkeredTex = createCheckeredTexture();
+            const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.TERRAIN_SIZE, CONFIG.TERRAIN_SIZE, 32, 32);
+            const floorMat = new THREE.MeshStandardMaterial({ map: checkeredTex, roughness: 0.8 });
+            floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+        }
 
         function createCheckeredTexture() {
             const size = 512;
             const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
+            canvas.width = size; canvas.height = size;
             const ctx = canvas.getContext('2d');
-            
             const cols = 8;
             const step = size / cols;
-            
             for(let i=0; i<cols; i++) {
                 for(let j=0; j<cols; j++) {
-                    ctx.fillStyle = (i+j) % 2 === 0 ? '#32CD32' : '#228B22'; // Lime and Forest Green
+                    ctx.fillStyle = (i+j) % 2 === 0 ? '#32CD32' : '#228B22';
                     ctx.fillRect(i*step, j*step, step, step);
                 }
             }
-            
             const tex = new THREE.CanvasTexture(canvas);
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
             tex.repeat.set(100, 100);
             return tex;
         }
 
-        // --- PLATFORM TEXTURE ---
-        function createBlockTexture() {
+        const blockTex = (() => {
             const size = 256;
             const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
+            canvas.width = size; canvas.height = size;
             const ctx = canvas.getContext('2d');
-            
-            // Sonic 3D Isometric Block Style
-            ctx.fillStyle = '#8B4513'; // Brown
+            ctx.fillStyle = '#8B4513';
             ctx.fillRect(0, 0, size, size);
-            
             ctx.strokeStyle = '#5D2E0A';
             ctx.lineWidth = 10;
             ctx.strokeRect(0, 0, size, size);
-            
             ctx.fillStyle = '#A0522D';
             ctx.fillRect(10, 10, size-20, size-20);
-            
             return new THREE.CanvasTexture(canvas);
-        }
-        const blockTex = createBlockTexture();
+        })();
 
-        // --- PLAYER ---
-        const playerGroup = new THREE.Group();
-        const playerBody = new THREE.Mesh(
-            new THREE.SphereBufferGeometry(0.8, 8, 6), // Low-poly 
-            new THREE.MeshStandardMaterial({ 
-                color: 0x87ceeb, 
-                transparent: true, 
-                opacity: 0.75,
-                roughness: 0.2, 
-                metalness: 0.4,
-                flatShading: true 
-            })
-        );
-        playerBody.castShadow = true;
-        playerGroup.add(playerBody);
+        let playerGroup, playerBody;
+        function createPlayer() {
+            playerGroup = new THREE.Group();
+            playerBody = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(0.8, 12, 12),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0x87ceeb, 
+                    transparent: true, 
+                    opacity: 0.75,
+                    roughness: 0.2, 
+                    metalness: 0.4,
+                    flatShading: true 
+                })
+            );
+            playerBody.castShadow = true;
+            playerGroup.add(playerBody);
 
-        // Add "Spikes" simple proxy
-        const spikeGeo = new THREE.ConeBufferGeometry(0.3, 1, 8);
-        spikeGeo.translate(0, 0.5, 0);
-        spikeGeo.rotateX(Math.PI / 2);
-        for(let i=0; i<3; i++) {
-            const spike = new THREE.Mesh(spikeGeo, playerBody.material);
-            spike.position.set(0, 0.2, 0.5 + i*0.3);
-            spike.rotation.x = Math.PI / 2 + 0.5;
-            playerGroup.add(spike);
-        }
-
-        // Hat system
-        function createHat(type) {
-            const hatGroup = new THREE.Group();
-            if(type === 'crown') {
-                const baseMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
-                const base = new THREE.Mesh(new THREE.ConeBufferGeometry(0.5, 0.2, 8), baseMat);
-                base.position.y = 0.95;
-                hatGroup.add(base);
-                for(let i=0; i<5; i++) {
-                    const spike = new THREE.Mesh(new THREE.ConeBufferGeometry(0.1, 0.4, 4), baseMat);
-                    spike.position.set(Math.cos(i*Math.PI*2/5)*0.35, 1.1, Math.sin(i*Math.PI*2/5)*0.35);
-                    hatGroup.add(spike);
-                }
-            } else if(type === 'halo') {
-                const haloMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.9, emissive: 0xffaa00 });
-                const halo = new THREE.Mesh(new THREE.TorusBufferGeometry(0.6, 0.05, 8, 32), haloMat);
-                halo.position.y = 1.1;
-                halo.rotation.x = Math.PI / 2.5;
-                hatGroup.add(halo);
-            } else if(type === 'turbo') {
-                const turboMat = new THREE.MeshStandardMaterial({ color: 0xff1744, metalness: 0.7, emissive: 0xff1744 });
-                const back = new THREE.Mesh(new THREE.ConeBufferGeometry(0.3, 0.6, 8), turboMat);
-                back.position.set(0, 0.9, -0.4);
-                back.rotation.x = Math.PI / 4;
-                hatGroup.add(back);
-                const flameMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xffaa00 });
-                const flame = new THREE.Mesh(new THREE.ConeBufferGeometry(0.15, 0.5, 4), flameMat);
-                flame.position.set(0, 1.3, -0.5);
-                hatGroup.add(flame);
+            const spikeGeo = new THREE.ConeBufferGeometry(0.3, 1, 8);
+            spikeGeo.translate(0, 0.5, 0);
+            spikeGeo.rotateX(Math.PI / 2);
+            for(let i=0; i<3; i++) {
+                const spike = new THREE.Mesh(spikeGeo, playerBody.material);
+                spike.position.set(0, 0.2, 0.5 + i*0.3);
+                spike.rotation.x = Math.PI / 2 + 0.5;
+                playerGroup.add(spike);
             }
-            return hatGroup;
+            scene.add(playerGroup);
         }
 
-        function updatePlayerHat() {
-            if(state.hatMesh) playerGroup.remove(state.hatMesh);
-            if(state.cosmetics.unlockedHats.length > 0) {
-                const hatIndex = Math.floor(Date.now() / 3000) % state.cosmetics.unlockedHats.length;
-                state.currentHat = state.cosmetics.unlockedHats[hatIndex];
-                state.hatMesh = createHat(state.currentHat);
-                playerGroup.add(state.hatMesh);
-            }
-        }
-
-        function updatePlayerColor() {
-            const progress = Math.min(1, state.rings / CONFIG.RINGS_FOR_SUPER);
-            let color;
-            if(state.isSuper) {
-                color = new THREE.Color(0xfff700);
-            } else if(progress > 0.75) {
-                const t = (progress - 0.75) / 0.25;
-                color = new THREE.Color(0x0047ff).lerp(new THREE.Color(0xffaa00), t);
-            } else if(progress > 0.5) {
-                const t = (progress - 0.5) / 0.25;
-                color = new THREE.Color(0x0047ff).lerp(new THREE.Color(0x00ccff), t);
-            } else if(progress > 0.25) {
-                const t = (progress - 0.25) / 0.25;
-                color = new THREE.Color(0x0047ff).lerp(new THREE.Color(0x0080ff), t);
-            } else {
-                color = new THREE.Color(0x0047ff);
-            }
-            playerBody.material.color.copy(color);
-        }
-
-        scene.add(playerGroup);
-
-        // Trick Deconstruction Mesh
         const deconstructionParts = [];
         function initDeconstruction() {
             for(let i=0; i<15; i++) {
@@ -848,707 +919,194 @@
                 deconstructionParts.push(part);
             }
         }
-        initDeconstruction();
 
-        // --- TAILS COMPANION ---
         function createTails() {
             const group = new THREE.Group();
-            const body = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(0.5, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3, metalness: 0.2 })
-            );
+            const body = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3, metalness: 0.2 }));
             group.add(body);
-
-            // Tiny cute ears
             const earGeo = new THREE.ConeBufferGeometry(0.15, 0.4, 4);
             const earMat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
-            const earL = new THREE.Mesh(earGeo, earMat);
-            earL.position.set(-0.25, 0.5, 0);
-            earL.rotation.z = 0.2;
-            group.add(earL);
-            const earR = new THREE.Mesh(earGeo, earMat);
-            earR.position.set(0.25, 0.5, 0);
-            earR.rotation.z = -0.2;
-            group.add(earR);
-
-            // Large cute eyes
+            const earL = new THREE.Mesh(earGeo, earMat); earL.position.set(-0.25, 0.5, 0); earL.rotation.z = 0.2; group.add(earL);
+            const earR = new THREE.Mesh(earGeo, earMat); earR.position.set(0.25, 0.5, 0); earR.rotation.z = -0.2; group.add(earR);
             const eyeGeo = new THREE.SphereBufferGeometry(0.12, 8, 8);
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeL.position.set(-0.2, 0.2, 0.4);
-            group.add(eyeL);
-            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-            eyeR.position.set(0.2, 0.2, 0.4);
-            group.add(eyeR);
-
-            // Two "tails" (cones)
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.2, 0.2, 0.4); group.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(0.2, 0.2, 0.4); group.add(eyeR);
             const tailGeo = new THREE.ConeBufferGeometry(0.2, 1, 8);
-            const tail1 = new THREE.Mesh(tailGeo, earMat);
-            tail1.position.set(-0.3, 0, -0.6);
-            tail1.rotation.x = Math.PI / 2;
-            group.add(tail1);
-            const tail2 = new THREE.Mesh(tailGeo, earMat);
-            tail2.position.set(0.3, 0, -0.6);
-            tail2.rotation.x = Math.PI / 2;
-            group.add(tail2);
-
+            const t1 = new THREE.Mesh(tailGeo, earMat); t1.position.set(-0.3, 0, -0.6); t1.rotation.x = Math.PI / 2; group.add(t1);
+            const t2 = new THREE.Mesh(tailGeo, earMat); t2.position.set(0.3, 0, -0.6); t2.rotation.x = Math.PI / 2; group.add(t2);
             scene.add(group);
             state.tails.mesh = group;
         }
-        createTails();
 
-        // --- ABILITY BOXES ---
-        function createAbilityBox(x, z, type = 'speed') {
-            const group = new THREE.Group();
-            const box = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(2, 2, 2),
-                new THREE.MeshStandardMaterial({ 
-                    color: type === 'speed' ? 0x00ffff : 0xff00ff,
-                    transparent: true,
-                    opacity: 0.8
-                })
-            );
-            group.add(box);
-
-            // Floating icon inside
-            const iconGeo = type === 'speed' ? new THREE.ConeBufferGeometry(0.5, 1, 4) : new THREE.SphereBufferGeometry(0.5, 8, 8);
-            const iconMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const icon = new THREE.Mesh(iconGeo, iconMat);
-            icon.position.y = 0;
-            group.add(icon);
-
-            group.position.set(x, 1, z);
-            scene.add(group);
-            state.objects.abilities.push({ mesh: group, type: type });
-        }
-
-        // --- SONIC 3D PLATFORMS ---
         function createSonicPlatform(x, y, z, width, height, depth, isLaunch = false) {
             const group = new THREE.Group();
             const geo = new THREE.BoxBufferGeometry(width, height, depth);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: 0x8B4513, 
-                map: blockTex,
-                roughness: 0.9 
-            });
-            const mesh = new THREE.Mesh(geo, mat);
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x8B4513, map: blockTex, roughness: 0.9 }));
             mesh.position.y = height / 2;
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            mesh.castShadow = true; mesh.receiveShadow = true;
             group.add(mesh);
-
-            // Add Grass Top
-            const grassGeo = new THREE.BoxBufferGeometry(width + 0.2, 0.4, depth + 0.2);
-            const grassMat = new THREE.MeshStandardMaterial({ color: 0x32CD32 });
-            const grass = new THREE.Mesh(grassGeo, grassMat);
+            const grass = new THREE.Mesh(new THREE.BoxBufferGeometry(width + 0.2, 0.4, depth + 0.2), new THREE.MeshStandardMaterial({ color: 0x32CD32 }));
             grass.position.y = height;
             grass.castShadow = true;
             group.add(grass);
-
             group.position.set(x, y, z);
             scene.add(group);
-            
-            state.objects.ramps.push({ 
-                mesh: group, 
-                width: width, 
-                height: y + height, 
-                depth: depth,
-                x: x,
-                z: z,
-                isPlatform: true,
-                isMegaLaunch: isLaunch,
-                slope: 0 // Will be set by MegaRamp call
-            });
+            state.objects.ramps.push({ mesh: group, width, height: y+height, depth, x, z, isPlatform: true, isMegaLaunch: isLaunch, slope: 0 });
         }
 
         function initSonicWorld() {
-            // Spawn a cluster of platforms in a spiral/progressive way
             for(let i=0; i<20; i++) {
-                const angle = i * 0.5;
-                const r = 30 + i * 15;
-                const px = Math.cos(angle) * r;
-                const pz = Math.sin(angle) * r;
-                const py = i * 2;
+                const angle = i * 0.5; const r = 30 + i * 15;
+                const px = Math.cos(angle) * r, pz = Math.sin(angle) * r, py = i * 2;
                 createSonicPlatform(px, py, pz, 15, 1, 15);
-                
-                // Add some rings on top
-                for(let j=0; j<5; j++) {
-                    createRing(px + (Math.random()-0.5)*10, py + 3, pz + (Math.random()-0.5)*10);
-                }
+                for(let j=0; j<3; j++) createRing(px + (Math.random()-0.5)*10, py + 3, pz + (Math.random()-0.5)*10);
             }
-            
-            // Add some center challenge platforms
             createSonicPlatform(0, 5, 0, 20, 2, 20);
             createSonicPlatform(0, 15, 0, 15, 2, 15);
             createSonicPlatform(0, 30, 0, 10, 2, 10);
-
-            // Spawn THE ROLLERCOASTER in the middle
             createRollerCoaster(0, -100);
         }
 
         function createRollerCoaster(startX, startZ) {
-            const segments = 40;
-            const radius = 20;
-            const step = 8;
-            
+            const segments = 40, radius = 20, step = 8;
             for(let i=0; i<segments; i++) {
-                const angle = (i / segments) * Math.PI * 6; // Spiral 3 times
-                const x = startX + Math.sin(angle) * radius;
-                const z = startZ + i * step;
-                const y = 2 + (radius) + Math.cos(angle) * radius;
-                
-                // Track segment
+                const angle = (i / segments) * Math.PI * 6;
+                const x = startX + Math.sin(angle) * radius, z = startZ + i * step, y = 2 + radius + Math.cos(angle) * radius;
                 createSonicPlatform(x, y, z, 15, 1, 15);
-                
-                // Add rings on the rollercoaster
                 if(i % 2 === 0) createRing(x, y + 2.5, z);
-                
-                // Speed boost periodically
-                if(i % 8 === 0) {
-                    createDashPad(x, y + 0.2, z, 0); // Need to align rotation better really
-                }
+                if(i % 8 === 0) createDashPad(x, y + 0.5, z, 0);
             }
-            
-            // End platform
             createSonicPlatform(startX, 0, startZ + segments * step + 20, 40, 2, 40);
         }
-        initSonicWorld();
 
-        // --- MEGA RAMP ---
         function createMegaRamp() {
-            const startX = 200, startY = 150, startZ = -900;
-            const segments = 120;
-            const width = 40;
-            const length = 1500;
-            
-            // Starting Platform
+            const startX = 200, startY = 150, startZ = -900, segments = 120, width = 40, length = 1500;
             createSonicPlatform(startX, startY, startZ, width + 20, 5, 100);
-            
             let lastY = startY;
             for(let i=0; i<segments; i++) {
                 const t = i / segments;
                 const z = startZ + 50 + t * length;
                 let y;
-                
-                // Skate Ramp Curve (Downward then flat-ish)
-                if(t < 0.5) {
-                    y = startY * (0.5 + 0.5 * Math.cos(t * Math.PI * 2)); 
-                } else if (t < 0.8) {
-                    y = 5; 
-                } else {
-                    const kickT = (t - 0.8) / 0.2;
-                    y = 5 + kickT * kickT * 80; 
-                }
-
-                // Calculate slope (y diff)
-                const slope = (lastY - y) * 0.05; // Force mult
-                lastY = y;
-
+                if(t < 0.5) y = startY * (0.5 + 0.5 * Math.cos(t * Math.PI * 2));
+                else if (t < 0.8) y = 5;
+                else y = 5 + Math.pow((t - 0.8) / 0.2, 2) * 80;
+                const slope = (lastY - y) * 0.05; lastY = y;
                 const isFinalKick = t > 0.95;
                 createSonicPlatform(startX, y, z, width, 3, length/segments + 2, isFinalKick);
-                
-                // Set slope on the last added platform
-                state.objects.ramps[state.objects.ramps.length - 1].slope = slope;
-                
-                // Add lots of dash pads on the drop and flat section
-                if(i % 6 === 0 && t < 0.8) {
-                    createDashPad(startX, y + 0.5, z, 0);
-                }
+                if(state.objects.ramps.length > 0) state.objects.ramps[state.objects.ramps.length - 1].slope = slope;
+                if(i % 6 === 0 && t < 0.8) createDashPad(startX, y + 0.5, z, 0);
             }
-
-            // Sky Battle Arena (Positioned for the mega launch)
             const arenaX = startX, arenaY = 350, arenaZ = startZ + length + 400;
             createSonicPlatform(arenaX, arenaY, arenaZ, 120, 5, 120);
-            
-            // Giant Boss in the sky arena
             createGiantBoss(arenaX, arenaY + 40, arenaZ + 40);
-            
-            // Set initial position
             state.pos.copy(CONFIG.SPAWN_POINT);
-            playerGroup.position.copy(state.pos);
+            if(playerGroup) playerGroup.position.copy(state.pos);
         }
 
         function createGiantBoss(x, y, z) {
             const group = new THREE.Group();
-            
-            // Giant Main Body
-            const body = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(15, 32, 32),
-                new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9, roughness: 0.1 })
-            );
-            group.add(body);
-
-            // Glowing Core
-            const core = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(6, 16, 16),
-                new THREE.MeshBasicMaterial({ color: 0xff0000 })
-            );
-            core.position.z = 12;
-            group.add(core);
-
-            // Giant Mechanical Arms
-            const armGeo = new THREE.CylinderBufferGeometry(2, 2, 40);
-            const armMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
-            
-            const armL = new THREE.Mesh(armGeo, armMat);
-            armL.position.set(-25, 0, 0);
-            armL.rotation.z = Math.PI / 4;
-            group.add(armL);
-
-            const armR = new THREE.Mesh(armGeo, armMat);
-            armR.position.set(25, 0, 0);
-            armR.rotation.z = -Math.PI / 4;
-            group.add(armR);
-
-            group.position.set(x, y, z);
-            scene.add(group);
-            state.boss.mesh = group;
-            state.boss.hp = 25; // Massive HP
-            state.boss.isGiant = true;
+            group.add(new THREE.Mesh(new THREE.SphereBufferGeometry(15, 32, 32), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.9, roughness: 0.1 })));
+            const core = new THREE.Mesh(new THREE.SphereBufferGeometry(6, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+            core.position.z = 12; group.add(core);
+            const armGeo = new THREE.CylinderBufferGeometry(2, 2, 40), armMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            const aL = new THREE.Mesh(armGeo, armMat); aL.position.set(-25, 0, 0); aL.rotation.z = Math.PI / 4; group.add(aL);
+            const aR = new THREE.Mesh(armGeo, armMat); aR.position.set(25, 0, 0); aR.rotation.z = -Math.PI / 4; group.add(aR);
+            group.position.set(x, y, z); scene.add(group);
+            state.boss.mesh = group; state.boss.hp = 25; state.boss.active = true;
         }
 
-        // --- RAMPS ---
         function createRamp(x, z, rotation, width = 10, height = 5, length = 15) {
             const group = new THREE.Group();
-            const geo = new THREE.BoxBufferGeometry(width, 1, length);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
-            const mesh = new THREE.Mesh(geo, mat);
-            
-            // Tilt the ramp
             const angle = Math.atan2(height, length);
-            mesh.rotation.x = -angle;
-            mesh.position.y = height / 2;
-            mesh.position.z = length / 2;
-            
-            group.add(mesh);
-            group.position.set(x, -0.5, z);
-            group.rotation.y = rotation;
-            scene.add(group);
-            state.objects.ramps.push({
-                mesh: group,
-                angle: angle,
-                height: height,
-                length: length,
-                width: width
-            });
+            const mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(width, 1, length), new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 }));
+            mesh.rotation.x = -angle; mesh.position.y = height / 2; mesh.position.z = length / 2;
+            group.add(mesh); group.position.set(x, -0.5, z); group.rotation.y = rotation; scene.add(group);
+            state.objects.ramps.push({ mesh: group, angle, height, length, width });
         }
 
-        // --- DASH PADS ---
-        function createDashPad(x, z, rotation) {
-            const geo = new THREE.PlaneBufferGeometry(6, 8);
-            const mat = new THREE.MeshBasicMaterial({ 
-                color: 0xffff00, 
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.8
-            });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.rotation.x = -Math.PI / 2;
-            mesh.rotation.z = rotation;
-            mesh.position.set(x, 0.1, z);
-            
-            // Add arrows
-            const arrowGeo = new THREE.ConeBufferGeometry(1, 2, 4);
-            const arrowMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        function createDashPad(x, y, z, rotation) {
+            const mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(6, 8), new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }));
+            mesh.rotation.x = -Math.PI / 2; mesh.rotation.z = rotation; mesh.position.set(x, y, z);
+            const arrowGeo = new THREE.ConeBufferGeometry(1, 2, 4), arrowMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
             for(let i=0; i<3; i++) {
-                const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-                arrow.position.set(0, 0, -2 + i*2);
-                arrow.rotation.x = -Math.PI / 2;
-                mesh.add(arrow);
+                const arrow = new THREE.Mesh(arrowGeo, arrowMat); arrow.position.set(0, 0, -2 + i*2); arrow.rotation.x = -Math.PI / 2; mesh.add(arrow);
             }
-
-            scene.add(mesh);
-            state.objects.dashPads.push({ mesh: mesh, rotation: rotation });
+            scene.add(mesh); state.objects.dashPads.push({ mesh, rotation });
         }
 
-        createMegaRamp();
-
-        // --- ASSET BUILDERS ---
-        
         function createRing(x, y, z) {
-            // Default y to 1.2 if only 2 args passed (for backward compatibility if needed)
             const posY = z !== undefined ? y : 1.2;
             const posZ = z !== undefined ? z : y;
-
-            const geo = new THREE.TorusBufferGeometry(0.5, 0.1, 8, 24);
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: 0xffcc00, 
-                emissive: 0xffcc00, 
-                emissiveIntensity: 0.5,
-                metalness: 1,
-                roughness: 0
-            });
-            const ring = new THREE.Mesh(geo, mat);
-            ring.position.set(x, posY, posZ);
-            ring.castShadow = true;
-            scene.add(ring);
-            state.objects.rings.push(ring);
+            const ring = new THREE.Mesh(new THREE.TorusBufferGeometry(0.5, 0.1, 8, 24), new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 0.5, metalness: 1, roughness: 0 }));
+            ring.position.set(x, posY, posZ); ring.castShadow = true; scene.add(ring); state.objects.rings.push(ring);
         }
 
         function createClock(x, z) {
             const group = new THREE.Group();
-            
-            // Body - Dark Mahogany wood
-            const body = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(2, 9, 1.5),
-                new THREE.MeshStandardMaterial({ color: 0x4a2c2a, roughness: 0.8, metalness: 0.2 })
-            );
-            body.position.y = 4.5;
-            body.castShadow = true;
-            group.add(body);
-
-            // Roof
-            const roof = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(2.4, 0.5, 1.8),
-                new THREE.MeshStandardMaterial({ color: 0x2a1a18 })
-            );
-            roof.position.y = 9;
-            group.add(roof);
-            
-            // Face - classic white with border
-            const faceGroup = new THREE.Group();
-            const face = new THREE.Mesh(
-                new THREE.CircleBufferGeometry(0.7, 32),
-                new THREE.MeshStandardMaterial({ color: 0xffffff })
-            );
-            faceGroup.add(face);
-            
-            const border = new THREE.Mesh(
-                new THREE.TorusBufferGeometry(0.7, 0.05, 8, 32),
-                new THREE.MeshStandardMaterial({ color: 0xb8860b }) // Gold border
-            );
-            faceGroup.add(border);
-
-            // Hands
-            const hourHand = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(0.05, 0.4, 0.05),
-                new THREE.MeshBasicMaterial({ color: 0x000000 })
-            );
-            hourHand.position.y = 0.2;
-            faceGroup.add(hourHand);
-
-            const minuteHand = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(0.03, 0.6, 0.03),
-                new THREE.MeshBasicMaterial({ color: 0x000000 })
-            );
-            minuteHand.position.y = 0.3;
-            faceGroup.add(minuteHand);
-            
-            faceGroup.position.set(0, 7.2, 0.8);
-            group.add(faceGroup);
-            
-            // Pendulum
-            const pGroup = new THREE.Group();
-            const pStem = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(0.1, 4, 0.1),
-                new THREE.MeshStandardMaterial({ color: 0xf1c40f, metalness: 0.8 })
-            );
-            pStem.position.y = -2;
-            pGroup.add(pStem);
-
-            const pWeight = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(0.4, 16, 16),
-                new THREE.MeshStandardMaterial({ color: 0xf1c40f, metalness: 0.8 })
-            );
-            pWeight.position.y = -4;
-            pGroup.add(pWeight);
-
-            pGroup.position.y = 5.5;
-            group.add(pGroup);
-            group.userData.pendulum = pGroup;
-            group.userData.hands = { hour: hourHand, minute: minuteHand };
-            
-            group.position.set(x, 0, z);
-            group.rotation.y = Math.random() * Math.PI * 2;
-            scene.add(group);
-            state.objects.clocks.push(group);
+            const body = new THREE.Mesh(new THREE.BoxBufferGeometry(2, 9, 1.5), new THREE.MeshStandardMaterial({ color: 0x4a2c2a }));
+            body.position.y = 4.5; group.add(body);
+            const face = new THREE.Mesh(new THREE.CircleBufferGeometry(0.7, 32), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+            face.position.set(0, 7.2, 0.8); group.add(face);
+            const pGroup = new THREE.Group(); 
+            const pStem = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 4, 0.1), new THREE.MeshStandardMaterial({ color: 0xf1c40f })); 
+            pStem.position.y = -2; pGroup.add(pStem);
+            pGroup.position.set(0, 5.5, 0.5); group.add(pGroup);
+            group.userData.pendulum = pGroup; group.position.set(x, 0, z); scene.add(group); state.objects.clocks.push(group);
         }
 
         function createBoss() {
             const group = new THREE.Group();
-            
-            // Eggmobile Pod (Grey hemisphere)
-            const podGeo = new THREE.SphereBufferGeometry(2.5, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2);
-            const podMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.2 });
-            const pod = new THREE.Mesh(podGeo, podMat);
-            pod.rotation.x = Math.PI; // Flip it to be a bowl
-            group.add(pod);
-
-            // Eggmobile Bottom Engine
-            const engineGeo = new THREE.CylinderBufferGeometry(1.5, 0.8, 1, 16);
-            const engineMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-            const engine = new THREE.Mesh(engineGeo, engineMat);
-            engine.position.y = 1.0;
-            group.add(engine);
-
-            // Robotnik Body (Red)
-            const robotBodyGeo = new THREE.SphereBufferGeometry(1.2, 16, 16);
-            const robotBodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-            const robotBody = new THREE.Mesh(robotBodyGeo, robotBodyMat);
-            robotBody.position.set(0, -0.5, 0);
-            group.add(robotBody);
-
-            // Robotnik Head (Flesh)
-            const headGeo = new THREE.SphereBufferGeometry(0.6, 16, 16);
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.set(0, 0.2, 0);
-            group.add(head);
-
-            // ICONIC MUSTACHE (Brown long box)
-            const stacheGeo = new THREE.BoxBufferGeometry(1.8, 0.3, 0.3);
-            const stacheMat = new THREE.MeshStandardMaterial({ color: 0x4b3621 });
-            const stache = new THREE.Mesh(stacheGeo, stacheMat);
-            stache.position.set(0, 0, 0.5);
-            group.add(stache);
-
-            // Wrecking Ball Arm (Visual)
-            const armGeo = new THREE.CylinderBufferGeometry(0.2, 0.2, 8);
-            const armMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
-            const arm = new THREE.Mesh(armGeo, armMat);
-            arm.position.set(0, 2, 0);
-            arm.rotation.z = Math.PI / 2;
-            group.add(arm);
-
-            const ballGeo = new THREE.SphereBufferGeometry(1.5, 16, 16);
-            const ballMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
-            const ball = new THREE.Mesh(ballGeo, ballMat);
-            ball.position.set(6, 2, 0);
-            group.add(ball);
-            group.userData.ball = ball;
-
-            group.position.set(0, 8, 0); // Middle of the map!
-            scene.add(group);
-            state.boss.mesh = group;
-            state.boss.hp = 10;
-            state.boss.active = true;
+            const pod = new THREE.Mesh(new THREE.SphereBufferGeometry(2.5, 32, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
+            pod.rotation.x = Math.PI; group.add(pod);
+            const b = new THREE.Mesh(new THREE.SphereBufferGeometry(1.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+            b.position.y = -0.5; group.add(b);
+            const ball = new THREE.Mesh(new THREE.SphereBufferGeometry(1.5, 16, 16), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            ball.position.set(6, 2, 0); group.add(ball);
+            group.userData.ball = ball; group.position.set(0, 8, 0); scene.add(group); 
+            state.boss.mesh = group; state.boss.hp = 10; state.boss.active = true;
         }
 
-        // Initialize World
-        for(let i=0; i<CONFIG.RING_COUNT; i++) {
-            createRing(
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8,
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8
-            );
+        function createAbilityBox(x, z, type = 'speed') {
+            const group = new THREE.Group();
+            const box = new THREE.Mesh(new THREE.BoxBufferGeometry(2, 2, 2), new THREE.MeshStandardMaterial({ color: type === 'speed' ? 0x00ffff : 0xff00ff, transparent: true, opacity: 0.8 }));
+            group.add(box);
+            const iconGeo = type === 'speed' ? new THREE.ConeBufferGeometry(0.5, 1, 4) : new THREE.SphereBufferGeometry(0.5, 8, 8);
+            const icon = new THREE.Mesh(iconGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+            group.add(icon);
+            group.position.set(x, 1, z); scene.add(group);
+            state.objects.abilities.push({ mesh: group, type });
         }
-        for(let i=0; i<CONFIG.CLOCK_COUNT; i++) {
-            createClock(
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.9,
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.9
-            );
-        }
-        createBoss();
 
-        // --- INPUTS ---
+        function createKnuckles(x, z) {
+            const group = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxBufferGeometry(1.5, 2, 1.2), new THREE.MeshStandardMaterial({ color: 0xcc0000 }));
+            body.position.y = 1; group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxBufferGeometry(1.6, 1.4, 1.4), body.material);
+            head.position.y = 2.4; group.add(head);
+            group.position.set(x, 0, z); scene.add(group);
+            state.objects.enemies.push({ mesh: group, type: 'knuckles', hp: 3 });
+        }
+
         window.addEventListener('keydown', e => state.keys[e.code] = true);
         window.addEventListener('keyup', e => state.keys[e.code] = false);
         
         document.getElementById('start-btn').onclick = () => {
             state.started = true;
-            updatePlayerHat();
-            document.getElementById('start-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('start-screen').style.display = 'none', 500);
+            const ss = document.getElementById('start-screen');
+            if(ss) ss.style.opacity = '0';
+            setTimeout(() => { if(ss) ss.style.display = 'none'; }, 500);
         };
 
-        // --- OBJ LOADER LOGIC ---
-        function spawnStudentEnemy(fileContent, fileName) {
-            const loader = new THREE.OBJLoader();
-            const obj = loader.parse(fileContent);
-
-            // Spawn at random location on map
-            const x = (Math.random() - 0.5) * 800;
-            const z = (Math.random() - 0.5) * 800;
-            obj.position.set(x, 1, z);
-            obj.scale.setScalar(0.5);
-
-            scene.add(obj);
-            state.objects.enemies.push({
-                mesh: obj,
-                type: 'student',
-                hp: 2,
-                name: fileName,
-                hasLightTrail: true
-            });
-            showNotification(`${fileName} spawned as enemy!`);
-        }
-
-        function handleObjFile(file) {
-            if (!file.name.toLowerCase().endsWith('.obj')) {
-                showNotification('Only .OBJ files supported');
+        function animate() {
+            requestAnimationFrame(animate);
+            if(!state.started) {
+                if(renderer && scene && camera) renderer.render(scene, camera);
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                spawnStudentEnemy(event.target.result, file.name);
-            };
-            reader.readAsText(file);
-        }
-
-        // File input handler
-        document.getElementById('file-input').addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-                handleObjFile(e.target.files[0]);
-            }
-        });
-
-        // Drag and drop
-        const dropZone = document.getElementById('drop-zone');
-        dropZone.onclick = () => document.getElementById('file-input').click();
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.style.background = 'rgba(100, 200, 255, 0.3)';
-            dropZone.style.borderColor = 'rgba(100, 200, 255, 1)';
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.style.background = 'rgba(0,0,0,0.3)';
-            dropZone.style.borderColor = 'rgba(255,255,255,0.5)';
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.background = 'rgba(0,0,0,0.3)';
-            dropZone.style.borderColor = 'rgba(255,255,255,0.5)';
-
-            const files = e.dataTransfer.files;
-            for (let file of files) {
-                handleObjFile(file);
-            }
-        });
-
-        // --- RED KNUCKLES ENEMY ---
-        function createKnuckles(x, z) {
-            const group = new THREE.Group();
-            
-            // Body
-            const body = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(1.5, 2, 1.2),
-                new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.5 })
-            );
-            body.position.y = 1;
-            group.add(body);
-
-            // Head (Red with white crest)
-            const head = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(1.6, 1.4, 1.4),
-                body.material
-            );
-            head.position.y = 2.4;
-            group.add(head);
-
-            const crest = new THREE.Mesh(
-                new THREE.BoxBufferGeometry(0.8, 0.4, 1.5),
-                new THREE.MeshStandardMaterial({ color: 0xffffff })
-            );
-            crest.position.set(0, 3.0, 0);
-            group.add(crest);
-
-            // Large fists (Dreadlocks / Claws vibe)
-            const fistGeo = new THREE.SphereBufferGeometry(0.6, 8, 8);
-            const fistL = new THREE.Mesh(fistGeo, body.material);
-            fistL.position.set(-1.2, 1, 0.5);
-            group.add(fistL);
-            const fistR = new THREE.Mesh(fistGeo, body.material);
-            fistR.position.set(1.2, 1, 0.5);
-            group.add(fistR);
-
-            group.position.set(x, 0, z);
-            scene.add(group);
-            state.objects.enemies.push({
-                mesh: group,
-                type: 'knuckles',
-                hp: 3
-            });
-        }
-
-        // --- SONIC LOOP-DE-LOOP ---
-        function createSonicLoop(x, z, radius = 15) {
-            const group = new THREE.Group();
-            const segs = 40;
-            const width = 12;
-            const thickness = 1;
-
-            for (let i = 0; i < segs; i++) {
-                const angle = (i / segs) * Math.PI * 2;
-
-                const geo = new THREE.BoxBufferGeometry(width, thickness, radius * (Math.PI * 2 / segs) * 1.05);
-                const mat = new THREE.MeshStandardMaterial({
-                    color: i % 2 === 0 ? 0xcc7722 : 0xaa5500, // Brownish soil/track
-                    roughness: 0.9
-                });
-                const seg = new THREE.Mesh(geo, mat);
-
-                // Create loop positioned for easy jumping
-                const loopCenterY = radius + 2; // Center of loop
-                seg.position.set(
-                    Math.sin(angle) * radius,
-                    loopCenterY + Math.cos(angle) * radius,
-                    0
-                );
-                seg.rotation.x = angle;
-
-                seg.receiveShadow = true;
-                group.add(seg);
-            }
-
-            group.position.set(x, 0, z);
-            scene.add(group);
-            state.objects.loops.push({
-                mesh: group,
-                center: new THREE.Vector3(x, radius + 2, z),
-                radius: radius
-            });
-        }
-
-        // Spawn many Knuckles and Loops
-        for(let i=0; i<20; i++) {
-            createKnuckles(
-                (Math.random()-0.5) * 1200,
-                (Math.random()-0.5) * 1200
-            );
-        }
-        for(let i=0; i<25; i++) {
-            createAbilityBox(
-                (Math.random()-0.5) * 1000,
-                (Math.random()-0.5) * 1000,
-                Math.random() > 0.5 ? 'speed' : 'jump'
-            );
-        }
-        
-        // Populate with many Ramps and Dash Pads
-        for(let i=0; i<15; i++) {
-            createRamp(
-                (Math.random()-0.5) * 1000,
-                (Math.random()-0.5) * 1000,
-                Math.random() * Math.PI * 2,
-                8 + Math.random() * 8, // width
-                4 + Math.random() * 6, // height
-                12 + Math.random() * 10 // length
-            );
-        }
-
-        for(let i=0; i<15; i++) {
-            createDashPad(
-                (Math.random()-0.5) * 1100,
-                (Math.random()-0.5) * 1100,
-                Math.random() * Math.PI * 2
-            );
-        }
-
-        createSonicLoop(40, -100, 12);
-        createSonicLoop(-60, -200, 15);
-        createSonicLoop(80, -40, 10);
-        createSonicLoop(-150, 150, 18);
-        createSonicLoop(200, -300, 14);
-
-        // --- GAME LOOP ---
-        function update() {
-            if(!state.started) return;
-
             const now = performance.now();
-            const dt = (now - state.lastTime) / 16; // approx 60fps delta
+            const dt = Math.min((now - state.lastTime) / 16, 3);
             state.lastTime = now;
 
             handleMovement(dt);
@@ -1558,68 +1116,13 @@
             updateTricks(dt);
             updateCamera(dt);
             updateUI();
-            updatePlayerColor();
-            renderMiniMap();
-
+            
             if (state.isSuper) {
                 state.superTimer -= (1/60) * dt;
-                if (state.superTimer <= 0) {
-                    loseSuper();
-                }
+                if (state.superTimer <= 0) loseSuper();
             }
 
-            if (state.shakeIntensity > 0) {
-                state.shakeIntensity -= 0.02 * dt;
-            }
-        }
-
-        function handleTails(dt) {
-            if(!state.tails.mesh || state.tails.isDead) return;
-            
-            // Calculate target position relative to player
-            const offset = new THREE.Vector3(-3.5, 2.0, -3.5);
-            offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), state.yaw);
-            const targetPos = state.pos.clone().add(offset);
-            
-            // Smoothed follow
-            state.tails.mesh.position.lerp(targetPos, 0.04 * dt);
-            state.tails.mesh.lookAt(state.pos.x, state.tails.mesh.position.y, state.pos.z);
-            
-            // Rotation animation (tails spinning)
-            state.tails.mesh.children.forEach(c => {
-                if(c.geometry && c.geometry.type === 'ConeBufferGeometry') {
-                    c.rotation.z += (0.8 + state.speed * 2) * dt;
-                }
-            });
-
-            // Update Tails Health HUD
-            const hpPercent = Math.max(0, Math.ceil(state.tails.health));
-            document.getElementById('tails-hp-text').innerText = hpPercent + "%";
-            document.getElementById('tails-hp-bar').style.width = hpPercent + "%";
-            
-            if(hpPercent < 30) {
-                document.getElementById('tails-hp-text').style.color = "#ff0000";
-            } else {
-                document.getElementById('tails-hp-text').style.color = "#f39c12";
-            }
-        }
-
-        function restartGame() {
-            state.tails.health = state.tails.maxHealth;
-            state.tails.isDead = false;
-            state.rings = 0;
-            state.pos.copy(CONFIG.SPAWN_POINT);
-            state.velocity.set(0, 0, 0);
-            state.yaw = 0;
-            state.isSuper = false;
-            document.body.classList.remove('super-active');
-            
-            showNotification("TAILS FAILED! RESTARTING...");
-            
-            // Reset Tails position
-            if(state.tails.mesh) {
-                state.tails.mesh.position.set(-5, 2, -5);
-            }
+            if(renderer && scene && camera) renderer.render(scene, camera);
         }
 
         function handleMovement(dt) {
@@ -1627,23 +1130,17 @@
             const boostMult = (state.keys['ShiftLeft'] || state.keys['ShiftRight']) ? 1.5 : 1.0;
             const maxSpeed = (state.isSuper ? CONFIG.SUPER_MAX_SPEED : CONFIG.PLAYER_MAX_SPEED) * boostMult;
 
-            // Handle Rotation (A/D or Left/Right)
             let turnInput = 0;
             if (state.keys['KeyA'] || state.keys['ArrowLeft']) turnInput += 1;
             if (state.keys['KeyD'] || state.keys['ArrowRight']) turnInput -= 1;
-            
-            const turnSpeed = 0.05;
-            state.yaw += turnInput * turnSpeed * dt;
+            state.yaw += turnInput * 0.05 * dt;
 
-            // Movement relative to Yaw
             const moveDir = new THREE.Vector3(0, 0, 0);
             if (state.keys['KeyW'] || state.keys['ArrowUp']) {
-                moveDir.x += Math.sin(state.yaw);
-                moveDir.z += Math.cos(state.yaw);
+                moveDir.x += Math.sin(state.yaw); moveDir.z += Math.cos(state.yaw);
             }
             if (state.keys['KeyS'] || state.keys['ArrowDown']) {
-                moveDir.x -= Math.sin(state.yaw);
-                moveDir.z -= Math.cos(state.yaw);
+                moveDir.x -= Math.sin(state.yaw); moveDir.z -= Math.cos(state.yaw);
             }
 
             if (moveDir.length() > 0) {
@@ -1652,640 +1149,151 @@
                 state.velocity.z += moveDir.z * accel * dt;
             }
 
-            // Sync character rotation + Banking effect
-            playerGroup.rotation.y = THREE.MathUtils.lerp(playerGroup.rotation.y, state.yaw, 0.1 * dt);
-            const targetBank = turnInput * 0.4;
-            playerGroup.rotation.z = THREE.MathUtils.lerp(playerGroup.rotation.z, targetBank, 0.1 * dt);
-
-            // Gravity
-            if(!state.onGround) {
-                state.velocity.y += CONFIG.GRAVITY * dt;
+            if(playerGroup) {
+                playerGroup.rotation.y = THREE.MathUtils.lerp(playerGroup.rotation.y, state.yaw, 0.1 * dt);
+                playerGroup.rotation.z = THREE.MathUtils.lerp(playerGroup.rotation.z, turnInput * 0.4, 0.1 * dt);
             }
 
-            // Jump
+            if(!state.onGround) state.velocity.y += CONFIG.GRAVITY * dt;
+
             if(state.keys['Space'] && state.onGround) {
                 state.velocity.y = CONFIG.JUMP_FORCE;
-                state.onGround = false;
-                state.isJumping = true;
-                state.shakeIntensity = 0.1;
+                state.onGround = false; state.isJumping = true;
             }
 
-            // Trick Input (Key K)
-            if(state.keys['KeyK'] && !state.onGround && !state.isTricking) {
-                state.isTricking = true;
-                state.trickProgress = 0;
-                showNotification("BACKFLIP!");
-            }
-
-            // Drag
             state.velocity.x *= Math.pow(CONFIG.DRAG, dt);
             state.velocity.z *= Math.pow(CONFIG.DRAG, dt);
-
-            // Apply Velocity
             state.pos.add(state.velocity.clone().multiplyScalar(dt));
 
-            // Ground Collision
             if(state.pos.y <= 0.8) {
-                state.pos.y = 0.8;
-                state.velocity.y = 0;
-                state.onGround = true;
-                state.isJumping = false;
+                state.pos.y = 0.8; state.velocity.y = 0; state.onGround = true; state.isJumping = false;
             }
 
-            // Speed Limit
-            const horizontalSpeed = Math.sqrt(state.velocity.x**2 + state.velocity.z**2);
-            if(horizontalSpeed > maxSpeed) {
-                const ratio = maxSpeed / horizontalSpeed;
-                state.velocity.x *= ratio;
-                state.velocity.z *= ratio;
+            const horizSpeed = Math.sqrt(state.velocity.x**2 + state.velocity.z**2);
+            if(horizSpeed > maxSpeed) {
+                const ratio = maxSpeed / horizSpeed;
+                state.velocity.x *= ratio; state.velocity.z *= ratio;
             }
-            state.speed = horizontalSpeed;
+            state.speed = horizSpeed;
 
-            // --- DASH PAD COLLISION ---
             state.objects.dashPads.forEach(pad => {
-                const dist = pad.mesh.position.distanceTo(state.pos);
-                if(dist < 5) {
-                    const boostDir = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), pad.rotation);
-                    state.velocity.add(boostDir.multiplyScalar(0.4));
-                    showNotification("DASH!");
+                if(pad.mesh.position.distanceTo(state.pos) < 5) {
+                    const b = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), pad.rotation);
+                    state.velocity.add(b.multiplyScalar(0.4));
                 }
             });
 
-            // --- RAMP & PLATFORM PHYSICS ---
             state.objects.ramps.forEach(ramp => {
                 const local = state.pos.clone().sub(ramp.mesh.position);
-                if (ramp.mesh.rotation.y) {
-                    local.applyAxisAngle(new THREE.Vector3(0, 1, 0), -ramp.mesh.rotation.y);
-                }
-                
+                if (ramp.mesh.rotation.y) local.applyAxisAngle(new THREE.Vector3(0, 1, 0), -ramp.mesh.rotation.y);
                 if (ramp.isPlatform) {
-                    // Box/Platform collision
-                    const halfW = ramp.width / 2;
-                    const halfD = ramp.depth / 2;
-                    if (Math.abs(local.x) < halfW && Math.abs(local.z) < halfD) {
-                        // ramp.height already includes the mesh position y in createSonicPlatform
-                        const topY = ramp.height + 0.8; 
-                        
-                        // If we are above the platform but close to its top
-                        // SNAP AGGRESSIVELY ON RAMPS TO FOLLOW CURVE
-                        const snapDist = state.speed > 1.5 ? 10 : 5;
-                        if (state.pos.y > ramp.height - snapDist && state.pos.y < topY + 2) {
-                            state.pos.y = topY;
-                            state.velocity.y = 0;
-                            state.onGround = true;
-                            state.isJumping = false;
-                            
-                            // Special launch for mega ramp ends
-                            if (ramp.isMegaLaunch && state.speed > 1.0) {
-                                state.velocity.y = 1.4;
-                                state.onGround = false;
-                                showNotification("MEGA LAUNCH!");
-                            }
-
-                            // ROLLING PHYSICS (Apply Slope Force)
-                            if (ramp.slope !== 0) {
-                                state.velocity.z += ramp.slope * dt;
-                                // Add a bit of camera shake if rolling fast
-                                if (Math.abs(ramp.slope) > 0.5 && state.speed > 1.0) {
-                                    state.shakeIntensity = Math.min(0.2, state.shakeIntensity + 0.01);
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // Tilted Ramp collision
-                    if (local.z > 0 && local.z < ramp.length && Math.abs(local.x) < ramp.width/2) {
-                        const targetY = (local.z / ramp.length) * ramp.height + 0.8;
-                        if (state.pos.y < targetY + 1.5) {
-                            state.pos.y = targetY;
-                            state.velocity.y = 0;
-                            state.onGround = true;
-                            
-                            // If near the end, launch!
-                            if (local.z > ramp.length - 1 && state.speed > 0.5) {
-                                state.velocity.y = (state.speed * 0.6) + 0.3;
-                                state.onGround = false;
-                            }
+                    if (Math.abs(local.x) < ramp.width/2 && Math.abs(local.z) < ramp.depth/2) {
+                        const topY = ramp.height + 0.8;
+                        if (state.pos.y > ramp.height - 5 && state.pos.y < topY + 2) {
+                            state.pos.y = topY; state.velocity.y = 0; state.onGround = true; state.isJumping = false;
+                            if (ramp.isMegaLaunch && state.speed > 1.0) { state.velocity.y = 1.4; state.onGround = false; }
                         }
                     }
                 }
             });
 
-            playerGroup.position.copy(state.pos);
-
-            // Animation: Rotation based on speed
-            if(horizontalSpeed > 0.01) {
-                playerBody.rotation.x -= horizontalSpeed * 0.5 * dt;
-            }
-            if(state.isJumping) {
-                playerBody.rotation.x -= 0.5 * dt;
-            }
-
-            // World Wrap or Bounds
+            if(playerGroup) playerGroup.position.copy(state.pos);
+            if(playerBody) playerBody.rotation.x -= horizSpeed * 0.5 * dt;
+            
             const halfSize = CONFIG.TERRAIN_SIZE / 2;
             if(Math.abs(state.pos.x) > halfSize) state.pos.x *= -0.99;
             if(Math.abs(state.pos.z) > halfSize) state.pos.z *= -0.99;
         }
 
         function handleObjects(dt) {
-            // Rings rotation and collection
             state.objects.rings.forEach((ring, idx) => {
                 ring.rotation.y += CONFIG.RING_ROT_SPEED * dt;
-                
-                const dist = ring.position.distanceTo(state.pos);
-                if(dist < 5) {
-                    collectRing(ring, idx);
+                if(ring.position.distanceTo(state.pos) < 5) {
+                    scene.remove(ring); state.objects.rings.splice(idx, 1); state.rings += 10;
+                    if(state.rings >= CONFIG.RINGS_FOR_SUPER && !state.isSuper) goSuper();
                 }
             });
-
-            // Clocks animation
-            state.objects.clocks.forEach(clock => {
-                const p = clock.userData.pendulum;
-                p.rotation.z = Math.sin(performance.now() * 0.005) * 0.5;
-            });
-
-            // Particles/Trails
-            updateTrails(dt);
-        }
-
-        function checkCosmeticsUnlock() {
-            const oldMax = state.cosmetics.maxRingsEver;
-            state.cosmetics.maxRingsEver = Math.max(state.cosmetics.maxRingsEver, state.rings);
-
-            // Unlock crown at 100 rings
-            if(state.cosmetics.maxRingsEver >= 100 && !state.cosmetics.unlockedHats.includes('crown')) {
-                state.cosmetics.unlockedHats.push('crown');
-                showNotification("🏆 Crown Unlocked!");
-                saveCosmetics(state.cosmetics);
-            }
-
-            // Unlock turbo at 200 rings
-            if(state.cosmetics.maxRingsEver >= 200 && !state.cosmetics.unlockedHats.includes('turbo')) {
-                state.cosmetics.unlockedHats.push('turbo');
-                showNotification("🔥 Turbo Mode Unlocked!");
-                saveCosmetics(state.cosmetics);
-            }
-
-            updatePlayerHat();
-        }
-
-        function collectRing(ring, idx) {
-            scene.remove(ring);
-            state.objects.rings.splice(idx, 1);
-            state.rings += 10; // Cheat slightly to make 1000 achievable faster
-
-            // Spawn a replacement ring far away
-            createRing(
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8,
-                (Math.random()-0.5) * CONFIG.TERRAIN_SIZE * 0.8
-            );
-
-            checkCosmeticsUnlock();
-
-            if(state.rings >= CONFIG.RINGS_FOR_SUPER && !state.isSuper) {
-                goSuper();
-            }
         }
 
         function goSuper() {
-            state.isSuper = true;
-            state.superTimer = CONFIG.SUPER_DURATION;
-            state.cosmetics.superModeCount++;
+            state.isSuper = true; state.superTimer = CONFIG.SUPER_DURATION;
             document.body.classList.add('super-active');
-            document.getElementById('super-timer-hud').style.display = 'block';
-            document.getElementById('super-label').innerText = "SUPER SONIC";
-            playerBody.material.color.setHex(0xfff700);
-            playerBody.material.emissive.setHex(0xfff700);
-            playerBody.material.emissiveIntensity = 1.0;
-
-            // Unlock halo cosmetic
-            if(!state.cosmetics.unlockedHats.includes('halo')) {
-                state.cosmetics.unlockedHats.push('halo');
-                showNotification("✨ HALO UNLOCKED!");
-                saveCosmetics(state.cosmetics);
+            if(playerBody) {
+                playerBody.material.color.setHex(0xfff700);
+                playerBody.material.emissive.setHex(0xfff700);
+                playerBody.material.emissiveIntensity = 1.0;
             }
-
-            showNotification("SUPER SONIC ACTIVATED!");
-            state.shakeIntensity = 0.8;
-
-            // Super speed burst
-            state.velocity.multiplyScalar(2);
         }
 
         function loseSuper() {
-            state.isSuper = false;
-            state.rings = 0;
-            state.superTimer = 0;
+            state.isSuper = false; state.rings = 0;
             document.body.classList.remove('super-active');
-            document.getElementById('super-timer-hud').style.display = 'none';
-            document.getElementById('super-label').innerText = "Super Meter";
-            playerBody.material.emissive.setHex(0x000000);
-            playerBody.material.emissiveIntensity = 0;
-            updatePlayerColor();
-            showNotification("SUPER SONIC EXPIRED!");
-            state.shakeIntensity = 0.5;
+            if(playerBody) {
+                playerBody.material.emissive.setHex(0x000000);
+                playerBody.material.emissiveIntensity = 0;
+            }
         }
 
         function updateTricks(dt) {
             if (state.isTricking) {
                 state.trickProgress += 0.05 * dt;
-                
-                // Hogwarts Legacy Deconstruction Effect
-                // Split the player's rotation while flying parts out
-                playerGroup.rotation.y += 0.2 * dt;
-                
-                const cycle = Math.sin(state.trickProgress * Math.PI); // 0 -> 1 -> 0
-                
-                playerBody.scale.setScalar(1 - cycle * 0.8);
-                
-                deconstructionParts.forEach((part, i) => {
-                    part.visible = true;
-                    const angle = (i / deconstructionParts.length) * Math.PI * 2 + state.trickProgress * 5;
-                    const dist = cycle * 8;
-                    part.position.set(
-                        state.pos.x + Math.cos(angle) * dist,
-                        state.pos.y + Math.sin(state.trickProgress * 10 + i) * dist * 0.5,
-                        state.pos.z + Math.sin(angle) * dist
-                    );
-                    part.rotation.set(angle, angle, angle);
-                });
-
                 if (state.trickProgress >= 1) {
-                    state.isTricking = false;
-                    playerGroup.rotation.x = 0;
-                    playerBody.scale.setScalar(1);
-                    deconstructionParts.forEach(p => p.visible = false);
-                    state.rings += 100;
-                    showNotification("MAGICAL TRICK! +100");
-                    state.shakeIntensity = 0.5;
+                    state.isTricking = false; if(playerBody) playerBody.scale.setScalar(1); state.rings += 100;
                 }
-            } else if (state.onGround) {
-                playerGroup.rotation.x = THREE.MathUtils.lerp(playerGroup.rotation.x, 0, 0.1 * dt);
             }
         }
 
         function handleBoss(dt) {
             if(!state.boss.mesh || !state.boss.active) return;
-            
-            // Smaller Robotnik logic - chase Tails or Player
-            const boss = state.boss.mesh;
-            const target = (state.tails.mesh && !state.tails.isDead) ? state.tails.mesh.position : state.pos;
-            
-            // Hover logic + Rotation
-            boss.position.y = 10 + Math.sin(performance.now() * 0.002) * 2;
-            boss.rotation.y += 0.03 * dt;
-
-            const dist = boss.position.distanceTo(target);
-            const chaseRange = state.boss.isGiant ? 500 : 100;
-            
-            if(dist < chaseRange) {
-                const dir = target.clone().sub(boss.position).normalize();
-                boss.position.add(dir.multiplyScalar(CONFIG.BOSS_SPEED * 2.0 * dt));
-                boss.lookAt(target.x, boss.position.y, target.z);
+            const b = state.boss.mesh;
+            b.position.y = 10 + Math.sin(performance.now() * 0.002) * 2;
+            b.rotation.y += 0.03 * dt;
+            const dist = b.position.distanceTo(state.pos);
+            if(dist < 100) {
+                const d = state.pos.clone().sub(b.position).normalize();
+                b.position.add(d.multiplyScalar(CONFIG.BOSS_SPEED * dt));
             }
-
-            // Boss attacks Tails
-            if(state.tails.mesh && !state.tails.isDead) {
-                const tailsDist = boss.position.distanceTo(state.tails.mesh.position);
-                if(tailsDist < 6) {
-                    state.tails.health -= 0.6 * dt;
-                    state.shakeIntensity = 0.2;
-                }
-            }
-
-             // Collision with player (Player still attacks boss)
-            const playerDist = boss.position.distanceTo(state.pos);
-            if(playerDist < 7 && (state.isJumping || state.isSuper)) {
-                damageBoss();
+            if(dist < 7 && (state.isJumping || state.isSuper)) {
+                state.boss.hp--; state.velocity.y = 0.4;
+                if(state.boss.hp <= 0) { scene.remove(b); state.boss.active = false; }
             }
         }
 
-            // --- ENEMY LOGIC ---
-            state.objects.enemies.forEach((enemy, idx) => {
-                const distToTails = enemy.mesh.position.distanceTo(state.tails.mesh.position);
-                const distToPlayer = enemy.mesh.position.distanceTo(state.pos);
-
-                if (distToTails < 80) {
-                    // Chase Tails
-                    const chaseDir = new THREE.Vector3().subVectors(state.tails.mesh.position, enemy.mesh.position);
-                    chaseDir.y = 0;
-                    chaseDir.normalize();
-                    enemy.mesh.position.add(chaseDir.multiplyScalar(0.28 * dt));
-                    enemy.mesh.lookAt(state.tails.mesh.position.x, 0, state.tails.mesh.position.z);
-                }
-
-                // Player can still kill enemies
-                if (distToPlayer < 4) {
-                    if (state.isJumping || state.speed > 1.2 || state.isSuper) {
-                        // Kill enemy
-                        scene.remove(enemy.mesh);
-                        state.objects.enemies.splice(idx, 1);
-                        state.rings += 50;
-                        state.shakeIntensity = 0.4;
-                        showNotification("Enemy defeated!");
-                        // Respawn
-                        createKnuckles((Math.random()-0.5)*1000, (Math.random()-0.5)*1000);
-                    }
-                }
-
-                // Enemy attacks Tails
-                if (distToTails < 4) {
-                    state.tails.health -= 0.5 * dt;
-                    if(state.tails.health <= 0 && !state.tails.isDead) {
-                        state.tails.isDead = true;
-                        restartGame();
-                    }
-                }
-            });
-
-            // --- ABILITY BOX LOGIC ---
-            for(let i=state.objects.abilities.length-1; i>=0; i--) {
-                const ability = state.objects.abilities[i];
-                const dist = ability.mesh.position.distanceTo(state.pos);
-                
-                // Animation
-                ability.mesh.rotation.y += 0.05 * dt;
-                ability.mesh.position.y = 1 + Math.sin(performance.now() * 0.005) * 0.2;
-
-                if (dist < 3 && state.isJumping) {
-                    // Destroy ability box
-                    scene.remove(ability.mesh);
-                    state.objects.abilities.splice(i, 1);
-                    
-                    if (ability.type === 'speed') {
-                        state.velocity.multiplyScalar(2.0);
-                        showNotification("SPEED BOOST!");
-                    } else {
-                        state.velocity.y = 0.8;
-                        showNotification("SUPER JUMP!");
-                    }
-                    
-                    // Respawn
-                    createAbilityBox((Math.random()-0.5)*800, (Math.random()-0.5)*800, Math.random() > 0.5 ? 'speed' : 'jump');
-                }
-            }
-
-            // --- LOOP LOGIC ---
-            state.objects.loops.forEach(loop => {
-                const localPos = state.pos.clone().sub(loop.mesh.position);
-                
-                // Only if moving fast and aligned with loop X-plane
-                if (Math.abs(localPos.x) < 6) {
-                    const distToCenter = Math.sqrt(localPos.y**2 + localPos.z**2);
-                    const distToRing = Math.abs(distToCenter - loop.radius);
-                    
-                    if (distToRing < 5 && state.speed > 0.6) {
-                        const angle = Math.atan2(localPos.z, localPos.y - loop.radius);
-                        
-                        // Lock to loop circle
-                        const targetY = loop.radius + Math.cos(angle) * loop.radius;
-                        const targetZ = Math.sin(angle) * loop.radius;
-                        
-                        // If we are "entering" the loop or already in it
-                        if (localPos.z < 10) { 
-                            state.pos.y = loop.mesh.position.y + targetY + 0.8;
-                            state.pos.z = loop.mesh.position.z + targetZ;
-                            
-                            // Align player rotation
-                            playerGroup.rotation.x = -angle - Math.PI/2;
-                            
-                            // Prevent falling
-                            state.onGround = true;
-                            state.velocity.y = 0;
-                        }
-                    } else {
-                        playerGroup.rotation.x = THREE.MathUtils.lerp(playerGroup.rotation.x, 0, 0.1 * dt);
-                    }
-                }
-            });
-        }
-
-        function damageBoss() {
-            state.boss.hp--;
-            state.velocity.y = 0.4; // Bounce off
-            state.velocity.x *= -1;
-            state.velocity.z *= -1;
-
-            if(state.boss.hp <= 0) {
-                showNotification("BOSS DEFEATED!");
-                scene.remove(state.boss.mesh);
-                state.boss.active = false;
-            }
-        }
-
-        function renderMiniMap() {
-            const canvas = document.getElementById('mini-map-canvas');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            
-            // Set resolution if not set
-            if(canvas.width !== 200) {
-                canvas.width = 200;
-                canvas.height = 200;
-            }
-
-            const size = canvas.width;
-            const center = size / 2;
-            const mapRadius = size / 2;
-            // Scale according to terrain size
-            const scale = size / (CONFIG.TERRAIN_SIZE * 0.8);
-
-            // Clear
-            ctx.clearRect(0, 0, size, size);
-
-            // Rounded Clipping for GTA Look
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(center, center, mapRadius - 5, 0, Math.PI * 2);
-            ctx.clip();
-
-            // Background Grid
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, 0, size, size);
-            
-            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-            ctx.lineWidth = 1;
-            for(let i=0; i<size; i+=20) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, size); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(size, i); ctx.stroke();
-            }
-
-            // Helper to draw dots
-            function drawDot(pos, color, dotSize, isTarget = false) {
-                const mapX = center + pos.x * scale;
-                const mapY = center + pos.z * scale;
-                ctx.beginPath();
-                ctx.arc(mapX, mapY, dotSize, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                
-                if(isTarget) {
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                }
-
-                // Simple glow
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = color;
-            }
-
-            // Draw Enemies (Red dots)
-            state.objects.enemies.forEach(e => {
-                const color = e.type === 'student' ? '#ff00ff' : '#ff3333';
-                drawDot(e.mesh.position, color, 3);
-            });
-
-            // Draw Boss (Large Red)
-            if(state.boss && state.boss.active) {
-                drawDot(state.boss.mesh.position, '#ff0000', 6, true);
-            }
-
-            // Draw Tails (Orange dot)
-            if(state.tails.mesh) {
-                drawDot(state.tails.mesh.position, '#f39c12', 4, true);
-            }
-
-            // Draw Player (Blue Arrow)
-            const pX = center + state.pos.x * scale;
-            const pY = center + state.pos.z * scale;
-            
-            ctx.save();
-            ctx.translate(pX, pY);
-            ctx.rotate(state.yaw);
-            ctx.beginPath();
-            ctx.moveTo(0, -7);
-            ctx.lineTo(5, 5);
-            ctx.lineTo(-5, 5);
-            ctx.closePath();
-            ctx.fillStyle = '#00aaff';
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.restore();
-
-            ctx.restore(); // End clipping
-        }
-
-        function updateTrails(dt) {
-            // Player Trail
-            if(state.speed > 0.4) {
-                 const trailColor = state.isSuper ? 0xfff700 : (state.isTricking ? 0xff00ff : 0x0047ff);
-                 spawnTrailParticle(state.pos, trailColor, 1.0, 0.5);
-            }
-
-            // Student Enemy "Light Trails" (Very Obvious)
-            state.objects.enemies.forEach(e => {
-                if(e.hasLightTrail) {
-                    // Spawn extra-bright particles
-                    spawnTrailParticle(e.mesh.position, 0xff0000, 0.6, 1.0, true);
-                }
-            });
-
-            for(let i=state.objects.trails.length-1; i>=0; i--) {
-                const t = state.objects.trails[i];
-                t.life -= 0.05 * dt;
-                t.mesh.scale.setScalar(t.life);
-                t.mesh.material.opacity = t.life * (t.maxOpacity || 0.5);
-                if(t.life <= 0) {
-                    scene.remove(t.mesh);
-                    state.objects.trails.splice(i, 1);
-                }
-            }
-        }
-
-        function spawnTrailParticle(pos, color, life, maxOpacity, isLight = false) {
-            const geo = new THREE.SphereBufferGeometry(isLight ? 0.7 : 0.5, 8, 8);
-            const mat = new THREE.MeshBasicMaterial({ 
-                color: color, 
-                transparent: true, 
-                opacity: maxOpacity 
-            });
-            const mesh = new THREE.Mesh(geo, mat);
-            mesh.position.copy(pos);
-            if(isLight) {
-                // Add a small point light logic could be heavy, so just keep material bright
-                mat.color.multiplyScalar(1.5); 
-            }
-            scene.add(mesh);
-            state.objects.trails.push({ mesh: mesh, life: life, maxOpacity: maxOpacity });
+        function handleTails(dt) {
+            if(!state.tails.mesh) return;
+            const target = state.pos.clone().add(new THREE.Vector3(-3.5, 2, -3.5).applyAxisAngle(new THREE.Vector3(0,1,0), state.yaw));
+            state.tails.mesh.position.lerp(target, 0.04 * dt);
+            state.tails.mesh.lookAt(state.pos.x, state.tails.mesh.position.y, state.pos.z);
+            const hb = document.getElementById('tails-hp-bar');
+            if(hb) hb.style.width = state.tails.health + "%";
         }
 
         function updateCamera(dt) {
-            // Field of view expansion based on speed
-            const targetFOV = 75 + (state.speed * 15);
-            camera.fov = THREE.MathUtils.lerp(camera.fov, targetFOV, 0.1 * dt);
+            if(!camera) return;
+            camera.fov = THREE.MathUtils.lerp(camera.fov, 75 + state.speed * 15, 0.1 * dt);
             camera.updateProjectionMatrix();
-
-            // Smooth follow behind the player based on their yaw
-            const cameraHeight = 5;
-            const cameraDistance = 12;
-            
-            const idealOffsetX = -Math.sin(state.yaw) * cameraDistance;
-            const idealOffsetZ = -Math.cos(state.yaw) * cameraDistance;
-            
-            const targetPos = state.pos.clone().add(new THREE.Vector3(idealOffsetX, cameraHeight, idealOffsetZ));
-            
-            // Apply shake
-            if (state.shakeIntensity > 0) {
-                targetPos.x += (Math.random() - 0.5) * state.shakeIntensity;
-                targetPos.y += (Math.random() - 0.5) * state.shakeIntensity;
-                targetPos.z += (Math.random() - 0.5) * state.shakeIntensity;
-            }
-
-            camera.position.lerp(targetPos, 0.08 * dt);
-            camera.lookAt(state.pos.clone().add(new THREE.Vector3(0, 2, 0)));
+            const off = new THREE.Vector3(-Math.sin(state.yaw)*12, 5, -Math.cos(state.yaw)*12);
+            camera.position.set(state.pos.x + off.x, state.pos.y + off.y, state.pos.z + off.z);
+            camera.lookAt(state.pos.x, state.pos.y + 2, state.pos.z);
         }
 
         function updateUI() {
-            document.getElementById('rings-count').innerText = Math.floor(state.rings);
-            document.getElementById('speed-display').innerText = (state.speed * 100).toFixed(0);
-
-            const progress = Math.min(100, (state.rings / CONFIG.RINGS_FOR_SUPER) * 100);
-            document.getElementById('super-bar').style.width = progress + '%';
-            
-            if (state.isSuper) {
-                document.getElementById('super-timer-hud').innerText = Math.ceil(state.superTimer) + 's';
-                document.getElementById('super-bar').style.background = 'linear-gradient(90deg, #fff, #ffcc00)';
-            } else {
-                document.getElementById('super-bar').style.background = 'linear-gradient(90deg, #f1c40f, #ffcc00)';
-            }
-            const cosmeticIcons = {
-                'crown': '👑',
-                'halo': '✨',
-                'turbo': '🔥'
-            };
-            const displayText = state.cosmetics.unlockedHats.length > 0
-                ? state.cosmetics.unlockedHats.map(h => cosmeticIcons[h] || '?').join('')
-                : '—';
-            document.getElementById('cosmetics-display').innerText = displayText;
-        }
-
-        function showNotification(text) {
-            const n = document.getElementById('notification');
-            n.innerText = text;
-            n.style.opacity = '1';
-            n.style.top = '25%';
-            setTimeout(() => {
-                n.style.opacity = '0';
-                n.style.top = '30%';
-            }, 3000);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            update();
-            renderer.render(scene, camera);
+            const rc = document.getElementById('rings-count');
+            if(rc) rc.innerText = Math.floor(state.rings);
+            const sd = document.getElementById('speed-display');
+            if(sd) sd.innerText = (state.speed * 100).toFixed(0);
+            const sb = document.getElementById('super-bar');
+            if(sb) sb.style.width = Math.min(100, (state.rings / CONFIG.RINGS_FOR_SUPER) * 100) + '%';
         }
 
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            if(camera) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
+            if(renderer) renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        animate();
+        // Use DOMContentLoaded to ensure elements are there
+        if (document.readyState === 'complete') init();
+        else window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
