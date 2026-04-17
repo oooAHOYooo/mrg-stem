@@ -782,8 +782,8 @@
             }, 60);
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 200, 1500); // Expanded fog
+            scene.background = new THREE.Color(0x3ca2f0); // Wind Waker Blue
+            scene.fog = new THREE.Fog(0x3ca2f0, 200, 1500);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -794,9 +794,9 @@
             if(container) container.appendChild(renderer.domElement);
 
             // Lights
-            scene.add(new THREE.AmbientLight(0xffffff, 0.6)); // Brighter ambient
-            sun = new THREE.DirectionalLight(0xffffff, 1.2);
-            sun.position.set(500, 1000, 500); // Further out
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8)); // Brighter for cel-vibe
+            sun = new THREE.DirectionalLight(0xffffff, 1.0);
+            sun.position.set(500, 1000, 500);
             sun.castShadow = true;
             sun.shadow.mapSize.width = 2048;
             sun.shadow.mapSize.height = 2048;
@@ -835,32 +835,23 @@
         }
 
         function createTerrain() {
-            const checkeredTex = createCheckeredTexture();
-            const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.TERRAIN_SIZE, CONFIG.TERRAIN_SIZE, 32, 32);
-            const floorMat = new THREE.MeshStandardMaterial({ map: checkeredTex, roughness: 0.8 });
+            const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.TERRAIN_SIZE, CONFIG.TERRAIN_SIZE, 64, 64);
+            const posAttr = floorGeo.attributes.position;
+            // Perturb vertices for low poly look
+            for(let i=0; i<posAttr.count; i++) {
+                posAttr.setZ(i, (Math.random() - 0.5) * 5); // Z is UP before rotation
+            }
+            floorGeo.computeVertexNormals();
+            
+            const floorMat = new THREE.MeshStandardMaterial({ 
+                color: 0x8BC34A, // Bright vibrant green
+                roughness: 1.0,
+                flatShading: true
+            });
             floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
             scene.add(floor);
-        }
-
-        function createCheckeredTexture() {
-            const size = 512;
-            const canvas = document.createElement('canvas');
-            canvas.width = size; canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            const cols = 8;
-            const step = size / cols;
-            for(let i=0; i<cols; i++) {
-                for(let j=0; j<cols; j++) {
-                    ctx.fillStyle = (i+j) % 2 === 0 ? '#32CD32' : '#228B22';
-                    ctx.fillRect(i*step, j*step, step, step);
-                }
-            }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(100, 100);
-            return tex;
         }
 
         const blockTex = (() => {
@@ -868,12 +859,9 @@
             const canvas = document.createElement('canvas');
             canvas.width = size; canvas.height = size;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#8B4513';
+            ctx.fillStyle = '#D68910'; // Brighter stylized wood
             ctx.fillRect(0, 0, size, size);
-            ctx.strokeStyle = '#5D2E0A';
-            ctx.lineWidth = 10;
-            ctx.strokeRect(0, 0, size, size);
-            ctx.fillStyle = '#A0522D';
+            ctx.fillStyle = '#E67E22';
             ctx.fillRect(10, 10, size-20, size-20);
             return new THREE.CanvasTexture(canvas);
         })();
@@ -942,11 +930,11 @@
         function createSonicPlatform(x, y, z, width, height, depth, isLaunch = false) {
             const group = new THREE.Group();
             const geo = new THREE.BoxBufferGeometry(width, height, depth);
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x8B4513, map: blockTex, roughness: 0.9 }));
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xD68910, map: blockTex, roughness: 1.0, flatShading: true }));
             mesh.position.y = height / 2;
             mesh.castShadow = true; mesh.receiveShadow = true;
             group.add(mesh);
-            const grass = new THREE.Mesh(new THREE.BoxBufferGeometry(width + 0.2, 0.4, depth + 0.2), new THREE.MeshStandardMaterial({ color: 0x32CD32 }));
+            const grass = new THREE.Mesh(new THREE.BoxBufferGeometry(width + 0.2, 0.4, depth + 0.2), new THREE.MeshStandardMaterial({ color: 0x8BC34A, flatShading: true }));
             grass.position.y = height;
             grass.castShadow = true;
             group.add(grass);
@@ -1019,10 +1007,10 @@
         function createRamp(x, z, rotation, width = 10, height = 5, length = 15) {
             const group = new THREE.Group();
             const angle = Math.atan2(height, length);
-            const mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(width, 1, length), new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 }));
+            const mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(width, 1, length), new THREE.MeshStandardMaterial({ color: 0xD68910, roughness: 1.0, flatShading: true }));
             mesh.rotation.x = -angle; mesh.position.y = height / 2; mesh.position.z = length / 2;
             group.add(mesh); group.position.set(x, -0.5, z); group.rotation.y = rotation; scene.add(group);
-            state.objects.ramps.push({ mesh: group, angle, height, length, width });
+            state.objects.ramps.push({ mesh: group, angle, height, length, width, isPlatform: false });
         }
 
         function createDashPad(x, y, z, rotation) {
@@ -1189,9 +1177,34 @@
                 if (ramp.isPlatform) {
                     if (Math.abs(local.x) < ramp.width/2 && Math.abs(local.z) < ramp.depth/2) {
                         const topY = ramp.height + 0.8;
-                        if (state.pos.y > ramp.height - 5 && state.pos.y < topY + 2) {
+                        const snapDist = state.speed > 1.5 ? 10 : 5;
+                        if (state.pos.y > ramp.height - snapDist && state.pos.y < topY + 2) {
                             state.pos.y = topY; state.velocity.y = 0; state.onGround = true; state.isJumping = false;
                             if (ramp.isMegaLaunch && state.speed > 1.0) { state.velocity.y = 1.4; state.onGround = false; }
+                            
+                            // Rolling marble physics on Mega Ramp
+                            if (ramp.slope && ramp.slope !== 0) {
+                                state.velocity.z += ramp.slope * dt; // gravity down slope
+                                if (Math.abs(ramp.slope) > 0.5 && state.speed > 1.0) {
+                                    state.shakeIntensity = Math.min(0.2, state.shakeIntensity + 0.01);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // True tilted ramps
+                    if (local.z > 0 && local.z < ramp.length && Math.abs(local.x) < ramp.width/2) {
+                        const targetY = (local.z / ramp.length) * ramp.height + 0.8;
+                        if (state.pos.y < targetY + 1.5) {
+                            state.pos.y = targetY; state.velocity.y = 0; state.onGround = true; state.isJumping = false;
+                            // Rolling marble down standard ramps
+                            const downDir = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), ramp.mesh.rotation.y);
+                            const gravityPush = (ramp.height / ramp.length) * -CONFIG.GRAVITY * 1.5;
+                            state.velocity.add(downDir.multiplyScalar(gravityPush * dt));
+                            
+                            if (local.z > ramp.length - 1 && state.speed > 0.5) {
+                                state.velocity.y = (state.speed * 0.6) + 0.3; state.onGround = false;
+                            }
                         }
                     }
                 }
