@@ -591,7 +591,8 @@
             RING_COUNT: 300,
             TERRAIN_SIZE: 1500, // Larger terrain for more ramps
             BOSS_SPEED: 0.04,
-            SUPER_DURATION: 30 // Seconds
+            SUPER_DURATION: 30, // Seconds
+            SPAWN_POINT: new THREE.Vector3(200, 158, -920)
         };
 
         // Load cosmetics from localStorage
@@ -615,7 +616,7 @@
             superTimer: 0,
             speed: 0,
             velocity: new THREE.Vector3(),
-            pos: new THREE.Vector3(0, 1, 0),
+            pos: CONFIG.SPAWN_POINT.clone(),
             isJumping: false,
             onGround: true,
             isTricking: false,
@@ -745,8 +746,15 @@
         // --- PLAYER ---
         const playerGroup = new THREE.Group();
         const playerBody = new THREE.Mesh(
-            new THREE.SphereBufferGeometry(0.8, 32, 32),
-            new THREE.MeshStandardMaterial({ color: 0x0047ff, roughness: 0.3, metalness: 0.5 })
+            new THREE.SphereBufferGeometry(0.8, 8, 6), // Low-poly 
+            new THREE.MeshStandardMaterial({ 
+                color: 0x87ceeb, 
+                transparent: true, 
+                opacity: 0.75,
+                roughness: 0.2, 
+                metalness: 0.4,
+                flatShading: true 
+            })
         );
         playerBody.castShadow = true;
         playerGroup.add(playerBody);
@@ -846,19 +854,40 @@
         function createTails() {
             const group = new THREE.Group();
             const body = new THREE.Mesh(
-                new THREE.SphereBufferGeometry(0.6, 32, 32),
+                new THREE.SphereBufferGeometry(0.5, 16, 16),
                 new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3, metalness: 0.2 })
             );
             group.add(body);
 
+            // Tiny cute ears
+            const earGeo = new THREE.ConeBufferGeometry(0.15, 0.4, 4);
+            const earMat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
+            const earL = new THREE.Mesh(earGeo, earMat);
+            earL.position.set(-0.25, 0.5, 0);
+            earL.rotation.z = 0.2;
+            group.add(earL);
+            const earR = new THREE.Mesh(earGeo, earMat);
+            earR.position.set(0.25, 0.5, 0);
+            earR.rotation.z = -0.2;
+            group.add(earR);
+
+            // Large cute eyes
+            const eyeGeo = new THREE.SphereBufferGeometry(0.12, 8, 8);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.2, 0.2, 0.4);
+            group.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.2, 0.2, 0.4);
+            group.add(eyeR);
+
             // Two "tails" (cones)
             const tailGeo = new THREE.ConeBufferGeometry(0.2, 1, 8);
-            const tailMat = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
-            const tail1 = new THREE.Mesh(tailGeo, tailMat);
+            const tail1 = new THREE.Mesh(tailGeo, earMat);
             tail1.position.set(-0.3, 0, -0.6);
             tail1.rotation.x = Math.PI / 2;
             group.add(tail1);
-            const tail2 = new THREE.Mesh(tailGeo, tailMat);
+            const tail2 = new THREE.Mesh(tailGeo, earMat);
             tail2.position.set(0.3, 0, -0.6);
             tail2.rotation.x = Math.PI / 2;
             group.add(tail2);
@@ -1029,9 +1058,9 @@
             // Giant Boss in the sky arena
             createGiantBoss(arenaX, arenaY + 40, arenaZ + 40);
             
-            // Sonic starting pos at the edge of start platform
-            playerGroup.position.set(startX, startY + 5, startZ - 10);
-            state.pos.copy(playerGroup.position);
+            // Set initial position
+            state.pos.copy(CONFIG.SPAWN_POINT);
+            playerGroup.position.copy(state.pos);
         }
 
         function createGiantBoss(x, y, z) {
@@ -1550,7 +1579,7 @@
             state.tails.health = state.tails.maxHealth;
             state.tails.isDead = false;
             state.rings = 0;
-            state.pos.set(0, 1, 0);
+            state.pos.copy(CONFIG.SPAWN_POINT);
             state.velocity.set(0, 0, 0);
             state.yaw = 0;
             state.isSuper = false;
@@ -1669,7 +1698,9 @@
                         const topY = ramp.height + 0.8; 
                         
                         // If we are above the platform but close to its top
-                        if (state.pos.y > ramp.height - 5 && state.pos.y < topY + 2) {
+                        // SNAP AGGRESSIVELY ON RAMPS TO FOLLOW CURVE
+                        const snapDist = state.speed > 1.5 ? 10 : 5;
+                        if (state.pos.y > ramp.height - snapDist && state.pos.y < topY + 2) {
                             state.pos.y = topY;
                             state.velocity.y = 0;
                             state.onGround = true;
@@ -1677,7 +1708,7 @@
                             
                             // Special launch for mega ramp ends
                             if (ramp.isMegaLaunch && state.speed > 1.0) {
-                                state.velocity.y = 1.2;
+                                state.velocity.y = 1.4;
                                 state.onGround = false;
                                 showNotification("MEGA LAUNCH!");
                             }
