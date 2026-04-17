@@ -826,7 +826,6 @@
         }
 
         scene.add(playerGroup);
-        playerGroup.position.set(200, 100, -800); // Start on the Mega Ramp!
 
         // Trick Deconstruction Mesh
         const deconstructionParts = [];
@@ -895,7 +894,7 @@
         }
 
         // --- SONIC 3D PLATFORMS ---
-        function createSonicPlatform(x, y, z, width, height, depth) {
+        function createSonicPlatform(x, y, z, width, height, depth, isLaunch = false) {
             const group = new THREE.Group();
             const geo = new THREE.BoxBufferGeometry(width, height, depth);
             const mat = new THREE.MeshStandardMaterial({ 
@@ -927,7 +926,8 @@
                 depth: depth,
                 x: x,
                 z: z,
-                isPlatform: true 
+                isPlatform: true,
+                isMegaLaunch: isLaunch
             });
         }
 
@@ -986,33 +986,52 @@
 
         // --- MEGA RAMP ---
         function createMegaRamp() {
-            const startX = 200, startY = 100, startZ = -800;
-            const segments = 100;
-            const width = 30;
-            const length = 1200;
+            const startX = 200, startY = 150, startZ = -900;
+            const segments = 120;
+            const width = 40;
+            const length = 1500;
+            
+            // Starting Platform
+            createSonicPlatform(startX, startY, startZ, width + 20, 5, 100);
             
             for(let i=0; i<segments; i++) {
                 const t = i / segments;
-                // A massive downward slope then a giant kick upward
-                const z = startZ + t * length;
+                const z = startZ + 50 + t * length;
                 let y;
-                if(t < 0.6) {
-                    y = startY * (1 - (t/0.6)); // Downward
+                
+                // Skate Ramp Curve (Downward then flat-ish)
+                if(t < 0.5) {
+                    // Steep drop (Cosine curve for smooth entry)
+                    y = startY * (0.5 + 0.5 * Math.cos(t * Math.PI * 2)); 
+                } else if (t < 0.8) {
+                    y = 5; // Flat section for speed gathering
                 } else {
-                    const kickT = (t - 0.6) / 0.4;
-                    y = kickT * kickT * 150; // Exponentially upward launch
+                    // The "Off another ramp" kicker!
+                    const kickT = (t - 0.8) / 0.2;
+                    y = 5 + kickT * kickT * 80; 
                 }
 
-                createSonicPlatform(startX, y, z, width, 2, length/segments + 1);
+                // Create the track segment
+                // If it's near the end, mark it as the mega launch platform
+                const isFinalKick = t > 0.95;
+                createSonicPlatform(startX, y, z, width, 3, length/segments + 2, isFinalKick);
                 
-                // Add some dash pads on the ramp
-                if(i % 10 === 0) createDashPad(startX, y + 0.5, z, 0);
+                // Add lots of dash pads on the drop and flat section
+                if(i % 6 === 0 && t < 0.8) {
+                    createDashPad(startX, y + 0.5, z, 0);
+                }
             }
 
-            // Sky Battle Arena at the end of launch
-            const arenaX = startX, arenaY = 250, arenaZ = startZ + length + 200;
-            createSonicPlatform(arenaX, arenaY, arenaZ, 100, 5, 100);
-            createGiantBoss(arenaX, arenaY + 30, arenaZ + 30);
+            // Sky Battle Arena (Positioned for the mega launch)
+            const arenaX = startX, arenaY = 350, arenaZ = startZ + length + 400;
+            createSonicPlatform(arenaX, arenaY, arenaZ, 120, 5, 120);
+            
+            // Giant Boss in the sky arena
+            createGiantBoss(arenaX, arenaY + 40, arenaZ + 40);
+            
+            // Sonic starting pos at the edge of start platform
+            playerGroup.position.set(startX, startY + 5, startZ - 10);
+            state.pos.copy(playerGroup.position);
         }
 
         function createGiantBoss(x, y, z) {
@@ -1634,22 +1653,50 @@
                 }
             });
 
-            // --- RAMP PHYSICS ---
+            // --- RAMP & PLATFORM PHYSICS ---
             state.objects.ramps.forEach(ramp => {
                 const local = state.pos.clone().sub(ramp.mesh.position);
-                local.applyAxisAngle(new THREE.Vector3(0, 1, 0), -ramp.mesh.rotation.y);
+                if (ramp.mesh.rotation.y) {
+                    local.applyAxisAngle(new THREE.Vector3(0, 1, 0), -ramp.mesh.rotation.y);
+                }
                 
-                if (local.z > 0 && local.z < ramp.length && Math.abs(local.x) < ramp.width/2) {
-                    const targetY = (local.z / ramp.length) * ramp.height + 0.8;
-                    if (state.pos.y < targetY + 1) {
-                        state.pos.y = targetY;
-                        state.velocity.y = 0;
-                        state.onGround = true;
+                if (ramp.isPlatform) {
+                    // Box/Platform collision
+                    const halfW = ramp.width / 2;
+                    const halfD = ramp.depth / 2;
+                    if (Math.abs(local.x) < halfW && Math.abs(local.z) < halfD) {
+                        // ramp.height already includes the mesh position y in createSonicPlatform
+                        const topY = ramp.height + 0.8; 
                         
-                        // If near the end, launch!
-                        if (local.z > ramp.length - 1 && state.speed > 0.5) {
-                            state.velocity.y = (state.speed * 0.5) + 0.2;
-                            state.onGround = false;
+                        // If we are above the platform but close to its top
+                        if (state.pos.y > ramp.height - 5 && state.pos.y < topY + 2) {
+                            state.pos.y = topY;
+                            state.velocity.y = 0;
+                            state.onGround = true;
+                            state.isJumping = false;
+                            
+                            // Special launch for mega ramp ends
+                            if (ramp.isMegaLaunch && state.speed > 1.0) {
+                                state.velocity.y = 1.2;
+                                state.onGround = false;
+                                showNotification("MEGA LAUNCH!");
+                            }
+                        }
+                    }
+                } else {
+                    // Tilted Ramp collision
+                    if (local.z > 0 && local.z < ramp.length && Math.abs(local.x) < ramp.width/2) {
+                        const targetY = (local.z / ramp.length) * ramp.height + 0.8;
+                        if (state.pos.y < targetY + 1.5) {
+                            state.pos.y = targetY;
+                            state.velocity.y = 0;
+                            state.onGround = true;
+                            
+                            // If near the end, launch!
+                            if (local.z > ramp.length - 1 && state.speed > 0.5) {
+                                state.velocity.y = (state.speed * 0.6) + 0.3;
+                                state.onGround = false;
+                            }
                         }
                     }
                 }
