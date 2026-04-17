@@ -1172,6 +1172,7 @@
             if(state.keys['Space'] && state.onGround) {
                 state.velocity.y = CONFIG.JUMP_FORCE;
                 state.onGround = false; state.isJumping = true;
+                if(playerBody) playerBody.scale.set(0.5, 1.6, 0.5); // STRETCH jump
             }
 
             state.velocity.x *= Math.pow(CONFIG.DRAG, dt);
@@ -1179,6 +1180,7 @@
             state.pos.add(state.velocity.clone().multiplyScalar(dt));
 
             if(state.pos.y <= 0.8) {
+                if(!state.onGround && playerBody) playerBody.scale.set(1.5, 0.5, 1.5); // SQUASH landing
                 state.pos.y = 0.8; state.velocity.y = 0; state.onGround = true; state.isJumping = false;
             }
 
@@ -1193,6 +1195,7 @@
                 if(pad.mesh.position.distanceTo(state.pos) < 5) {
                     const b = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), pad.rotation);
                     state.velocity.add(b.multiplyScalar(0.4));
+                    if(playerBody) playerBody.scale.set(0.4, 0.4, 2.0); // SPEED STRETCH
                 }
             });
 
@@ -1236,7 +1239,13 @@
             });
 
             if(playerGroup) playerGroup.position.copy(state.pos);
-            if(playerBody) playerBody.rotation.x -= horizSpeed * 0.5 * dt;
+            if(playerBody) {
+                playerBody.rotation.x -= horizSpeed * 0.5 * dt;
+                // Recover from squash/stretch
+                if (!state.isTricking) {
+                    playerBody.scale.lerp(new THREE.Vector3(1, 1, 1), 0.15 * dt);
+                }
+            }
             
             const halfSize = CONFIG.TERRAIN_SIZE / 2;
             if(Math.abs(state.pos.x) > halfSize) state.pos.x *= -0.99;
