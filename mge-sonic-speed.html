@@ -186,7 +186,7 @@
 
         .controls-hint {
             position: absolute;
-            bottom: 40px;
+            bottom: 260px;
             left: 20px;
             background: var(--glass-dark);
             backdrop-filter: blur(8px);
@@ -194,6 +194,40 @@
             border-radius: 15px;
             font-size: 0.9rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- MINI MAP --- */
+        #mini-map-container {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+
+        #mini-map-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 0 5px #000;
         }
 
         .hint-key {
@@ -451,6 +485,11 @@
             <div><span class="hint-key">SPACE</span> JUMP</div>
             <div><span class="hint-key">K</span> BACKFLIP TRICK</div>
             <div><span class="hint-key">SHIFT</span> BOOST</div>
+        </div>
+
+        <div id="mini-map-container">
+            <div class="map-label">Tactical Map</div>
+            <canvas id="mini-map-canvas"></canvas>
         </div>
 
         <div id="notification">GO SUPER!</div>
@@ -1163,7 +1202,8 @@
                 mesh: obj,
                 type: 'student',
                 hp: 2,
-                name: fileName
+                name: fileName,
+                hasLightTrail: true
             });
             showNotification(`${fileName} spawned as enemy!`);
         }
@@ -1355,6 +1395,7 @@
             updateCamera(dt);
             updateUI();
             updatePlayerColor();
+            renderMiniMap();
 
             if (state.isSuper) {
                 state.superTimer -= (1/60) * dt;
@@ -1809,31 +1850,143 @@
             }
         }
 
-        function updateTrails(dt) {
-            // Only add trails if moving fast
-            if(state.speed > 0.4) {
-                const trailGeo = new THREE.SphereBufferGeometry(0.5, 8, 8);
-                const trailMat = new THREE.MeshBasicMaterial({ 
-                    color: state.isSuper ? 0xfff700 : (state.isTricking ? 0xff00ff : 0x0047ff), 
-                    transparent: true, 
-                    opacity: 0.5 
-                });
-                const trail = new THREE.Mesh(trailGeo, trailMat);
-                trail.position.copy(state.pos);
-                scene.add(trail);
-                state.objects.trails.push({ mesh: trail, life: 1.0 });
+        function renderMiniMap() {
+            const canvas = document.getElementById('mini-map-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Set resolution if not set
+            if(canvas.width !== 200) {
+                canvas.width = 200;
+                canvas.height = 200;
             }
+
+            const size = canvas.width;
+            const center = size / 2;
+            const mapRadius = size / 2;
+            // Scale according to terrain size
+            const scale = size / (CONFIG.TERRAIN_SIZE * 0.8);
+
+            // Clear
+            ctx.clearRect(0, 0, size, size);
+
+            // Rounded Clipping for GTA Look
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(center, center, mapRadius - 5, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Background Grid
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, size, size);
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for(let i=0; i<size; i+=20) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, size); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(size, i); ctx.stroke();
+            }
+
+            // Helper to draw dots
+            function drawDot(pos, color, dotSize, isTarget = false) {
+                const mapX = center + pos.x * scale;
+                const mapY = center + pos.z * scale;
+                ctx.beginPath();
+                ctx.arc(mapX, mapY, dotSize, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                if(isTarget) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                // Simple glow
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = color;
+            }
+
+            // Draw Enemies (Red dots)
+            state.objects.enemies.forEach(e => {
+                const color = e.type === 'student' ? '#ff00ff' : '#ff3333';
+                drawDot(e.mesh.position, color, 3);
+            });
+
+            // Draw Boss (Large Red)
+            if(state.boss && state.boss.active) {
+                drawDot(state.boss.mesh.position, '#ff0000', 6, true);
+            }
+
+            // Draw Tails (Orange dot)
+            if(state.tails.mesh) {
+                drawDot(state.tails.mesh.position, '#f39c12', 4, true);
+            }
+
+            // Draw Player (Blue Arrow)
+            const pX = center + state.pos.x * scale;
+            const pY = center + state.pos.z * scale;
+            
+            ctx.save();
+            ctx.translate(pX, pY);
+            ctx.rotate(state.yaw);
+            ctx.beginPath();
+            ctx.moveTo(0, -7);
+            ctx.lineTo(5, 5);
+            ctx.lineTo(-5, 5);
+            ctx.closePath();
+            ctx.fillStyle = '#00aaff';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.restore(); // End clipping
+        }
+
+        function updateTrails(dt) {
+            // Player Trail
+            if(state.speed > 0.4) {
+                 const trailColor = state.isSuper ? 0xfff700 : (state.isTricking ? 0xff00ff : 0x0047ff);
+                 spawnTrailParticle(state.pos, trailColor, 1.0, 0.5);
+            }
+
+            // Student Enemy "Light Trails" (Very Obvious)
+            state.objects.enemies.forEach(e => {
+                if(e.hasLightTrail) {
+                    // Spawn extra-bright particles
+                    spawnTrailParticle(e.mesh.position, 0xff0000, 0.6, 1.0, true);
+                }
+            });
 
             for(let i=state.objects.trails.length-1; i>=0; i--) {
                 const t = state.objects.trails[i];
                 t.life -= 0.05 * dt;
                 t.mesh.scale.setScalar(t.life);
-                t.mesh.material.opacity = t.life * 0.5;
+                t.mesh.material.opacity = t.life * (t.maxOpacity || 0.5);
                 if(t.life <= 0) {
                     scene.remove(t.mesh);
                     state.objects.trails.splice(i, 1);
                 }
             }
+        }
+
+        function spawnTrailParticle(pos, color, life, maxOpacity, isLight = false) {
+            const geo = new THREE.SphereBufferGeometry(isLight ? 0.7 : 0.5, 8, 8);
+            const mat = new THREE.MeshBasicMaterial({ 
+                color: color, 
+                transparent: true, 
+                opacity: maxOpacity 
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.copy(pos);
+            if(isLight) {
+                // Add a small point light logic could be heavy, so just keep material bright
+                mat.color.multiplyScalar(1.5); 
+            }
+            scene.add(mesh);
+            state.objects.trails.push({ mesh: mesh, life: life, maxOpacity: maxOpacity });
         }
 
         function updateCamera(dt) {
