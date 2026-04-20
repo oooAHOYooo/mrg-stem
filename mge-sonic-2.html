@@ -24,7 +24,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #00a2ff;
+            background-color: #adeafa;
             font-family: 'Outfit', sans-serif;
             color: white;
         }
@@ -224,19 +224,19 @@
     <div id="canvas-container"></div>
     <div id="split-line"></div>
 
-    <div id="loading-screen" style="position:fixed; inset:0; background:#00a2ff; color:#fff; display:flex; justify-content:center; align-items:center; z-index:2000;">
+    <div id="loading-screen" style="position:fixed; inset:0; background:#adeafa; color:#fff; display:flex; justify-content:center; align-items:center; z-index:2000;">
         <div style="text-align: center;">
-            <div style="font-size: 5rem;">🍄🦔</div>
-            <h1 style="letter-spacing: 10px; text-shadow: 0 0 20px rgba(0,0,0,0.5);">NINTENDO SONIC 2</h1>
-            <div style="width: 200px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 20px auto; overflow: hidden;">
-                <div id="loader-fill" style="width: 0%; height: 100%; background: #fff;"></div>
+            <div style="font-size: 5rem;">💨🦔</div>
+            <h1 style="letter-spacing: 10px; color:#111; text-shadow: 0 0 10px rgba(255,255,255,0.5);">SONIC 2</h1>
+            <div style="width: 200px; height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin: 20px auto; overflow: hidden;">
+                <div id="loader-fill" style="width: 0%; height: 100%; background: #0047ff;"></div>
             </div>
         </div>
     </div>
 
     <div id="start-screen">
         <h1 style="font-size: 6rem; font-weight: 900; margin: 0; text-shadow: 0 0 40px var(--mge-primary);">SONIC 2</h1>
-        <p style="font-size: 1.4rem; color: #888;">Nintendo Style Blue Sky | Speed Effects</p>
+        <p style="font-size: 1.4rem; color: #888;">Air Tricks | Extra Speed FX | Baby Blue Sky</p>
         <div style="display:flex; gap:20px; margin-top:40px;">
             <button class="start-btn" id="btn-1p">1 PLAYER</button>
             <button class="start-btn" id="btn-2p" style="background: linear-gradient(135deg, #f39c12, #e67e22);">2 PLAYER</button>
@@ -253,14 +253,13 @@
                     <div class="key-box" id="key-KeyA">A</div>
                     <div class="key-box" id="key-KeyS">S</div>
                     <div class="key-box" id="key-KeyD">D</div>
-                    <div class="key-box" id="key-Space">J</div>
-                    <div class="key-box" id="key-KeyE">TRICK</div>
+                    <div class="key-box" id="key-Space" style="width: 80px;">JUMP / TRICK</div>
                 </div>
             </div>
 
             <div class="top-center-stats">
                 <div class="timer-display" id="timer-display">03:00</div>
-                <div style="color: #fff; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">EASY WIN MODE</div>
+                <div style="color: #fff; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">SONIC SPEEDWAY</div>
             </div>
 
             <div class="hud-group" id="p2-ui" style="flex-direction: column; align-items: flex-end; display: none;">
@@ -271,8 +270,7 @@
                     <div class="key-box" id="key-ArrowLeft">◀</div>
                     <div class="key-box" id="key-ArrowDown">▼</div>
                     <div class="key-box" id="key-ArrowRight">▶</div>
-                    <div class="key-box" id="key-ControlRight">J</div>
-                    <div class="key-box" id="key-ShiftRight">TRICK</div>
+                    <div class="key-box" id="key-ControlRight" style="width: 80px;">JUMP / TRICK</div>
                 </div>
             </div>
         </div>
@@ -284,14 +282,14 @@
         import * as THREE from 'three';
 
         const CONFIG = {
-            ACCEL: 0.1, // Faster
-            MAX_SPEED: 2.2, // Faster max
-            DRAG: 0.97,
+            ACCEL: 0.12,
+            MAX_SPEED: 2.5,
+            DRAG: 0.98,
             GRAVITY: -0.025,
-            JUMP: 0.85,
-            MAGNET: 25, // Large collection area
+            JUMP: 0.9,
+            MAGNET: 30,
             WORLD: 2000,
-            THEME_BLUE: 0x00a2ff
+            SKY: 0xadeafa
         };
 
         const state = {
@@ -315,8 +313,8 @@
             let p = 0; const iv = setInterval(() => { p += 5; document.getElementById('loader-fill').style.width = p+'%'; if(p>=100) { clearInterval(iv); document.getElementById('loading-screen').style.display='none'; document.getElementById('start-screen').style.display='flex'; }}, 50);
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(CONFIG.THEME_BLUE);
-            scene.fog = new THREE.Fog(CONFIG.THEME_BLUE, 200, 1500);
+            scene.background = new THREE.Color(CONFIG.SKY);
+            scene.fog = new THREE.Fog(CONFIG.SKY, 300, 1800);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -326,11 +324,11 @@
             cam1 = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 5000);
             cam2 = new THREE.PerspectiveCamera(75, window.innerWidth/2/window.innerHeight, 0.1, 5000);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
             scene.add(ambientLight);
 
             sun = new THREE.DirectionalLight(0xffffff, 1.2);
-            sun.position.set(200, 500, 300);
+            sun.position.set(300, 600, 400);
             sun.castShadow = true;
             sun.shadow.mapSize.set(2048, 2048);
             scene.add(sun);
@@ -343,8 +341,21 @@
             for(let i=0; i<30; i++) spawnSeeker();
             for(let i=0; i<40; i++) createCloud();
 
-            window.addEventListener('keydown', e => { state.keys[e.code] = true; const el = document.getElementById('key-'+e.code); if(el) el.classList.add('active'); });
-            window.addEventListener('keyup', e => { state.keys[e.code] = false; const el = document.getElementById('key-'+e.code); if(el) el.classList.remove('active'); });
+            window.addEventListener('keydown', e => { 
+                const p1 = players[0], p2 = players[1];
+                // Unified Air Trick
+                if(e.code === 'Space' && state.started && !p1.onGround && p1.trick === 0) triggerTrick(0);
+                if(e.code === 'ControlRight' && state.is2P && !p2.onGround && p2.trick === 0) triggerTrick(1);
+
+                state.keys[e.code] = true; 
+                const el = document.getElementById('key-'+e.code); 
+                if(el) el.classList.add('active'); 
+            });
+            window.addEventListener('keyup', e => { 
+                state.keys[e.code] = false; 
+                const el = document.getElementById('key-'+e.code); 
+                if(el) el.classList.remove('active'); 
+            });
             
             document.getElementById('btn-1p').onclick = () => startGame(false);
             document.getElementById('btn-2p').onclick = () => startGame(true);
@@ -353,57 +364,59 @@
         }
 
         function createWorld() {
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(CONFIG.WORLD + 200, CONFIG.WORLD + 200), new THREE.MeshStandardMaterial({ color: 0x4cc910, roughness: 1 }));
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(CONFIG.WORLD + 200, CONFIG.WORLD + 200), new THREE.MeshStandardMaterial({ color: 0x5cd61e, roughness: 0.9 }));
             floor.rotation.x = -Math.PI/2;
             floor.receiveShadow = true;
             scene.add(floor);
-            // World Boundary (Nintendo Style Pipes or Rocks)
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-            const wallGeo = new THREE.BoxGeometry(CONFIG.WORLD, 20, 10);
+            // Boundary Walls
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x4cc910 });
+            const wallGeo = new THREE.BoxGeometry(CONFIG.WORLD, 30, 20);
             for(let i=0; i<4; i++) {
                 const wall = new THREE.Mesh(wallGeo, wallMat);
-                wall.position.y = 10;
+                wall.position.y = 15;
                 if(i===0) wall.position.z = CONFIG.WORLD/2;
                 if(i===1) wall.position.z = -CONFIG.WORLD/2;
                 if(i===2) { wall.position.x = CONFIG.WORLD/2; wall.rotation.y = Math.PI/2; }
                 if(i===3) { wall.position.x = -CONFIG.WORLD/2; wall.rotation.y = Math.PI/2; }
                 scene.add(wall);
             }
-
-            for(let i=0; i<100; i++) createRamp((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD, Math.random()*6);
+            for(let i=0; i<120; i++) createRamp((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD, Math.random()*6);
         }
 
         function createRamp(x, z, r) {
             const g = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const slope = new THREE.Mesh(new THREE.BoxGeometry(25, 2, 50), mat);
-            slope.rotation.x = -0.3; slope.position.set(0, 5, 25); slope.castShadow = true;
+            const slope = new THREE.Mesh(new THREE.BoxGeometry(30, 3, 60), mat);
+            slope.rotation.x = -0.3; slope.position.set(0, 7, 30); slope.castShadow = true;
             g.add(slope);
             g.position.set(x, 0, z); g.rotation.y = r;
             scene.add(g);
-            state.objects.ramps.push({ x, z, r, w: 25, h: 10, l: 50 });
+            state.objects.ramps.push({ x, z, r, w: 30, h: 12, l: 60 });
         }
 
         function createPlayerMesh(p) {
             const g = new THREE.Group();
-            // Smooth, shiny sphere
-            const sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.1, metalness: 0.4 }));
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(1.5, 32, 32), new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.1, metalness: 0.6 }));
             sphere.castShadow = true;
             g.add(sphere);
-            // Big Nintendo Eyes
-            const eyeGeo = new THREE.SphereGeometry(0.4, 16, 16);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eyeGeo = new THREE.SphereGeometry(0.5, 16, 16);
             for(let side of [-1, 1]) {
-                const eye = new THREE.Mesh(eyeGeo, eyeMat);
-                eye.position.set(side * 0.5, 0.5, 1.2);
+                const eye = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                eye.position.set(side * 0.6, 0.6, 1.2);
                 g.add(eye);
-                const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), pupilMat);
-                pupil.position.set(side * 0.5, 0.5, 1.5);
+                const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+                pupil.position.set(side * 0.6, 0.6, 1.55);
                 g.add(pupil);
             }
             scene.add(g);
             return g;
+        }
+
+        function triggerTrick(i) {
+            const p = players[i];
+            p.trick = 1; p.vel.y += 0.3; 
+            p.rings += 10; updateUI(); 
+            showNotification(`${p.type.toUpperCase()} TRICK! +10 RINGS`);
         }
 
         function spawnRing() {
@@ -415,27 +428,26 @@
 
         function spawnSeeker() {
             const g = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.OctahedronGeometry(2), new THREE.MeshStandardMaterial({ color: 0x555555 }));
+            const body = new THREE.Mesh(new THREE.OctahedronGeometry(2), new THREE.MeshStandardMaterial({ color: 0x333333 }));
             g.add(body);
-            const scanner = new THREE.Mesh(new THREE.ConeGeometry(10, 50, 16), new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.15 }));
-            scanner.rotation.x = Math.PI/2;
-            scanner.position.z = 25;
+            const scanner = new THREE.Mesh(new THREE.ConeGeometry(12, 60, 16), new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.1 }));
+            scanner.rotation.x = Math.PI/2; scanner.position.z = 30;
             g.add(scanner);
-            g.position.set((Math.random()-0.5)*CONFIG.WORLD, 10, (Math.random()-0.5)*CONFIG.WORLD);
-            g.userData = { state: 'idle', angle: Math.random()*Math.PI*2 };
+            g.position.set((Math.random()-0.5)*CONFIG.WORLD, 12, (Math.random()-0.5)*CONFIG.WORLD);
+            g.userData = { angle: Math.random()*Math.PI*2 };
             scene.add(g);
             state.objects.seekers.push(g);
         }
 
         function createCloud() {
             const g = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, flatShading: true });
-            for(let i=0; i<6; i++) {
-                const b = new THREE.Mesh(new THREE.BoxGeometry(20+Math.random()*40, 15+Math.random()*20, 20+Math.random()*40), mat);
-                b.position.set(Math.random()*30-15, Math.random()*15, Math.random()*30-15);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+            for(let i=0; i<8; i++) {
+                const b = new THREE.Mesh(new THREE.BoxGeometry(30+Math.random()*50, 20+Math.random()*30, 30+Math.random()*50), mat);
+                b.position.set(Math.random()*50-25, Math.random()*20, Math.random()*50-25);
                 g.add(b);
             }
-            g.position.set((Math.random()-0.5)*3000, 200 + Math.random()*150, (Math.random()-0.5)*3000);
+            g.position.set((Math.random()-0.5)*4000, 300 + Math.random()*200, (Math.random()-0.5)*4000);
             scene.add(g);
             state.objects.clouds.push(g);
         }
@@ -452,7 +464,7 @@
             const delta = Math.min((now - state.lastFrame)/1000, 0.1);
             state.lastFrame = now;
             if(state.started) {
-                state.objects.clouds.forEach(c => { c.position.x += delta*15; if(c.position.x > 2000) c.position.x = -2000; });
+                state.objects.clouds.forEach(c => { c.position.x += delta*20; if(c.position.x > 2500) c.position.x = -2500; });
                 updatePlayers(delta);
                 updateLogic(delta);
                 render();
@@ -463,11 +475,11 @@
         }
 
         function updatePlayers(delta) {
-            handleInput(0, 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space', 'KeyE');
-            if(state.is2P) handleInput(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ControlRight', 'ShiftRight');
+            handleInput(0, 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space');
+            if(state.is2P) handleInput(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ControlRight');
             else {
                 const t = players[0].pos.clone().add(new THREE.Vector3(-Math.sin(players[0].yaw)*12, 3, -Math.cos(players[0].yaw)*12));
-                players[1].pos.lerp(t, delta*4);
+                players[1].pos.lerp(t, delta*5);
                 players[1].obj.position.copy(players[1].pos);
                 players[1].obj.lookAt(players[0].pos);
             }
@@ -475,44 +487,41 @@
                 if(!p.onGround) p.vel.y += CONFIG.GRAVITY;
                 p.vel.x *= CONFIG.DRAG; p.vel.z *= CONFIG.DRAG;
                 p.pos.add(p.vel);
-                // Boundary Lock
-                const r = CONFIG.WORLD/2 - 10;
+                const r = CONFIG.WORLD/2 - 15;
                 p.pos.x = Math.max(-r, Math.min(r, p.pos.x));
                 p.pos.z = Math.max(-r, Math.min(r, p.pos.z));
-
                 if(p.pos.y < 1.5) { p.pos.y = 1.5; p.vel.y = 0; p.onGround = true; p.trick = 0; }
                 p.obj.position.copy(p.pos); p.obj.rotation.y = p.yaw;
                 
-                // Speed Effects
-                const speed = p.vel.length();
-                if(speed > 1.2) spawnSpeedLine(p);
-                if(p.trick > 0) { p.obj.rotation.x += delta*20; p.obj.rotation.z += delta*10; }
-                p.obj.children[0].scale.set(1 + speed*0.1, 1 - speed*0.1, 1 + speed*0.1); // Squash stretch logic
+                const s = p.vel.length();
+                if(s > 1.0) spawnSpeedLine(p, s);
+                if(p.trick > 0) { p.obj.rotation.x += delta*25; p.obj.rotation.z += delta*15; }
+                p.obj.children[0].scale.set(1 + s*0.12, 1 - s*0.12, 1 + s*0.12);
             });
-            // Update Speed Lines
             for(let i=state.objects.speedLines.length-1; i>=0; i--) {
                 const l = state.objects.speedLines[i];
-                l.material.opacity -= 0.05;
+                l.material.opacity -= 0.08;
+                l.position.add(l.userData.v);
                 if(l.material.opacity <= 0) { scene.remove(l); state.objects.speedLines.splice(i,1); }
             }
         }
 
-        function spawnSpeedLine(p) {
-            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
-            const line = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 5), mat);
-            line.position.copy(p.pos).add(new THREE.Vector3((Math.random()-0.5)*3, (Math.random()-0.5)*3, (Math.random()-0.5)*3));
+        function spawnSpeedLine(p, s) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+            const line = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 6 * s), mat);
+            line.position.copy(p.pos).add(new THREE.Vector3((Math.random()-0.5)*5, (Math.random()-0.5)*5, (Math.random()-0.5)*5));
             line.lookAt(p.pos.clone().add(p.vel));
+            line.userData = { v: p.vel.clone().multiplyScalar(-0.2) };
             scene.add(line);
             state.objects.speedLines.push(line);
         }
 
-        function handleInput(i, f, b, l, r, j, t) {
+        function handleInput(i, f, b, l, r, j) {
             const p = players[i];
-            if(state.keys[l]) p.yaw += 0.09; if(state.keys[r]) p.yaw -= 0.09;
+            if(state.keys[l]) p.yaw += 0.1; if(state.keys[r]) p.yaw -= 0.1;
             if(state.keys[f]) { p.vel.x += Math.sin(p.yaw)*CONFIG.ACCEL; p.vel.z += Math.cos(p.yaw)*CONFIG.ACCEL; }
             if(state.keys[b]) { p.vel.x -= Math.sin(p.yaw)*CONFIG.ACCEL; p.vel.z -= Math.cos(p.yaw)*CONFIG.ACCEL; }
             if(state.keys[j] && p.onGround) { p.vel.y = CONFIG.JUMP; p.onGround = false; }
-            if(state.keys[t] && !p.onGround && p.trick === 0) { p.trick = 1; p.vel.y += 0.25; showNotification("NINTENDO TRICK! +10 RINGS"); p.rings += 10; updateUI(); }
         }
 
         function updateLogic(delta) {
@@ -520,23 +529,23 @@
                 const r = state.objects.rings[i];
                 players.forEach(p => {
                     const d = r.position.distanceTo(p.pos);
-                    if(d < CONFIG.MAGNET) { r.position.lerp(p.pos, 0.3); if(d < 3.5) { scene.remove(r); state.objects.rings.splice(i,1); p.rings++; updateUI(); } }
+                    if(d < CONFIG.MAGNET) { r.position.lerp(p.pos, 0.35); if(d < 4) { scene.remove(r); state.objects.rings.splice(i,1); p.rings++; updateUI(); } }
                 });
             }
             state.objects.seekers.forEach(s => {
                 s.userData.angle += delta; s.position.x += Math.sin(s.userData.angle)*0.2;
-                players.forEach(p => { if(s.position.distanceTo(p.pos) < 6) { p.rings = Math.max(0, p.rings-10); updateUI(); showNotification("HURT!"); }});
+                players.forEach(p => { if(s.position.distanceTo(p.pos) < 6) { p.rings = Math.max(0, p.rings-10); updateUI(); showNotification("HIT!"); }});
             });
             if (state.is2P) {
                 const p0 = players[0], p1 = players[1], d = p0.pos.distanceTo(p1.pos);
-                if (d < 3.0) {
+                if (d < 3.5) {
                     const diff = p0.pos.clone().sub(p1.pos).normalize();
-                    p0.vel.add(diff.clone().multiplyScalar(0.7)); p1.vel.add(diff.clone().multiplyScalar(-0.7));
+                    p0.vel.add(diff.clone().multiplyScalar(0.8)); p1.vel.add(diff.clone().multiplyScalar(-0.8));
                     const now = performance.now();
                     if (!state.lastPvPHit || now - state.lastPvPHit > 1000) {
                         state.lastPvPHit = now;
-                        if (p0.pos.y > p1.pos.y + 0.5) { p1.rings -= Math.min(p1.rings,15); p0.rings += 15; showNotification("SONIC STOLE!"); }
-                        else if (p1.pos.y > p0.pos.y + 0.5) { p0.rings -= Math.min(p0.rings,15); p1.rings += 15; showNotification("TAILS STOLE!"); }
+                        if (p0.pos.y > p1.pos.y + 0.5) { p1.rings -= Math.min(p1.rings,20); p0.rings += 20; showNotification("SONIC SMASH!"); }
+                        else if (p1.pos.y > p0.pos.y + 0.5) { p0.rings -= Math.min(p0.rings,20); p1.rings += 20; showNotification("TAILS SMASH!"); }
                         updateUI();
                     }
                 }
@@ -553,7 +562,7 @@
             }
         }
 
-        function follow(c, p) { c.position.lerp(p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*25, 12, -Math.cos(p.yaw)*25)), 0.1); c.lookAt(p.pos); }
+        function follow(c, p) { c.position.lerp(p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*28, 14, -Math.cos(p.yaw)*28)), 0.12); c.lookAt(p.pos); }
         function updateUI() { document.getElementById('p1-rings').innerText = players[0].rings; if(state.is2P) document.getElementById('p2-rings').innerText = players[1].rings; }
         function updateTimerUI() { const m = Math.floor(state.time/60), s = state.time%60; document.getElementById('timer-display').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
         function showNotification(t) { const n = document.getElementById('notification'); n.innerText = t; n.classList.add('active'); setTimeout(() => n.classList.remove('active'), 2000); }
