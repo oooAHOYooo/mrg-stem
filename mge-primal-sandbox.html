@@ -267,6 +267,7 @@
                 <button class="tool-btn" data-tool="spawn" data-entity="sphere" title="Physics Sphere">⚽</button>
                 <button class="tool-btn" data-tool="spawn" data-entity="cube" title="Physics Cube">📦</button>
                 <button class="tool-btn" data-tool="spawn" data-entity="bot" title="Spawn Bot">🤖</button>
+                <button class="tool-btn" data-tool="spawn" data-entity="sonic" title="Spawn Sonic">🦔</button>
                 <button class="tool-btn" data-tool="delete" title="Eraser">🧹</button>
             </div>
         </div>
@@ -469,6 +470,10 @@
                 mesh = createSimpleBot(pos);
                 physicsObjects.push(mesh);
                 return;
+            } else if (currentEntity === 'sonic') {
+                mesh = createSonicBall(pos);
+                physicsObjects.push(mesh);
+                return;
             }
 
             mesh.position.copy(pos);
@@ -483,6 +488,32 @@
 
             scene.add(mesh);
             physicsObjects.push(mesh);
+        }
+
+        function createSonicBall(pos) {
+            const group = new THREE.Group();
+            // Blue Sonic body
+            const body = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({color: 0x0047ff}));
+            body.position.y = 1;
+            group.add(body);
+
+            // Spikes
+            const spikeGeo = new THREE.ConeGeometry(0.3, 1, 6);
+            spikeGeo.rotateX(Math.PI/2);
+            for(let i=0; i<3; i++) {
+                const s = new THREE.Mesh(spikeGeo, new THREE.MeshStandardMaterial({color: 0x0047ff}));
+                s.position.set(0, 1.2, 0.4 + i*0.4);
+                group.add(s);
+            }
+
+            group.position.copy(pos);
+            group.userData.velocity = new THREE.Vector3(0,0,0);
+            group.userData.isSonic = true;
+            group.userData.isPhysics = true;
+            group.userData.radius = 1;
+
+            scene.add(group);
+            return group;
         }
 
         function createSimpleBot(pos) {
