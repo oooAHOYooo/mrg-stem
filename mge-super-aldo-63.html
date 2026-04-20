@@ -27,6 +27,13 @@
             color: white;
         }
 
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+
         #canvas-container {
             position: absolute;
             top: 0;
@@ -279,9 +286,6 @@
         <div class="close-btn" id="close-popup">GOT IT!</div>
     </div>
 
-    <!-- Legacy Scripts for Maximum Compatibility on file:/// -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
@@ -317,9 +321,10 @@
             ]
         };
 
-        let scene, camera, renderer, world, clock = new THREE.Clock();
-        let player, playerBody, keys = {}, isPaused = false;
+        let scene, camera, renderer, clock = new THREE.Clock();
+        let player, keys = {}, isPaused = false;
         let pLinks = [], enemies = [], joyData = null;
+        let pVelocity = new THREE.Vector3();
 
         class EnemyEntity {
             constructor(x, z) {
@@ -337,19 +342,16 @@
                 mesh.add(eye2);
 
                 this.mesh = mesh;
-                this.body = new CANNON.Body({ mass: 0.2, position: new CANNON.Vec3(x, 10, z), shape: new CANNON.Sphere(1.2) });
-                world.addBody(this.body);
+                this.mesh.position.set(x, 1.2, z);
             }
-            update() {
+            update(dt) {
                 if(!this.stomped) {
-                    this.mesh.position.copy(this.body.position);
-                    this.mesh.quaternion.copy(this.body.quaternion);
+                    this.mesh.rotation.y += dt;
                 }
             }
             stomp() {
                 if(this.stomped) return;
                 this.stomped = true;
-                world.remove(this.body);
                 gsap.to(this.mesh.scale, { y: 0.1, x: 2, z: 2, duration: 0.3, ease: "elastic.out(1,0.3)", onComplete: () => {
                     showFact();
                     gsap.to(this.mesh.scale, { x: 0, y: 0, z: 0, delay: 1.5, duration: 0.5, onComplete: () => scene.remove(this.mesh) });
@@ -370,9 +372,6 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-            world = new CANNON.World();
-            world.gravity.set(0, CONFIG.gravity, 0);
 
             // Lighting
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -416,11 +415,6 @@
             island.receiveShadow = true; island.castShadow = true;
             scene.add(island);
 
-            const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Cylinder(100, 105, 10, 32) });
-            groundBody.position.y = -5;
-            groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
-            world.addBody(groundBody);
-
             // Water
             const water = new THREE.Mesh(new THREE.CircleGeometry(500, 32), new THREE.MeshStandardMaterial({ color: 0x0369a1, roughness: 0.1, transparent: true, opacity: 0.8 }));
             water.rotation.x = -Math.PI / 2;
@@ -447,7 +441,6 @@
             const keep = new THREE.Mesh(new THREE.BoxGeometry(25, 20, 25), stone);
             keep.position.y = 10; keep.receiveShadow = true; keep.castShadow = true;
             group.add(keep);
-            world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 10, 0), shape: new CANNON.Box(new CANNON.Vec3(12.5, 10, 12.5)) }));
 
             // 4 Towers
             const pos = [[12.5,12.5], [12.5,-12.5], [-12.5,12.5], [-12.5,-12.5]];
@@ -458,16 +451,12 @@
                 const r = new THREE.Mesh(new THREE.ConeGeometry(5, 10, 12), roof);
                 r.position.set(p[0], 35, p[1]);
                 group.add(r);
-                world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(p[0], 15, p[1]), shape: new CANNON.Cylinder(4, 4, 30, 12) }));
             });
 
             // Drawbridge
             const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 15), new THREE.MeshStandardMaterial({ color: 0x78350f }));
             bridge.position.set(0, 0.5, 20); bridge.rotation.x = 0.05;
             group.add(bridge);
-            const brB = new CANNON.Body({ mass: 0, position: new CANNON.Vec3(0, 0.5, 20), shape: new CANNON.Box(new CANNON.Vec3(5, 0.5, 7.5)) });
-            brB.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), 0.05);
-            world.addBody(brB);
 
             scene.add(group);
         }
@@ -490,7 +479,6 @@
             p.position.set(x, 0, z);
             scene.add(p);
             pLinks.push(p);
-            world.addBody(new CANNON.Body({ mass: 0, position: new CANNON.Vec3(x, 1, z), shape: new CANNON.Cylinder(3, 3, 2, 8) }));
         }
 
         function spawnPlayer() {
@@ -527,8 +515,7 @@
             player.add(hatBrim);
 
             scene.add(player);
-            playerBody = new CANNON.Body({ mass: 1, position: new CANNON.Vec3(0, 10, 30), shape: new CANNON.Box(new CANNON.Vec3(0.6, 1.2, 0.6)), fixedRotation: true });
-            world.addBody(playerBody);
+            player.position.set(0, 0, 30);
         }
 
         function initControls() {
@@ -555,8 +542,6 @@
             const dt = Math.min(clock.getDelta(), 0.1);
 
             if(!isPaused) {
-                world.step(1/60, dt);
-
                 let mx = 0, mz = 0;
                 if(keys.KeyW || keys.ArrowUp) mz -= 1;
                 if(keys.KeyS || keys.ArrowDown) mz += 1;
@@ -567,19 +552,34 @@
                 if(mx !== 0 || mz !== 0) {
                     const camYaw = camera.rotation.y;
                     const finalAngle = camYaw + Math.atan2(mx, mz);
-                    playerBody.velocity.x = Math.sin(finalAngle) * CONFIG.speed;
-                    playerBody.velocity.z = Math.cos(finalAngle) * CONFIG.speed;
+                    pVelocity.x = Math.sin(finalAngle) * CONFIG.speed;
+                    pVelocity.z = Math.cos(finalAngle) * CONFIG.speed;
                     
                     const diff = ((finalAngle - player.rotation.y) % (Math.PI * 2) + Math.PI * 3) % (Math.PI * 2) - Math.PI;
                     player.rotation.y += diff * CONFIG.rotSpeed;
                 } else {
-                    playerBody.velocity.x *= 0.8; playerBody.velocity.z *= 0.8;
+                    pVelocity.x *= 0.8; pVelocity.z *= 0.8;
                 }
 
-                if(keys.Space && Math.abs(playerBody.velocity.y) < 0.5) playerBody.velocity.y = CONFIG.jumpForce;
+                // Custom constraints
+                if(player.position.x > 90) player.position.x = 90;
+                if(player.position.x < -90) player.position.x = -90;
+                if(player.position.z > 90) player.position.z = 90;
+                if(player.position.z < -90) player.position.z = -90;
 
-                // Sync
-                player.position.set(playerBody.position.x, playerBody.position.y - 1.2, playerBody.position.z);
+                // Move Player Horizontally
+                player.position.x += pVelocity.x * dt;
+                player.position.z += pVelocity.z * dt;
+
+                // Move Player Vertically
+                pVelocity.y += CONFIG.gravity * dt;
+                player.position.y += pVelocity.y * dt;
+
+                if (player.position.y <= 0) {
+                    player.position.y = 0;
+                    if(pVelocity.y < 0) pVelocity.y = 0;
+                    if(keys.Space) pVelocity.y = CONFIG.jumpForce;
+                }
                 
                 // Smooth Third Person Camera
                 const offsetDist = 20;
@@ -601,11 +601,11 @@
                 camera.lookAt(window.currentLookat);
 
                 enemies.forEach(e => {
-                    e.update();
+                    e.update(dt);
                     if(!e.stomped) {
                         const d = player.position.distanceTo(e.mesh.position);
-                        if(d < 2 && player.position.y > e.mesh.position.y + 0.8 && playerBody.velocity.y < -1) {
-                            e.stomp(); playerBody.velocity.y = CONFIG.jumpForce * 0.6;
+                        if(d < 2 && player.position.y > e.mesh.position.y + 0.8 && pVelocity.y < 0) {
+                            e.stomp(); pVelocity.y = CONFIG.jumpForce * 0.6;
                         }
                     }
                 });
@@ -618,7 +618,7 @@
                     if(player.position.distanceTo(p.position) < 4) window.location.href = p.userData.url;
                 });
 
-                if(playerBody.position.y < -30) playerBody.position.set(0, 10, 30);
+                });
             }
 
             renderer.render(scene, camera);

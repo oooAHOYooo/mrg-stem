@@ -10,6 +10,21 @@
 
 const mgeChangelog = [
     {
+        date: '2026-04-20',
+        title: 'New Sequel: Sonic 2!',
+        gameId: 'sonic-2',
+        icon: '🦔',
+        description: 'The faster, better, and bigger sequel to Sonic Speed!',
+        updates: [
+            'Play as both Sonic and Tails in a low-poly 3D world',
+            'Full 3-minute challenge timer with ring collection',
+            'Dynamic Day & Night cycle affects sky and lighting',
+            'Transform into Super Sonic at 100 rings',
+            'Epic Boss Battle with the Eggmobile triggers at 100 rings'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-04-15',
         title: 'New Hub: Super Aldo 63!',
         gameId: 'super-aldo-63',
