@@ -138,16 +138,21 @@
             }
         }
 
-        .experiments-grid {
+        .dashboard-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 280px 1fr;
             gap: 2rem;
-            max-width: 1200px;
-            margin: 3rem auto;
+            max-width: 1400px;
+            margin: 2rem auto;
             padding: 0 2rem;
+            padding-top: 60px;
         }
 
-        .experiment-card {
+        .navbar-top .navbar-menu {
+            display: flex !important;
+            align-items: center;
+            gap: 15px;
+        }.experiment-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 25px;
@@ -480,8 +485,20 @@
                     <div class="mge-logo">📦</div>
                     <h1>Misc experiments</h1>
                     <div class="subtitle">The Archive of Curious Creations</div>
-                    <a href="mge.html" class="experiment-link" style="margin-top: 1rem; background: rgba(255,255,255,0.2); border: 1px solid white;">← Back to Main MGE</a>
+                    
+                    <!-- NEW Hero Toggle -->
+                    <div class="hero-actions" style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 15px; position: relative; z-index: 10;">
+                        <button class="hero-wake-lock-btn" id="hero-wake-lock-toggle" style="background: rgba(255,255,255,0.15); border: 1.5px solid white; color: white; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease; backdrop-filter: blur(5px);">
+                            <span class="hero-lock-icon">☕</span>
+                            <span class="hero-lock-text">Classroom Mode</span>
+                        </button>
+                    </div>
                 </div>
+
+                <style>
+                    .hero-wake-lock-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+                    .hero-wake-lock-btn.active { background: #34d399 !important; color: #064e3b !important; border-color: white !important; }
+                </style>
 
                 <p class="mge-tagline">
                     This is where we keep our older experiments, experimental prototypes, and miscellaneous tools. 
@@ -805,17 +822,26 @@
             let wakeLock = null;
             const toggleBtn = document.getElementById('wake-lock-toggle');
             const sidebarToggle = document.getElementById('sidebar-wake-lock-toggle');
+            const heroToggle = document.getElementById('hero-wake-lock-toggle');
             const lockText = toggleBtn.querySelector('.lock-text');
             const lockIcon = toggleBtn.querySelector('.lock-icon');
+
+            const heroLockText = heroToggle.querySelector('.hero-lock-text');
+            const heroLockIcon = heroToggle.querySelector('.hero-lock-icon');
 
             async function requestWakeLock() {
                 try {
                     if ('wakeLock' in navigator) {
                         wakeLock = await navigator.wakeLock.request('screen');
-                        toggleBtn.classList.add('active');
+                        
+                        [toggleBtn, heroToggle].forEach(el => el.classList.add('active'));
                         sidebarToggle.checked = true;
+                        
                         lockText.innerText = "System Active";
                         lockIcon.innerText = "⚡";
+                        
+                        heroLockText.innerText = "System Active";
+                        heroLockIcon.innerText = "⚡";
                     }
                 } catch (err) {
                     console.error(err);
@@ -827,18 +853,24 @@
                     wakeLock.release();
                     wakeLock = null;
                 }
-                toggleBtn.classList.remove('active');
+                [toggleBtn, heroToggle].forEach(el => el.classList.remove('active'));
                 sidebarToggle.checked = false;
+                
                 lockText.innerText = "Stay Awake";
                 lockIcon.innerText = "☕";
+                
+                heroLockText.innerText = "Classroom Mode";
+                heroLockIcon.innerText = "☕";
             }
 
-            toggleBtn.addEventListener('click', () => {
-                if (wakeLock === null) {
-                    requestWakeLock();
-                } else {
-                    releaseWakeLock();
-                }
+            [toggleBtn, heroToggle].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (wakeLock === null) {
+                        requestWakeLock();
+                    } else {
+                        releaseWakeLock();
+                    }
+                });
             });
 
             sidebarToggle.addEventListener('change', () => {
