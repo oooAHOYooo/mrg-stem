@@ -515,6 +515,44 @@
                     if(s.position.distanceTo(s.userData.target.pos) < 5) { s.userData.target.rings = Math.max(0, s.userData.target.rings-20); s.userData.state = 'idle'; updateUI(); }
                 }
             });
+
+            // --- PvP COLLISION & STEALING ---
+            if (state.is2P) {
+                const p0 = players[0];
+                const p1 = players[1];
+                const d = p0.pos.distanceTo(p1.pos);
+                
+                if (d < 2.5) { // Collision radius
+                    const diff = p0.pos.clone().sub(p1.pos).normalize();
+                    const bounceStrength = 0.5;
+                    
+                    // Apply Bounce
+                    p0.vel.add(diff.clone().multiplyScalar(bounceStrength));
+                    p1.vel.add(diff.clone().multiplyScalar(-bounceStrength));
+                    
+                    // Steal Logic (Cooldown based on time)
+                    const now = performance.now();
+                    if (!state.lastPvPHit || now - state.lastPvPHit > 1000) {
+                        state.lastPvPHit = now;
+                        
+                        // Who stole? The higher player
+                        if (p0.pos.y > p1.pos.y + 0.5) {
+                            const stolen = Math.min(p1.rings, 10);
+                            p1.rings -= stolen;
+                            p0.rings += stolen;
+                            showNotification("SONIC STOLE RINGS!");
+                        } else if (p1.pos.y > p0.pos.y + 0.5) {
+                            const stolen = Math.min(p0.rings, 10);
+                            p0.rings -= stolen;
+                            p1.rings += stolen;
+                            showNotification("TAILS STOLE RINGS!");
+                        } else {
+                            showNotification("BOUNCE!");
+                        }
+                        updateUI();
+                    }
+                }
+            }
         }
 
         function render() {
