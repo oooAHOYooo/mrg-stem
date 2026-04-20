@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonic 2 | MGE STEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mge-primary: #0047ff;
+            --mge-secondary: #2c3e50;
+            --mge-accent: #f1c40f;
+            --mge-gold: #ffcc00;
+            --mge-tails: #ffcc00;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.7);
+            --neon-blue: 0 0 15px rgba(0, 71, 255, 0.6);
+            --neon-gold: 0 0 15px rgba(255, 204, 0, 0.6);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: auto;
+        }
+
+        .mge-badge {
+            background: linear-gradient(135deg, var(--mge-primary), #5dade2);
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-weight: 900;
+            font-size: 1.5rem;
+            box-shadow: var(--neon-blue);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .top-center-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-display {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 10px 30px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            font-size: 2rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .super-meter {
+            width: 250px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .super-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #ffcc00);
+            box-shadow: 0 0 10px #ffcc00;
+            transition: width 0.3s;
+        }
+
+        /* --- HUD ELEMENTS --- */
+        .hud-card {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 140px;
+        }
+
+        .hud-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .hud-value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        #rings-hud { color: var(--mge-accent); text-shadow: 0 0 10px var(--mge-accent); }
+        #speed-hud { color: #5dade2; text-shadow: 0 0 10px #5dade2; }
+
+        .side-hud {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* --- ANNOUNCEMENTS --- */
+        #notification {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            padding: 30px 60px;
+            border-radius: 100px;
+            background: rgba(255, 247, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 4px solid var(--mge-gold);
+            font-size: 3rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px var(--mge-gold);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 500;
+            text-align: center;
+        }
+
+        #notification.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* --- LOADING & START --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0047ff 0%, #001a5e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 1s;
+        }
+
+        .loader-content { text-align: center; }
+        .loader-logo { font-size: 6rem; margin-bottom: 20px; }
+        .loader-bar {
+            width: 300px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        .loader-fill { width: 0%; height: 100%; background: #fff; box-shadow: 0 0 15px #fff; transition: width 0.1s; }
+
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+            backdrop-filter: blur(15px);
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #0047ff, #00a2ff);
+            border: none;
+            color: white;
+            padding: 20px 60px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 71, 255, 0.5);
+            transition: all 0.3s;
+            pointer-events: auto;
+            margin-top: 30px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 71, 255, 0.7);
+        }
+
+        .nav-back {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            pointer-events: auto;
+            text-decoration: none;
+            color: white;
+            background: var(--glass-dark);
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+
+        .nav-back:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        /* --- KEYBOARD OVERLAY --- */
+        .controls-hint {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            display: flex;
+            gap: 15px;
+            pointer-events: none;
+        }
+
+        .key-hint {
+            background: var(--glass-dark);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key-cap {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 900;
+            color: var(--mge-accent);
+        }
+
+        /* Super State */
+        body.super-sonic #notification {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            text-shadow: 0 0 30px #fff;
+        }
+
+        #super-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 0px rgba(255, 204, 0, 0);
+            transition: box-shadow 1s;
+            z-index: 80;
+        }
+
+        body.super-sonic #super-overlay {
+            box-shadow: inset 0 0 200px rgba(255, 204, 0, 0.4);
+            animation: pulse-gold 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-gold {
+            0%, 100% { box-shadow: inset 0 0 150px rgba(255, 204, 0, 0.3); }
+            50% { box-shadow: inset 0 0 250px rgba(255, 204, 0, 0.6); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="super-overlay"></div>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">🦔💨</div>
+            <h1 style="letter-spacing: 5px; font-weight: 900;">SONIC 2</h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; text-transform: uppercase;">Building the Green Hill World...</p>
+            <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <h1 style="font-size: 5rem; font-weight: 900; margin: 0; text-shadow: 0 0 30px var(--mge-primary);">SONIC 2</h1>
+        <p style="font-size: 1.2rem; color: #aaa; margin-top: 0;">Collect 100 rings to go SUPER and face the BOSS!</p>
+        <button class="start-btn" id="start-btn">START SESSION</button>
+        <div style="margin-top: 40px; color: #666; font-size: 0.8rem;">Low-Poly 3D Experiment | MGE STEM Arcade</div>
+    </div>
+
+    <div id="ui-root">
+        <div class="header">
+            <div class="side-hud">
+                <div class="mge-badge">SONIC 2</div>
+                <div class="hud-card">
+                    <span class="hud-label">Rings</span>
+                    <span class="hud-value" id="rings-hud">0</span>
+                </div>
+            </div>
+
+            <div class="top-center-stats">
+                <div class="timer-display" id="timer-display">03:00</div>
+                <div class="hud-label">Super Progress</div>
+                <div class="super-meter">
+                    <div class="super-fill" id="super-fill"></div>
+                </div>
+            </div>
+
+            <div class="side-hud">
+                <a href="mge.html" class="nav-back">EXIT TO HUB</a>
+                <div class="hud-card" style="align-items: flex-end;">
+                    <span class="hud-label">Speed</span>
+                    <span class="hud-value" id="speed-hud">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="notification">SUPER SONIC ACTIVE!</div>
+
+        <div class="controls-hint">
+            <div class="key-hint"><span class="key-cap">WASD</span> MOVE</div>
+            <div class="key-hint"><span class="key-cap">SPACE</span> JUMP</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const CONFIG = {
+            PLAYER_ACCEL: 0.05,
+            PLAYER_MAX_SPEED: 1.2,
+            SUPER_ACCEL: 0.12,
+            SUPER_MAX_SPEED: 4.0,
+            DRAG: 0.96,
+            GRAVITY: -0.02,
+            JUMP_FORCE: 0.7,
+            RINGS_FOR_SUPER: 100,
+            GAME_DURATION: 180, // 3 minutes
+            DAY_NIGHT_SPEED: 0.005, // Cycle speed
+            WORLD_SIZE: 1000,
+            CHECKER_RES: 32
+        };
+
+        const state = {
+            started: false,
+            time: CONFIG.GAME_DURATION,
+            rings: 0,
+            isSuper: false,
+            speed: 0,
+            velocity: new THREE.Vector3(),
+            pos: new THREE.Vector3(0, 1, 0),
+            onGround: false,
+            keys: {},
+            yaw: 0,
+            dayTime: 0, // 0 to Math.PI * 2
+            bossActive: false,
+            lastFrame: performance.now(),
+            objects: {
+                rings: [],
+                enemies: [],
+                ramps: [],
+                platforms: []
+            }
+        };
+
+        let scene, camera, renderer, sun, moon, ambientLight, floor;
+        let player, tails, boss;
+
+        // --- INITIALIZATION ---
+        function init() {
+            // Loading Screen Animation
+            const loaderFill = document.getElementById('loader-fill');
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('loading-screen').style.display = 'none';
+                            document.getElementById('start-screen').style.display = 'flex';
+                        }, 1000);
+                    }, 500);
+                }
+                loaderFill.style.width = progress + '%';
+            }, 50);
+
+            // Three.js Setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x87ceeb, 100, 800);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Lighting
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            sun = new THREE.DirectionalLight(0xffffff, 1.0);
+            sun.position.set(100, 200, 100);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.left = -500;
+            sun.shadow.camera.right = 500;
+            sun.shadow.camera.top = 500;
+            sun.shadow.camera.bottom = -500;
+            scene.add(sun);
+
+            moon = new THREE.DirectionalLight(0x4444ff, 0.2);
+            scene.add(moon);
+
+            // World Generation
+            createWorld();
+            createPlayer();
+            createTails();
+            
+            // Random Rings & Enemies
+            for(let i=0; i<300; i++) spawnRing();
+            for(let i=0; i<30; i++) spawnEnemy();
+
+            // Event Listeners
+            window.addEventListener('keydown', e => state.keys[e.code] = true);
+            window.addEventListener('keyup', e => state.keys[e.code] = false);
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('start-btn').onclick = startGame;
+
+            animate();
+        }
+
+        function createWorld() {
+            // Green Checkered Floor
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            const step = 64;
+            for(let x=0; x<512; x+=step) {
+                for(let y=0; y<512; y+=step) {
+                    ctx.fillStyle = ((x+y)/step) % 2 === 0 ? '#32CD32' : '#228B22';
+                    ctx.fillRect(x, y, step, step);
+                }
+            }
+            const floorTex = new THREE.CanvasTexture(canvas);
+            floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+            floorTex.repeat.set(100, 100);
+
+            const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.WORLD_SIZE, CONFIG.WORLD_SIZE);
+            const floorMat = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.8 });
+            floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Add some ramps
+            for(let i=0; i<15; i++) {
+                createRamp(
+                    (Math.random()-0.5) * 800,
+                    (Math.random()-0.5) * 800,
+                    Math.random() * Math.PI * 2
+                );
+            }
+        }
+
+        function createRamp(x, z, rotation) {
+            const width = 20, height = 15, length = 30;
+            const group = new THREE.Group();
+            
+            // The ramp incline
+            const inclineGeo = new THREE.BoxBufferGeometry(width, 1, length);
+            const inclineMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, flatShading: true });
+            const incline = new THREE.Mesh(inclineGeo, inclineMat);
+            
+            const angle = Math.atan2(height, length);
+            incline.rotation.x = -angle;
+            incline.position.y = height / 2;
+            incline.position.z = length / 2;
+            group.add(incline);
+
+            // Flat top platform
+            const topGeo = new THREE.BoxBufferGeometry(width, 1, 15);
+            const top = new THREE.Mesh(topGeo, inclineMat);
+            top.position.y = height;
+            top.position.z = length + 7.5;
+            group.add(top);
+
+            group.position.set(x, 0, z);
+            group.rotation.y = rotation;
+            scene.add(group);
+            
+            state.objects.ramps.push({ 
+                mesh: group, 
+                width, 
+                height, 
+                length, 
+                angle,
+                x, z, rot: rotation 
+            });
+        }
+
+        function createPlayer() {
+            const group = new THREE.Group();
+            
+            // Sonic is a blue ball
+            const bodyGeo = new THREE.SphereBufferGeometry(1.2, 12, 12);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0047ff, flatShading: true });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            group.add(body);
+
+            // Spikes (low poly)
+            const spikeGeo = new THREE.ConeBufferGeometry(0.4, 1.5, 6);
+            spikeGeo.translate(0, 0.75, 0);
+            spikeGeo.rotateX(Math.PI / 2);
+            for(let i=0; i<3; i++) {
+                const spike = new THREE.Mesh(spikeGeo, bodyMat);
+                spike.position.set(0, 0.4, 0.5 + i*0.4);
+                spike.rotation.x = 0.5 + i*0.2;
+                group.add(spike);
+            }
+
+            scene.add(group);
+            player = group;
+            player.userData = { body };
+        }
+
+        function createTails() {
+            const group = new THREE.Group();
+            // Tails is a yellow ball
+            const bodyGeo = new THREE.SphereBufferGeometry(0.8, 12, 12);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, flatShading: true });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            group.add(body);
+
+            // Two tails
+            const tailGeo = new THREE.ConeBufferGeometry(0.3, 1.5, 6);
+            tailGeo.translate(0, 0.75, 0);
+            tailGeo.rotateX(Math.PI * 0.7);
+            const t1 = new THREE.Mesh(tailGeo, bodyMat);
+            t1.position.set(-0.3, -0.2, -0.6);
+            group.add(t1);
+            const t2 = new THREE.Mesh(tailGeo, bodyMat);
+            t2.position.set(0.3, -0.2, -0.6);
+            group.add(t2);
+
+            scene.add(group);
+            tails = group;
+            tails.position.set(-4, 1.5, -4);
+        }
+
+        function createBoss() {
+            const group = new THREE.Group();
+            // Round Eggmobile base
+            const bodyGeo = new THREE.SphereBufferGeometry(10, 16, 12, 0, Math.PI*2, 0, Math.PI/2);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.2 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.rotation.x = Math.PI;
+            group.add(body);
+
+            // Glass cockpit
+            const glassGeo = new THREE.SphereBufferGeometry(8, 16, 12, 0, Math.PI*2, 0, Math.PI/2);
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0.4 });
+            const glass = new THREE.Mesh(glassGeo, glassMat);
+            glass.position.y = 2;
+            group.add(glass);
+
+            // Boss spikes / drills
+            const drillGeo = new THREE.ConeBufferGeometry(2, 6, 8);
+            const drillMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 1 });
+            const drill = new THREE.Mesh(drillGeo, drillMat);
+            drill.position.y = -12;
+            drill.rotation.x = Math.PI;
+            group.add(drill);
+
+            group.position.set(0, 50, 0); // High up initially
+            scene.add(group);
+            boss = group;
+            boss.userData = { hp: 5, active: true, phase: 0 };
+        }
+
+        function spawnRing() {
+            const geo = new THREE.TorusBufferGeometry(0.8, 0.2, 8, 16);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 0.5 });
+            const ring = new THREE.Mesh(geo, mat);
+            ring.position.set(
+                (Math.random()-0.5) * 900,
+                1.5,
+                (Math.random()-0.5) * 900
+            );
+            // Some rings on platforms/higher up
+            if(Math.random() > 0.8) ring.position.y = 15;
+            
+            scene.add(ring);
+            state.objects.rings.push(ring);
+        }
+
+        function spawnEnemy() {
+            const group = new THREE.Group();
+            // Motobug style
+            const body = new THREE.Mesh(new THREE.BoxBufferGeometry(3, 2, 4), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+            group.add(body);
+            const eye = new THREE.Mesh(new THREE.SphereBufferGeometry(0.5, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+            eye.position.set(0, 0.5, 2);
+            group.add(eye);
+
+            group.position.set(
+                (Math.random()-0.5) * 800,
+                1.0,
+                (Math.random()-0.5) * 800
+            );
+            scene.add(group);
+            state.objects.enemies.push(group);
+        }
+
+        // --- GAME LOOP ---
+        function startGame() {
+            state.started = true;
+            document.getElementById('start-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('start-screen').style.display = 'none', 500);
+            
+            // Start Timer
+            setInterval(() => {
+                if(state.started && state.time > 0) {
+                    state.time--;
+                    updateTimerUI();
+                    if(state.time === 0) endGame();
+                }
+            }, 1000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = performance.now();
+            const delta = Math.min((now - state.lastFrame) / 1000, 0.1);
+            state.lastFrame = now;
+
+            if (state.started) {
+                updateDayNight(delta);
+                updateMovement(delta);
+                updateCollisions();
+                updateTailsFollow(delta);
+                updateBossLogic(delta);
+                updateCamera();
+                updateUI();
+            } else {
+                // Idle rotation for start screen
+                if(player) player.rotation.y += delta * 0.5;
+                if(renderer && scene && camera) renderer.render(scene, camera);
+            }
+        }
+
+        function updateDayNight(delta) {
+            state.dayTime += CONFIG.DAY_NIGHT_SPEED * delta * 60; // Faster for dramatic effect
+            const cycle = state.dayTime;
+
+            // Sun position
+            sun.position.x = Math.sin(cycle) * 300;
+            sun.position.y = Math.cos(cycle) * 300;
+            sun.position.z = Math.cos(cycle) * 100;
+
+            // Moon opposite
+            moon.position.x = -sun.position.x;
+            moon.position.y = -sun.position.y;
+            moon.position.z = -sun.position.z;
+
+            // Sky Colors
+            const isDay = sun.position.y > 0;
+            const intensity = Math.max(0, sun.position.y / 300);
+            
+            // Smooth sky transition
+            const dayColor = new THREE.Color(0x87ceeb);
+            const nightColor = new THREE.Color(0x0a0a2a);
+            const sunsetColor = new THREE.Color(0xff4500);
+            
+            let skyColor;
+            if (sun.position.y > 50) {
+                skyColor = dayColor.clone().lerp(sunsetColor, 1 - intensity);
+            } else if (sun.position.y > -50) {
+                skyColor = sunsetColor.clone().lerp(nightColor, (50 - sun.position.y)/100);
+            } else {
+                skyColor = nightColor;
+            }
+
+            scene.background = skyColor;
+            scene.fog.color = skyColor;
+            ambientLight.intensity = 0.2 + intensity * 0.6;
+            sun.intensity = intensity;
+            moon.intensity = Math.max(0, -sun.position.y / 300) * 0.5;
+        }
+
+        function updateMovement(delta) {
+            const accel = state.isSuper ? CONFIG.SUPER_ACCEL : CONFIG.PLAYER_ACCEL;
+            const maxSpeed = state.isSuper ? CONFIG.SUPER_MAX_SPEED : CONFIG.PLAYER_MAX_SPEED;
+
+            // Rotation
+            if (state.keys['KeyA'] || state.keys['ArrowLeft']) state.yaw += 0.08;
+            if (state.keys['KeyD'] || state.keys['ArrowRight']) state.yaw -= 0.08;
+            player.rotation.y = state.yaw;
+
+            // Forward/Backward
+            const moveDir = new THREE.Vector3(0, 0, 0);
+            if (state.keys['KeyW'] || state.keys['ArrowUp']) {
+                moveDir.x = Math.sin(state.yaw);
+                moveDir.z = Math.cos(state.yaw);
+            }
+            if (state.keys['KeyS'] || state.keys['ArrowDown']) {
+                moveDir.x = -Math.sin(state.yaw);
+                moveDir.z = -Math.cos(state.yaw);
+            }
+
+            if (moveDir.length() > 0) {
+                state.velocity.x += moveDir.x * accel;
+                state.velocity.z += moveDir.z * accel;
+            }
+
+            // Jump
+            if (state.keys['Space'] && state.onGround) {
+                state.velocity.y = CONFIG.JUMP_FORCE;
+                state.onGround = false;
+            }
+
+            // Gravity
+            if (!state.onGround) {
+                state.velocity.y += CONFIG.GRAVITY;
+            }
+
+            // Drag
+            state.velocity.x *= CONFIG.DRAG;
+            state.velocity.z *= CONFIG.DRAG;
+
+            // Limit Speed
+            const horizSpeed = Math.sqrt(state.velocity.x**2 + state.velocity.z**2);
+            if (horizSpeed > maxSpeed) {
+                state.velocity.x *= maxSpeed / horizSpeed;
+                state.velocity.z *= maxSpeed / horizSpeed;
+            }
+            state.speed = horizSpeed;
+
+            // Applying velocity to position
+            state.pos.add(state.velocity);
+
+            // Floor collision
+            if (state.pos.y < 1.2) {
+                state.pos.y = 1.2;
+                state.velocity.y = 0;
+                state.onGround = true;
+            }
+
+            player.position.copy(state.pos);
+            
+            // Sphere rotation animation
+            if (state.speed > 0.1) {
+                player.userData.body.rotation.x -= state.speed * 0.5;
+            }
+        }
+
+        function updateCollisions() {
+            // Rings
+            for(let i = state.objects.rings.length - 1; i >= 0; i--) {
+                const ring = state.objects.rings[i];
+                ring.rotation.y += 0.05;
+                if (ring.position.distanceTo(state.pos) < 3) {
+                    scene.remove(ring);
+                    state.objects.rings.splice(i, 1);
+                    state.rings++;
+                    
+                    if (state.rings >= CONFIG.RINGS_FOR_SUPER && !state.isSuper) {
+                        triggerSuperSonic();
+                    }
+                }
+            }
+
+            // Enemies
+            for(let i = state.objects.enemies.length - 1; i >= 0; i--) {
+                const enemy = state.objects.enemies[i];
+                const dist = enemy.position.distanceTo(state.pos);
+                if (dist < 4) {
+                    // Bounce attack
+                    if (state.velocity.y < 0 && state.pos.y > enemy.position.y + 1) {
+                        scene.remove(enemy);
+                        state.objects.enemies.splice(i, 1);
+                        state.velocity.y = 0.5; // Bounce up
+                        state.rings += 5;
+                    } else if (!state.isSuper) {
+                        // Take damage (lose rings)
+                        state.rings = Math.max(0, state.rings - 10);
+                        state.velocity.x *= -2;
+                        state.velocity.z *= -2;
+                    }
+                }
+            }
+
+            // Ramps
+            state.onGround = state.pos.y <= 1.25; 
+            state.objects.ramps.forEach(ramp => {
+                const dx = state.pos.x - ramp.x;
+                const dz = state.pos.z - ramp.z;
+                
+                // Rotate player local to ramp
+                const localX = dx * Math.cos(-ramp.rot) - dz * Math.sin(-ramp.rot);
+                const localZ = dx * Math.sin(-ramp.rot) + dz * Math.cos(-ramp.rot);
+
+                if (Math.abs(localX) < ramp.width/2) {
+                    // On the incline
+                    if (localZ > 0 && localZ < ramp.length) {
+                        const targetY = (localZ / ramp.length) * ramp.height + 1.2;
+                        if (state.pos.y < targetY + 2) {
+                            state.pos.y = targetY;
+                            state.velocity.y = 0;
+                            state.onGround = true;
+                        }
+                    }
+                    // On the top platform
+                    else if (localZ >= ramp.length && localZ < ramp.length + 15) {
+                        const targetY = ramp.height + 1.2;
+                        if (state.pos.y < targetY + 2) {
+                            state.pos.y = targetY;
+                            state.velocity.y = 0;
+                            state.onGround = true;
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTailsFollow(delta) {
+            if(!tails) return;
+            // Tails follows with a delay and offset
+            const targetPos = state.pos.clone().add(new THREE.Vector3(
+                -Math.sin(state.yaw) * 6,
+                2 + Math.sin(performance.now() * 0.005) * 1, // Hovering effect
+                -Math.cos(state.yaw) * 6
+            ));
+            
+            tails.position.lerp(targetPos, delta * 3);
+            tails.lookAt(player.position.x, tails.position.y, player.position.z);
+            
+            // Spin tails
+            tails.children.forEach(child => {
+                if(child.geometry.type === "ConeBufferGeometry") {
+                    child.rotation.y += delta * 15;
+                }
+            });
+        }
+
+        function triggerSuperSonic() {
+            state.isSuper = true;
+            document.body.classList.add('super-sonic');
+            player.userData.body.material.color.setHex(0xffcc00);
+            player.userData.body.material.emissive.setHex(0xffaa00);
+            player.userData.body.material.emissiveIntensity = 0.5;
+            
+            showNotification("SUPER SONIC ACTIVE!");
+            
+            // Spawn Boss
+            if(!boss) createBoss();
+            state.bossActive = true;
+            boss.position.set(state.pos.x, 80, state.pos.z + 100);
+        }
+
+        function updateBossLogic(delta) {
+            if(!boss || !state.bossActive) return;
+
+            // Boss hover / follow
+            const targetPos = state.pos.clone().add(new THREE.Vector3(0, 25, 0));
+            boss.position.lerp(targetPos, delta * 1.5);
+            boss.lookAt(player.position);
+
+            // Phase logic
+            const dist = boss.position.distanceTo(state.pos);
+            if (dist < 15 && state.velocity.y < 0 && state.pos.y > boss.position.y + 5) {
+                // Hit boss from above
+                boss.userData.hp--;
+                state.velocity.y = 0.8; // High bounce
+                showNotification("BOSS HIT! HP: " + boss.userData.hp);
+                
+                if (boss.userData.hp <= 0) {
+                    showNotification("BOSS DEFEATED!");
+                    state.bossActive = false;
+                    scene.remove(boss);
+                    state.rings += 1000;
+                }
+            }
+        }
+
+        function updateCamera() {
+            const followDist = state.isSuper ? 25 : 18;
+            const followHeight = state.isSuper ? 12 : 8;
+            
+            const camOffset = new THREE.Vector3(
+                -Math.sin(state.yaw) * followDist,
+                followHeight,
+                -Math.cos(state.yaw) * followDist
+            );
+            
+            camera.position.lerp(state.pos.clone().add(camOffset), 0.1);
+            camera.lookAt(state.pos.x, state.pos.y + 2, state.pos.z);
+        }
+
+        function updateUI() {
+            document.getElementById('rings-hud').innerText = state.rings;
+            document.getElementById('speed-hud').innerText = (state.speed * 100).toFixed(0);
+            
+            const progress = (state.rings / CONFIG.RINGS_FOR_SUPER) * 100;
+            document.getElementById('super-fill').style.width = Math.min(100, progress) + '%';
+        }
+
+        function updateTimerUI() {
+            const mins = Math.floor(state.time / 60);
+            const secs = state.time % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showNotification(text) {
+            const n = document.getElementById('notification');
+            n.innerText = text;
+            n.classList.add('active');
+            setTimeout(() => n.classList.remove('active'), 2000);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function endGame() {
+            state.started = false;
+            showNotification("TIME UP! TOTAL RINGS: " + state.rings);
+            setTimeout(() => location.reload(), 5000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
