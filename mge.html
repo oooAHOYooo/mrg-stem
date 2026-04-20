@@ -697,6 +697,53 @@
             from { opacity: 0.5; }
             to { opacity: 1; color: #fff; text-shadow: 0 0 10px #0f0; }
         }
+
+        /* Wake Lock Toggle Styles */
+        .wake-lock-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: 15px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .wake-lock-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .wake-lock-toggle.active {
+            background: var(--mge-green);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
+            color: #064e3b;
+        }
+
+        .wake-lock-toggle.active .lock-icon {
+            animation: coffeeShake 0.5s infinite alternate;
+        }
+
+        @keyframes coffeeShake {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
+        }
+
+        @media (max-width: 600px) {
+            .lock-text { display: none; }
+            .wake-lock-toggle { padding: 8px 12px; margin-right: 8px; }
+        }
     </style>
 </head>
 
@@ -714,6 +761,10 @@
         <div class="navbar-container">
             <a href="index.html" class="navbar-brand">🏠 Mr. Gonzalez STEM</a>
             <div class="navbar-menu">
+                <button class="wake-lock-toggle" id="wake-lock-toggle" title="Prevent Sleep/Logoff">
+                    <span class="lock-icon">☕</span>
+                    <span class="lock-text">Stay Awake</span>
+                </button>
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
             </div>
         </div>
@@ -1386,6 +1437,67 @@
             requestAnimationFrame(updateCycleEffects);
         }
         updateCycleEffects();
+
+        // Screen Wake Lock Implementation
+        (function() {
+            let wakeLock = null;
+            const toggleBtn = document.getElementById('wake-lock-toggle');
+            const lockText = toggleBtn.querySelector('.lock-text');
+            const lockIcon = toggleBtn.querySelector('.lock-icon');
+
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        
+                        wakeLock.addEventListener('release', () => {
+                            console.log('Wake Lock was released');
+                            if (toggleBtn.classList.contains('active')) {
+                                // If it was released but we still want it active (e.g. tab returned to focus)
+                                // we'll handle this in the visibilitychange listener
+                            }
+                        });
+
+                        toggleBtn.classList.add('active');
+                        lockText.innerText = "Active";
+                        lockIcon.innerText = "🔥";
+                        console.log('Wake Lock is active');
+                    } else {
+                        alert("Your browser doesn't support the Wake Lock API. Try Chrome or Edge!");
+                    }
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                    toggleBtn.classList.remove('active');
+                    lockText.innerText = "Stay Awake";
+                    lockIcon.innerText = "☕";
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock !== null) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+                toggleBtn.classList.remove('active');
+                lockText.innerText = "Stay Awake";
+                lockIcon.innerText = "☕";
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                if (wakeLock === null) {
+                    requestWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+            });
+
+            // Re-acquire wake lock when tab becomes visible again
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    await requestWakeLock();
+                }
+            });
+        })();
     </script>
 </body>
 

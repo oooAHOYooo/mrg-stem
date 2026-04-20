@@ -340,6 +340,25 @@
         body.dark-mode .mge-tagline {
             color: #a5b4fc;
         }
+
+        .wake-lock-toggle.active {
+            background: #34d399 !important;
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.5);
+            color: #064e3b !important;
+        }
+
+        .wake-lock-toggle.active .lock-icon {
+            animation: coffeeShake 0.5s infinite alternate;
+        }
+
+        @keyframes coffeeShake {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
+        }
+
+        @media (max-width: 600px) {
+            .lock-text { display: none; }
+        }
     </style>
 </head>
 
@@ -351,6 +370,10 @@
         <div class="navbar-container">
             <a href="index.html" class="navbar-brand">🏠 Mr. Gonzalez STEM</a>
             <div class="navbar-menu">
+                <button class="wake-lock-toggle" id="wake-lock-toggle" title="Prevent Sleep/Logoff" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 8px 16px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; transition: all 0.3s ease; margin-right: 15px; font-size: 0.9rem;">
+                    <span class="lock-icon">☕</span>
+                    <span class="lock-text">Stay Awake</span>
+                </button>
                 <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
             </div>
         </div>
@@ -715,6 +738,52 @@
     </script>
 
     <script type="module" src="mge-screensaver.js"></script>
+    <script>
+        // Screen Wake Lock Implementation
+        (function() {
+            let wakeLock = null;
+            const toggleBtn = document.getElementById('wake-lock-toggle');
+            const lockText = toggleBtn.querySelector('.lock-text');
+            const lockIcon = toggleBtn.querySelector('.lock-icon');
+
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        toggleBtn.classList.add('active');
+                        lockText.innerText = "Active";
+                        lockIcon.innerText = "🔥";
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock !== null) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+                toggleBtn.classList.remove('active');
+                lockText.innerText = "Stay Awake";
+                lockIcon.innerText = "☕";
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                if (wakeLock === null) {
+                    requestWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+            });
+
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    await requestWakeLock();
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>
