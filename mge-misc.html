@@ -359,6 +359,53 @@
         @media (max-width: 600px) {
             .lock-text { display: none; }
         }
+
+        /* Toggle Switch Styling */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #34d399;
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 
@@ -409,6 +456,20 @@
                     <a href="#face-master" class="sidebar-link">🎭 Face Master 3D</a>
                     <a href="#coming-soon" class="sidebar-link" style="opacity: 0.5;">🔬 More Coming...</a>
                 </nav>
+
+                <!-- NEW: Classroom Mode Toggle -->
+                <div class="sidebar-section" style="margin-top: 30px; padding: 18px; background: rgba(255,255,255,0.4); border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <h4 style="margin: 0 0 12px 0; font-size: 0.9rem; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        <span>🏫</span> Classroom Tools
+                    </h4>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Keep Active</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="sidebar-wake-lock-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -743,6 +804,7 @@
         (function() {
             let wakeLock = null;
             const toggleBtn = document.getElementById('wake-lock-toggle');
+            const sidebarToggle = document.getElementById('sidebar-wake-lock-toggle');
             const lockText = toggleBtn.querySelector('.lock-text');
             const lockIcon = toggleBtn.querySelector('.lock-icon');
 
@@ -751,8 +813,9 @@
                     if ('wakeLock' in navigator) {
                         wakeLock = await navigator.wakeLock.request('screen');
                         toggleBtn.classList.add('active');
-                        lockText.innerText = "Active";
-                        lockIcon.innerText = "🔥";
+                        sidebarToggle.checked = true;
+                        lockText.innerText = "System Active";
+                        lockIcon.innerText = "⚡";
                     }
                 } catch (err) {
                     console.error(err);
@@ -765,6 +828,7 @@
                     wakeLock = null;
                 }
                 toggleBtn.classList.remove('active');
+                sidebarToggle.checked = false;
                 lockText.innerText = "Stay Awake";
                 lockIcon.innerText = "☕";
             }
@@ -774,6 +838,14 @@
                     requestWakeLock();
                 } else {
                     releaseWakeLock();
+                }
+            });
+
+            sidebarToggle.addEventListener('change', () => {
+                if (sidebarToggle.checked) {
+                    if (wakeLock === null) requestWakeLock();
+                } else {
+                    if (wakeLock !== null) releaseWakeLock();
                 }
             });
 
