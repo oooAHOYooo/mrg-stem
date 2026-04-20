@@ -521,6 +521,18 @@
             letter-spacing: 1px;
         }
 
+        .navbar-top .navbar-menu {
+            display: flex !important;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .navbar-brand {
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
         .changelog-badge {
             font-size: 0.65rem;
             font-weight: 900;
@@ -925,7 +937,29 @@
                     <div class="mge-logo">🧪⚡</div>
                     <h1>Mr. Gonzalez Experiments</h1>
                     <div class="subtitle">MGE - Where Science Meets Fun!</div>
+                    
+                    <!-- NEW Hero Toggle -->
+                    <div class="hero-actions" style="margin-top: 2rem; display: flex; justify-content: center; gap: 15px; position: relative; z-index: 10;">
+                        <button class="hero-wake-lock-btn" id="hero-wake-lock-toggle" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); backdrop-filter: blur(5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                            <span class="hero-lock-icon" style="font-size: 1.4rem;">☕</span>
+                            <span class="hero-lock-text">Activate Classroom Mode</span>
+                        </button>
+                    </div>
                 </div>
+
+                <style>
+                    .hero-wake-lock-btn:hover {
+                        transform: translateY(-5px) scale(1.02);
+                        background: rgba(255,255,255,0.3);
+                        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+                    }
+                    .hero-wake-lock-btn.active {
+                        background: var(--mge-green) !important;
+                        color: #064e3b !important;
+                        border-color: #fff !important;
+                        box-shadow: 0 0 30px rgba(52, 211, 153, 0.6);
+                    }
+                </style>
 
                 <p class="mge-tagline">
                     Welcome to the experimental playground! Here you'll find interactive games,
@@ -1552,20 +1586,31 @@
             let wakeLock = null;
             const toggleBtn = document.getElementById('wake-lock-toggle');
             const sidebarToggle = document.getElementById('sidebar-wake-lock-toggle');
+            const heroToggle = document.getElementById('hero-wake-lock-toggle');
             const lockText = toggleBtn.querySelector('.lock-text');
             const lockIcon = toggleBtn.querySelector('.lock-icon');
             const indicator = document.getElementById('wake-lock-indicator');
+
+            const heroLockText = heroToggle.querySelector('.hero-lock-text');
+            const heroLockIcon = heroToggle.querySelector('.hero-lock-icon');
 
             async function requestWakeLock() {
                 try {
                     if ('wakeLock' in navigator) {
                         wakeLock = await navigator.wakeLock.request('screen');
                         
-                        toggleBtn.classList.add('active');
+                        const elements = [toggleBtn, heroToggle];
+                        elements.forEach(el => el.classList.add('active'));
+                        
                         sidebarToggle.checked = true;
                         indicator.style.display = 'block';
+                        
                         lockText.innerText = "System Active";
                         lockIcon.innerText = "⚡";
+                        
+                        heroLockText.innerText = "Classroom Mode Active";
+                        heroLockIcon.innerText = "🔥";
+
                         console.log('Wake Lock is active');
                     } else {
                         alert("Your browser doesn't support the Wake Lock API. Try Chrome or Edge!");
@@ -1573,9 +1618,12 @@
                 } catch (err) {
                     console.error(`${err.name}, ${err.message}`);
                     toggleBtn.classList.remove('active');
+                    heroToggle.classList.remove('active');
                     sidebarToggle.checked = false;
                     lockText.innerText = "Stay Awake";
                     lockIcon.innerText = "☕";
+                    heroLockText.innerText = "Activate Classroom Mode";
+                    heroLockIcon.innerText = "☕";
                 }
             }
 
@@ -1585,18 +1633,23 @@
                     wakeLock = null;
                 }
                 toggleBtn.classList.remove('active');
+                heroToggle.classList.remove('active');
                 sidebarToggle.checked = false;
                 indicator.style.display = 'none';
                 lockText.innerText = "Stay Awake";
                 lockIcon.innerText = "☕";
+                heroLockText.innerText = "Activate Classroom Mode";
+                heroLockIcon.innerText = "☕";
             }
 
-            toggleBtn.addEventListener('click', () => {
-                if (wakeLock === null) {
-                    requestWakeLock();
-                } else {
-                    releaseWakeLock();
-                }
+            [toggleBtn, heroToggle].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (wakeLock === null) {
+                        requestWakeLock();
+                    } else {
+                        releaseWakeLock();
+                    }
+                });
             });
 
             sidebarToggle.addEventListener('change', () => {
