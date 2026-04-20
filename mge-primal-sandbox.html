@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE - Primal Sandbox</title>
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+            --mge-accent: #ffe66d;
+            --mge-dark: #2d3436;
+            --mge-light: #f9f9f9;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hud-panel {
+            pointer-events: auto;
+            background: rgba(45, 52, 54, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin: 20px;
+            padding: 15px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bottom-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--mge-primary), #ff4757);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .tool-picker {
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .tool-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .tool-btn.active {
+            border-color: var(--mge-secondary);
+            background: rgba(78, 205, 196, 0.3);
+            box-shadow: 0 0 15px var(--mge-secondary);
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            pointer-events: none;
+            text-shadow: 0 0 5px black;
+        }
+
+        #instructions {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        #instructions h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--mge-primary), var(--mge-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(78, 205, 196, 0.5));
+        }
+
+        .controls-hint {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-width: 600px;
+            margin-top: 30px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .key {
+            background: #444;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: monospace;
+            color: var(--mge-accent);
+            border-bottom: 3px solid #222;
+        }
+
+        #stats {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        /* Escape Overlay */
+        #esc-overlay {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 14px 28px;
+            border-radius: 20px;
+            border: 2px solid #4ecdc4;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            z-index: 3000;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        #esc-overlay.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .keycap {
+            background: linear-gradient(135deg, #3d4452, #242933);
+            border: 2px solid #57606f;
+            border-bottom: 6px solid #161a21;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 0 5px rgba(255,255,255,0.3);
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="instructions">
+        <h1>PRIMAL SANDBOX</h1>
+        <p>A world of pure experimentation and creation.</p>
+        <div class="controls-hint">
+            <div><span class="key">W,A,S,D</span> Move Around</div>
+            <div><span class="key">SPACE</span> Jump / Fly Up</div>
+            <div><span class="key">SHIFT</span> Fly Down</div>
+            <div><span class="key">L-CLICK</span> Use Tool / Delete</div>
+            <div><span class="key">R-CLICK</span> Place Object</div>
+            <div><span class="key">1-6</span> Quick Tool Select</div>
+            <div><span class="key">F</span> Toggle Physics</div>
+            <div><span class="key">ESC</span> Unlock Mouse</div>
+        </div>
+        <p style="margin-top: 30px; font-weight: bold; color: var(--mge-secondary); animation: pulse 2s infinite;">Click ANYWHERE to enter the world</p>
+    </div>
+
+    <div id="ui-layer">
+        <div class="hud-panel top-bar">
+            <a href="mge.html" class="back-btn">⬅️ Back to MGE</a>
+            <div id="current-tool-label" style="font-weight: bold; color: var(--mge-secondary);">TOOL: BUILDER</div>
+            <div id="time-display" style="font-family: monospace;">12:00 PM</div>
+        </div>
+
+        <div id="stats">
+            Objects: <span id="obj-count">0</span><br>
+            Physics: <span id="phys-status">OFF</span><br>
+            Position: <span id="pos-display">0, 0, 0</span>
+        </div>
+
+        <div class="hud-panel bottom-bar">
+            <div class="tool-picker" id="material-picker">
+                <button class="tool-btn active" data-tool="build" data-material="stone" title="Stone">🪨</button>
+                <button class="tool-btn" data-tool="build" data-material="wood" title="Wood">🪵</button>
+                <button class="tool-btn" data-tool="build" data-material="glass" title="Glass">💎</button>
+                <button class="tool-btn" data-tool="build" data-material="glow" title="Neon">🌟</button>
+                <button class="tool-btn" data-tool="spawn" data-entity="sphere" title="Physics Sphere">⚽</button>
+                <button class="tool-btn" data-tool="spawn" data-entity="cube" title="Physics Cube">📦</button>
+                <button class="tool-btn" data-tool="spawn" data-entity="bot" title="Spawn Bot">🤖</button>
+                <button class="tool-btn" data-tool="delete" title="Eraser">🧹</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="crosshair">+</div>
+
+    <div id="esc-overlay">
+        <div class="keycap">ESC</div>
+        <div style="display:flex; flex-direction:column; margin-left: 10px;">
+            <span style="font-weight:bold;">Press Escape to Exit</span>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.6);">Unlock mouse to return to menu</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        // --- SEUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.set(0, 10, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // --- CONTROLS ---
+        const controls = new PointerLockControls(camera, document.body);
+        const instructions = document.getElementById('instructions');
+
+        instructions.addEventListener('click', () => {
+            controls.lock();
+        });
+
+        controls.addEventListener('lock', () => {
+            instructions.style.display = 'none';
+        });
+
+        controls.addEventListener('unlock', () => {
+            instructions.style.display = 'flex';
+        });
+
+        // ESC Overlay logic
+        document.addEventListener('pointerlockchange', () => {
+            const overlay = document.getElementById('esc-overlay');
+            if (document.pointerLockElement === document.body) {
+                overlay.classList.add('visible');
+                setTimeout(() => { if(document.pointerLockElement === document.body) overlay.classList.remove('visible'); }, 4000);
+            } else {
+                overlay.classList.remove('visible');
+            }
+        });
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xfff5e1, 1.0);
+        sunLight.position.set(100, 200, 100);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 500;
+        sunLight.shadow.camera.left = -200;
+        sunLight.shadow.camera.right = 200;
+        sunLight.shadow.camera.top = 200;
+        sunLight.shadow.camera.bottom = -200;
+        scene.add(sunLight);
+
+        // --- ENVIRONMENT ---
+        // Ground
+        const groundGeo = new THREE.PlaneGeometry(1000, 1000);
+        const groundMat = new THREE.MeshStandardMaterial({ 
+            color: 0x3d8c40, 
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Add some basic trees
+        function createTree(x, z) {
+            const group = new THREE.Group();
+            
+            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 5, 8);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4d2902 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 2.5;
+            trunk.castShadow = true;
+            trunk.receiveShadow = true;
+            group.add(trunk);
+
+            const leavesGeo = new THREE.ConeGeometry(3, 8, 8);
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1a5e1a });
+            const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+            leaves.position.y = 7;
+            leaves.castShadow = true;
+            leaves.receiveShadow = true;
+            group.add(leaves);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            return group;
+        }
+
+        for(let i=0; i<50; i++) {
+            createTree(Math.random()*400 - 200, Math.random()*400 - 200);
+        }
+
+        // --- PHYSICS & OBJECTS ---
+        const objects = [];
+        const physicsObjects = [];
+        let physicsEnabled = false;
+
+        const materials = {
+            stone: new THREE.MeshStandardMaterial({ color: 0x7f8c8d }),
+            wood: new THREE.MeshStandardMaterial({ color: 0x964b00 }),
+            glass: new THREE.MeshStandardMaterial({ color: 0x81ecec, transparent: true, opacity: 0.5 }),
+            glow: new THREE.MeshStandardMaterial({ color: 0x55efc4, emissive: 0x55efc4, emissiveIntensity: 0.5 })
+        };
+
+        let currentTool = 'build';
+        let currentMaterial = 'stone';
+        let currentEntity = 'sphere';
+
+        // --- INTERACTION ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('mousedown', (e) => {
+            if (!controls.isLocked) return;
+
+            if (e.button === 0) { // Left Click
+                if (currentTool === 'delete') {
+                    deleteAtCursor();
+                } else if (currentTool === 'build' || currentTool === 'spawn') {
+                    useTool();
+                }
+            } else if (e.button === 2) { // Right Click
+                useTool();
+            }
+        });
+
+        // Disable context menu
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        function useTool() {
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects([ground, ...objects, ...physicsObjects], true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                const pos = hit.point.clone();
+                const normal = hit.face.normal.clone();
+                normal.transformDirection(hit.object.matrixWorld);
+
+                if (currentTool === 'build') {
+                    const size = 2;
+                    // Snap to grid
+                    const buildPos = pos.add(normal.multiplyScalar(size/2));
+                    buildPos.x = Math.round(buildPos.x / size) * size;
+                    buildPos.y = Math.max(size/2, Math.round(buildPos.y / size) * size);
+                    buildPos.z = Math.round(buildPos.z / size) * size;
+
+                    const geo = new THREE.BoxGeometry(size, size, size);
+                    const mesh = new THREE.Mesh(geo, materials[currentMaterial]);
+                    mesh.position.copy(buildPos);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    scene.add(mesh);
+                    objects.push(mesh);
+                } else if (currentTool === 'spawn') {
+                    spawnEntity(pos.add(normal.multiplyScalar(2)));
+                }
+            }
+        }
+
+        function spawnEntity(pos) {
+            let mesh;
+            const size = 1 + Math.random();
+            
+            if (currentEntity === 'sphere') {
+                const geo = new THREE.SphereGeometry(size/2, 32, 32);
+                mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff }));
+            } else if (currentEntity === 'cube') {
+                const geo = new THREE.BoxGeometry(size, size, size);
+                mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff }));
+            } else if (currentEntity === 'bot') {
+                mesh = createSimpleBot(pos);
+                physicsObjects.push(mesh);
+                return;
+            }
+
+            mesh.position.copy(pos);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            
+            // Basic physics properties
+            mesh.userData.velocity = new THREE.Vector3(0, 0, 0);
+            mesh.userData.mass = size;
+            mesh.userData.isPhysics = true;
+            mesh.userData.radius = size/2;
+
+            scene.add(mesh);
+            physicsObjects.push(mesh);
+        }
+
+        function createSimpleBot(pos) {
+            const group = new THREE.Group();
+            
+            // Body
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.8), new THREE.MeshStandardMaterial({color: 0xecf0f1}));
+            body.position.y = 0.6;
+            group.add(body);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.6), new THREE.MeshStandardMaterial({color: 0x95a5a6}));
+            head.position.y = 1.6;
+            group.add(head);
+
+            // Eyes
+            const eyeGeo = new THREE.BoxGeometry(0.2, 0.1, 0.1);
+            const eyeMat = new THREE.MeshBasicMaterial({color: 0x00f2fe});
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.2, 1.6, 0.3);
+            group.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.2, 1.6, 0.3);
+            group.add(eyeR);
+
+            group.position.copy(pos);
+            group.userData.velocity = new THREE.Vector3(0,0,0);
+            group.userData.isBot = true;
+            group.userData.isPhysics = true;
+            group.userData.radius = 1;
+
+            scene.add(group);
+            return group;
+        }
+
+        function deleteAtCursor() {
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects([...objects, ...physicsObjects], true);
+            if (intersects.length > 0) {
+                let target = intersects[0].object;
+                while(target.parent && target.parent !== scene) target = target.parent;
+                
+                scene.remove(target);
+                const objIdx = objects.indexOf(target);
+                if (objIdx > -1) objects.splice(objIdx, 1);
+                
+                const physIdx = physicsObjects.indexOf(target);
+                if (physIdx > -1) physicsObjects.splice(physIdx, 1);
+            }
+        }
+
+        // --- UI HANDLING ---
+        const toolBtns = document.querySelectorAll('.tool-btn');
+        toolBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                toolBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool || currentTool;
+                currentMaterial = btn.dataset.material || currentMaterial;
+                currentEntity = btn.dataset.entity || currentEntity;
+                
+                let label = "TOOL: " + currentTool.toUpperCase();
+                if(currentTool === 'build') label += " (" + currentMaterial.toUpperCase() + ")";
+                if(currentTool === 'spawn') label += " (" + currentEntity.toUpperCase() + ")";
+                document.getElementById('current-tool-label').textContent = label;
+            });
+        });
+
+        // Numeric keys for tools
+        window.addEventListener('keydown', (e) => {
+            if(e.key >= '1' && e.key <= '8') {
+                const idx = parseInt(e.key) - 1;
+                if(toolBtns[idx]) toolBtns[idx].click();
+            }
+            if(e.key.toLowerCase() === 'f') {
+                physicsEnabled = !physicsEnabled;
+                document.getElementById('phys-status').textContent = physicsEnabled ? "ON" : "OFF";
+                document.getElementById('phys-status').style.color = physicsEnabled ? "var(--mge-secondary)" : "red";
+            }
+        });
+
+        // --- PLAYER MOVEMENT ---
+        const moveState = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+        window.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'KeyW': moveState.forward = true; break;
+                case 'KeyS': moveState.backward = true; break;
+                case 'KeyA': moveState.left = true; break;
+                case 'KeyD': moveState.right = true; break;
+                case 'Space': moveState.up = true; break;
+                case 'ShiftLeft': moveState.down = true; break;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            switch(e.code) {
+                case 'KeyW': moveState.forward = false; break;
+                case 'KeyS': moveState.backward = false; break;
+                case 'KeyA': moveState.left = false; break;
+                case 'KeyD': moveState.right = false; break;
+                case 'Space': moveState.up = false; break;
+                case 'ShiftLeft': moveState.down = false; break;
+            }
+        });
+
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+
+        // --- ANIMATION REAM ---
+        let prevTime = performance.now();
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+
+            if (controls.isLocked) {
+                const moveSpeed = 50.0;
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= velocity.y * 10.0 * delta;
+
+                direction.z = Number(moveState.forward) - Number(moveState.backward);
+                direction.x = Number(moveState.right) - Number(moveState.left);
+                direction.y = Number(moveState.up) - Number(moveState.down);
+                direction.normalize();
+
+                if (moveState.forward || moveState.backward) velocity.z -= direction.z * moveSpeed * delta;
+                if (moveState.left || moveState.right) velocity.x -= direction.x * moveSpeed * delta;
+                if (moveState.up || moveState.down) velocity.y += direction.y * moveSpeed * delta;
+
+                controls.moveRight(-velocity.x * delta);
+                controls.moveForward(-velocity.z * delta);
+                camera.position.y += velocity.y * delta;
+                if(camera.position.y < 1.6) camera.position.y = 1.6;
+            }
+
+            // --- PHYSICS SIM ---
+            if (physicsEnabled) {
+                const gravity = -9.8;
+                physicsObjects.forEach(obj => {
+                    // Gravity
+                    obj.userData.velocity.y += gravity * delta;
+                    obj.position.addScaledVector(obj.userData.velocity, delta);
+
+                    // Ground collision
+                    const radius = obj.userData.radius || 0.5;
+                    if (obj.position.y < radius) {
+                        obj.position.y = radius;
+                        obj.userData.velocity.y *= -0.5; // Bounce
+                        obj.userData.velocity.x *= 0.8; // Friction
+                        obj.userData.velocity.z *= 0.8;
+                    }
+
+                    // Bot behaviors
+                    if(obj.userData.isBot) {
+                        obj.rotation.y += delta;
+                        // Simple hover/bounce
+                        obj.position.y += Math.sin(time * 0.005) * 0.01;
+                    }
+                });
+            }
+
+            // Sky Cycle
+            const skyTime = (time * 0.01) % 360;
+            const skyColor = new THREE.Color().setHSL(0.6, 0.5, 0.5 + Math.sin(skyTime * 0.01) * 0.3);
+            scene.background = skyColor;
+            if(scene.fog) scene.fog.color = skyColor;
+
+            // Header UI
+            const now = new Date();
+            document.getElementById('time-display').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('obj-count').textContent = objects.length + physicsObjects.length;
+            document.getElementById('pos-display').textContent = `${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)}`;
+
+            renderer.render(scene, camera);
+            prevTime = time;
+        }
+
+        animate();
+
+        // Responsive
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>

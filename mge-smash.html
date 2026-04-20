@@ -1246,13 +1246,20 @@
         ];
 
         // Player stats
-        // Cosmetics system with localStorage
         function loadCosmetics() {
-            const saved = localStorage.getItem('smashGameCosmetics');
-            return saved ? JSON.parse(saved) : {
-                unlockedHats: [],
-                roundsWon: 0,
-                baseColor: { p1: 0xff6b6b, p2: 0x4ecdc4 }
+            try {
+                const saved = localStorage.getItem('smashGameCosmetics');
+                const parsed = saved ? JSON.parse(saved) : null;
+                if (parsed && Array.isArray(parsed.unlockedHats)) {
+                    return parsed;
+                }
+            } catch (e) {
+                console.warn("Failed to load cosmetics:", e);
+            }
+            return {
+                unlockedHats: ['crown'],
+                unlockedFighters: ['p1', 'p2', 'p3'],
+                equippedHats: { p1: 'crown', p2: null, p3: null }
             };
         }
 
@@ -3345,7 +3352,7 @@
             players.p3.isDead = false;
             players.p3.invulnerable = 0;
             players.p3.attackCooldown = 0;
-            players.p1.specialCooldown = 0;
+            players.p3.specialCooldown = 0;
 
             player1.position.set(-3, 2, 0);
             player2.position.set(3, 2, 0);
@@ -3548,8 +3555,8 @@
                 
                 scene.background = skyColor;
                 if (directionalLight) directionalLight.intensity = lightInt;
-                if (window.pLight1) pLight1.intensity = lightInt;
-                if (window.pLight2) pLight2.intensity = lightInt;
+                if (pLight1) pLight1.intensity = lightInt;
+                if (pLight2) pLight2.intensity = lightInt;
 
                 // Build code / timer
                 updateGameCode();
