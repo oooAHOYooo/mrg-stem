@@ -107,6 +107,10 @@
                         <span class="status-time">${formatTime()}</span>
                     </span>
                 </div>
+                <div class="status-divider" style="width: 1px; height: 20px; background: rgba(59, 130, 246, 0.2); margin: 0 5px;"></div>
+                <button class="status-wake-lock" id="status-wake-lock-toggle" title="Keep Classroom Computer Awake" style="background: none; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 4px; padding: 2px 8px; cursor: pointer; display: flex; align-items: center; gap: 5px; color: #1e40af; font-weight: 500; font-size: 0.7rem; transition: all 0.3s ease;">
+                    <span class="lock-icon">☕</span> <span class="lock-text">Stay Awake</span>
+                </button>
             </div>
         `;
 
@@ -134,11 +138,56 @@
         }
     }
 
+    // Wake Lock Logic for Status Bar
+    let globalWakeLock = null;
+    async function requestGlobalWakeLock(btn) {
+        try {
+            if ('wakeLock' in navigator) {
+                globalWakeLock = await navigator.wakeLock.request('screen');
+                btn.style.background = '#10b981';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#10b981';
+                btn.querySelector('.lock-icon').innerText = '⚡';
+                btn.querySelector('.lock-text').innerText = 'Active';
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function releaseGlobalWakeLock(btn) {
+        if (globalWakeLock !== null) {
+            globalWakeLock.release();
+            globalWakeLock = null;
+        }
+        btn.style.background = 'none';
+        btn.style.color = '#1e40af';
+        btn.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+        btn.querySelector('.lock-icon').innerText = '☕';
+        btn.querySelector('.lock-text').innerText = 'Stay Awake';
+    }
+
+    function initWakeLockToggle() {
+        const btn = document.getElementById('status-wake-lock-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            if (globalWakeLock === null) {
+                requestGlobalWakeLock(btn);
+            } else {
+                releaseGlobalWakeLock(btn);
+            }
+        });
+    }
+
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', updateStatusBar);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatusBar();
+            initWakeLockToggle();
+        });
     } else {
         updateStatusBar();
+        initWakeLockToggle();
     }
 
     // Export for manual updates
