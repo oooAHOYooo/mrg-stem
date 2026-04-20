@@ -276,17 +276,92 @@
         }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
             .arcade-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Wake Lock Toggle */
+        .wake-lock-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 6px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .wake-lock-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .wake-lock-toggle.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .wake-lock-toggle.active .lock-icon {
+            animation: coffeeShake 0.5s infinite alternate;
+        }
+
+        .arcade-energy-field {
+            position: fixed;
+            inset: 0;
+            border: 4px solid var(--arcade-primary);
+            pointer-events: none;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            box-shadow: inset 0 0 50px rgba(99, 102, 241, 0.2);
+            animation: energyPulse 3s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes energyPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; box-shadow: inset 0 0 100px rgba(99, 102, 241, 0.4); }
+        }
+
+        .wake-lock-toggle.active {
+            position: relative;
+        }
+
+        .wake-lock-toggle.active::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 2px solid var(--arcade-primary);
+            border-radius: 34px;
+            animation: arcadeRipple 2s linear infinite;
+        }
+
+        @keyframes arcadeRipple {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
     </style>
 </head>
 <body>
     <div class="mesh-bg"></div>
+    <div class="arcade-energy-field" id="arcade-energy-field"></div>
 
     <nav class="navbar">
         <div class="brand"><span>🕹️</span> THE STEM ARCADE</div>
-        <div class="license-status">✓ School Site License Active</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="wake-lock-toggle" id="wake-lock-toggle" title="Prevent Sleep/Logoff">
+                <span class="lock-icon">☕</span> Stay Awake
+            </button>
+            <div class="license-status">✓ School Site License Active</div>
+        </div>
     </nav>
 
     <header class="hero">
@@ -408,6 +483,52 @@
                 pill.classList.add('active');
             });
         });
+
+        // Screen Wake Lock Implementation
+        (function() {
+            let wakeLock = null;
+            const toggleBtn = document.getElementById('wake-lock-toggle');
+            const energyField = document.getElementById('arcade-energy-field');
+
+            async function requestWakeLock() {
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        toggleBtn.classList.add('active');
+                        energyField.style.display = 'block';
+                        toggleBtn.innerHTML = '<span class="lock-icon">⚡</span> SYSTEM ACTIVE';
+                    } else {
+                        console.warn("Wake Lock not supported");
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock !== null) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+                toggleBtn.classList.remove('active');
+                energyField.style.display = 'none';
+                toggleBtn.innerHTML = '<span class="lock-icon">☕</span> Stay Awake';
+            }
+
+            toggleBtn.addEventListener('click', () => {
+                if (wakeLock === null) {
+                    requestWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+            });
+
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    await requestWakeLock();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

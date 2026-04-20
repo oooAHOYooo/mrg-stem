@@ -95,7 +95,10 @@
             display: flex;
             flex-direction: column;
             min-width: 100px;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
+        .hud-card.pulse { transform: scale(1.15); border-color: var(--mge-gold); }
 
         .hud-label {
             font-size: 0.65rem;
@@ -236,7 +239,7 @@
 
     <div id="start-screen">
         <h1 style="font-size: 6rem; font-weight: 900; margin: 0; text-shadow: 0 0 40px var(--mge-primary);">SONIC 2</h1>
-        <p style="font-size: 1.4rem; color: #888;">Glow Trails | Speed Particles | Air Tricks</p>
+        <p style="font-size: 1.4rem; color: #888;">Butterflies | FOV Zoom | Screen Shake</p>
         <div style="display:flex; gap:20px; margin-top:40px;">
             <button class="start-btn" id="btn-1p">1 PLAYER</button>
             <button class="start-btn" id="btn-2p" style="background: linear-gradient(135deg, #f39c12, #e67e22);">2 PLAYER</button>
@@ -247,7 +250,7 @@
         <div class="header">
             <div class="hud-group" style="flex-direction: column;">
                 <div class="mge-badge" id="p1-badge">P1: SONIC</div>
-                <div class="hud-card"><span class="hud-label">Rings</span><span class="hud-value p1-color" id="p1-rings">0</span></div>
+                <div class="hud-card" id="p1-card"><span class="hud-label">Rings</span><span class="hud-value p1-color" id="p1-rings">0</span></div>
                 <div class="keyboard-overlay">
                     <div class="key-box" id="key-KeyW">W</div>
                     <div class="key-box" id="key-KeyA">A</div>
@@ -259,12 +262,12 @@
 
             <div class="top-center-stats">
                 <div class="timer-display" id="timer-display">03:00</div>
-                <div style="color: #fff; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">JUNGLE ELEVATORS</div>
+                <div style="color: #fff; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">JUNGLE ZONE</div>
             </div>
 
             <div class="hud-group" id="p2-ui" style="flex-direction: column; align-items: flex-end; display: none;">
                 <div class="mge-badge" style="background: linear-gradient(135deg, #f39c12, #e67e22);">P2: TAILS</div>
-                <div class="hud-card" style="align-items: flex-end;"><span class="hud-label">Rings</span><span class="hud-value p2-color" id="p2-rings">0</span></div>
+                <div class="hud-card" id="p2-card" style="align-items: flex-end;"><span class="hud-label">Rings</span><span class="hud-value p2-color" id="p2-rings">0</span></div>
                 <div class="keyboard-overlay p2-keys">
                     <div class="key-box" id="key-ArrowUp">▲</div>
                     <div class="key-box" id="key-ArrowLeft">◀</div>
@@ -289,12 +292,12 @@
 
         const state = {
             started: false, is2P: false, time: 180, lastFrame: performance.now(), keys: {},
-            objects: { rings: [], enemies: [], seekers: [], islands: [], clouds: [], speedLines: [], trees: [], trails: [] }
+            objects: { rings: [], enemies: [], seekers: [], islands: [], clouds: [], speedLines: [], trees: [], trails: [], butterflies: [] }
         };
 
         const players = [
-            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0x3366ff, type: 'sonic' },
-            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0xffcc00, type: 'tails' }
+            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0x3366ff, type: 'sonic', shake: 0 },
+            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0xffcc00, type: 'tails', shake: 0 }
         ];
 
         let scene, renderer, sun, ambientLight, cam1, cam2;
@@ -329,6 +332,7 @@
             for(let i=0; i<100; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
             for(let i=0; i<35; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 40 + Math.random()*100, (Math.random()-0.5)*CONFIG.WORLD*0.8);
             for(let i=0; i<70; i++) createCloud();
+            for(let i=0; i<120; i++) spawnButterfly();
 
             window.addEventListener('keydown', e => { 
                 const p1 = players[0], p2 = players[1];
@@ -381,7 +385,6 @@
             base.position.y = -15; g.add(base);
             g.position.set(x, y, z); scene.add(g);
             state.objects.islands.push({ obj: g, x, y, z, valY: y, phase: Math.random()*Math.PI*2, range: 40 + Math.random()*70, w, d });
-            // Add Blue Rings to Island
             for(let i=0; i<4; i++) {
                 const br = spawnRing(true);
                 br.position.set(x + (Math.random()-0.5)*w*0.8, y + 12, z + (Math.random()-0.5)*d*0.8);
@@ -401,13 +404,21 @@
             leaves.position.y = h; g.add(leaves);
             const vineCount = 5 + Math.floor(Math.random()*5);
             for(let i=0; i<vineCount; i++) {
-                const vine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 25+Math.random()*20, 0.5), new THREE.MeshStandardMaterial({ color: 0x81c784 }));
+                const vine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 25+Math.random()*15, 0.5), new THREE.MeshStandardMaterial({ color: 0x81c784 }));
                 const ang = (i/vineCount) * Math.PI*2;
                 vine.position.set(Math.cos(ang)*12, h * 0.7, Math.sin(ang)*12);
                 vine.rotation.z = (Math.random()-0.5)*0.4; g.add(vine);
             }
             g.position.set(x, 0, z); g.rotation.y = Math.random()*Math.PI; scene.add(g);
             state.objects.trees.push(g);
+        }
+
+        function spawnButterfly() {
+            const colors = [0xffffff, 0xff00ff, 0x00ffff, 0xffff00];
+            const b = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random()*colors.length)], side: THREE.DoubleSide }));
+            b.position.set((Math.random()-0.5)*CONFIG.WORLD, 10 + Math.random()*40, (Math.random()-0.5)*CONFIG.WORLD);
+            b.userData = { phase: Math.random()*Math.PI*2, speed: 0.05 + Math.random()*0.1 };
+            scene.add(b); state.objects.butterflies.push(b);
         }
 
         function createPlayerMesh(p) {
@@ -426,7 +437,6 @@
 
         function triggerTrick(i) {
             const p = players[i]; p.trick = 1; p.vel.y += 0.45; 
-            // Removed notification to keep screen clear for trick visuals
         }
 
         function spawnRing(blue) {
@@ -478,6 +488,12 @@
                 state.objects.seekers.forEach(s => { 
                     s.userData.wingPhase += delta * 25; s.children[1].rotation.x = Math.sin(s.userData.wingPhase) * 0.6; 
                     s.userData.angle += delta; s.position.x += Math.sin(s.userData.angle)*s.userData.speed;
+                });
+                state.objects.butterflies.forEach(b => {
+                    b.userData.phase += delta*3;
+                    b.position.x += Math.cos(b.userData.phase)*0.2;
+                    b.position.y += Math.sin(b.userData.phase*0.5)*0.1;
+                    b.rotation.y += delta*5;
                 });
                 state.objects.islands.forEach(isl => {
                     isl.phase += delta * 0.85;
@@ -532,9 +548,10 @@
                 if(p.trick > 0) { p.obj.rotation.x += delta*35; p.obj.rotation.z += delta*18; }
                 const targetScale = p.trick > 0 ? 1.0 : (1 + s*0.18);
                 p.obj.children[0].scale.lerp(new THREE.Vector3(targetScale, 2 - targetScale, targetScale), 0.12);
+                
+                if(p.shake > 0) p.shake -= delta * 15;
             });
             
-            // Update Particles
             for(let i=state.objects.speedLines.length-1; i>=0; i--) {
                 const l = state.objects.speedLines[i]; l.material.opacity -= 0.08; l.position.add(l.userData.v);
                 if(l.material.opacity <= 0) { scene.remove(l); state.objects.speedLines.splice(i,1); }
@@ -558,11 +575,8 @@
         function spawnLightTrail(p, s) {
             const glow = Math.min(3.0, (s - 1.5) * 2);
             const mat = new THREE.MeshStandardMaterial({ 
-                color: p.color, 
-                emissive: p.color, 
-                emissiveIntensity: 1.5 + glow,
-                transparent: true, 
-                opacity: 0.8
+                color: p.color, emissive: p.color, emissiveIntensity: 1.5 + glow,
+                transparent: true, opacity: 0.8
             });
             const part = new THREE.Mesh(new THREE.SphereGeometry(0.8, 8, 8), mat);
             part.position.copy(p.pos);
@@ -580,7 +594,7 @@
         function updateLogic(delta) {
             for(let i=state.objects.rings.length-1; i>=0; i--) {
                 const r = state.objects.rings[i];
-                players.forEach(p => {
+                players.forEach((p, idx) => {
                     const d = r.position.distanceTo(p.pos);
                     if(d < CONFIG.MAGNET) { 
                         r.position.lerp(p.pos, 0.48); 
@@ -589,12 +603,14 @@
                             const val = r.userData.blue ? 5 : 1; p.rings += val; 
                             if(r.userData.blue) showNotification("+5 BLUE RINGS!");
                             updateUI(); 
+                            const card = document.getElementById(`p${idx+1}-card`);
+                            card.classList.add('pulse'); setTimeout(() => card.classList.remove('pulse'), 200);
                         } 
                     }
                 });
             }
             state.objects.seekers.forEach(s => {
-                players.forEach(p => { if(s.position.distanceTo(p.pos) < 9.0) { p.rings = Math.max(0, p.rings-20); updateUI(); showNotification("BUZZER STING!"); }});
+                players.forEach(p => { if(s.position.distanceTo(p.pos) < 9.0) { p.rings = Math.max(0, p.rings-20); p.shake = 8; updateUI(); showNotification("BUZZER STING!"); }});
             });
             if (state.is2P) {
                 const p0 = players[0], p1 = players[1], d = p0.pos.distanceTo(p1.pos);
@@ -603,7 +619,7 @@
                     p0.vel.add(diff.clone().multiplyScalar(1.4)); p1.vel.add(diff.clone().multiplyScalar(-1.4));
                     const now = performance.now();
                     if (!state.lastPvPHit || now - state.lastPvPHit > 1000) {
-                        state.lastPvPHit = now;
+                        state.lastPvPHit = now; p0.shake = 10; p1.shake = 10;
                         if (p0.pos.y > p1.pos.y + 0.5) { p1.rings -= Math.min(p1.rings,40); p0.rings += 40; showNotification("SONIC SMASH!"); }
                         else if (p1.pos.y > p0.pos.y + 0.5) { p0.rings -= Math.min(p0.rings,40); p1.rings += 40; showNotification("TAILS SMASH!"); }
                         updateUI();
@@ -622,7 +638,16 @@
             }
         }
 
-        function follow(c, p) { c.position.lerp(p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*40, 22, -Math.cos(p.yaw)*40)), 0.18); c.lookAt(p.pos); }
+        function follow(c, p) { 
+            const s = p.vel.length();
+            const targetFOV = 75 + Math.min(25, s * 6);
+            c.fov = THREE.MathUtils.lerp(c.fov, targetFOV, 0.1);
+            c.updateProjectionMatrix();
+
+            const shakeOffset = new THREE.Vector3((Math.random()-0.5)*p.shake, (Math.random()-0.5)*p.shake, (Math.random()-0.5)*p.shake);
+            const targetPos = p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*40, 22, -Math.cos(p.yaw)*40)).add(shakeOffset);
+            c.position.lerp(targetPos, 0.18); c.lookAt(p.pos); 
+        }
         function updateUI() { document.getElementById('p1-rings').innerText = players[0].rings; if(state.is2P) document.getElementById('p2-rings').innerText = players[1].rings; }
         function updateTimerUI() { const m = Math.floor(state.time/60), s = state.time%60; document.getElementById('timer-display').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
         function showNotification(t) { const n = document.getElementById('notification'); n.innerText = t; n.classList.add('active'); setTimeout(() => n.classList.remove('active'), 2000); }
