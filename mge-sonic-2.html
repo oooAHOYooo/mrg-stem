@@ -12,8 +12,7 @@
             --mge-accent: #f1c40f;
             --mge-gold: #ffcc00;
             --mge-tails: #ffcc00;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-dark: rgba(0, 0, 0, 0.7);
+            --glass-dark: rgba(0, 0, 0, 0.85);
             --neon-blue: 0 0 20px rgba(0, 71, 255, 0.8);
             --neon-gold: 0 0 20px rgba(255, 204, 0, 0.8);
         }
@@ -31,18 +30,13 @@
 
         #canvas-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
         }
 
         #ui-root {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             display: flex;
             flex-direction: column;
@@ -60,10 +54,7 @@
             width: 100%;
         }
 
-        .hud-group {
-            display: flex;
-            gap: 10px;
-        }
+        .hud-group { display: flex; gap: 10px; }
 
         .mge-badge {
             background: linear-gradient(135deg, var(--mge-primary), #5dade2);
@@ -77,7 +68,6 @@
 
         .timer-display {
             background: var(--glass-dark);
-            backdrop-filter: blur(15px);
             padding: 10px 30px;
             border-radius: 50px;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -88,7 +78,6 @@
 
         .hud-card {
             background: var(--glass-dark);
-            backdrop-filter: blur(10px);
             padding: 10px 20px;
             border-radius: 15px;
             border: 1px solid rgba(255,255,255,0.15);
@@ -108,12 +97,7 @@
             letter-spacing: 1px;
         }
 
-        .hud-value {
-            font-size: 1.8rem;
-            font-weight: 900;
-            line-height: 1;
-        }
-
+        .hud-value { font-size: 1.8rem; font-weight: 900; line-height: 1; }
         .p1-color { color: #5dade2; }
         .p2-color { color: var(--mge-gold); }
 
@@ -128,89 +112,66 @@
         }
 
         .key-box {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             background: rgba(255,255,255,0.1);
             border: 2px solid rgba(255,255,255,0.2);
             border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 900;
-            font-size: 0.8rem;
-            transition: all 0.1s;
-            color: rgba(255,255,255,0.5);
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 0.8rem;
+            transition: all 0.1s; color: rgba(255,255,255,0.5);
         }
 
         .key-box.active {
             background: var(--mge-primary);
-            border-color: #fff;
-            color: white;
+            border-color: #fff; color: white;
             box-shadow: var(--neon-blue);
             transform: scale(0.9) translateY(2px);
         }
 
-        .p2-keys .key-box.active {
-            background: var(--mge-gold);
-            box-shadow: var(--neon-gold);
-        }
+        .p2-keys .key-box.active { background: var(--mge-gold); box-shadow: var(--neon-gold); }
 
         #start-screen {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.9);
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1500;
-            backdrop-filter: blur(20px);
         }
 
         .start-btn {
             background: linear-gradient(135deg, var(--mge-primary), #00a2ff);
-            border: none;
-            color: white;
+            border: none; color: white;
             padding: 20px 40px;
-            font-size: 1.5rem;
-            font-weight: 900;
-            border-radius: 15px;
-            cursor: pointer;
+            font-size: 1.5rem; font-weight: 900;
+            border-radius: 15px; cursor: pointer;
             box-shadow: 0 10px 30px rgba(0, 71, 255, 0.4);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: auto;
         }
 
+        .start-btn:hover { transform: scale(1.05); }
+
         #notification {
-            position: absolute;
-            top: 50%;
-            left: 50%;
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
-            padding: 20px 40px;
-            border-radius: 50px;
+            padding: 20px 40px; border-radius: 50px;
             background: rgba(0, 0, 0, 0.8);
             border: 3px solid var(--mge-gold);
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: #fff;
-            opacity: 0;
-            transition: all 0.4s;
-            z-index: 500;
-            text-align: center;
+            font-size: 2.5rem; font-weight: 900;
+            color: #fff; opacity: 0;
+            transition: all 0.4s; z-index: 500; text-align: center;
         }
 
         #notification.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
         #split-line {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 4px;
-            height: 100%;
+            position: absolute; top: 0; left: 50%;
+            width: 4px; height: 100%;
             background: rgba(255,255,255,0.2);
             transform: translateX(-50%);
-            display: none;
-            z-index: 50;
+            display: none; z-index: 50;
         }
     </style>
     <script type="importmap">
@@ -227,7 +188,7 @@
     <div id="canvas-container"></div>
     <div id="split-line"></div>
 
-    <div id="loading-screen" style="position:fixed; inset:0; background:#adeafa; color:#fff; display:flex; justify-content:center; align-items:center; z-index:2000;">
+    <div id="loading-screen" style="position:fixed; inset:0; background:#adeafa; display:flex; justify-content:center; align-items:center; z-index:2000;">
         <div style="text-align: center;">
             <div style="font-size: 5rem;">🌴🦍🦔</div>
             <h1 style="letter-spacing: 10px; color:#111; text-shadow: 0 0 10px rgba(255,255,255,0.5);">SONIC JUNGLE</h1>
@@ -277,7 +238,6 @@
                 </div>
             </div>
         </div>
-
         <div id="notification">GO!</div>
     </div>
 
@@ -303,52 +263,63 @@
         let scene, renderer, sun, ambientLight, cam1, cam2;
 
         function init() {
-            let p = 0; const iv = setInterval(() => { p += 5; document.getElementById('loader-fill').style.width = p+'%'; if(p>=100) { clearInterval(iv); document.getElementById('loading-screen').style.display='none'; document.getElementById('start-screen').style.display='flex'; }}, 50);
+            try {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(CONFIG.SKY);
+                scene.fog = new THREE.Fog(CONFIG.SKY, 600, 3000);
 
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(CONFIG.SKY);
-            scene.fog = new THREE.Fog(CONFIG.SKY, 600, 3000);
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+                cam1 = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 8000);
+                cam2 = new THREE.PerspectiveCamera(75, window.innerWidth/2/window.innerHeight, 0.1, 8000);
 
-            cam1 = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 8000);
-            cam2 = new THREE.PerspectiveCamera(75, window.innerWidth/2/window.innerHeight, 0.1, 8000);
+                ambientLight = new THREE.AmbientLight(0xffffff, 0.95); scene.add(ambientLight);
+                sun = new THREE.DirectionalLight(0xffffff, 1.3);
+                sun.position.set(400, 800, 600); sun.castShadow = true;
+                sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 0.95); scene.add(ambientLight);
-            sun = new THREE.DirectionalLight(0xffffff, 1.3);
-            sun.position.set(400, 800, 600); sun.castShadow = true;
-            sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
+                createWorld();
+                players[0].obj = createPlayerMesh(players[0]);
+                players[1].obj = createPlayerMesh(players[1]);
 
-            createWorld();
-            players[0].obj = createPlayerMesh(players[0]);
-            players[1].obj = createPlayerMesh(players[1]);
+                for(let i=0; i<600; i++) spawnRing(false);
+                for(let i=0; i<150; i++) spawnRing(true);
+                for(let i=0; i<45; i++) spawnJungleSeeker();
+                for(let i=0; i<100; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
+                for(let i=0; i<35; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 40 + Math.random()*100, (Math.random()-0.5)*CONFIG.WORLD*0.8);
+                for(let i=0; i<70; i++) createCloud();
+                for(let i=0; i<120; i++) spawnButterfly();
 
-            for(let i=0; i<600; i++) spawnRing(false);
-            for(let i=0; i<150; i++) spawnRing(true);
-            for(let i=0; i<45; i++) spawnJungleSeeker();
-            for(let i=0; i<100; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
-            for(let i=0; i<35; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 40 + Math.random()*100, (Math.random()-0.5)*CONFIG.WORLD*0.8);
-            for(let i=0; i<70; i++) createCloud();
-            for(let i=0; i<120; i++) spawnButterfly();
+                window.addEventListener('keydown', e => { 
+                    const p1 = players[0], p2 = players[1];
+                    if(e.code === 'Space' && state.started && !p1.onGround && p1.trick === 0) triggerTrick(0);
+                    if(e.code === 'ControlRight' && state.is2P && !p2.onGround && p2.trick === 0) triggerTrick(1);
+                    state.keys[e.code] = true; 
+                    const el = document.getElementById('key-'+e.code); if(el) el.classList.add('active'); 
+                });
+                window.addEventListener('keyup', e => { 
+                    state.keys[e.code] = false; 
+                    const el = document.getElementById('key-'+e.code); if(el) el.classList.remove('active'); 
+                });
+                
+                document.getElementById('btn-1p').onclick = (e) => { e.preventDefault(); startGame(false); };
+                document.getElementById('btn-2p').onclick = (e) => { e.preventDefault(); startGame(true); };
 
-            window.addEventListener('keydown', e => { 
-                const p1 = players[0], p2 = players[1];
-                if(e.code === 'Space' && state.started && !p1.onGround && p1.trick === 0) triggerTrick(0);
-                if(e.code === 'ControlRight' && state.is2P && !p2.onGround && p2.trick === 0) triggerTrick(1);
-                state.keys[e.code] = true; 
-                const el = document.getElementById('key-'+e.code); if(el) el.classList.add('active'); 
-            });
-            window.addEventListener('keyup', e => { 
-                state.keys[e.code] = false; 
-                const el = document.getElementById('key-'+e.code); if(el) el.classList.remove('active'); 
-            });
-            
-            document.getElementById('btn-1p').onclick = () => startGame(false);
-            document.getElementById('btn-2p').onclick = () => startGame(true);
-            animate();
+                // Loading sequence
+                let p = 0; const iv = setInterval(() => { 
+                    p += 5; document.getElementById('loader-fill').style.width = p+'%'; 
+                    if(p>=100) { 
+                        clearInterval(iv); 
+                        document.getElementById('loading-screen').style.display='none'; 
+                        document.getElementById('start-screen').style.display='flex'; 
+                    }
+                }, 50);
+
+                animate();
+            } catch (err) { console.error("Sonic Initialization Error:", err); }
         }
 
         function createWorld() {
@@ -359,10 +330,8 @@
             ctx.fillRect(0, 0, 32, 32); ctx.fillRect(32, 32, 32, 32);
             const tex = new THREE.CanvasTexture(canvas);
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(100, 100); tex.magFilter = THREE.NearestFilter;
-
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(CONFIG.WORLD + 600, CONFIG.WORLD + 600), new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }));
             floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
-
             const wallMat = new THREE.MeshStandardMaterial({ color: 0x3d8c11 });
             const wallGeo = new THREE.BoxGeometry(CONFIG.WORLD, 50, 40);
             for(let i=0; i<4; i++) {
@@ -384,11 +353,10 @@
             const base = new THREE.Mesh(new THREE.CylinderGeometry(w/2, 5, 30, 4), new THREE.MeshStandardMaterial({ color: 0x5d4037 }));
             base.position.y = -15; g.add(base);
             g.position.set(x, y, z); scene.add(g);
-            state.objects.islands.push({ obj: g, x, y, z, valY: y, phase: Math.random()*Math.PI*2, range: 40 + Math.random()*70, w, d });
+            state.objects.islands.push({ obj: g, x, y, z, valY: y, phase: Math.random()*Math.PI*2, range: 40 + Math.random()*70, w, d, velY: 0 });
             for(let i=0; i<4; i++) {
                 const br = spawnRing(true);
                 br.position.set(x + (Math.random()-0.5)*w*0.8, y + 12, z + (Math.random()-0.5)*d*0.8);
-                br.userData.onIsland = true;
             }
         }
 
@@ -398,26 +366,22 @@
             const h = 45 + Math.random()*35;
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 3.2, h, 8), new THREE.MeshStandardMaterial({ color: 0x5d4037 }));
             trunk.position.y = h/2; g.add(trunk);
-            const leafColors = [0x1b5e20, 0x2e7d32, 0x388e3c];
-            const leafCol = leafColors[Math.floor(Math.random()*leafColors.length)];
-            const leaves = new THREE.Mesh(new THREE.SphereGeometry(22 + Math.random()*6, 6, 4), new THREE.MeshStandardMaterial({ color: leafCol, flatShading: true }));
+            const leaves = new THREE.Mesh(new THREE.SphereGeometry(22 + Math.random()*6, 6, 4), new THREE.MeshStandardMaterial({ color: 0x2e7d32, flatShading: true }));
             leaves.position.y = h; g.add(leaves);
-            const vineCount = 5 + Math.floor(Math.random()*5);
-            for(let i=0; i<vineCount; i++) {
-                const vine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 25+Math.random()*15, 0.5), new THREE.MeshStandardMaterial({ color: 0x81c784 }));
-                const ang = (i/vineCount) * Math.PI*2;
+            for(let i=0; i<6; i++) {
+                const vine = new THREE.Mesh(new THREE.BoxGeometry(0.5, 25+Math.random()*20, 0.5), new THREE.MeshStandardMaterial({ color: 0x81c784 }));
+                const ang = (i/6) * Math.PI*2;
                 vine.position.set(Math.cos(ang)*12, h * 0.7, Math.sin(ang)*12);
                 vine.rotation.z = (Math.random()-0.5)*0.4; g.add(vine);
             }
             g.position.set(x, 0, z); g.rotation.y = Math.random()*Math.PI; scene.add(g);
-            state.objects.trees.push(g);
         }
 
         function spawnButterfly() {
             const colors = [0xffffff, 0xff00ff, 0x00ffff, 0xffff00];
             const b = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random()*colors.length)], side: THREE.DoubleSide }));
             b.position.set((Math.random()-0.5)*CONFIG.WORLD, 10 + Math.random()*40, (Math.random()-0.5)*CONFIG.WORLD);
-            b.userData = { phase: Math.random()*Math.PI*2, speed: 0.05 + Math.random()*0.1 };
+            b.userData = { phase: Math.random()*Math.PI*2 };
             scene.add(b); state.objects.butterflies.push(b);
         }
 
@@ -435,37 +399,31 @@
             scene.add(g); return g;
         }
 
-        function triggerTrick(i) {
-            const p = players[i]; p.trick = 1; p.vel.y += 0.45; 
-        }
+        function triggerTrick(i) { players[i].trick = 1; players[i].vel.y += 0.45; }
 
         function spawnRing(blue) {
             const color = blue ? 0x00ffff : 0xffcc00;
             const r = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.4, 8, 16), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.5 }));
             r.position.set((Math.random()-0.5)*CONFIG.WORLD, 4 + Math.random()*80, (Math.random()-0.5)*CONFIG.WORLD);
             r.userData = { blue };
-            scene.add(r); state.objects.rings.push(r);
-            return r;
+            scene.add(r); state.objects.rings.push(r); return r;
         }
 
         function spawnJungleSeeker() {
             const g = new THREE.Group();
-            const scl = 0.9 + Math.random()*0.5;
-            const body = new THREE.Mesh(new THREE.SphereGeometry(2.8*scl, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffdf00, flatShading: true }));
-            g.add(body);
-            const wings = new THREE.Mesh(new THREE.BoxGeometry(8*scl, 0.2, 4*scl), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }));
-            wings.position.y = 1.3*scl; g.add(wings);
-            const stinger = new THREE.Mesh(new THREE.ConeGeometry(0.6*scl, 3*scl, 8), new THREE.MeshStandardMaterial({ color: 0x212121 }));
-            stinger.rotation.x = Math.PI/2; stinger.position.z = 3*scl; g.add(stinger);
+            const scl = 1.0;
+            const body = new THREE.Mesh(new THREE.SphereGeometry(2.8, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffdf00, flatShading: true })); g.add(body);
+            const wings = new THREE.Mesh(new THREE.BoxGeometry(8, 0.2, 4), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 })); wings.position.y = 1.3; g.add(wings);
+            const stinger = new THREE.Mesh(new THREE.ConeGeometry(0.6, 3, 8), new THREE.MeshStandardMaterial({ color: 0x212121 })); stinger.rotation.x = Math.PI/2; stinger.position.z = 3; g.add(stinger);
             g.position.set((Math.random()-0.5)*CONFIG.WORLD, 20 + Math.random()*80, (Math.random()-0.5)*CONFIG.WORLD);
-            g.userData = { angle: Math.random()*Math.PI*2, wingPhase: 0, speed: 0.25 + Math.random()*0.3 }; scene.add(g); state.objects.seekers.push(g);
+            g.userData = { angle: Math.random()*Math.PI*2, wingPhase: 0, speed: 0.3 }; scene.add(g); state.objects.seekers.push(g);
         }
 
         function createCloud() {
             const g = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
             for(let i=0; i<10; i++) {
-                const b = new THREE.Mesh(new THREE.BoxGeometry(80+Math.random()*150, 40+Math.random()*80, 80+Math.random()*150), mat);
+                const b = new THREE.Mesh(new THREE.BoxGeometry(100, 50, 100), mat);
                 b.position.set(Math.random()*150-75, Math.random()*75, Math.random()*150-75); g.add(b);
             }
             g.position.set((Math.random()-0.5)*7000, 800 + Math.random()*600, (Math.random()-0.5)*7000);
@@ -473,8 +431,13 @@
         }
 
         function startGame(split) {
-            state.is2P = split; state.started = true; document.getElementById('start-screen').style.display='none';
-            if(split) { document.getElementById('p2-ui').style.display='flex'; document.getElementById('split-line').style.display='block'; }
+            console.log("Starting game, mode:", split ? "2P" : "1P");
+            state.is2P = split; state.started = true; 
+            document.getElementById('start-screen').style.display='none';
+            if(split) { 
+                document.getElementById('p2-ui').style.display='flex'; 
+                document.getElementById('split-line').style.display='block'; 
+            }
             setInterval(() => { if(state.started && state.time>0) { state.time--; updateTimerUI(); if(state.time===0) endGame(); } }, 1000);
         }
 
@@ -490,10 +453,8 @@
                     s.userData.angle += delta; s.position.x += Math.sin(s.userData.angle)*s.userData.speed;
                 });
                 state.objects.butterflies.forEach(b => {
-                    b.userData.phase += delta*3;
-                    b.position.x += Math.cos(b.userData.phase)*0.2;
-                    b.position.y += Math.sin(b.userData.phase*0.5)*0.1;
-                    b.rotation.y += delta*5;
+                    b.userData.phase += delta*3; b.position.x += Math.cos(b.userData.phase)*0.2;
+                    b.position.y += Math.sin(b.userData.phase*0.5)*0.1; b.rotation.y += delta*5;
                 });
                 state.objects.islands.forEach(isl => {
                     isl.phase += delta * 0.85;
@@ -515,7 +476,9 @@
             if(state.is2P) handleInput(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ControlRight');
             else {
                 const t = players[0].pos.clone().add(new THREE.Vector3(-Math.sin(players[0].yaw)*15, 3, -Math.cos(players[0].yaw)*15));
-                players[1].pos.lerp(t, delta*8); players[1].obj.position.copy(players[1].pos); players[1].obj.lookAt(players[0].pos);
+                players[1].pos.lerp(t, delta*8); 
+                players[1].obj.position.copy(players[1].pos);
+                players[1].obj.lookAt(players[0].pos);
             }
             players.forEach(p => {
                 if(!p.onGround) p.vel.y += CONFIG.GRAVITY;
@@ -523,22 +486,19 @@
                 p.pos.add(p.vel);
                 const r = CONFIG.WORLD/2 - 25;
                 p.pos.x = Math.max(-r, Math.min(r, p.pos.x)); p.pos.z = Math.max(-r, Math.min(r, p.pos.z));
-                
                 let floorY = 1.8; let pVelY = 0;
-                state.objects.islands.forEach(isl => {
+                for (const isl of state.objects.islands) {
                     const dx = p.pos.x - isl.obj.position.x; const dz = p.pos.z - isl.obj.position.z;
                     if(Math.abs(dx) < isl.w/2+1 && Math.abs(dz) < isl.d/2+1) {
                         const tY = isl.obj.position.y + 7.8;
                         if(p.pos.y > tY - 10) { floorY = Math.max(floorY, tY); if(floorY === tY) pVelY = isl.velY; }
                     }
-                });
-
+                }
                 if(p.pos.y < floorY) { 
                     p.pos.y = floorY; if(p.vel.y < 0) p.vel.y = 0; 
                     if(p.onGround) p.pos.y += pVelY;
                     p.onGround = true; p.trick = 0; 
                 } else if(p.pos.y > floorY + 0.8) { p.onGround = false; }
-                
                 p.obj.position.copy(p.pos); p.obj.rotation.y = p.yaw;
                 const s = p.vel.length();
                 if(s > 0.8) {
@@ -548,10 +508,8 @@
                 if(p.trick > 0) { p.obj.rotation.x += delta*35; p.obj.rotation.z += delta*18; }
                 const targetScale = p.trick > 0 ? 1.0 : (1 + s*0.18);
                 p.obj.children[0].scale.lerp(new THREE.Vector3(targetScale, 2 - targetScale, targetScale), 0.12);
-                
                 if(p.shake > 0) p.shake -= delta * 15;
             });
-            
             for(let i=state.objects.speedLines.length-1; i>=0; i--) {
                 const l = state.objects.speedLines[i]; l.material.opacity -= 0.08; l.position.add(l.userData.v);
                 if(l.material.opacity <= 0) { scene.remove(l); state.objects.speedLines.splice(i,1); }
@@ -600,11 +558,11 @@
                         r.position.lerp(p.pos, 0.48); 
                         if(d < 5.5) { 
                             scene.remove(r); state.objects.rings.splice(i,1); 
-                            const val = r.userData.blue ? 5 : 1; p.rings += val; 
+                            p.rings += r.userData.blue ? 5 : 1; 
                             if(r.userData.blue) showNotification("+5 BLUE RINGS!");
                             updateUI(); 
                             const card = document.getElementById(`p${idx+1}-card`);
-                            card.classList.add('pulse'); setTimeout(() => card.classList.remove('pulse'), 200);
+                            if(card) { card.classList.add('pulse'); setTimeout(() => card.classList.remove('pulse'), 200); }
                         } 
                     }
                 });
@@ -630,8 +588,10 @@
 
         function render() {
             const w = window.innerWidth, h = window.innerHeight;
-            if(!state.is2P) { follow(cam1, players[0]); renderer.setViewport(0,0,w,h); renderer.render(scene, cam1); }
-            else {
+            if(!state.is2P) { 
+                follow(cam1, players[0]); 
+                renderer.setViewport(0,0,w,h); renderer.render(scene, cam1); 
+            } else {
                 renderer.setScissorTest(true);
                 follow(cam1, players[0]); renderer.setViewport(0,0,w/2,h); renderer.setScissor(0,0,w/2,h); renderer.render(scene, cam1);
                 follow(cam2, players[1]); renderer.setViewport(w/2,0,w/2,h); renderer.setScissor(w/2,0,w/2,h); renderer.render(scene, cam2);
@@ -641,18 +601,25 @@
         function follow(c, p) { 
             const s = p.vel.length();
             const targetFOV = 75 + Math.min(25, s * 6);
-            c.fov = THREE.MathUtils.lerp(c.fov, targetFOV, 0.1);
+            if (THREE.MathUtils && THREE.MathUtils.lerp) {
+                c.fov = THREE.MathUtils.lerp(c.fov, targetFOV, 0.1);
+            } else { c.fov = targetFOV; }
             c.updateProjectionMatrix();
 
-            const shakeOffset = new THREE.Vector3((Math.random()-0.5)*p.shake, (Math.random()-0.5)*p.shake, (Math.random()-0.5)*p.shake);
-            const targetPos = p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*40, 22, -Math.cos(p.yaw)*40)).add(shakeOffset);
+            const shakeAmt = p.shake || 0;
+            const shake = new THREE.Vector3((Math.random()-0.5)*shakeAmt, (Math.random()-0.5)*shakeAmt, (Math.random()-0.5)*shakeAmt);
+            const targetPos = p.pos.clone().add(new THREE.Vector3(-Math.sin(p.yaw)*40, 22, -Math.cos(p.yaw)*40)).add(shake);
             c.position.lerp(targetPos, 0.18); c.lookAt(p.pos); 
         }
-        function updateUI() { document.getElementById('p1-rings').innerText = players[0].rings; if(state.is2P) document.getElementById('p2-rings').innerText = players[1].rings; }
-        function updateTimerUI() { const m = Math.floor(state.time/60), s = state.time%60; document.getElementById('timer-display').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; }
-        function showNotification(t) { const n = document.getElementById('notification'); n.innerText = t; n.classList.add('active'); setTimeout(() => n.classList.remove('active'), 2000); }
+        function updateUI() { 
+            const p1r = document.getElementById('p1-rings'); if(p1r) p1r.innerText = players[0].rings;
+            const p2r = document.getElementById('p2-rings'); if(p2r && state.is2P) p2r.innerText = players[1].rings;
+        }
+        function updateTimerUI() { const td = document.getElementById('timer-display'); if(td) { const m = Math.floor(state.time/60), s = state.time%60; td.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; } }
+        function showNotification(t) { const n = document.getElementById('notification'); if(n) { n.innerText = t; n.classList.add('active'); setTimeout(() => n.classList.remove('active'), 2000); } }
         function endGame() { state.started = false; showNotification("GAME OVER"); setTimeout(() => location.reload(), 3000); }
-        init();
+        
+        window.onload = init;
     </script>
 </body>
 </html>
