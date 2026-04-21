@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MGE: Lunar Architect | STEM Arcade Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --arcade-primary: #a78bfa;
+            --arcade-accent: #ffe66d;
+            --mge-dark: #1a1a2e;
+            --mge-neon-blue: #00f2fe;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: 'Outfit', sans-serif; background-color: var(--mge-dark); color: white; overflow: hidden; height: 100vh; }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(26, 26, 46, 0.85); backdrop-filter: blur(15px);
+            border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #dashboard { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 30px; }
+        .stat { text-align: center; min-width: 100px; }
+        .stat-label { font-size: 0.65rem; color: #aaa; text-transform: uppercase; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; }
+
+        #vab-panel { position: absolute; left: 20px; top: 100px; width: 280px; }
+        .vab-title { font-weight: 900; color: var(--arcade-accent); margin-bottom: 15px; }
+        
+        .control-group { margin-bottom: 15px; }
+        .control-label { font-size: 0.85rem; display: block; margin-bottom: 5px; }
+        .control-input { width: 100%; }
+
+        #ignite-container {
+            position: absolute; bottom: 40px; right: 40px;
+            pointer-events: auto; display: flex; gap: 15px;
+        }
+
+        .mge-btn {
+            padding: 15px 30px; border: none; border-radius: 50px;
+            font-family: 'Orbitron', sans-serif; font-weight: 800;
+            cursor: pointer; transition: all 0.2s;
+            background: linear-gradient(135deg, #a78bfa, #f472b6); color: white;
+        }
+        .mge-btn:hover { transform: scale(1.05); }
+
+        .exit-link { position: absolute; top: 20px; left: 20px; pointer-events: auto; color: #aaa; text-decoration: none; font-weight: 800; }
+        .exit-link:hover { color: white; }
+
+        #mission-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column; items: center; justify-content: center;
+            text-align: center; z-index: 100; padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-layer">
+        <a href="../../index.html" class="exit-link">🕹️ EXIT TO ARCADE</a>
+
+        <div id="dashboard" class="panel">
+            <div class="stat">
+                <div class="stat-label">Altitude</div>
+                <div id="alt-val" class="stat-value">0 km</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Velocity</div>
+                <div id="speed-val" class="stat-value">0 m/s</div>
+            </div>
+        </div>
+
+        <div id="vab-panel" class="panel">
+            <div class="vab-title">🚀 MISSION BUILDER</div>
+            <div class="control-group">
+                <label class="control-label">Fuel Mass</label>
+                <input type="range" id="fuel-input" class="control-input" min="100" max="1000" value="500">
+            </div>
+            <div class="control-group">
+                <label class="control-label">Thrust Power</label>
+                <input type="range" id="thrust-input" class="control-input" min="10" max="100" value="50">
+            </div>
+            <p style="font-size: 0.7rem; color: #888; font-style: italic;">* Adjust your parameters for the perfect lunar injection.</p>
+        </div>
+
+        <div id="ignite-container">
+            <button class="mge-btn" id="ignite-btn">IGNITION</button>
+        </div>
+    </div>
+
+    <div id="mission-overlay">
+        <h1 style="font-size: 3rem; margin-bottom: 15px;">LUNAR ARCHITECT</h1>
+        <p style="max-width: 600px; margin-bottom: 30px;">Build your rocket. Master the gravity slingshot. Achieve lunar orbit.</p>
+        <button class="mge-btn" id="start-btn">ENTER VAB</button>
+    </div>
+
+    <script>
+        class LunarArchitect {
+            constructor() {
+                this.initThree();
+                this.initSystems();
+                this.setupUI();
+                this.animate();
+            }
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x050510);
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(this.renderer.domElement);
+
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+                const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+                sun.position.set(100, 50, 100);
+                this.scene.add(sun);
+            }
+
+            initSystems() {
+                // Earth
+                this.earth = new THREE.Mesh(new THREE.SphereGeometry(20, 32, 32), new THREE.MeshStandardMaterial({ color: 0x1a73e8 }));
+                this.scene.add(this.earth);
+
+                // Moon
+                this.moon = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 24), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
+                this.moon.position.set(200, 0, 0);
+                this.scene.add(this.moon);
+
+                // Rocket
+                this.rocket = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 3, 8), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                this.rocket.add(body);
+                this.rocket.position.set(0, 22, 0);
+                this.scene.add(this.rocket);
+
+                this.velocity = new THREE.Vector3();
+                this.position = this.rocket.position.clone();
+                this.ignited = false;
+                this.fuel = 500;
+                this.thrust = 0.5;
+            }
+
+            setupUI() {
+                document.getElementById('start-btn').onclick = () => {
+                    document.getElementById('mission-overlay').style.display = 'none';
+                };
+                document.getElementById('ignite-btn').onmousedown = () => { this.ignited = true; };
+                document.getElementById('ignite-btn').onmouseup = () => { this.ignited = false; };
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const dt = 0.016;
+
+                if (this.ignited && this.fuel > 0) {
+                    const thrustForce = new THREE.Vector3(0, 1, 0).applyQuaternion(this.rocket.quaternion).multiplyScalar(this.thrust);
+                    this.velocity.add(thrustForce);
+                    this.fuel -= 1;
+                }
+
+                // Gravity (Simplified)
+                const toEarth = new THREE.Vector3(0,0,0).sub(this.position);
+                const distE = toEarth.length();
+                this.velocity.add(toEarth.normalize().multiplyScalar(15 / (distE * distE)));
+
+                const toMoon = new THREE.Vector3(200,0,0).sub(this.position);
+                const distM = toMoon.length();
+                this.velocity.add(toMoon.normalize().multiplyScalar(5 / (distM * distM)));
+
+                this.position.add(this.velocity);
+                this.rocket.position.copy(this.position);
+
+                // HUD
+                document.getElementById('alt-val').innerText = Math.round(this.position.length() - 20) + " km";
+                document.getElementById('speed-val').innerText = Math.round(this.velocity.length() * 100) + " m/s";
+
+                this.camera.position.lerp(this.position.clone().add(new THREE.Vector3(20, 20, 50)), 0.1);
+                this.camera.lookAt(this.position);
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        new LunarArchitect();
+    </script>
+</body>
+</html>

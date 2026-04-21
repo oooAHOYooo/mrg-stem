@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MGE: Storm Chaser | STEM Arcade Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+            --mge-accent: #ffe66d;
+            --mge-purple: #a78bfa;
+            --mge-dark: #1a1a2e;
+            --mge-storm: #475569;
+            --mge-neon-blue: #00f2fe;
+            --mge-neon-yellow: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--mge-dark);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .panel {
+            pointer-events: auto;
+            background: rgba(26, 26, 46, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        #dashboard {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            padding: 15px 40px;
+            border-radius: 50px;
+        }
+
+        .stat { text-align: center; min-width: 80px; }
+        .stat-label { font-size: 0.65rem; color: #aaa; margin-bottom: 4px; }
+        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 700; }
+
+        #action-panel {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .action-btn:hover { background: rgba(0, 242, 254, 0.2); transform: scale(1.05); }
+        .action-btn.active { background: var(--mge-neon-blue); color: var(--mge-dark); }
+
+        .mge-nav { position: absolute; top: 20px; left: 20px; pointer-events: auto; z-index: 100; }
+        .nav-link { text-decoration: none; color: #aaa; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .nav-link:hover { color: white; }
+
+        #intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(26, 26, 46, 0.9) 0%, rgba(10, 10, 20, 1) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .mge-btn {
+            padding: 18px 50px;
+            background: linear-gradient(135deg, var(--mge-neon-blue), var(--mge-purple));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.4);
+            transition: all 0.3s;
+        }
+
+        #warning-box {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 25px;
+            background: rgba(255, 107, 107, 0.15);
+            border: 2px solid var(--mge-primary);
+            border-radius: 12px;
+            color: var(--mge-primary);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="ui-layer">
+        <div class="mge-nav">
+            <a href="../../index.html" class="nav-link">🕹️ EXIT TO ARCADE</a>
+        </div>
+
+        <div id="dashboard" class="panel">
+            <div class="stat">
+                <div class="stat-label">STORM LEVEL</div>
+                <div id="stat-level" class="stat-value">CLEAR</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">WIND</div>
+                <div id="stat-wind" class="stat-value">5 MPH</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">🏆 ESCAPES</div>
+                <div id="stat-escapes" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div id="action-panel">
+            <button class="action-btn" id="rain-btn">⛈️ STORM</button>
+            <button class="action-btn" id="lightning-btn">⚡ LIGHTNING</button>
+            <button class="action-btn" id="tornado-btn">🌪️ TORNADO</button>
+            <button class="action-btn" id="reset-btn">🔄 RESET</button>
+        </div>
+
+        <div id="warning-box">⚠️ SEVERE WEATHER WARNING!</div>
+    </div>
+
+    <div id="intro-overlay">
+        <h1>STORM CHASER</h1>
+        <p>Master the elements. Survive the tornado.</p>
+        <button class="mge-btn" id="start-btn">BEGIN MISSION</button>
+    </div>
+
+    <script>
+        class StormChaser {
+            constructor() {
+                this.escapeCount = 0;
+                this.initThree();
+                this.initEnvironment();
+                this.initWeather();
+                this.initCar();
+                this.setupControls();
+                this.animate();
+            }
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87ceeb);
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+                const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+                sun.position.set(100, 200, 100);
+                this.scene.add(sun);
+            }
+
+            initEnvironment() {
+                const ground = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ color: 0x3d5a80 }));
+                ground.rotation.x = -Math.PI / 2;
+                this.scene.add(ground);
+                this.scene.add(new THREE.GridHelper(1000, 40, 0x00f2fe, 0x1a1a2e));
+            }
+
+            initWeather() {
+                this.isRaining = false;
+                this.hasTornado = false;
+                
+                // Tornado
+                this.tornado = new THREE.Group();
+                for(let i=0; i<10; i++) {
+                    const ring = new THREE.Mesh(new THREE.TorusGeometry(2 + i*2, 0.5, 8, 16), new THREE.MeshStandardMaterial({ color: 0x475569, transparent: true, opacity: 0.7 }));
+                    ring.position.y = i * 6;
+                    ring.rotation.x = Math.PI / 2;
+                    this.tornado.add(ring);
+                }
+                this.scene.add(this.tornado);
+                this.tornado.visible = false;
+            }
+
+            initCar() {
+                this.car = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 8), new THREE.MeshStandardMaterial({ color: 0xff4757 }));
+                this.car.position.set(0, 1, 100);
+                this.scene.add(this.car);
+                this.carInput = { w: false, a: false, s: false, d: false, speed: 0, angle: 0 };
+                window.addEventListener('keydown', e => { if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = true; });
+                window.addEventListener('keyup', e => { if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = false; });
+            }
+
+            setupControls() {
+                document.getElementById('rain-btn').onclick = () => {
+                    this.isRaining = !this.isRaining;
+                    document.getElementById('rain-btn').classList.toggle('active');
+                };
+                document.getElementById('tornado-btn').onclick = () => {
+                    this.hasTornado = !this.hasTornado;
+                    this.tornado.visible = this.hasTornado;
+                    document.getElementById('tornado-btn').classList.toggle('active');
+                    document.getElementById('warning-box').style.display = this.hasTornado ? 'block' : 'none';
+                };
+                document.getElementById('start-btn').onclick = () => {
+                    document.getElementById('intro-overlay').style.display = 'none';
+                };
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const dt = 0.016;
+
+                if (this.carInput.w) this.carInput.speed += 50 * dt;
+                if (this.carInput.s) this.carInput.speed -= 50 * dt;
+                this.carInput.speed *= 0.95;
+                if (this.carInput.a) this.carInput.angle += 2 * dt;
+                if (this.carInput.d) this.carInput.angle -= 2 * dt;
+
+                this.car.position.x += Math.sin(this.carInput.angle) * this.carInput.speed * dt;
+                this.car.position.z += Math.cos(this.carInput.angle) * this.carInput.speed * dt;
+                this.car.rotation.y = this.carInput.angle;
+
+                this.camera.position.set(this.car.position.x - Math.sin(this.carInput.angle)*40, 20, this.car.position.z - Math.cos(this.carInput.angle)*40);
+                this.camera.lookAt(this.car.position);
+
+                if (this.hasTornado) {
+                    this.tornado.children.forEach((r, i) => r.rotation.z += dt * (10-i));
+                    const chaseDir = new THREE.Vector3().subVectors(this.car.position, this.tornado.position).normalize();
+                    this.tornado.position.add(chaseDir.multiplyScalar(20 * dt));
+                    
+                    if (this.car.position.distanceTo(this.tornado.position) < 15) {
+                        this.car.position.set(0, 1, 100);
+                        this.carInput.speed = 0;
+                    }
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        new StormChaser();
+    </script>
+</body>
+</html>

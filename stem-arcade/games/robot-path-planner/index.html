@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Path Planner | STEM Arcade Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --arcade-primary: #00e5ff;
+            --arcade-bg: #0d0f1a;
+            --panel: #13172a;
+            --border: #2a2f50;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: 'Outfit', sans-serif; background: var(--arcade-bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        #topbar { height: 60px; background: var(--panel); border-bottom: 2px solid var(--border); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
+        .logo { font-size: 1.5rem; font-weight: 900; background: linear-gradient(to right, #00e5ff, #b388ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+        #layout { display: flex; flex: 1; overflow: hidden; }
+        #canvas-wrap { flex: 1; position: relative; background: #000; }
+        #panel { width: 300px; background: var(--panel); border-left: 2px solid var(--border); display: flex; flex-direction: column; padding: 20px; gap: 20px; }
+
+        .palette h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--arcade-primary); margin-bottom: 10px; }
+        .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tile { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 10px; border-radius: 10px; cursor: pointer; text-align: center; }
+
+        #rail { flex: 1; background: rgba(0,0,0,0.2); border: 2px dashed var(--border); border-radius: 15px; padding: 15px; overflow-y: auto; }
+
+        .run-btn { background: #00e676; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; color: #000; }
+        .exit-link { color: white; text-decoration: none; font-weight: 800; font-size: 0.8rem; opacity: 0.7; }
+        .exit-link:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div id="topbar">
+        <div class="logo">ROBOT PATH PLANNER</div>
+        <a href="../../index.html" class="exit-link">🕹️ EXIT TO ARCADE</a>
+    </div>
+
+    <div id="layout">
+        <div id="canvas-wrap"></div>
+        <div id="panel">
+            <div class="palette">
+                <h3>LOGIC BLOCKS</h3>
+                <div class="tiles">
+                    <div class="tile">⬆ FORWARD</div>
+                    <div class="tile">⬅ LEFT</div>
+                    <div class="tile">➡ RIGHT</div>
+                    <div class="tile">🔁 LOOP</div>
+                </div>
+            </div>
+            <div id="rail">
+                <p style="text-align: center; color: #555; margin-top: 20px;">Logic Sequence Rail</p>
+            </div>
+            <button class="run-btn">RUN PROGRAM</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        class RobotPath {
+            constructor() {
+                this.initThree();
+                this.initGrid();
+                this.animate();
+            }
+
+            initThree() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x0d0f1a);
+                this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(10, 10, 10);
+                this.camera.lookAt(0,0,0);
+                
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth - 300, window.innerHeight - 60);
+                document.getElementById('canvas-wrap').appendChild(this.renderer.domElement);
+
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+                const sun = new THREE.DirectionalLight(0xffffff, 1);
+                sun.position.set(5, 10, 5);
+                this.scene.add(sun);
+            }
+
+            initGrid() {
+                const grid = new THREE.GridHelper(20, 10, 0x00e5ff, 0x2a2f50);
+                this.scene.add(grid);
+                
+                // Robot
+                this.robot = new THREE.Mesh(new THREE.BoxGeometry(1, 1.5, 1), new THREE.MeshStandardMaterial({ color: 0x00e5ff }));
+                this.robot.position.y = 0.75;
+                this.scene.add(this.robot);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        new RobotPath();
+    </script>
+</body>
+</html>

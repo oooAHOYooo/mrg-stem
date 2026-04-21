@@ -5,13 +5,13 @@ export const useArcadeStore = defineStore('arcade', {
     license: JSON.parse(localStorage.getItem('arcade_license') || 'null'),
     stemXp: parseInt(localStorage.getItem('arcade_xp') || '0'),
     games: [
-      { id: 'smash', title: 'Super Smash Fighters', emoji: '⚔️', category: 'Fighting', native: true },
-      { id: 'storm-chaser', title: 'Storm Chaser', emoji: '🌪️', category: 'Nature', path: '../mge-storm-chaser.html' },
-      { id: 'lunar-architect', title: 'Lunar Architect', emoji: '🚀', category: 'Space', path: '../mge-lunar-architect.html' },
-      { id: 'sonic-speed', title: 'Sonic Speed', emoji: '🦔', category: 'Physics', path: '../mge-sonic-speed.html' },
-      { id: 'fps-striker', title: 'FPS Striker', emoji: '🎯', category: 'Logic', path: '../mge-fps-striker.html' },
-      { id: 'robot-path', title: 'Robot Path Planner', emoji: '🤖', category: 'Logic', path: '../mge-robot-path-planner.html' },
-      { id: 'aqua-genesis', title: 'Aqua Genesis', emoji: '🌊', category: 'Science', path: '../mge-aqua-genesis.html' }
+      { id: 'smash', title: 'Super Smash Fighters', emoji: '⚔️', category: 'Fighting', path: 'games/smash/index.html' },
+      { id: 'storm-chaser', title: 'Storm Chaser', emoji: '🌪️', category: 'Nature', path: 'games/storm-chaser/index.html' },
+      { id: 'lunar-architect', title: 'Lunar Architect', emoji: '🚀', category: 'Space', path: 'games/lunar-architect/index.html' },
+      { id: 'sonic-speed', title: 'Sonic Speed', emoji: '🦔', category: 'Physics', path: 'games/sonic-speed/index.html' },
+      { id: 'fps-striker', title: 'FPS Striker', emoji: '🎯', category: 'Logic', path: 'games/fps-striker/index.html' },
+      { id: 'robot-path', title: 'Robot Path Planner', emoji: '🤖', category: 'Logic', path: 'games/robot-path-planner/index.html' },
+      { id: 'aqua-genesis', title: 'Aqua Genesis', emoji: '🌊', category: 'Science', path: 'games/aqua-genesis/index.html' }
     ]
   }),
   actions: {

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqua Genesis | STEM Arcade Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #001219;
+            --accent-primary: #94d2bd;
+            --border-color: #005f73;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Comic Neue', sans-serif; background: var(--bg-dark); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        .top-nav { height: 70px; background: #000; border-bottom: 3px solid var(--accent-primary); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; }
+        .nav-brand { font-size: 1.6rem; font-weight: 700; color: var(--accent-primary); display: flex; align-items: center; gap: 10px; }
+
+        .workspace { display: grid; grid-template-columns: 40% 60%; flex: 1; padding: 1.5rem; gap: 1.5rem; }
+        .panel { background: #002233; border: 3px solid var(--border-color); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+
+        #canvas-view { flex: 1; background: #000; position: relative; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { background: #2a2a2a; padding: 15px; border-radius: 12px; font-size: 1.1rem; border-left: 5px solid var(--accent-primary); }
+
+        .controls { padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .btn-game { background: var(--border-color); border: none; padding: 10px; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-game:hover { background: var(--accent-primary); color: #000; }
+
+        .exit-link { color: white; text-decoration: none; font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-brand"><span>🌊</span> AQUA GENESIS</div>
+        <a href="../../index.html" class="exit-link">🕹️ EXIT TO ARCADE</a>
+    </nav>
+
+    <div class="workspace">
+        <div class="panel" style="display: flex; flex-direction: column;">
+            <div class="chat-area">
+                <div class="msg"><b>Helper Robot:</b> Welcome to Aqua Genesis! Let's build an underwater world. Start by clicking a color block below! 🐠</div>
+            </div>
+            <div class="controls">
+                <button class="btn-game" onclick="spawn('cube', '#007aff')">BLUE CUBE</button>
+                <button class="btn-game" onclick="spawn('sphere', '#ff4757')">RED SPHERE</button>
+                <button class="btn-game" onclick="spawn('torus', '#ffa502')">ORANGE DONUT</button>
+                <button class="btn-game" onclick="clearAll()" style="grid-column: span 3; background: #ff4757;">RESET WORLD</button>
+            </div>
+        </div>
+        <div class="panel" id="canvas-view"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, objects = [];
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x001219);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth * 0.6 / (window.innerHeight - 70), 0.1, 1000);
+            camera.position.set(5, 5, 10);
+            camera.lookAt(0,0,0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            const view = document.getElementById('canvas-view');
+            renderer.setSize(view.clientWidth, view.clientHeight);
+            view.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const light = new THREE.PointLight(0x00e5ff, 1, 100);
+            light.position.set(5, 10, 5);
+            scene.add(light);
+            
+            // Grid for floor
+            const grid = new THREE.GridHelper(20, 10, 0x005f73, 0x002233);
+            scene.add(grid);
+
+            animate();
+        }
+
+        function spawn(type, color) {
+            let geometry;
+            if(type === 'cube') geometry = new THREE.BoxGeometry(1, 1, 1);
+            else if(type === 'sphere') geometry = new THREE.SphereGeometry(0.7, 32, 32);
+            else geometry = new THREE.TorusGeometry(0.6, 0.2, 16, 100);
+
+            const material = new THREE.MeshStandardMaterial({ color: color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set((Math.random()-0.5)*10, 5, (Math.random()-0.5)*10);
+            scene.add(mesh);
+            objects.push(mesh);
+        }
+
+        function clearAll() {
+            objects.forEach(obj => scene.remove(obj));
+            objects = [];
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            objects.forEach(obj => {
+                if(obj.position.y > 0.5) obj.position.y -= 0.05;
+                obj.rotation.y += 0.01;
+            });
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+        window.onresize = () => {
+            const view = document.getElementById('canvas-view');
+            camera.aspect = view.clientWidth / view.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(view.clientWidth, view.clientHeight);
+        };
+    </script>
+</body>
+</html>

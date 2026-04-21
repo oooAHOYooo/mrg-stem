@@ -1,0 +1,19 @@
+[build]
+  base = "frontend"
+  # Only build if something in the frontend or the config itself changed
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../netlify.toml"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_CONFIG_LOGLEVEL = "warn"
+  NPM_CONFIG_PROGRESS = "false"
+  NPM_CONFIG_FUND = "false"
+  NPM_CONFIG_AUDIT = "false"
+  GENERATE_SOURCEMAP = "false"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

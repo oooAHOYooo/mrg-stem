@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonic Speed | STEM Arcade Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mge-primary: #3498db;
+            --mge-secondary: #2c3e50;
+            --mge-accent: #f1c40f;
+            --mge-gold: #ffcc00;
+            --mge-blue: #0047ff;
+            --mge-super: #fff700;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-dark: rgba(0, 0, 0, 0.6);
+            --neon-glow: 0 0 15px var(--mge-blue);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0047ff 0%, #002b99 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-content {
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .loader-logo {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(0, 162, 255, 0.6));
+        }
+
+        .loader-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .loader-bar-container {
+            width: 320px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            padding: 3px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .loader-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #0047ff);
+            border-radius: 99px;
+            box-shadow: 0 0 15px #0047ff;
+            transition: width 0.1s ease;
+        }
+
+        .loader-status {
+            margin-top: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .mge-badge {
+            background: linear-gradient(135deg, var(--mge-blue), #5dade2);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--neon-glow);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .super-status {
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar-bg {
+            width: 150px;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #ffcc00);
+            box-shadow: 0 0 10px #ffcc00;
+            transition: width 0.3s;
+        }
+
+        /* --- HUD --- */
+        .game-hud {
+            position: absolute;
+            background: var(--glass-dark);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        #rings-hud {
+            top: 80px;
+            left: 20px;
+        }
+
+        #speed-hud {
+            bottom: 40px;
+            right: 40px;
+            align-items: flex-end;
+        }
+
+        .big-text {
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .rings-val { color: var(--mge-accent); text-shadow: 0 0 15px var(--mge-accent); }
+        .speed-val { color: var(--mge-blue); text-shadow: 0 0 15px var(--mge-blue); }
+
+        .hud-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        #tails-hud {
+            top: 180px;
+            left: 20px;
+            border-color: #f39c12;
+        }
+
+        .tails-hp-bg {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .tails-hp-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #notification {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px);
+            padding: 20px 50px;
+            border-radius: 40px;
+            border: 2px solid var(--mge-super);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            font-weight: 950;
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 0 20px #ffcc00;
+            z-index: 500;
+            text-align: center;
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 260px;
+            left: 20px;
+            background: var(--glass-dark);
+            backdrop-filter: blur(8px);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- MINI MAP --- */
+        #mini-map-container {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+
+        #mini-map-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 0 5px #000;
+        }
+
+        .hint-key {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+            color: var(--mge-accent);
+        }
+
+        #super-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(255, 247, 0, 0);
+            transition: box-shadow 0.5s;
+            z-index: 90;
+        }
+
+        .super-active #super-overlay {
+            box-shadow: inset 0 0 150px rgba(255, 247, 0, 0.3);
+            animation: pulse-gold 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-gold {
+            0% { box-shadow: inset 0 0 100px rgba(255, 247, 0, 0.2); }
+            50% { box-shadow: inset 0 0 200px rgba(255, 247, 0, 0.5); }
+            100% { box-shadow: inset 0 0 100px rgba(255, 247, 0, 0.2); }
+        }
+
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--mge-blue), var(--mge-primary));
+            border: none;
+            color: white;
+            padding: 20px 60px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 71, 255, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            pointer-events: auto;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 71, 255, 0.6);
+        }
+
+        .nav-back {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            pointer-events: auto;
+            text-decoration: none;
+            color: white;
+            background: var(--glass-dark);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+
+        .nav-back:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        /* --- MOBILE --- */
+        @media (max-width: 768px) {
+            .mge-keyboard-wrapper { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+    <div id="super-overlay"></div>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">🦔</div>
+            <h1 class="loader-title">SONIC SPEED</h1>
+            <div class="loader-bar-container">
+                <div class="loader-fill" id="loader-fill"></div>
+            </div>
+            <div class="loader-status" id="loader-status">Initializing Loop-De-Loops...</div>
+        </div>
+    </div>
+
+    <div id="start-screen" style="display: none; opacity: 0;">
+        <h1 style="font-size: 4rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--mge-blue);">SONIC SPEED</h1>
+        <p style="margin-bottom: 40px; font-size: 1.2rem; color: #aaa;">Self-Contained Arcade Experience</p>
+        <button class="start-btn" id="start-btn">GO FAST!</button>
+    </div>
+
+    <div id="ui-root">
+        <div class="header">
+            <div class="mge-badge">ARCADE EDITION</div>
+            <div class="super-status">
+                <span class="hud-label" id="super-label">Super Meter</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="super-bar"></div>
+                </div>
+            </div>
+            <a href="../../index.html" class="nav-back">🕹️ EXIT TO ARCADE</a>
+        </div>
+
+        <div id="rings-hud" class="game-hud">
+            <div class="hud-label">Rings</div>
+            <div class="big-text rings-val" id="rings-count">0</div>
+        </div>
+
+        <div id="speed-hud" class="game-hud">
+            <div class="hud-label">Current Speed</div>
+            <div class="big-text speed-val" id="speed-display">0</div>
+        </div>
+
+        <div class="controls-hint">
+            <div><span class="hint-key">W / UP</span> ACCELERATE</div>
+            <div><span class="hint-key">A / D</span> STEER</div>
+            <div><span class="hint-key">SPACE</span> JUMP</div>
+        </div>
+
+        <div id="notification">GO SUPER!</div>
+    </div>
+
+    <!-- Contained Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- GAME ENGINE ---
+        const CONFIG = {
+            PLAYER_ACCEL: 0.04,
+            PLAYER_MAX_SPEED: 1.2,
+            SUPER_ACCEL: 0.08,
+            SUPER_MAX_SPEED: 3.5,
+            DRAG: 0.97,
+            GRAVITY: -0.015,
+            JUMP_FORCE: 0.65,
+            RINGS_FOR_SUPER: 50,
+            RING_COUNT: 300,
+            TERRAIN_SIZE: 1500,
+            SPAWN_POINT: new THREE.Vector3(0, 5, 0)
+        };
+
+        const state = {
+            started: false,
+            rings: 0,
+            isSuper: false,
+            speed: 0,
+            velocity: new THREE.Vector3(),
+            pos: CONFIG.SPAWN_POINT.clone(),
+            onGround: true,
+            keys: {},
+            yaw: 0,
+            lastTime: performance.now(),
+            rings_meshes: []
+        };
+
+        let scene, camera, renderer, floor;
+
+        function init() {
+            // Loading Simulator
+            const loaderFill = document.getElementById('loader-fill');
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    document.getElementById('loading-screen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').remove();
+                        const ss = document.getElementById('start-screen');
+                        ss.style.display = 'flex';
+                        setTimeout(() => ss.style.opacity = '1', 50);
+                    }, 800);
+                }
+                loaderFill.style.width = progress + '%';
+            }, 50);
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.Fog(0x87ceeb, 200, 1000);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+            sun.position.set(100, 200, 100);
+            scene.add(sun);
+
+            createTerrain();
+            createPlayer();
+            for(let i=0; i<CONFIG.RING_COUNT; i++) createRing();
+
+            animate();
+        }
+
+        function createTerrain() {
+            const floorGeo = new THREE.PlaneBufferGeometry(CONFIG.TERRAIN_SIZE, CONFIG.TERRAIN_SIZE, 32, 32);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8 });
+            floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+        }
+
+        let player;
+        function createPlayer() {
+            player = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(1, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0x0047ff, roughness: 0.3, metalness: 0.5 })
+            );
+            player.add(body);
+            scene.add(player);
+        }
+
+        function createRing() {
+            const ring = new THREE.Mesh(
+                new THREE.TorusBufferGeometry(0.5, 0.1, 8, 16),
+                new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0xffcc00, emissiveIntensity: 0.5 })
+            );
+            ring.position.set((Math.random()-0.5)*1000, 1.2, (Math.random()-0.5)*1000);
+            scene.add(ring);
+            state.rings_meshes.push(ring);
+        }
+
+        window.addEventListener('keydown', e => state.keys[e.code] = true);
+        window.addEventListener('keyup', e => state.keys[e.code] = false);
+        document.getElementById('start-btn').onclick = () => {
+            state.started = true;
+            document.getElementById('start-screen').style.display = 'none';
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(!state.started) {
+                renderer.render(scene, camera);
+                return;
+            }
+
+            const now = performance.now();
+            const dt = (now - state.lastTime) / 16;
+            state.lastTime = now;
+
+            handleMovement(dt);
+            updateCamera();
+            updateUI();
+
+            renderer.render(scene, camera);
+        }
+
+        function handleMovement(dt) {
+            const accel = state.isSuper ? CONFIG.SUPER_ACCEL : CONFIG.PLAYER_ACCEL;
+            const maxSpeed = state.isSuper ? CONFIG.SUPER_MAX_SPEED : CONFIG.PLAYER_MAX_SPEED;
+
+            if (state.keys['KeyA'] || state.keys['ArrowLeft']) state.yaw += 0.05 * dt;
+            if (state.keys['KeyD'] || state.keys['ArrowRight']) state.yaw -= 0.05 * dt;
+
+            if (state.keys['KeyW'] || state.keys['ArrowUp']) {
+                state.velocity.x += Math.sin(state.yaw) * accel * dt;
+                state.velocity.z += Math.cos(state.yaw) * accel * dt;
+            }
+
+            state.velocity.x *= Math.pow(CONFIG.DRAG, dt);
+            state.velocity.z *= Math.pow(CONFIG.DRAG, dt);
+            state.pos.add(state.velocity.clone().multiplyScalar(dt));
+
+            if(state.keys['Space'] && state.onGround) {
+                state.velocity.y = CONFIG.JUMP_FORCE;
+                state.onGround = false;
+            }
+
+            if(!state.onGround) {
+                state.velocity.y += CONFIG.GRAVITY * dt;
+                state.pos.y += state.velocity.y * dt;
+                if(state.pos.y <= 1) {
+                    state.pos.y = 1; state.velocity.y = 0; state.onGround = true;
+                }
+            }
+
+            player.position.copy(state.pos);
+            player.rotation.y = state.yaw;
+
+            state.rings_meshes.forEach((ring, idx) => {
+                ring.rotation.y += 0.1 * dt;
+                if(ring.position.distanceTo(state.pos) < 3) {
+                    scene.remove(ring);
+                    state.rings_meshes.splice(idx, 1);
+                    state.rings += 1;
+                    if(state.rings >= CONFIG.RINGS_FOR_SUPER) state.isSuper = true;
+                }
+            });
+        }
+
+        function updateCamera() {
+            const off = new THREE.Vector3(-Math.sin(state.yaw)*15, 6, -Math.cos(state.yaw)*15);
+            camera.position.set(state.pos.x + off.x, state.pos.y + off.y, state.pos.z + off.z);
+            camera.lookAt(state.pos.x, state.pos.y + 2, state.pos.z);
+        }
+
+        function updateUI() {
+            document.getElementById('rings-count').innerText = state.rings;
+            document.getElementById('super-bar').style.width = Math.min(100, (state.rings / CONFIG.RINGS_FOR_SUPER) * 100) + '%';
+            document.getElementById('speed-display').innerText = (state.velocity.length() * 100).toFixed(0);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+    </script>
+</body>
+</html>
