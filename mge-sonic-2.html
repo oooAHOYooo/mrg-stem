@@ -268,6 +268,36 @@
             const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(100, 100); tex.magFilter = THREE.NearestFilter;
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(CONFIG.WORLD + 600, CONFIG.WORLD + 600), new THREE.MeshStandardMaterial({ map: tex, roughness: 1 }));
             floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+            // Level Boundaries (Neon Walls)
+            const wallGeo = new THREE.PlaneGeometry(CONFIG.WORLD, 500);
+            const wallMat = new THREE.MeshBasicMaterial({ 
+                color: 0x00ffff, 
+                transparent: true, 
+                opacity: 0.1, 
+                side: THREE.DoubleSide,
+                wireframe: true
+            });
+            
+            const wallPositions = [
+                { x: 0, z: CONFIG.WORLD/2, rot: 0 },
+                { x: 0, z: -CONFIG.WORLD/2, rot: 0 },
+                { x: CONFIG.WORLD/2, z: 0, rot: Math.PI/2 },
+                { x: -CONFIG.WORLD/2, z: 0, rot: Math.PI/2 }
+            ];
+
+            wallPositions.forEach(p => {
+                const wall = new THREE.Mesh(wallGeo, wallMat);
+                wall.position.set(p.x, 250, p.z);
+                wall.rotation.y = p.rot;
+                scene.add(wall);
+                
+                // Add a glow line at the top and bottom
+                const beam = new THREE.Mesh(new THREE.BoxGeometry(CONFIG.WORLD, 2, 2), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+                beam.position.set(p.x, 1, p.z);
+                beam.rotation.y = p.rot;
+                scene.add(beam);
+            });
         }
 
         function createPlayerMesh(p) {
@@ -434,6 +464,11 @@
                 if(p.trick > 0) { p.obj.rotation.x += delta*30; }
                 p.obj.position.copy(p.pos); p.obj.rotation.y = p.yaw;
                 if(p.shake > 0) p.shake -= delta*10;
+
+                // Level Boundaries Collision
+                const half = CONFIG.WORLD / 2;
+                if (Math.abs(p.pos.x) > half) { p.pos.x = Math.sign(p.pos.x) * half; p.vel.x = 0; p.shake = 5; }
+                if (Math.abs(p.pos.z) > half) { p.pos.z = Math.sign(p.pos.z) * half; p.vel.z = 0; p.shake = 5; }
             });
             for(let i=state.objects.speedLines.length-1; i>=0; i--) {
                 const l = state.objects.speedLines[i]; l.material.opacity -= 0.1;
