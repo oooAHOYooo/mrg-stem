@@ -198,11 +198,11 @@
             lastFrame: performance.now(), 
             keys: {}, 
             bossSpawned: false,
-            objects: { rings: [], islands: [], butterflies: [], clouds: [], speedLines: [], trails: [], seekers: [], boss: null } 
+            objects: { rings: [], islands: [], butterflies: [], clouds: [], speedLines: [], trails: [], seekers: [], boss: null, pets: [] } 
         };
         const players = [
-            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0x3366ff, shake: 0 },
-            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0xffcc00, shake: 0 }
+            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0x3366ff, shake: 0, pet: null },
+            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0xffcc00, shake: 0, pet: null }
         ];
 
         let scene, renderer, cam1, cam2;
@@ -234,6 +234,8 @@
             for(let i=0; i<80; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
             for(let i=0; i<30; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 50 + Math.random()*80, (Math.random()-0.5)*CONFIG.WORLD*0.8);
             for(let i=0; i<50; i++) spawnButterfly();
+
+            players.forEach((p, i) => { p.pet = createPet(p, i); });
 
             window.addEventListener('keydown', e => { 
                 if(e.code === 'Space' && state.started && !players[0].onGround && players[0].trick === 0) players[0].trick=1;
@@ -349,6 +351,40 @@
             g.userData = { angle: Math.random()*Math.PI*2, speed: 0.2 }; scene.add(g); state.objects.seekers.push(g);
         }
 
+        function createPet(p, i) {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshStandardMaterial({ color: p.color, emissive: p.color, emissiveIntensity: 0.2 }));
+            g.add(body);
+
+            // Googly Eyes
+            const eyeGroup = new THREE.Group();
+            const whiteGeo = new THREE.SphereGeometry(0.3, 8, 8);
+            const pupilGeo = new THREE.SphereGeometry(0.12, 8, 8);
+            
+            for(let x of [-0.4, 0.4]) {
+                const eye = new THREE.Mesh(whiteGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                eye.position.set(x, 0.2, 0.8);
+                const pupil = new THREE.Mesh(pupilGeo, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+                pupil.position.z = 0.2;
+                eye.add(pupil);
+                eyeGroup.add(eye);
+            }
+            g.add(eyeGroup);
+            scene.add(g);
+
+            const pet = { 
+                obj: g, 
+                eyes: eyeGroup, 
+                owner: p, 
+                pos: p.pos.clone().add(new THREE.Vector3(5, 5, 5)), 
+                hp: 100, 
+                shake: 0,
+                id: i 
+            };
+            state.objects.pets.push(pet);
+            return pet;
+        }
+
         function spawnBoss() {
             if (state.bossSpawned) return;
             state.bossSpawned = true;
@@ -431,6 +467,7 @@
                 state.objects.butterflies.forEach(b => { b.userData.phase += delta*5; b.position.y += Math.sin(b.userData.phase)*0.1; b.rotation.y += delta*2; });
                 state.objects.seekers.forEach(s => { s.userData.angle += delta; s.position.x += Math.sin(s.userData.angle)*s.userData.speed; });
                 updatePlayers(delta);
+                updatePets(delta);
                 updateLogic(delta);
                 updateRadar();
                 render();
@@ -474,6 +511,34 @@
                 const l = state.objects.speedLines[i]; l.material.opacity -= 0.1;
                 if(l.material.opacity <= 0) { scene.remove(l); state.objects.speedLines.splice(i,1); }
             }
+        }
+
+        function updatePets(delta) {
+            state.objects.pets.forEach(pet => {
+                const target = pet.owner.pos.clone().add(new THREE.Vector3(
+                    Math.sin(performance.now()*0.001 + pet.id)*8,
+                    4 + Math.sin(performance.now()*0.002)*2,
+                    Math.cos(performance.now()*0.001 + pet.id)*8
+                ));
+                pet.pos.lerp(target, 0.05);
+                pet.obj.position.copy(pet.pos);
+                
+                // Googly eyes follow owner
+                pet.eyes.lookAt(pet.owner.pos);
+                
+                // Floating animation
+                pet.obj.rotation.y += delta;
+                
+                if (pet.shake > 0) {
+                    pet.shake -= delta * 10;
+                    pet.obj.position.add(new THREE.Vector3((Math.random()-0.5)*pet.shake, (Math.random()-0.5)*pet.shake, (Math.random()-0.5)*pet.shake));
+                    pet.obj.children[0].material.color.setHex(0xff0000);
+                } else {
+                    pet.obj.children[0].material.color.setHex(pet.owner.color);
+                }
+
+                if (pet.hp < 100) pet.hp += delta * 2; // Slow recovery
+            });
         }
 
         function handleInput(i, f, b, l, r, j) {
@@ -522,8 +587,28 @@
                         p.vel.add(p.pos.clone().sub(b.obj.position).normalize().multiplyScalar(2));
                     }
                 });
+                state.objects.pets.forEach(pet => {
+                    if (b.obj.position.distanceTo(pet.pos) < 15) {
+                        pet.hp -= delta * 30;
+                        pet.shake = 2;
+                        if (Math.random() < 0.01) showNotification(`P${pet.id+1} PET UNDER ATTACK!`, 1000);
+                    }
+                });
             }
-            state.objects.seekers.forEach(s => { players.forEach(p => { if(s.position.distanceTo(p.pos) < 8) { p.rings=Math.max(0, p.rings-10); p.shake=10; updateUI(); }}); });
+            state.objects.seekers.forEach(s => { 
+                players.forEach(p => { if(s.position.distanceTo(p.pos) < 8) { p.rings=Math.max(0, p.rings-10); p.shake=10; updateUI(); }});
+                state.objects.pets.forEach(pet => {
+                    const dist = s.position.distanceTo(pet.pos);
+                    if (dist < 15) {
+                        // Seeker attracts to pet
+                        s.position.lerp(pet.pos, 0.02);
+                        if (dist < 5) {
+                            pet.hp -= delta * 15;
+                            pet.shake = 1;
+                        }
+                    }
+                });
+            });
         }
 
         function updateRadar() {
