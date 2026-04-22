@@ -13,6 +13,7 @@ try {
 }
 
 export default defineConfig({
+  base: './', // CRITICAL: Allows Pips to load its own assets from subfolders
   plugins: [vue()],
   define: {
     __BUILD_TIME__: JSON.stringify(buildTime),
