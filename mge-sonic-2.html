@@ -64,63 +64,86 @@
         }
         #notification.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* Radar Styling */
-        .radar-container {
+        /* Liquid Glass Controls */
+        .controls-overlay {
             position: absolute;
             bottom: 30px;
-            width: 180px;
-            height: 180px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            overflow: hidden;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            display: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            z-index: 200;
         }
-        #p1-radar { left: 30px; }
-        #p2-radar { left: calc(50% + 30px); }
+        #p1-controls { left: 30px; }
+        #p2-controls { right: 30px; align-items: flex-end; }
 
-        .radar-map {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            transform: translate(-50%, -50%);
-        }
-
-        .radar-blip {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            border: 2px solid white;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-        .blip-p1 { background: #0047ff; }
-        .blip-p2 { background: #ffcc00; }
-        .blip-boss { background: #ff0000; width: 16px; height: 16px; border-radius: 4px; animation: pulse-red 1s infinite; }
+        .control-row { display: flex; gap: 8px; }
         
-        @keyframes pulse-red {
-            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0px #ff0000; }
-            50% { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 15px #ff0000; }
-            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0px #ff0000; }
+        .liquid-key {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.2),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
         }
 
-        .radar-center {
+        .liquid-key::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 8px;
-            height: 8px;
-            background: white;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+
+        .liquid-key.jump-key { width: 110px; font-size: 0.8rem; letter-spacing: 1px; }
+
+        .liquid-key.active {
+            color: #fff;
+            transform: scale(0.92) translateY(3px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 
+                0 0 30px rgba(255, 255, 255, 0.15),
+                inset 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .liquid-key.active::after {
+            opacity: 0.2;
+            animation: liquid-ripple 0.6s infinite alternate;
+        }
+
+        @keyframes liquid-ripple {
+            0% { transform: scale(0.8); opacity: 0.1; }
+            100% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        #p1-controls .liquid-key.active {
+            background: rgba(0, 71, 255, 0.5);
+            border-color: rgba(0, 100, 255, 0.8);
+            box-shadow: 0 0 40px rgba(0, 71, 255, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        #p2-controls .liquid-key.active {
+            background: rgba(255, 204, 0, 0.5);
+            border-color: rgba(255, 230, 0, 0.8);
+            box-shadow: 0 0 40px rgba(255, 204, 0, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .liquid-key svg { width: 22px; height: 22px; fill: currentColor; }
     </style>
     <script type="importmap">
         {
@@ -170,12 +193,41 @@
         </div>
         <div id="notification">GO!</div>
         
+        <!-- Premium Liquid Controls Overlay -->
+        <div id="p1-controls" class="controls-overlay">
+            <div class="control-row" style="justify-content: center;">
+                <div class="liquid-key" id="key-KeyW">W</div>
+            </div>
+            <div class="control-row">
+                <div class="liquid-key" id="key-KeyA">A</div>
+                <div class="liquid-key" id="key-KeyS">S</div>
+                <div class="liquid-key" id="key-KeyD">D</div>
+            </div>
+            <div class="control-row" style="justify-content: center; margin-top: 5px;">
+                <div class="liquid-key jump-key" id="key-Space">SPACE</div>
+            </div>
+        </div>
+
+        <div id="p2-controls" class="controls-overlay" style="display: none;">
+            <div class="control-row" style="justify-content: center;">
+                <div class="liquid-key" id="key-ArrowUp">↑</div>
+            </div>
+            <div class="control-row">
+                <div class="liquid-key" id="key-ArrowLeft">←</div>
+                <div class="liquid-key" id="key-ArrowDown">↓</div>
+                <div class="liquid-key" id="key-ArrowRight">→</div>
+            </div>
+            <div class="control-row" style="justify-content: center; margin-top: 5px;">
+                <div class="liquid-key jump-key" id="key-ShiftRight" style="font-size: 0.7rem;">R-SHIFT</div>
+            </div>
+        </div>
+
         <!-- Radars -->
-        <div id="p1-radar" class="radar-container">
+        <div id="p1-radar" class="radar-container" style="bottom: 230px; left: 30px; transform: scale(0.8); transform-origin: bottom left;">
             <div class="radar-map" id="p1-map"></div>
             <div class="radar-center"></div>
         </div>
-        <div id="p2-radar" class="radar-container">
+        <div id="p2-radar" class="radar-container" style="bottom: 230px; right: 30px; left: auto; transform: scale(0.8); transform-origin: bottom right;">
             <div class="radar-map" id="p2-map"></div>
             <div class="radar-center"></div>
         </div>
@@ -239,10 +291,16 @@
 
             window.addEventListener('keydown', e => { 
                 if(e.code === 'Space' && state.started && !players[0].onGround && players[0].trick === 0) players[0].trick=1;
-                if(e.code === 'ControlRight' && state.is2P && !players[1].onGround && players[1].trick === 0) players[1].trick=1;
-                state.keys[e.code] = true; 
+                if(e.code === 'ShiftRight' && state.is2P && !players[1].onGround && players[1].trick === 0) players[1].trick=1;
+                state.keys[e.code] = true;
+                const keyEl = document.getElementById(`key-${e.code}`);
+                if(keyEl) keyEl.classList.add('active');
             });
-            window.addEventListener('keyup', e => state.keys[e.code] = false);
+            window.addEventListener('keyup', e => {
+                state.keys[e.code] = false;
+                const keyEl = document.getElementById(`key-${e.code}`);
+                if(keyEl) keyEl.classList.remove('active');
+            });
 
             document.getElementById('btn-1p').onclick = () => startGame(false);
             document.getElementById('btn-2p').onclick = () => startGame(true);
@@ -448,6 +506,7 @@
                 document.getElementById('p2-ui').style.display='flex'; 
                 document.getElementById('split-line').style.display='block'; 
                 document.getElementById('p2-radar').style.display='block';
+                document.getElementById('p2-controls').style.display='flex';
             }
             setInterval(() => { if(state.started && state.time > 0) { state.time--; updateTimerUI(); if(state.time<=0) location.reload(); } }, 1000);
         }
@@ -479,7 +538,7 @@
 
         function updatePlayers(delta) {
             handleInput(0, 'KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space');
-            if(state.is2P) handleInput(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ControlRight');
+            if(state.is2P) handleInput(1, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftRight');
             else {
                 const target = players[0].pos.clone().add(new THREE.Vector3(-Math.sin(players[0].yaw)*15, 2, -Math.cos(players[0].yaw)*15));
                 players[1].pos.lerp(target, 0.1); players[1].obj.position.copy(players[1].pos);
