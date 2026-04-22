@@ -257,20 +257,26 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.getElementById('game-container').appendChild(renderer.domElement);
 
-        // Background
-        scene.background = new THREE.Color(0x020205);
-        scene.fog = new THREE.FogExp2(0x020205, 0.001);
+        // Random Cosmic Theme
+        const themeHue = Math.random();
+        const bgColor = new THREE.Color().setHSL(themeHue, 0.4, 0.02);
+        scene.background = bgColor;
+        scene.fog = new THREE.FogExp2(bgColor, 0.001);
+        document.body.style.backgroundColor = `#${bgColor.getHexString()}`;
+
+        const accent1 = new THREE.Color().setHSL((themeHue + 0.5) % 1, 1, 0.6);
+        const accent2 = new THREE.Color().setHSL((themeHue + 0.8) % 1, 1, 0.6);
 
         // Lights
-        const ambientLight = new THREE.AmbientLight(0x404040, 1);
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
         scene.add(ambientLight);
 
-        const mainLight = new THREE.PointLight(0x00ffff, 2, 100);
+        const mainLight = new THREE.PointLight(accent1, 2, 100);
         mainLight.position.set(10, 20, 10);
         mainLight.castShadow = true;
         scene.add(mainLight);
 
-        const subLight = new THREE.PointLight(0xff00ff, 1.5, 100);
+        const subLight = new THREE.PointLight(accent2, 1.5, 100);
         subLight.position.set(-10, 20, -10);
         scene.add(subLight);
 
@@ -292,8 +298,8 @@
             for (let i = 0; i < 60; i++) {
                 const geo = geometries[Math.floor(Math.random() * geometries.length)];
                 const mat = new THREE.MeshStandardMaterial({
-                    color: Math.random() > 0.5 ? 0x00ffff : 0xff00ff,
-                    emissive: Math.random() > 0.5 ? 0x008888 : 0x880088,
+                    color: Math.random() > 0.5 ? accent1 : accent2,
+                    emissive: Math.random() > 0.5 ? accent1 : accent2,
                     emissiveIntensity: 0.5,
                     wireframe: Math.random() > 0.7
                 });
@@ -366,7 +372,7 @@
 
         // Board Frame
         const frameGeo = new THREE.BoxGeometry(16.5, 0.2, 16.5);
-        const frameMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, wireframe: true });
+        const frameMat = new THREE.MeshStandardMaterial({ color: accent1, wireframe: true });
         const frame = new THREE.Mesh(frameGeo, frameMat);
         frame.position.y = -0.4;
         scene.add(frame);
@@ -390,7 +396,7 @@
             const isWhite = p.color === 'w';
             const mat = new THREE.MeshStandardMaterial({
                 color: isWhite ? 0xffffff : 0x333333,
-                emissive: isWhite ? 0x00ffff : 0xff00ff,
+                emissive: isWhite ? accent1 : accent2,
                 emissiveIntensity: 0.8,
                 metalness: 0.9,
                 roughness: 0.1
@@ -402,7 +408,7 @@
             
             // Add a small light to important pieces
             if (p.type === 'k' || p.type === 'q') {
-                const pLight = new THREE.PointLight(isWhite ? 0x00ffff : 0xff00ff, 0.5, 3);
+                const pLight = new THREE.PointLight(isWhite ? accent1 : accent2, 0.5, 3);
                 mesh.add(pLight);
             }
 
