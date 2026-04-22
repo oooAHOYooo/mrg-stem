@@ -1015,6 +1015,16 @@
 
                 <!-- Featured: Easter Egg Hunt -->
                 <div class="experiments-grid">
+                    <!-- FEATURED: Pips - The Glade Network -->
+                    <div class="experiment-card featured-highlight" id="pips-glade" style="border-color: #06b6d4; background: linear-gradient(135deg, #ecfeff, #ffffff); order: -50; box-shadow: 0 20px 60px rgba(6, 182, 212, 0.35);">
+                        <span class="experiment-icon">🏝️🌱</span>
+                        <h2 style="background: linear-gradient(135deg, #0891b2, #3b82f6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Pips: The Glade Network <span style="background: linear-gradient(90deg, #06b6d4, #8b5cf6); color: #fff; padding: 3px 10px; border-radius: 50px; font-size: 0.45em; font-weight: 900; margin-left: 10px; vertical-align: middle; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);">🧪 EXPERIMENTAL</span></h2>
+                        <p>
+                            <b>AI AGENT ORCHESTRATION!</b> Step into a beautiful 3D world of islands you must sail to. Interact with "Pips" — cute AI creatures that grow and build structures based on your real-world coding projects. A spatial, low-poly experience for the next generation of AI!
+                        </p>
+                        <a href="#" onclick="openPips(); return false;" class="experiment-link" style="background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff; font-weight: 900;">Launch Pips ⛵</a>
+                    </div>
+
                     <!-- NEW TOP PICK: Sonic 2 -->
                     <div class="experiment-card featured-highlight" id="sonic-2" style="border-color: #32CD32; background: linear-gradient(135deg, #f0fdf4, #ffffff); order: -35; box-shadow: 0 20px 50px rgba(50, 205, 50, 0.3);">
                         <span class="experiment-icon">🦔🦊</span>
@@ -1728,6 +1738,285 @@
         <span class="arcade-icon">🕹️</span>
         STEM Arcade <span class="arcade-v1-tag">V1.0</span>
     </a>
+
+    <!-- Pips: 3D Agent World - Floating Lab Button -->
+    <button id="pips-lab-toggle" class="pips-lab-btn" title="Open Pips — 3D Agent World (Work in Progress)">
+        <span class="pips-lab-icon">🌱</span>
+        Pips Lab <span class="pips-wip-tag">WIP</span>
+    </button>
+
+    <!-- Pips: Fullscreen Iframe Overlay -->
+    <div id="pips-overlay" class="pips-overlay" style="display:none;">
+        <div class="pips-overlay-header">
+            <div class="pips-overlay-title">
+                <span class="pips-overlay-icon">🏝️</span>
+                <span>Pips — The Glade Network</span>
+                <span class="pips-wip-banner">⚠️ WORK IN PROGRESS — Experimental Feature</span>
+            </div>
+            <div class="pips-overlay-actions">
+                <a id="pips-fullscreen-link" href="#" target="_blank" class="pips-open-tab-btn" title="Open in new tab">↗ New Tab</a>
+                <button id="pips-close-btn" class="pips-close-btn" title="Close Pips">✕</button>
+            </div>
+        </div>
+        <iframe id="pips-iframe" class="pips-iframe" src="about:blank" allow="pointer-lock; fullscreen; autoplay"></iframe>
+    </div>
+
+    <style>
+        /* Pips Lab Floating Button (bottom-right, next to arcade shortcut) */
+        .pips-lab-btn {
+            position: fixed;
+            bottom: 85px;
+            right: 215px; 
+            background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+            background-size: 200% 200%;
+            animation: pips-gradient 4s ease infinite, pips-float 3s ease-in-out infinite;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            padding: 10px 18px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            font-size: 0.85rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            z-index: 10001;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(45, 212, 191, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }
+
+        .pips-lab-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            border-color: #fff;
+            box-shadow: 0 20px 40px rgba(34, 211, 238, 0.6);
+        }
+
+        @keyframes pips-gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pips-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .pips-lab-icon {
+            font-size: 1.2rem;
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+        }
+
+        .pips-wip-tag {
+            background: #f59e0b;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            font-weight: 950;
+            margin-left: 4px;
+            animation: wip-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes wip-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Pips Overlay Panel */
+        .pips-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99998;
+            background: #0a0e17;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pips-overlay-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, rgba(13, 17, 28, 0.98), rgba(20, 28, 45, 0.98));
+            border-bottom: 1px solid rgba(129, 140, 248, 0.25);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .pips-overlay-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e0e7ff;
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .pips-overlay-icon {
+            font-size: 1.4rem;
+        }
+
+        .pips-wip-banner {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            color: #000;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: wip-pulse 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        .pips-overlay-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pips-open-tab-btn {
+            color: #a5b4fc;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 8px;
+            background: rgba(129, 140, 248, 0.12);
+            border: 1px solid rgba(129, 140, 248, 0.25);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .pips-open-tab-btn:hover {
+            background: rgba(129, 140, 248, 0.25);
+            color: #fff;
+        }
+
+        .pips-close-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            font-size: 1.1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .pips-close-btn:hover {
+            background: rgba(239, 68, 68, 0.35);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .pips-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #0a0e17;
+        }
+
+        /* Hide the Pips button when overlay is open */
+        .pips-overlay[style*="display: flex"] ~ .pips-lab-btn,
+        .pips-overlay:not([style*="display:none"]):not([style*="display: none"]) ~ .pips-lab-btn {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .pips-lab-btn {
+                bottom: 145px;
+                right: 20px;
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+            .pips-wip-banner {
+                display: none;
+            }
+        }
+    </style>
+
+    <!-- Pips: 3D Agent World - Floating Lab Button -->
+    <button id="pips-lab-toggle" class="pips-lab-btn" title="Open Pips — 3D Agent World (Work in Progress)">
+        <span class="pips-lab-icon">🌱</span>
+        Pips Lab <span class="pips-wip-tag">WIP</span>
+    </button>
+
+    <!-- Pips: Fullscreen Iframe Overlay -->
+    <div id="pips-overlay" class="pips-overlay" style="display:none;">
+        <div class="pips-overlay-header">
+            <div class="pips-overlay-title">
+                <span class="pips-overlay-icon">🏝️</span>
+                <span>Pips — The Glade Network</span>
+                <span class="pips-wip-banner">⚠️ WORK IN PROGRESS — Experimental Feature</span>
+            </div>
+            <div class="pips-overlay-actions">
+                <a id="pips-fullscreen-link" href="#" target="_blank" class="pips-open-tab-btn" title="Open in new tab">↗ New Tab</a>
+                <button id="pips-close-btn" class="pips-close-btn" title="Close Pips">✕</button>
+            </div>
+        </div>
+        <iframe id="pips-iframe" class="pips-iframe" src="about:blank" allow="pointer-lock; fullscreen; autoplay"></iframe>
+    </div>
+
+    <script>
+        // Pips Lab: iframe toggle with dev/prod auto-detection
+        (function() {
+            const PIPS_DEV_URL = 'http://localhost:5173';
+            const PIPS_PROD_URL = 'pips/dist/index.html'; // Served from mrg-stem/pips/ dist files
+
+            const toggleBtn = document.getElementById('pips-lab-toggle');
+            const overlay = document.getElementById('pips-overlay');
+            const iframe = document.getElementById('pips-iframe');
+            const closeBtn = document.getElementById('pips-close-btn');
+            const fullscreenLink = document.getElementById('pips-fullscreen-link');
+
+            function getPipsUrl() {
+                // If we're on localhost, try the Vite dev server
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    return PIPS_DEV_URL;
+                }
+                // Otherwise use the production build served from same origin
+                return PIPS_PROD_URL;
+            }
+
+            window.openPips = function() {
+                const url = getPipsUrl();
+                iframe.src = url;
+                fullscreenLink.href = url;
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            };
+
+            function closePips() {
+                overlay.style.display = 'none';
+                iframe.src = 'about:blank'; // Free memory
+                document.body.style.overflow = '';
+            }
+
+            toggleBtn.addEventListener('click', openPips);
+            closeBtn.addEventListener('click', closePips);
+
+            // Escape key closes overlay
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && overlay.style.display === 'flex') {
+                    closePips();
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>
