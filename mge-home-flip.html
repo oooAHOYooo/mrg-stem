@@ -409,8 +409,9 @@
     </div>
 
     <div id="game-container"></div>
-    <div id="controls-overlay-premium" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Outfit', sans-serif;">
+    <div id="controls-overlay-premium" class="hidden" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Outfit', sans-serif; transition: opacity 0.5s ease; opacity: 0;">
         <style>
+            #controls-overlay-premium.visible { opacity: 1 !important; }
             .liquid-key {
                 width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
                 border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
@@ -472,6 +473,7 @@
                 btn.innerText = "LOADING...";
             }
             document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('controls-overlay-premium').classList.add('visible');
             setTimeout(initThree, 500);
         }
 
@@ -528,6 +530,13 @@
         function updateRenoPanel() {
             if (!state.currentHouse) {
                 document.getElementById('current-house-title').innerText = "NO HOUSE SELECTED";
+                document.getElementById('reno-condition').innerText = "0%";
+                ['cleanup', 'repair', 'modernize', 'solar'].forEach(key => {
+                    const btn = document.querySelector(`#reno-${key} button`);
+                    btn.disabled = true;
+                    btn.style.opacity = "0.5";
+                });
+                document.getElementById('list-sale-btn').disabled = true;
                 return;
             }
             document.getElementById('current-house-title').innerText = `${state.currentHouse.type} #${state.currentHouse.id}`;
@@ -536,6 +545,7 @@
             // Update buttons
             ['cleanup', 'repair', 'modernize', 'solar'].forEach(key => {
                 const btn = document.querySelector(`#reno-${key} button`);
+                btn.style.opacity = "1";
                 if (state.renovations[key]) {
                     btn.innerText = "COMPLETED ✅";
                     btn.disabled = true;
@@ -640,18 +650,55 @@
             try {
                 controls = new THREE.OrbitControls(camera, renderer.domElement);
             } catch (e) {
-                console.warn("Retrying OrbitControls...");
-                // Fallback attempt if OrbitControls didn't attach to THREE
-                if (typeof OrbitControls !== 'undefined') {
-                    controls = new OrbitControls(camera, renderer.domElement);
-                } else {
-                    console.error("OrbitControls failed to load!", e);
+                console.warn("OrbitControls init failed, trying global fallback...");
+                if (window.OrbitControls) {
+                    controls = new window.OrbitControls(camera, renderer.domElement);
+                } else if (THREE.OrbitControls) {
+                    controls = new THREE.OrbitControls(camera, renderer.domElement);
                 }
             }
-            controls.enableDamping = true;
-            controls.maxPolarAngle = Math.PI / 2.1;
-            controls.maxDistance = 60;
-            controls.minDistance = 5;
+            
+            if (controls) {
+                controls.enableDamping = true;
+                controls.maxPolarAngle = Math.PI / 2.1;
+                controls.maxDistance = 60;
+                controls.minDistance = 5;
+            }
+
+            // Raycaster for house selection
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            renderer.domElement.addEventListener('click', (event) => {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+
+                if (intersects.length > 0) {
+                    let obj = intersects[0].object;
+                    while (obj.parent && !obj.userData.id) obj = obj.parent;
+                    
+                    if (obj.userData.id) {
+                        const p = state.properties.find(x => x.id === obj.userData.id);
+                        if (p.sold) return;
+                        
+                        if (state.hasHouse && state.currentHouse.id !== p.id) {
+                            showToast("You are already working on another house!");
+                            return;
+                        }
+
+                        if (!state.hasHouse) {
+                            openMarket(); // Open market to buy if not owned
+                        } else {
+                            focusOnHouse(p);
+                            toggleReno(true);
+                            updateRenoPanel();
+                        }
+                    }
+                }
+            });
 
             // Lights
             const amb = new THREE.AmbientLight(0xffffff, 0.6);
@@ -733,7 +780,15 @@
             trash.userData.isTrash = true;
             group.add(trash);
 
+            group.userData.id = data.id; // Crucial for raycasting
             return group;
+        }
+
+        function showToast(msg) {
+            const n = document.getElementById('notification');
+            n.innerText = msg;
+            n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 3000);
         }
 
         function updateHouseVisuals() {
@@ -793,6 +848,15 @@
         }
 
         function focusOnHouse(p) {
+            const h = houseMeshes.find(m => m.id === p.id).mesh;
+            
+            // Pop effect for selection
+            new TWEEN.Tween(h.scale)
+                .to({ x: 1.1, y: 1.1, z: 1.1 }, 200)
+                .yoyo(true)
+                .repeat(1)
+                .start();
+
             new TWEEN.Tween(camera.position)
                 .to({ x: p.pos.x + 10, y: 8, z: p.pos.z + 10 }, 1000)
                 .easing(TWEEN.Easing.Cubic.Out)
