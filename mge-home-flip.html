@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE Home Flip - Zillow for Kids</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #8b5cf6;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --panel: rgba(15, 23, 42, 0.85);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* OVERLAYS */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(15px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .modal-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        h1, h2, h3 { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
+        p { color: #94a3b8; line-height: 1.6; }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 16px;
+            padding: 1.25rem 2.5rem;
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 15px 30px -10px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn:hover { transform: translateY(-5px); box-shadow: 0 25px 40px -10px rgba(139, 92, 246, 0.6); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* MARKETPLACE GRID */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .property-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: left;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .property-card:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--primary); }
+        .property-card.sold { opacity: 0.5; grayscale: 1; pointer-events: none; }
+
+        .prop-price { font-size: 1.5rem; font-weight: 900; color: var(--success); margin-bottom: 0.5rem; font-family: 'Orbitron'; }
+        .prop-stat { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; }
+
+        /* HUD */
+        #hud {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stat-badge {
+            background: var(--panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            padding: 0.85rem 1.75rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .stat-value { color: var(--success); font-family: 'Orbitron'; }
+
+        /* RENOVATION SIDEBAR */
+        #reno-sidebar {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 420px;
+            height: 100vh;
+            background: var(--panel);
+            backdrop-filter: blur(25px);
+            border-left: 1px solid var(--border);
+            z-index: 60;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding-top: 100px;
+        }
+
+        #reno-sidebar.open { right: 0; }
+
+        .reno-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .reno-header { display: flex; justify-content: space-between; align-items: center; }
+        .reno-title { font-weight: 700; font-size: 1rem; }
+        .reno-cost { color: var(--accent); font-weight: 900; }
+
+        /* CAMERA / UI TOGGLES */
+        .top-right-controls {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 70;
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover { background: var(--primary); color: white; transform: scale(1.1); }
+
+        /* LOADING */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+
+        .loader-circle {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* SUCCESS NOTIFICATION */
+        #notification {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success);
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            font-weight: 900;
+            z-index: 500;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        #notification.show { bottom: 40px; }
+
+        .community-progress {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            z-index: 50;
+            width: 300px;
+        }
+
+        .prog-bar-bg { width: 100%; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin-top: 8px; }
+        .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); width: 0%; transition: width 1s ease; }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="loader">
+        <div class="loader-circle"></div>
+        <h2 style="margin-top: 2rem; color: var(--primary);">ESTABLISHING NEIGHBORHOOD...</h2>
+    </div>
+
+    <!-- MAIN MENU OVERLAY -->
+    <div class="overlay" id="main-menu">
+        <div class="modal-panel">
+            <h1>🏠 MGE HOME FLIP</h1>
+            <p>Welcome to the Neighborhood Revitalization Program! Buy distressed houses, fix them up, and improve the community score. Can you turn this block into a dream street?</p>
+            
+            <div style="margin: 2rem 0;">
+                <h3 style="margin-bottom: 1rem;">YOUR STARTING CAPITAL</h3>
+                <div style="font-size: 3rem; font-weight: 900; color: var(--success); font-family: 'Orbitron';">$50,000</div>
+            </div>
+
+            <button class="btn" onclick="startGame()">START RENOVATING</button>
+        </div>
+    </div>
+
+    <!-- MARKETPLACE OVERLAY -->
+    <div class="overlay hidden" id="market-overlay">
+        <div class="modal-panel">
+            <h2>🏘️ PROPERTIES FOR SALE</h2>
+            <p>Select a distressed property to purchase and begin your flip.</p>
+            
+            <div class="market-grid" id="market-list">
+                <!-- Properties will be injected here -->
+            </div>
+
+            <button class="btn btn-outline" onclick="closeMarket()">BACK TO STREET</button>
+        </div>
+    </div>
+
+    <!-- SELL MODAL -->
+    <div class="overlay hidden" id="sell-overlay">
+        <div class="modal-panel">
+            <h2>🎉 LIST FOR SALE?</h2>
+            <p id="sell-details">You've put in the work. Let's see what the buyers think!</p>
+            
+            <div style="display: flex; gap: 2rem; justify-content: center; margin: 2rem 0;">
+                <div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">VALUATION</div>
+                    <div id="sell-price" style="font-size: 2.5rem; font-weight: 900; color: var(--success); font-family: 'Orbitron';">$0</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-outline" onclick="closeSell()">KEEP WORKING</button>
+                <button class="btn" onclick="confirmSale()">CONFIRM SALE ✍️</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud">
+        <div class="stat-badge">
+            <span style="font-size: 1.5rem;">💰</span>
+            <span>CASH: <span id="cash-val" class="stat-value">$50,000</span></span>
+        </div>
+        <div class="stat-badge">
+            <span style="font-size: 1.5rem;">🏗️</span>
+            <span>FLIPS: <span id="flip-count" class="stat-value">0</span></span>
+        </div>
+    </div>
+
+    <div class="community-progress">
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800;">
+            <span>STREET VIBES</span>
+            <span id="community-val">0%</span>
+        </div>
+        <div class="prog-bar-bg">
+            <div class="prog-bar-fill" id="community-bar"></div>
+        </div>
+    </div>
+
+    <div class="top-right-controls">
+        <div class="icon-btn" onclick="openMarket()" title="Marketplace">🏘️</div>
+        <div class="icon-btn" onclick="toggleReno()" title="Management">🛠️</div>
+    </div>
+
+    <!-- RENOVATION SIDEBAR -->
+    <div id="reno-sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="current-house-title">NO HOUSE SELECTED</h2>
+            <div class="icon-btn" onclick="toggleReno()" style="width: 40px; height: 40px; font-size: 1rem;">❌</div>
+        </div>
+        
+        <p>Condition: <span id="reno-condition" style="color: var(--accent); font-weight: 800;">0%</span></p>
+
+        <div class="reno-option" id="reno-cleanup">
+            <div class="reno-header">
+                <span class="reno-title">🧹 EXTERIOR CLEANUP</span>
+                <span class="reno-cost">$2,000</span>
+            </div>
+            <p style="font-size: 0.8rem;">Remove trash, fix fence, and mow lawn.</p>
+            <button class="btn" style="padding: 0.75rem;" onclick="applyReno('cleanup', 2000, 15)">FIX UP</button>
+        </div>
+
+        <div class="reno-option" id="reno-repair">
+            <div class="reno-header">
+                <span class="reno-title">⚒️ STRUCTURAL REPAIR</span>
+                <span class="reno-cost">$5,000</span>
+            </div>
+            <p style="font-size: 0.8rem;">Fix the roof and stabilize the foundation.</p>
+            <button class="btn" style="padding: 0.75rem;" onclick="applyReno('repair', 5000, 25)">REPAIR</button>
+        </div>
+
+        <div class="reno-option" id="reno-modernize">
+            <div class="reno-header">
+                <span class="reno-title">🎨 MODERNIZE</span>
+                <span class="reno-cost">$8,000</span>
+            </div>
+            <p style="font-size: 0.8rem;">New paint, neon windows, and tech setup.</p>
+            <button class="btn" style="padding: 0.75rem;" onclick="applyReno('modernize', 8000, 30)">UPGRADE</button>
+        </div>
+
+        <div class="reno-option" id="reno-solar">
+            <div class="reno-header">
+                <span class="reno-title">☀️ SOLAR LAB</span>
+                <span class="reno-cost">$4,000</span>
+            </div>
+            <p style="font-size: 0.8rem;">Install solar panels for sustainable energy labs!</p>
+            <button class="btn" style="padding: 0.75rem;" onclick="applyReno('solar', 4000, 10)">INSTALL</button>
+        </div>
+
+        <button class="btn" id="list-sale-btn" style="margin-top: auto; background: var(--success);" onclick="openSell()" disabled>LIST FOR SALE 📈</button>
+    </div>
+
+    <div id="game-container"></div>
+    <div id="notification">CONGRATS! HOUSE SOLD! 💸</div>
+
+    <a href="index.html" class="btn btn-outline" style="position: fixed; bottom: 25px; right: 25px; z-index: 50; padding: 0.75rem 1.5rem; font-size: 0.8rem;">EXIT TO HUB</a>
+
+    <script>
+        // --- GAME STATE ---
+        const state = {
+            cash: 50000,
+            hasHouse: false,
+            currentHouse: null,
+            communityScore: 0,
+            flips: 0,
+            properties: [
+                { id: 1, type: 'Cottage', price: 35000, condition: 20, pos: { x: -8, z: 0 }, color: 0x64748b },
+                { id: 2, type: 'Urban Box', price: 42000, condition: 15, pos: { x: 0, z: 0 }, color: 0x475569 },
+                { id: 3, type: 'Beach Pad', price: 48000, condition: 30, pos: { x: 8, z: 0 }, color: 0x334155 }
+            ],
+            renovations: {
+                cleanup: false,
+                repair: false,
+                modernize: false,
+                solar: false
+            }
+        };
+
+        // --- UI LOGIC ---
+        function startGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            setTimeout(initThree, 500);
+        }
+
+        function openMarket() {
+            const list = document.getElementById('market-list');
+            list.innerHTML = '';
+            
+            state.properties.forEach(p => {
+                const card = document.createElement('div');
+                card.className = `property-card ${p.sold ? 'sold' : ''}`;
+                card.innerHTML = `
+                    <div class="prop-price">$${p.price.toLocaleString()}</div>
+                    <div style="font-weight: 800; margin-bottom: 1rem;">${p.type} #${p.id}</div>
+                    <div class="prop-stat"><span>CONDITION</span><span>${p.condition}%</span></div>
+                    <div class="prop-stat"><span>STREET APPEAL</span><span>LOW</span></div>
+                    <button class="btn" style="width: 100%; margin-top: 1rem; padding: 0.5rem;" ${p.sold || state.hasHouse ? 'disabled' : ''} onclick="buyHouse(${p.id})">PURCHASE</button>
+                `;
+                list.appendChild(card);
+            });
+            
+            document.getElementById('market-overlay').classList.remove('hidden');
+        }
+
+        function closeMarket() {
+            document.getElementById('market-overlay').classList.add('hidden');
+        }
+
+        function buyHouse(id) {
+            const p = state.properties.find(x => x.id === id);
+            if (state.cash < p.price) {
+                alert("Not enough cash!");
+                return;
+            }
+
+            state.cash -= p.price;
+            state.hasHouse = true;
+            state.currentHouse = p;
+            state.renovations = { cleanup: false, repair: false, modernize: false, solar: false };
+            
+            updateHUD();
+            closeMarket();
+            focusOnHouse(p);
+            toggleReno(true);
+            updateRenoPanel();
+        }
+
+        function toggleReno(forceOpen = null) {
+            const sidebar = document.getElementById('reno-sidebar');
+            if (forceOpen === true) sidebar.classList.add('open');
+            else if (forceOpen === false) sidebar.classList.remove('open');
+            else sidebar.classList.toggle('open');
+        }
+
+        function updateRenoPanel() {
+            if (!state.currentHouse) {
+                document.getElementById('current-house-title').innerText = "NO HOUSE SELECTED";
+                return;
+            }
+            document.getElementById('current-house-title').innerText = `${state.currentHouse.type} #${state.currentHouse.id}`;
+            document.getElementById('reno-condition').innerText = `${state.currentHouse.condition}%`;
+            
+            // Update buttons
+            ['cleanup', 'repair', 'modernize', 'solar'].forEach(key => {
+                const btn = document.querySelector(`#reno-${key} button`);
+                if (state.renovations[key]) {
+                    btn.innerText = "COMPLETED ✅";
+                    btn.disabled = true;
+                    btn.style.background = "var(--success)";
+                } else {
+                    btn.innerText = key === 'cleanup' ? 'FIX UP' : (key === 'repair' ? 'REPAIR' : (key === 'solar' ? 'INSTALL' : 'UPGRADE'));
+                    btn.disabled = false;
+                    btn.style.background = "";
+                }
+            });
+
+            document.getElementById('list-sale-btn').disabled = state.currentHouse.condition < 80;
+        }
+
+        function applyReno(key, cost, boost) {
+            if (state.cash < cost) {
+                alert("Need more funds!");
+                return;
+            }
+
+            state.cash -= cost;
+            state.currentHouse.condition += boost;
+            state.renovations[key] = true;
+            
+            updateHUD();
+            updateRenoPanel();
+            updateHouseVisuals();
+            
+            // Shake camera briefly
+            controls.target.y += 0.5;
+            setTimeout(() => controls.target.y -= 0.5, 100);
+        }
+
+        function openSell() {
+            const baseValue = state.currentHouse.price;
+            const finalCondition = state.currentHouse.condition;
+            const profitMulti = 1 + (finalCondition / 100) + (state.communityScore / 200);
+            const sellPrice = Math.floor(baseValue * profitMulti);
+            
+            state.pendingSalePrice = sellPrice;
+            document.getElementById('sell-price').innerText = `$${sellPrice.toLocaleString()}`;
+            document.getElementById('sell-overlay').classList.remove('hidden');
+        }
+
+        function closeSell() {
+            document.getElementById('sell-overlay').classList.add('hidden');
+        }
+
+        function confirmSale() {
+            state.cash += state.pendingSalePrice;
+            state.flips++;
+            state.communityScore += 10;
+            state.hasHouse = false;
+            state.currentHouse.sold = true;
+            state.currentHouse = null;
+
+            updateHUD();
+            closeSell();
+            toggleReno(false);
+            showNotification();
+            resetCamera();
+            updateAllHouses();
+        }
+
+        function updateHUD() {
+            document.getElementById('cash-val').innerText = `$${state.cash.toLocaleString()}`;
+            document.getElementById('flip-count').innerText = state.flips;
+            document.getElementById('community-val').innerText = `${state.communityScore}%`;
+            document.getElementById('community-bar').style.width = `${state.communityScore}%`;
+        }
+
+        function showNotification() {
+            const n = document.getElementById('notification');
+            n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 3000);
+        }
+
+        // --- THREE.JS LOGIC ---
+        let scene, camera, renderer, controls, houseMeshes = [];
+
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(20, 15, 25);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxPolarAngle = Math.PI / 2.1;
+            controls.maxDistance = 60;
+            controls.minDistance = 5;
+
+            // Lights
+            const amb = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(amb);
+
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(20, 30, 20);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            scene.add(sun);
+
+            // Ground
+            const groundGeo = new THREE.PlaneGeometry(100, 100);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Road
+            const roadGeo = new THREE.PlaneGeometry(100, 8);
+            const roadMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = 0.01;
+            road.position.z = 8;
+            scene.add(road);
+
+            // Create initial distressed houses
+            state.properties.forEach(p => {
+                const house = createHouse(p);
+                scene.add(house);
+                houseMeshes.push({ id: p.id, mesh: house });
+            });
+
+            animate();
+            updateHUD();
+
+            // Hide loader
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
+            }, 1000);
+        }
+
+        function createHouse(data) {
+            const group = new THREE.Group();
+            group.position.set(data.pos.x, 0, data.pos.z);
+
+            // Main box
+            const body = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), new THREE.MeshStandardMaterial({ color: data.color }));
+            body.position.y = 1.5;
+            body.castShadow = true;
+            group.add(body);
+
+            // Roof
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2, 4), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+            roof.position.y = 4;
+            roof.rotation.y = Math.PI / 4;
+            group.add(roof);
+
+            // Door
+            const door = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.8), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
+            door.position.set(0, 0.9, 2.01);
+            group.add(door);
+
+            // Windows
+            const win1 = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: 0x000000 }));
+            win1.position.set(1.2, 2, 2.01);
+            group.add(win1);
+            const win2 = win1.clone();
+            win2.position.x = -1.2;
+            group.add(win2);
+
+            // Broken state indicators (trash blocks)
+            const trash = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+            trash.position.set(1.5, 0.1, 3);
+            trash.userData.isTrash = true;
+            group.add(trash);
+
+            return group;
+        }
+
+        function updateHouseVisuals() {
+            if (!state.currentHouse) return;
+            const h = houseMeshes.find(m => m.id === state.currentHouse.id).mesh;
+
+            if (state.renovations.cleanup) {
+                // Remove trash
+                h.children.forEach(c => {
+                    if (c.userData.isTrash) c.visible = false;
+                });
+                // Add grass patch
+                if (!h.userData.hasGrass) {
+                    const grass = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+                    grass.rotation.x = -Math.PI / 2;
+                    grass.position.y = 0.05;
+                    h.add(grass);
+                    h.userData.hasGrass = true;
+                }
+            }
+
+            if (state.renovations.repair) {
+                // Make house cleaner
+                h.children[0].material.color.set(0x8b5cf6); // Vibrant purple
+                h.children[1].material.color.set(0x334155); // Newer roof
+            }
+
+            if (state.renovations.modernize) {
+                // Glowing windows
+                h.children[3].material.emissive.set(0xec4899);
+                h.children[3].material.emissiveIntensity = 0.5;
+                h.children[4].material.emissive.set(0xec4899);
+                h.children[4].material.emissiveIntensity = 0.5;
+                h.children[0].material.color.set(0xec4899);
+            }
+
+            if (state.renovations.solar) {
+                // Add solar panel on roof
+                if (!h.userData.hasSolar) {
+                    const solar = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.2 }));
+                    solar.position.set(0, 4.5, 0);
+                    solar.rotation.x = -Math.PI / 4;
+                    h.add(solar);
+                    h.userData.hasSolar = true;
+                }
+            }
+        }
+
+        function updateAllHouses() {
+            // After a sale, we might clear the sold house or mark it as "Premium"
+            state.properties.forEach(p => {
+                if (p.sold) {
+                    const h = houseMeshes.find(m => m.id === p.id).mesh;
+                    // Already updated by renovates, just keep it looking nice
+                }
+            });
+        }
+
+        function focusOnHouse(p) {
+            new TWEEN.Tween(camera.position)
+                .to({ x: p.pos.x + 10, y: 8, z: p.pos.z + 10 }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to({ x: p.pos.x, y: 2, z: p.pos.z }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+        }
+
+        function resetCamera() {
+            new TWEEN.Tween(camera.position)
+                .to({ x: 20, y: 15, z: 25 }, 1500)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to({ x: 0, y: 0, z: 0 }, 1500)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            TWEEN.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
