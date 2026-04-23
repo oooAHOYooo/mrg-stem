@@ -560,7 +560,6 @@
 
         <p style="font-size: 0.8rem; margin: 0;">* Arrow Keys to Move •Space to Wave •Q to Dance</p>
     </div>
-    </div>
 
     <div id="simulation-controls">
         <button class="btn" id="run-day-btn" onclick="runSimulation()">START DAY 🚀</button>
@@ -722,16 +721,7 @@
             setTimeout(() => n.classList.remove('active'), 3000);
         }
 
-        // --- MGMT UPDATES ---
-        document.getElementById('price-slider').addEventListener('input', (e) => {
-            state.price = parseFloat(e.target.value);
-            document.getElementById('price-val').innerText = `$${state.price.toFixed(2)}`;
-        });
 
-        document.getElementById('quality-slider').addEventListener('input', (e) => {
-            state.quality = parseInt(e.target.value);
-            document.getElementById('quality-val').innerText = `${state.quality}%`;
-        });
 
         function buySupplies() {
             if (state.cash >= 10) {
@@ -745,11 +735,16 @@
         }
 
         function updateHUD() {
-            document.getElementById('day-val').innerText = state.day;
-            document.getElementById('cash-val').innerText = `$${state.cash.toFixed(2)}`;
-            document.getElementById('rep-val').innerText = state.reputation;
-            document.getElementById('inv-val').innerText = `${Math.floor(state.inventory)} / ${state.maxInventory}`;
+            const dayVal = document.getElementById('day-val');
+            const cashVal = document.getElementById('cash-val');
+            const repVal = document.getElementById('rep-val');
+            const invVal = document.getElementById('inv-val');
             const invBar = document.getElementById('inv-bar');
+
+            if (dayVal) dayVal.innerText = state.day;
+            if (cashVal) cashVal.innerText = `$${state.cash.toFixed(2)}`;
+            if (repVal) repVal.innerText = state.reputation;
+            if (invVal) invVal.innerText = `${Math.floor(state.inventory)} / ${state.maxInventory}`;
             if (invBar) invBar.style.width = `${(state.inventory / state.maxInventory) * 100}%`;
         }
 
