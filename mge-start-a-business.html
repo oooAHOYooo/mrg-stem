@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start a Business - MGE Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #4f46e5;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --panel: rgba(30, 41, 59, 0.7);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+        }
+
+        .wizard-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            color: white;
+            font-size: 1.2rem;
+            width: 100%;
+            margin-bottom: 2rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2.5rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: #94a3b8;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* Selection Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .card.active {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-weight: 700;
+            display: block;
+        }
+
+        /* HUD */
+        #hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stat-badge {
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon { font-size: 1.2rem; }
+        .stat-value { color: var(--success); }
+
+        /* Right Panel - Management */
+        #management-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 60;
+        }
+
+        #management-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100vh;
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--border);
+            z-index: 55;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem;
+            padding-top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        #management-sidebar.open {
+            right: 0;
+        }
+
+        .mgmt-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 5px;
+            appearance: none;
+            cursor: pointer;
+            margin: 0;
+            border: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+        }
+
+        /* Game Results */
+        #results-overlay {
+            z-index: 150;
+        }
+
+        .results-panel {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .summary-label { font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem; }
+        .summary-value { font-size: 1.5rem; font-weight: 800; }
+
+        /* Notification Toast */
+        #notification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            z-index: 200;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        #notification.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Bottom Controls */
+        #simulation-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+        }
+
+        #run-day-btn {
+            background: var(--success);
+            padding: 1.25rem 4rem;
+            font-size: 1.5rem;
+            box-shadow: 0 15px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        #run-day-btn:hover {
+            background: #059669;
+        }
+
+        .exit-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            z-index: 50;
+        }
+
+        .customer-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .customer-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid rgba(255, 255, 255, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loading-screen" id="loading-screen">
+        <div class="loader"></div>
+        <h2 style="margin-top: 2rem;">INITIALIZING BUSINESS CORE...</h2>
+    </div>
+
+    <!-- Wizard Overlay -->
+    <div id="wizard-overlay" class="overlay">
+        <div class="wizard-panel">
+            <!-- Step 1: Name -->
+            <div class="wizard-step active" id="step-1">
+                <h1>START YOUR STORY</h1>
+                <p>Welcome, future tycoon! Every great empire begins with a name. What will yours be called?</p>
+                <input type="text" id="business-name-input" placeholder="e.g. Neon Lemonade Co." maxlength="30">
+                <button class="btn" onclick="nextWizardStep(1)">ESTABLISH BRAND</button>
+            </div>
+
+            <!-- Step 2: Industry -->
+            <div class="wizard-step" id="step-2">
+                <h2>CHOOSE YOUR INDUSTRY</h2>
+                <p>What kind of products will you bring to the citizens?</p>
+                <div class="cards-grid">
+                    <div class="card active" onclick="selectCard(this, 'industry', 'lemonade')">
+                        <div class="card-icon">🍋</div>
+                        <span class="card-title">Lemonade Stand</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">Classic foundation.</p>
+                    </div>
+                    <div class="card" onclick="selectCard(this, 'industry', 'tacos')">
+                        <div class="card-icon">🌮</div>
+                        <span class="card-title">Taco Truck</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">Spicy & profitable.</p>
+                    </div>
+                    <div class="card" onclick="selectCard(this, 'industry', 'tech')">
+                        <div class="card-icon">🚀</div>
+                        <span class="card-title">Space Gadgets</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">High risk, high yield.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button class="btn btn-outline" onclick="prevWizardStep(2)">BACK</button>
+                    <button class="btn" onclick="nextWizardStep(2)">SECURE PERMIT</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Location -->
+            <div class="wizard-step" id="step-3">
+                <h2>SELECT HQ LOCATION</h2>
+                <p>Location is everything. Choose where you'll set up your first shop.</p>
+                <div class="cards-grid">
+                    <div class="card active" onclick="selectCard(this, 'location', 'park')">
+                        <div class="card-icon">🌳</div>
+                        <span class="card-title">Sunny Park</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">Stable foot traffic.</p>
+                    </div>
+                    <div class="card" onclick="selectCard(this, 'location', 'downtown')">
+                        <div class="card-icon">🏢</div>
+                        <span class="card-title">Downtown Hub</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">Big Spenders.</p>
+                    </div>
+                    <div class="card" onclick="selectCard(this, 'location', 'beach')">
+                        <div class="card-icon">🏖️</div>
+                        <span class="card-title">Neon Beach</span>
+                        <p style="font-size: 0.8rem; margin: 0.5rem 0 0;">High Thirst x2.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button class="btn btn-outline" onclick="prevWizardStep(3)">BACK</button>
+                    <button class="btn" onclick="finishWizard()">OPEN FOR BUSINESS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Overlay -->
+    <div id="results-overlay" class="overlay hidden">
+        <div class="results-panel">
+            <h1 id="results-title">DAY COMPLETE</h1>
+            <p id="results-subtitle">Here is how your business performed today.</p>
+            
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">TOTAL SALES</div>
+                    <div class="summary-value" id="res-sales">$0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">CUSTOMERS</div>
+                    <div class="summary-value" id="res-customers">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">EXPENSES</div>
+                    <div class="summary-value" id="res-expenses" style="color: var(--danger);">$0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">NET PROFIT</div>
+                    <div class="summary-value" id="res-profit">$0</div>
+                </div>
+            </div>
+
+            <p id="results-feedback" style="font-style: italic;">"The neighborhood is talking about your quality!"</p>
+            
+            <button class="btn" onclick="closeResults()">BACK TO HQ</button>
+        </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div id="hud">
+        <div class="stat-badge">
+            <span class="stat-icon">📅</span>
+            <span>DAY <span id="day-val" class="stat-value">1</span></span>
+        </div>
+        <div class="stat-badge">
+            <span class="stat-icon">💰</span>
+            <span>CASH <span id="cash-val" class="stat-value">$20.00</span></span>
+        </div>
+        <div class="stat-badge">
+            <span class="stat-icon">✨</span>
+            <span>REPUTATION <span id="rep-val" class="stat-value">0%</span></span>
+        </div>
+    </div>
+
+    <div id="management-toggle">
+        <button class="btn" onclick="toggleMgmt()"><span id="toggle-icon">📊</span> MGMT</button>
+    </div>
+
+    <div id="management-sidebar">
+        <h2 id="business-name-display">BUSINESS MGMT</h2>
+
+        <div class="mgmt-section">
+            <h3>RECIPE & PRICE</h3>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>SELLING PRICE</span>
+                    <span id="price-val">$1.50</span>
+                </div>
+                <input type="range" id="price-slider" min="0.25" max="5.00" step="0.25" value="1.50">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>INGREDIENT RATIO (STRENGTH)</span>
+                    <span id="quality-val">50%</span>
+                </div>
+                <input type="range" id="quality-slider" min="10" max="100" step="5" value="50">
+            </div>
+        </div>
+
+        <div class="mgmt-section">
+            <h3>INVENTORY</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>SUPPLIES</span>
+                    <span id="inv-val">100 / 100</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                    <div id="inv-bar" style="width: 100%; height: 100%; background: var(--secondary);"></div>
+                </div>
+            </div>
+            <button class="btn btn-outline" style="width: 100%; padding: 0.5rem;" onclick="buySupplies()">RESTOCK ($10.00)</button>
+        </div>
+
+        <p style="font-size: 0.8rem; margin: 0;">* Better ratio increases quality but uses more supplies per sale.</p>
+    </div>
+
+    <div id="simulation-controls">
+        <button class="btn" id="run-day-btn" onclick="runSimulation()">START DAY 🚀</button>
+    </div>
+
+    <div id="notification">SUPPLIES RESTOCKED! 📦</div>
+
+    <a href="index.html" class="btn btn-outline exit-btn">BACK TO HUB</a>
+
+    <script>
+        // --- GAME STATE ---
+        const state = {
+            name: "My Business",
+            industry: "lemonade",
+            location: "park",
+            day: 1,
+            cash: 20.00,
+            reputation: 0,
+            inventory: 100,
+            maxInventory: 100,
+            price: 1.50,
+            quality: 50,
+            isSimulationRunning: false,
+            customersHandled: 0,
+            daySales: 0,
+            dayExpenses: 0
+        };
+
+        // UI Helpers
+        function nextWizardStep(step) {
+            if (step === 1) {
+                const nameInput = document.getElementById('business-name-input').value.trim();
+                if (!nameInput) {
+                    alert("Please enter a business name first!");
+                    return;
+                }
+                state.name = nameInput;
+                document.getElementById('business-name-display').innerText = state.name;
+            }
+            document.getElementById(`step-${step}`).classList.remove('active');
+            document.getElementById(`step-${step + 1}`).classList.add('active');
+        }
+
+        function prevWizardStep(step) {
+            document.getElementById(`step-${step}`).classList.remove('active');
+            document.getElementById(`step-${step - 1}`).classList.add('active');
+        }
+
+        function selectCard(card, type, value) {
+            // Remove active from siblings
+            const siblings = card.parentElement.children;
+            for (let s of siblings) s.classList.remove('active');
+            card.classList.add('active');
+            state[type] = value;
+        }
+
+        function finishWizard() {
+            document.getElementById('wizard-overlay').classList.add('hidden');
+            showNotification(`WELCOME TO ${state.name.toUpperCase()}!`);
+            initEnvironment();
+        }
+
+        function toggleMgmt() {
+            const sidebar = document.getElementById('management-sidebar');
+            sidebar.classList.toggle('open');
+            document.getElementById('toggle-icon').innerText = sidebar.classList.contains('open') ? '❌' : '📊';
+        }
+
+        function showNotification(msg, type = 'success') {
+            const n = document.getElementById('notification');
+            n.innerText = msg;
+            n.style.background = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            n.classList.add('active');
+            setTimeout(() => n.classList.remove('active'), 3000);
+        }
+
+        // --- MGMT UPDATES ---
+        document.getElementById('price-slider').addEventListener('input', (e) => {
+            state.price = parseFloat(e.target.value);
+            document.getElementById('price-val').innerText = `$${state.price.toFixed(2)}`;
+        });
+
+        document.getElementById('quality-slider').addEventListener('input', (e) => {
+            state.quality = parseInt(e.target.value);
+            document.getElementById('quality-val').innerText = `${state.quality}%`;
+        });
+
+        function buySupplies() {
+            if (state.cash >= 10) {
+                state.cash -= 10;
+                state.inventory = Math.min(state.maxInventory, state.inventory + 50);
+                updateHUD();
+                showNotification("RESTOCKED SUPPLIES! 📦");
+            } else {
+                showNotification("NOT ENOUGH CASH! 💸", 'danger');
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('day-val').innerText = state.day;
+            document.getElementById('cash-val').innerText = `$${state.cash.toFixed(2)}`;
+            document.getElementById('rep-val').innerText = `${state.reputation}%`;
+            document.getElementById('inv-val').innerText = `${Math.floor(state.inventory)} / ${state.maxInventory}`;
+            document.getElementById('inv-bar').style.width = `${(state.inventory / state.maxInventory) * 100}%`;
+        }
+
+        // --- THREE.JS ENGINE ---
+        let scene, camera, renderer, controls, clock;
+        let ground, stand, agents = [];
+        const agentGroup = new THREE.Group();
+
+        function initScene() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(10, 10, 15);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxDistance = 40;
+            controls.minDistance = 5;
+            controls.maxPolarAngle = Math.PI / 2 - 0.1;
+
+            clock = new THREE.Clock();
+
+            // Lights
+            const amb = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(amb);
+
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(20, 30, 10);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 1024;
+            sun.shadow.mapSize.height = 1024;
+            scene.add(sun);
+
+            scene.add(agentGroup);
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+            
+            // Remove loading screen
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            }, 1000);
+        }
+
+        function initEnvironment() {
+            // Clear old env
+            if (ground) scene.remove(ground);
+            if (stand) scene.remove(stand);
+
+            // Ground
+            const floorGeo = new THREE.PlaneGeometry(100, 100);
+            let floorCol = 0x2d5a27; // Park
+            if (state.location === 'downtown') floorCol = 0x334155;
+            if (state.location === 'beach') floorCol = 0xfde68a;
+
+            const floorMat = new THREE.MeshStandardMaterial({ color: floorCol });
+            ground = new THREE.Mesh(floorGeo, floorMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Stand
+            stand = createStand();
+            scene.add(stand);
+
+            // Decor based on location
+            createLocationDecor();
+        }
+
+        function createStand() {
+            const group = new THREE.Group();
+
+            // Counter (Colors changed by industry)
+            let baseCol = 0x4f46e5;
+            let roofCol = 0xf59e0b;
+            if (state.industry === 'tacos') { baseCol = 0xef4444; roofCol = 0x10b981; }
+            if (state.industry === 'tech') { baseCol = 0x06b6d4; roofCol = 0x8b5cf6; }
+
+            const baseGeo = new THREE.BoxGeometry(4, 2, 2);
+            const baseMat = new THREE.MeshStandardMaterial({ color: baseCol });
+            const base = new THREE.Mesh(baseGeo, baseMat);
+            base.position.y = 1;
+            base.castShadow = true;
+            group.add(base);
+
+            // Top
+            const topGeo = new THREE.BoxGeometry(4.2, 0.2, 2.2);
+            const topMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const top = new THREE.Mesh(topGeo, topMat);
+            top.position.y = 2.1;
+            group.add(top);
+
+            // Sign / Roof
+            const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+            p1.position.set(1.8, 2.5, 0);
+            group.add(p1);
+            
+            const p2 = p1.clone();
+            p2.position.set(-1.8, 2.5, 0);
+            group.add(p2);
+
+            const roofGeo = new THREE.BoxGeometry(4.5, 0.2, 2.5);
+            const roofMat = new THREE.MeshStandardMaterial({ color: roofCol });
+            const roof = new THREE.Mesh(roofGeo, roofMat);
+            roof.position.y = 4;
+            group.add(roof);
+
+            // Industry Specific Prop
+            let prop;
+            if (state.industry === 'lemonade') {
+                prop = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffff00 }));
+            } else if (state.industry === 'tacos') {
+                prop = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.2, 5), new THREE.MeshStandardMaterial({ color: 0xffd700 }));
+                prop.rotation.x = Math.PI / 2;
+            } else {
+                prop = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), new THREE.MeshStandardMaterial({ color: 0x00f2fe, emissive: 0x00f2fe, emissiveIntensity: 0.5 }));
+            }
+            prop.position.set(0, 2.5, 0.5);
+            group.add(prop);
+
+            return group;
+        }
+
+        function createLocationDecor() {
+            // Remove existing decor
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const child = scene.children[i];
+                if (child.userData && child.userData.isDecor) scene.remove(child);
+            }
+
+            if (state.location === 'park') {
+                for (let i = 0; i < 20; i++) {
+                    const tree = createTree();
+                    tree.position.set((Math.random() - 0.5) * 60, 0, (Math.random() - 0.5) * 60);
+                    if (tree.position.length() < 10) tree.position.normalize().multiplyScalar(10);
+                    tree.userData.isDecor = true;
+                    scene.add(tree);
+                }
+            } else if (state.location === 'downtown') {
+                for (let i = 0; i < 15; i++) {
+                    const building = createBuilding();
+                    building.position.set((Math.random() - 0.5) * 80, 0, (Math.random() - 0.5) * 80);
+                    if (building.position.length() < 15) building.position.normalize().multiplyScalar(15);
+                    building.userData.isDecor = true;
+                    scene.add(building);
+                }
+            } else if (state.location === 'beach') {
+                for (let i = 0; i < 40; i++) {
+                    const shell = new THREE.Mesh(new THREE.SphereGeometry(0.1 + Math.random()*0.2, 6, 6), new THREE.MeshStandardMaterial({ color: 0xfff1f2 }));
+                    shell.position.set((Math.random() - 0.5) * 60, 0.05, (Math.random() - 0.5) * 60);
+                    shell.userData.isDecor = true;
+                    scene.add(shell);
+                }
+            }
+        }
+
+        function createTree() {
+            const group = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
+            trunk.position.y = 1.5;
+            group.add(trunk);
+            const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 0), new THREE.MeshStandardMaterial({ color: 0x166534 }));
+            leaves.position.y = 3.5;
+            group.add(leaves);
+            return group;
+        }
+
+        function createBuilding() {
+            const h = 5 + Math.random() * 15;
+            const w = 4 + Math.random() * 4;
+            const geo = new THREE.BoxGeometry(w, h, w);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+            const b = new THREE.Mesh(geo, mat);
+            b.position.y = h / 2;
+            return b;
+        }
+
+        // --- SIMULATION LOGIC ---
+        function runSimulation() {
+            if (state.inventory <= 0) {
+                showNotification("NO SUPPLIES LEFT! 📦", 'danger');
+                return;
+            }
+
+            state.isSimulationRunning = true;
+            state.customersHandled = 0;
+            state.daySales = 0;
+            state.dayExpenses = 0;
+            
+            document.getElementById('simulation-controls').style.display = 'none';
+            if (document.getElementById('management-sidebar').classList.contains('open')) toggleMgmt();
+
+            // Spawn waves of customers
+            let count = 0;
+            const maxCount = 10 + Math.floor(state.reputation / 10);
+            
+            const interval = setInterval(() => {
+                spawnAgent();
+                count++;
+                if (count >= maxCount) {
+                    clearInterval(interval);
+                    setTimeout(endSimulation, 8000);
+                }
+            }, 500);
+        }
+
+        function spawnAgent() {
+            const agent = createAgent();
+            agents.push(agent);
+            agentGroup.add(agent.mesh);
+
+            // Entry point
+            const side = Math.random() > 0.5 ? 20 : -20;
+            agent.mesh.position.set(side, 0, (Math.random() - 0.5) * 10 + 5);
+            
+            // Logic state
+            agent.state = 'walking_to_stand';
+            agent.target = new THREE.Vector3(0, 0, 4);
+            agent.waitTimer = 0;
+        }
+
+        function createAgent() {
+            const group = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff }));
+            body.position.y = 0.7;
+            group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({ color: 0xffdbac }));
+            head.position.y = 1.6;
+            group.add(head);
+
+            return {
+                mesh: group,
+                budget: 0.50 + Math.random() * 4.00,
+                thirst: 20 + Math.random() * 60,
+                speed: 0.05 + Math.random() * 0.05,
+                hasPurchased: false
+            };
+        }
+
+        function updateAgents() {
+            for (let i = agents.length - 1; i >= 0; i--) {
+                const a = agents[i];
+                
+                if (a.state === 'walking_to_stand') {
+                    const dir = a.target.clone().sub(a.mesh.position).normalize();
+                    a.mesh.position.add(dir.multiplyScalar(a.speed));
+                    a.mesh.lookAt(a.target);
+
+                    if (a.mesh.position.distanceTo(a.target) < 0.5) {
+                        a.state = 'deciding';
+                        a.waitTimer = 50 + Math.random() * 50;
+                    }
+                } else if (a.state === 'deciding') {
+                    a.waitTimer--;
+                    if (a.waitTimer <= 0) {
+                        handlePurchase(a);
+                        a.state = 'leaving';
+                        const exitSide = Math.random() > 0.5 ? 30 : -30;
+                        a.target = new THREE.Vector3(exitSide, 0, a.mesh.position.z + (Math.random()-0.5)*5);
+                    }
+                } else if (a.state === 'leaving') {
+                    const dir = a.target.clone().sub(a.mesh.position).normalize();
+                    a.mesh.position.add(dir.multiplyScalar(a.speed));
+                    a.mesh.lookAt(a.target);
+
+                    if (a.mesh.position.distanceTo(a.target) < 1) {
+                        agentGroup.remove(a.mesh);
+                        agents.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        function handlePurchase(agent) {
+            if (state.inventory <= 0) {
+                createBubble(agent.mesh, "Out of stock? 😡");
+                return;
+            }
+
+            // Decision Matrix
+            const qualityScore = state.quality;
+            const priceScore = (5.00 - state.price) * 20; // Lower price = higher score
+            const buyChance = (qualityScore + priceScore) / 200;
+
+            if (state.price <= agent.budget && Math.random() < buyChance) {
+                // Success!
+                const revenue = state.price;
+                const cost = (state.quality / 100) * 0.5; // Supplies used
+                
+                state.daySales += revenue;
+                state.dayExpenses += cost;
+                state.inventory -= (state.quality / 10);
+                state.customersHandled++;
+                state.cash += revenue;
+                
+                // reputation gain
+                if (state.quality > 70) state.reputation += 0.5;
+                if (state.price < 1.00) state.reputation += 0.2;
+
+                createBubble(agent.mesh, "Delicious! ✨", "success");
+            } else {
+                if (state.price > agent.budget) createBubble(agent.mesh, "Too expensive! 💸");
+                else if (qualityScore < agent.thirst) createBubble(agent.mesh, "Tastes weak... 👅");
+                else createBubble(agent.mesh, "Maybe later. 👋");
+                
+                // Rep loss if quality is terrible
+                if (state.quality < 20) state.reputation -= 0.1;
+            }
+            state.reputation = Math.max(0, Math.min(100, Math.floor(state.reputation)));
+            updateHUD();
+        }
+
+        function createBubble(mesh, text, type) {
+            const div = document.createElement('div');
+            div.className = 'customer-bubble';
+            if (type === 'success') div.style.background = '#4ade80';
+            div.innerText = text;
+            document.body.appendChild(div);
+
+            // Position update loop for bubble
+            const updateUI = () => {
+                if (!div.parentElement) return;
+                const vector = mesh.position.clone();
+                vector.y += 2.5;
+                vector.project(camera);
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = -(vector.y * 0.5 - 0.5) * window.innerHeight;
+                div.style.left = `${x}px`;
+                div.style.top = `${y}px`;
+                requestAnimationFrame(updateUI);
+            };
+            updateUI();
+
+            setTimeout(() => div.remove(), 2000);
+        }
+
+        function endSimulation() {
+            state.isSimulationRunning = false;
+            
+            // Show Results
+            document.getElementById('results-overlay').classList.remove('hidden');
+            document.getElementById('res-sales').innerText = `$${state.daySales.toFixed(2)}`;
+            document.getElementById('res-customers').innerText = state.customersHandled;
+            document.getElementById('res-expenses').innerText = `$${state.dayExpenses.toFixed(2)}`;
+            const profit = state.daySales - state.dayExpenses;
+            document.getElementById('res-profit').innerText = `$${profit.toFixed(2)}`;
+            document.getElementById('res-profit').style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            // Feedback strings
+            const feedbacks = [
+                "The town is buzzing about your new stand!",
+                "Customers appreciated the fair prices today.",
+                "Word is spreading: your quality is unmatched!",
+                "A solid day of business. Keep it up!",
+                "A few people complained about the wait, but loved the product."
+            ];
+            document.getElementById('results-feedback').innerText = `"${feedbacks[Math.floor(Math.random() * feedbacks.length)]}"`;
+        }
+
+        function closeResults() {
+            state.day++;
+            document.getElementById('results-overlay').classList.add('hidden');
+            document.getElementById('simulation-controls').style.display = 'block';
+            updateHUD();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            
+            if (controls) controls.update();
+            if (state.isSimulationRunning) updateAgents();
+            
+            // Character bounce
+            agentGroup.children.forEach((m, i) => {
+                m.position.y = Math.abs(Math.sin(clock.elapsedTime * 10 + i) * 0.1);
+            });
+
+            if (renderer) renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Init
+        initScene();
+        updateHUD();
+
+    </script>
+</body>
+</html>
