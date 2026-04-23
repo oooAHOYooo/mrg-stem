@@ -11,6 +11,20 @@
 const mgeChangelog = [
     {
         date: '2026-04-23',
+        title: 'MGE v1.0.1 - Pip Labs Unleashed!',
+        gameId: 'pips-lab-toggle',
+        icon: '🌱',
+        description: 'The secret AI agent laboratory is now officially integrated into the MGE Hub.',
+        updates: [
+            'Security: Password-protected Lab access (Code: pippy)',
+            'Integration: Moved Pips to a dedicated "Lab" corner button',
+            'Stability: Fixed production paths for high-speed Netlify performance',
+            'UI: Optimized the Glade Network overlay for desktop and iPad'
+        ],
+        category: 'update'
+    },
+    {
+        date: '2026-04-23',
         title: 'New Experiment: Home Flip!',
         gameId: 'home-flip',
         icon: '🏠',
