@@ -207,7 +207,7 @@
 
     <div id="start-screen">
         <h1 style="font-size: 6rem; font-weight: 900; margin: 0; color: #111; text-shadow: 0 0 20px rgba(0,0,0,0.1);">SONIC 2</h1>
-        <p style="font-size: 1.4rem; color: #555;">Butterflies | FOV Zoom | Screen Shake</p>
+        <p style="font-size: 1.4rem; color: #555;">Team up with Tails | 3-Minute Challenge | Ultimate Rivals</p>
         <div style="display:flex; gap:20px; margin-top:40px;">
             <button class="start-btn" id="btn-1p">1 PLAYER</button>
             <button class="start-btn" id="btn-2p" style="background: linear-gradient(135deg, #f39c12, #e67e22);">2 PLAYER</button>
@@ -279,7 +279,7 @@
             ACCEL: 0.12, MAX_SPEED: 2.5, DRAG: 0.98, GRAVITY: -0.025, JUMP: 0.92,
             MAGNET: 35, WORLD: 2500, SKY: 0xadeafa,
             FLOOR_GREEN: 0x5cd61e, FLOOR_GREEN_DARK: 0x4aa618, ISLAND_GREEN: 0x2e7d32,
-            BOSS_THRESHOLD: 20
+            BOSS_THRESHOLD: 100, // Matches changelog
         };
 
         const state = { 
@@ -299,68 +299,87 @@
         let scene, renderer, cam1, cam2;
 
         function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(CONFIG.SKY);
-            scene.fog = new THREE.Fog(CONFIG.SKY, 600, 3000);
+            try {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(CONFIG.SKY);
+                scene.fog = new THREE.FogExp2(CONFIG.SKY, 0.002);
 
-            const container = document.getElementById('canvas-container');
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
+                const container = document.getElementById('canvas-container');
+                if (!container) throw new Error("Canvas container not found");
 
-            cam1 = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 8000);
-            cam1.position.set(0, 10, -30);
-            cam2 = new THREE.PerspectiveCamera(75, window.innerWidth/2/window.innerHeight, 0.1, 8000);
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                container.appendChild(renderer.domElement);
 
-            const amb = new THREE.AmbientLight(0xffffff, 0.9); scene.add(amb);
-            const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(200, 500, 300); sun.castShadow = true; scene.add(sun);
+                cam1 = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 8000);
+                cam1.position.set(0, 10, -30);
+                cam2 = new THREE.PerspectiveCamera(75, window.innerWidth/2/window.innerHeight, 0.1, 8000);
 
-            createWorld();
-            players[0].obj = createPlayerMesh(players[0]);
-            players[1].obj = createPlayerMesh(players[1]);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.6); scene.add(ambient);
+                const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(100, 200, 100); sun.castShadow = true;
+                sun.shadow.mapSize.width = sun.shadow.mapSize.height = 2048; scene.add(sun);
 
-            for(let i=0; i<500; i++) spawnRing(Math.random() < 0.2);
-            for(let i=0; i<30; i++) spawnJungleSeeker();
-            for(let i=0; i<80; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
-            for(let i=0; i<30; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 50 + Math.random()*80, (Math.random()-0.5)*CONFIG.WORLD*0.8);
-            for(let i=0; i<50; i++) spawnButterfly();
-            for(let i=0; i<15; i++) {
-                const x = (Math.random()-0.5)*CONFIG.WORLD;
-                const z = (Math.random()-0.5)*CONFIG.WORLD;
-                state.objects.enemies.push(createKnucklesEnemy(x, z));
-            }
+                createWorld();
+                players[0].obj = createPlayerMesh(players[0]);
+                players[1].obj = createPlayerMesh(players[1]);
 
-            players.forEach((p, i) => { p.pet = createPet(p, i); });
-
-            window.addEventListener('keydown', e => { 
-                if(e.code === 'Space' && state.started && !players[0].onGround && players[0].trick === 0) players[0].trick=1;
-                if(e.code === 'ShiftRight' && state.is2P && !players[1].onGround && players[1].trick === 0) players[1].trick=1;
-                state.keys[e.code] = true;
-                const keyEl = document.getElementById(`key-${e.code}`);
-                if(keyEl) keyEl.classList.add('active');
-            });
-            window.addEventListener('keyup', e => {
-                state.keys[e.code] = false;
-                const keyEl = document.getElementById(`key-${e.code}`);
-                if(keyEl) keyEl.classList.remove('active');
-            });
-
-            document.getElementById('btn-1p').onclick = () => startGame(false);
-            document.getElementById('btn-2p').onclick = () => startGame(true);
-
-            // Hide loader
-            let p = 0; const iv = setInterval(() => { 
-                p += 4; if(p > 100) p = 100;
-                const fill = document.getElementById('loader-fill'); if(fill) fill.style.width = p+'%';
-                if(p >= 100) { 
-                    clearInterval(iv); 
-                    document.getElementById('loading-screen').style.display='none'; 
-                    document.getElementById('start-screen').style.display='flex'; 
+                for(let i=0; i<500; i++) spawnRing(Math.random() < 0.2);
+                for(let i=0; i<30; i++) spawnJungleSeeker();
+                for(let i=0; i<80; i++) createJungleTree((Math.random()-0.5)*CONFIG.WORLD, (Math.random()-0.5)*CONFIG.WORLD);
+                for(let i=0; i<30; i++) createFloatingIsland((Math.random()-0.5)*CONFIG.WORLD*0.8, 50 + Math.random()*80, (Math.random()-0.5)*CONFIG.WORLD*0.8);
+                for(let i=0; i<50; i++) spawnButterfly();
+                for(let i=0; i<15; i++) {
+                    const x = (Math.random()-0.5)*CONFIG.WORLD;
+                    const z = (Math.random()-0.5)*CONFIG.WORLD;
+                    state.objects.enemies.push(createKnucklesEnemy(x, z));
                 }
-            }, 30);
 
-            animate();
+                players.forEach((p, i) => { p.pet = createPet(p, i); });
+
+                window.addEventListener('keydown', e => { 
+                    if(e.code === 'Space' && state.started && !players[0].onGround && players[0].trick === 0) players[0].trick=1;
+                    if(e.code === 'ShiftRight' && state.is2P && !players[1].onGround && players[1].trick === 0) players[1].trick=1;
+                    state.keys[e.code] = true;
+                    const keyEl = document.getElementById(`key-${e.code}`);
+                    if(keyEl) keyEl.classList.add('active');
+                });
+                window.addEventListener('keyup', e => {
+                    state.keys[e.code] = false;
+                    const keyEl = document.getElementById(`key-${e.code}`);
+                    if(keyEl) keyEl.classList.remove('active');
+                });
+
+                window.addEventListener('resize', () => {
+                    const w = window.innerWidth, h = window.innerHeight;
+                    renderer.setSize(w, h);
+                    cam1.aspect = w / h;
+                    cam1.updateProjectionMatrix();
+                    cam2.aspect = (w/2) / h;
+                    cam2.updateProjectionMatrix();
+                });
+
+                const btn1p = document.getElementById('btn-1p');
+                const btn2p = document.getElementById('btn-2p');
+                if(btn1p) btn1p.onclick = () => startGame(false);
+                if(btn2p) btn2p.onclick = () => startGame(true);
+
+                animate();
+
+                let p = 0; const iv = setInterval(() => { 
+                    p += 4; if(p > 100) p = 100;
+                    const fill = document.getElementById('loader-fill'); if(fill) fill.style.width = p+'%';
+                    if(p >= 100) { 
+                        clearInterval(iv); 
+                        const ls = document.getElementById('loading-screen'); if(ls) ls.style.display='none'; 
+                        const ss = document.getElementById('start-screen'); if(ss) ss.style.display='flex'; 
+                    }
+                }, 30);
+            } catch (err) {
+                console.error("Sonic 2 Init Error:", err);
+                const ls = document.getElementById('loading-screen');
+                if (ls) ls.innerHTML = `<div style="color:white; text-align:center;"><h2>ERROR LOADING</h2><p>${err.message}</p></div>`;
+            }
         }
 
         function createWorld() {
