@@ -434,7 +434,7 @@
         <div class="wizard-panel">
             <!-- Step 1: Name -->
             <div class="wizard-step active" id="step-1">
-                <h1>START YOUR STORY</h1>
+                <h1>NAME YOUR BUSINESS</h1>
                 <p>Welcome, future tycoon! Every great empire begins with a name. What will yours be called?</p>
                 <input type="text" id="business-name-input" placeholder="e.g. Neon Lemonade Co." maxlength="30">
                 <button class="btn" onclick="nextWizardStep(1)">ESTABLISH BRAND</button>
@@ -540,7 +540,7 @@
         </div>
         <div class="stat-badge">
             <span class="stat-icon">✨</span>
-            <span>REPUTATION <span id="rep-val" class="stat-value">0%</span></span>
+            <span>LIKES <span id="rep-val" class="stat-value">0</span></span>
         </div>
     </div>
 
@@ -552,38 +552,14 @@
         <h2 id="business-name-display">BUSINESS MGMT</h2>
 
         <div class="mgmt-section">
-            <h3>RECIPE & PRICE</h3>
-            <div class="slider-group">
-                <div class="slider-label">
-                    <span>SELLING PRICE</span>
-                    <span id="price-val">$1.50</span>
-                </div>
-                <input type="range" id="price-slider" min="0.25" max="5.00" step="0.25" value="1.50">
-            </div>
-            <div class="slider-group">
-                <div class="slider-label">
-                    <span>INGREDIENT RATIO (STRENGTH)</span>
-                    <span id="quality-val">50%</span>
-                </div>
-                <input type="range" id="quality-slider" min="10" max="100" step="5" value="50">
+            <h3>MARKETPLACE</h3>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;" id="upgrades-list">
+                <!-- Upgrades will be injected here -->
             </div>
         </div>
 
-        <div class="mgmt-section">
-            <h3>INVENTORY</h3>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>SUPPLIES</span>
-                    <span id="inv-val">100 / 100</span>
-                </div>
-                <div style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-                    <div id="inv-bar" style="width: 100%; height: 100%; background: var(--secondary);"></div>
-                </div>
-            </div>
-            <button class="btn btn-outline" style="width: 100%; padding: 0.5rem;" onclick="buySupplies()">RESTOCK ($10.00)</button>
-        </div>
-
-        <p style="font-size: 0.8rem; margin: 0;">* Better ratio increases quality but uses more supplies per sale.</p>
+        <p style="font-size: 0.8rem; margin: 0;">* Arrow Keys to Move •Space to Wave •Q to Dance</p>
+    </div>
     </div>
 
     <div id="simulation-controls">
@@ -610,8 +586,22 @@
             isSimulationRunning: false,
             customersHandled: 0,
             daySales: 0,
-            dayExpenses: 0
+            dayExpenses: 0,
+            idealRatio: 65 + Math.floor(Math.random() * 15), // Random ideal for this business
+            upgrades: {
+                fancy_sign: { name: "Neon Sign", cost: 50, owned: false, desc: "+20% Customers" },
+                turbo_blender: { name: "Turbo Blender", cost: 100, owned: false, desc: "Faster Sales" },
+                premium_ice: { name: "Premium Ice", cost: 150, owned: false, desc: "+10 Reputation/Like" }
+            }
         };
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') emote('wave');
+            if (e.code === 'KeyQ') emote('dance');
+        });
 
         // UI Helpers
         function nextWizardStep(step) {
@@ -651,6 +641,77 @@
             const sidebar = document.getElementById('management-sidebar');
             sidebar.classList.toggle('open');
             document.getElementById('toggle-icon').innerText = sidebar.classList.contains('open') ? '❌' : '📊';
+            if (sidebar.classList.contains('open')) renderMarketplace();
+        }
+
+        function renderMarketplace() {
+            const container = document.getElementById('upgrades-list');
+            container.innerHTML = '';
+            
+            // Add existing MGMT controls back in
+            const controls = `
+                <div class="mgmt-section" style="padding:0; margin-bottom: 2rem;">
+                    <h3>RECIPE & PRICE</h3>
+                    <div class="slider-group">
+                        <div class="slider-label"><span>PRICE</span><span id="price-val">$${state.price.toFixed(2)}</span></div>
+                        <input type="range" id="price-slider" min="0.25" max="5.00" step="0.25" value="${state.price}" oninput="updatePrice(this)">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label"><span>STRENGTH</span><span id="quality-val">${state.quality}%</span></div>
+                        <input type="range" id="quality-slider" min="10" max="100" step="5" value="${state.quality}" oninput="updateQuality(this)">
+                    </div>
+                </div>
+                <div class="mgmt-section" style="padding:0; margin-bottom: 2rem;">
+                    <h3>INVENTORY</h3>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>SUPPLIES</span>
+                        <span id="inv-val">${Math.floor(state.inventory)} / ${state.maxInventory}</span>
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%; padding: 0.5rem;" onclick="buySupplies()">RESTOCK ($10.00)</button>
+                </div>
+                <h3>UPGRADES</h3>
+            `;
+            container.innerHTML = controls;
+
+            Object.keys(state.upgrades).forEach(id => {
+                const up = state.upgrades[id];
+                const btn = document.createElement('button');
+                btn.className = `btn ${up.owned ? 'active' : 'btn-outline'}`;
+                btn.style.textAlign = 'left';
+                btn.style.padding = '0.75rem';
+                btn.innerHTML = `
+                    <div style="font-weight:800">${up.name}</div>
+                    <div style="font-size:0.7rem; opacity:0.7">${up.desc}</div>
+                    <div style="font-size:0.8rem; color:${up.owned ? '#fff' : 'var(--success)'}">${up.owned ? 'OWNED ✅' : '$' + up.cost}</div>
+                `;
+                btn.onclick = () => buyUpgrade(id);
+                container.appendChild(btn);
+            });
+        }
+
+        function updatePrice(el) {
+            state.price = parseFloat(el.target ? el.target.value : el.value);
+            document.getElementById('price-val').innerText = `$${state.price.toFixed(2)}`;
+        }
+
+        function updateQuality(el) {
+            state.quality = parseInt(el.target ? el.target.value : el.value);
+            document.getElementById('quality-val').innerText = `${state.quality}%`;
+        }
+
+        function buyUpgrade(id) {
+            const up = state.upgrades[id];
+            if (up.owned) return;
+            if (state.cash >= up.cost) {
+                state.cash -= up.cost;
+                up.owned = true;
+                updateHUD();
+                renderMarketplace();
+                showNotification(`PURCHASED ${up.name}!`);
+                if (id === 'fancy_sign') addSignToStand();
+            } else {
+                showNotification("NOT ENOUGH CASH!", 'danger');
+            }
         }
 
         function showNotification(msg, type = 'success') {
@@ -686,15 +747,27 @@
         function updateHUD() {
             document.getElementById('day-val').innerText = state.day;
             document.getElementById('cash-val').innerText = `$${state.cash.toFixed(2)}`;
-            document.getElementById('rep-val').innerText = `${state.reputation}%`;
+            document.getElementById('rep-val').innerText = state.reputation;
             document.getElementById('inv-val').innerText = `${Math.floor(state.inventory)} / ${state.maxInventory}`;
-            document.getElementById('inv-bar').style.width = `${(state.inventory / state.maxInventory) * 100}%`;
+            const invBar = document.getElementById('inv-bar');
+            if (invBar) invBar.style.width = `${(state.inventory / state.maxInventory) * 100}%`;
         }
 
         // --- THREE.JS ENGINE ---
         let scene, camera, renderer, controls, clock;
-        let ground, stand, agents = [];
+        let ground, stand, player, agents = [];
         const agentGroup = new THREE.Group();
+
+        function emote(type) {
+            if (!player) return;
+            if (type === 'wave') {
+                new TWEEN.Tween(player.rotation).to({ z: 0.3 }, 200).yoyo(true).repeat(3).start();
+                createBubble(player, "WELCOME! 👋", "success");
+            } else if (type === 'dance') {
+                new TWEEN.Tween(player.position).to({ y: 1.5 }, 200).yoyo(true).repeat(5).start();
+                createBubble(player, "YEAH! 💃");
+            }
+        }
 
         function initScene() {
             scene = new THREE.Scene();
@@ -729,6 +802,10 @@
             scene.add(agentGroup);
 
             window.addEventListener('resize', onWindowResize);
+            
+            player = createPlayer();
+            scene.add(player);
+            
             animate();
             
             // Remove loading screen
@@ -815,6 +892,40 @@
             group.add(prop);
 
             return group;
+        }
+
+        function createPlayer() {
+            const group = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.2, 0.4), new THREE.MeshStandardMaterial({ color: 0x4f46e5 }));
+            body.position.y = 0.6;
+            group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xffdbac }));
+            head.position.y = 1.4;
+            group.add(head);
+            group.position.set(0, 0, -1); // Behind the stand
+            return group;
+        }
+
+        function updatePlayer(delta) {
+            if (!player) return;
+            const speed = 5 * delta;
+            if (keys['ArrowUp']) player.position.z -= speed;
+            if (keys['ArrowDown']) player.position.z += speed;
+            if (keys['ArrowLeft']) player.position.x -= speed;
+            if (keys['ArrowRight']) player.position.x += speed;
+
+            // Bounds (stay in booth)
+            player.position.x = Math.max(-2, Math.min(2, player.position.x));
+            player.position.z = Math.max(-2.5, Math.min(-0.8, player.position.z));
+        }
+
+        function addSignToStand() {
+            if (!stand) return;
+            const signGeo = new THREE.BoxGeometry(3, 1, 0.2);
+            const signMat = new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 });
+            const sign = new THREE.Mesh(signGeo, signMat);
+            sign.position.set(0, 4.5, 1.2);
+            stand.add(sign);
         }
 
         function createLocationDecor() {
@@ -911,8 +1022,14 @@
             
             // Logic state
             agent.state = 'walking_to_stand';
-            agent.target = new THREE.Vector3(0, 0, 4);
+            agent.target = new THREE.Vector3((Math.random() - 0.5) * 2, 0, 4);
             agent.waitTimer = 0;
+
+            // NPC Event chance
+            if (Math.random() < 0.15) {
+                agent.isSpecial = true;
+                agent.mesh.scale.set(1.2, 1.2, 1.2);
+            }
         }
 
         function createAgent() {
@@ -949,10 +1066,15 @@
                 } else if (a.state === 'deciding') {
                     a.waitTimer--;
                     if (a.waitTimer <= 0) {
-                        handlePurchase(a);
-                        a.state = 'leaving';
-                        const exitSide = Math.random() > 0.5 ? 30 : -30;
-                        a.target = new THREE.Vector3(exitSide, 0, a.mesh.position.z + (Math.random()-0.5)*5);
+                        if (a.isSpecial && !a.eventTriggered) {
+                            a.eventTriggered = true;
+                            triggerNPCEvent(a);
+                        } else {
+                            handlePurchase(a);
+                            a.state = 'leaving';
+                            const exitSide = Math.random() > 0.5 ? 30 : -30;
+                            a.target = new THREE.Vector3(exitSide, 0, a.mesh.position.z + (Math.random()-0.5)*5);
+                        }
                     }
                 } else if (a.state === 'leaving') {
                     const dir = a.target.clone().sub(a.mesh.position).normalize();
@@ -973,15 +1095,31 @@
                 return;
             }
 
-            // Decision Matrix
-            const qualityScore = state.quality;
-            const priceScore = (5.00 - state.price) * 20; // Lower price = higher score
-            const buyChance = (qualityScore + priceScore) / 200;
+            // Decision Matrix - REFINED FOR "JUST RIGHT"
+            const ratioDiff = Math.abs(state.quality - state.idealRatio);
+            let qualityFeedback = "";
+            let repGain = 0;
+
+            if (ratioDiff < 5) {
+                qualityFeedback = "PERFECT! ⭐";
+                repGain = 5;
+            } else if (ratioDiff < 15) {
+                qualityFeedback = "Pretty good. 👍";
+                repGain = 2;
+            } else if (ratioDiff < 30) {
+                qualityFeedback = "It's okay. 😐";
+                repGain = 1;
+            } else {
+                qualityFeedback = "Too weak/strong! 🤢";
+                repGain = -2;
+            }
+
+            const priceScore = (5.00 - state.price) * 20; 
+            const buyChance = (50 + priceScore) / 100;
 
             if (state.price <= agent.budget && Math.random() < buyChance) {
-                // Success!
                 const revenue = state.price;
-                const cost = (state.quality / 100) * 0.5; // Supplies used
+                const cost = (state.quality / 100) * 0.5;
                 
                 state.daySales += revenue;
                 state.dayExpenses += cost;
@@ -989,20 +1127,41 @@
                 state.customersHandled++;
                 state.cash += revenue;
                 
-                // reputation gain
-                if (state.quality > 70) state.reputation += 0.5;
-                if (state.price < 1.00) state.reputation += 0.2;
+                state.reputation += repGain;
+                if (state.upgrades.premium_ice.owned) state.reputation += 2;
 
-                createBubble(agent.mesh, "Delicious! ✨", "success");
+                createBubble(agent.mesh, qualityFeedback, repGain > 0 ? "success" : "danger");
             } else {
                 if (state.price > agent.budget) createBubble(agent.mesh, "Too expensive! 💸");
-                else if (qualityScore < agent.thirst) createBubble(agent.mesh, "Tastes weak... 👅");
                 else createBubble(agent.mesh, "Maybe later. 👋");
-                
-                // Rep loss if quality is terrible
-                if (state.quality < 20) state.reputation -= 0.1;
             }
-            state.reputation = Math.max(0, Math.min(100, Math.floor(state.reputation)));
+            state.reputation = Math.max(0, state.reputation);
+            updateHUD();
+        }
+
+        function triggerNPCEvent(agent) {
+            const isUpset = Math.random() > 0.5;
+            const text = isUpset ? "I have a complaint! 📢" : "I LOVE THIS PLACE! ❤️";
+            createBubble(agent.mesh, text);
+
+            // Pause agent
+            agent.state = 'event_active';
+            
+            const choice = confirm(`${agent.isSpecial ? 'VIP' : 'NPC'} ${isUpset ? 'is complaining' : 'is thrilled'}!\n\nHelp them? (Costs $5.00 and time, but gains big reputation)`);
+            
+            if (choice && state.cash >= 5) {
+                state.cash -= 5;
+                state.reputation += isUpset ? 20 : 15;
+                showNotification("HELPED NPC! ✨");
+                createBubble(player, "Happy to help!", "success");
+            } else {
+                if (isUpset) state.reputation -= 10;
+                showNotification("IGNORED NPC.");
+            }
+
+            agent.state = 'leaving';
+            const exitSide = Math.random() > 0.5 ? 30 : -30;
+            agent.target = new THREE.Vector3(exitSide, 0, agent.mesh.position.z + (Math.random()-0.5)*5);
             updateHUD();
         }
 
@@ -1065,7 +1224,10 @@
             const delta = clock.getDelta();
             
             if (controls) controls.update();
+            updatePlayer(delta);
             if (state.isSimulationRunning) updateAgents();
+            
+            if (typeof TWEEN !== 'undefined') TWEEN.update();
             
             // Character bounce
             agentGroup.children.forEach((m, i) => {
