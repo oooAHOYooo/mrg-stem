@@ -146,6 +146,41 @@
         .liquid-key svg { width: 22px; height: 22px; fill: currentColor; }
 
         .blip-knuckles { background: #ff0000; box-shadow: 0 0 10px #ff0000; border: 1px solid white; }
+        
+        /* Radar Styles */
+        .radar-container {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            pointer-events: none;
+            display: none;
+        }
+        .radar-map { position: absolute; width: 100%; height: 100%; }
+        .radar-center {
+            position: absolute; top: 50%; left: 50%;
+            width: 6px; height: 6px; background: #fff;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px #fff; z-index: 10;
+        }
+        .radar-blip {
+            position: absolute; width: 8px; height: 8px;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            z-index: 5;
+        }
+        .blip-p1 { background: #0047ff; box-shadow: 0 0 10px #0047ff; }
+        .blip-p2 { background: #ffcc00; box-shadow: 0 0 10px #ffcc00; }
+        .blip-boss { background: #ff00ff; box-shadow: 0 0 15px #ff00ff; border: 2px solid #fff; width: 12px; height: 12px; }
+
+        /* Health Bar Styles */
+        .hp-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .hp-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; }
+        .hp-bar-fill.warning { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+        .hp-bar-fill.critical { background: linear-gradient(90deg, #e74c3c, #c0392b); }
     </style>
     <script type="importmap">
         {
@@ -184,6 +219,7 @@
             <div class="hud-group" style="flex-direction: column;">
                 <div class="mge-badge">P1: SONIC</div>
                 <div class="hud-card" id="p1-card"><span class="hud-label">Rings</span><span class="hud-value" id="p1-rings" style="color:#5dade2;">0</span></div>
+                <div class="hud-card"><span class="hud-label">Health</span><div class="hp-bar-bg"><div id="p1-hp-fill" class="hp-bar-fill"></div></div></div>
             </div>
             <div class="top-center-stats">
                 <div class="timer-display" id="timer-display">03:00</div>
@@ -191,6 +227,7 @@
             <div class="hud-group" id="p2-ui" style="flex-direction: column; align-items: flex-end; display: none;">
                 <div class="mge-badge" style="background: #f39c12;">P2: TAILS</div>
                 <div class="hud-card" id="p2-card" style="align-items: flex-end;"><span class="hud-label">Rings</span><span class="hud-value" id="p2-rings" style="color:var(--mge-gold);">0</span></div>
+                <div class="hud-card" style="align-items: flex-end;"><span class="hud-label">Health</span><div class="hp-bar-bg"><div id="p2-hp-fill" class="hp-bar-fill"></div></div></div>
             </div>
         </div>
         <div id="notification">GO!</div>
@@ -255,8 +292,8 @@
             objects: { rings: [], islands: [], butterflies: [], clouds: [], speedLines: [], trails: [], seekers: [], boss: null, pets: [], enemies: [] } 
         };
         const players = [
-            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0x3366ff, shake: 0, pet: null },
-            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, onGround: false, trick: 0, color: 0xffcc00, shake: 0, pet: null }
+            { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, health: 100, onGround: false, trick: 0, color: 0x3366ff, shake: 0, pet: null },
+            { obj: null, pos: new THREE.Vector3(-40,1.8,-40), vel: new THREE.Vector3(), yaw: 0, rings: 0, health: 100, onGround: false, trick: 0, color: 0xffcc00, shake: 0, pet: null }
         ];
 
         let scene, renderer, cam1, cam2;
@@ -503,12 +540,27 @@
             g.position.set(x, 2.8, z);
             scene.add(g);
             
+            // Health bar for Knuckles
+            const hbBgGeo = new THREE.PlaneGeometry(5, 0.4);
+            const hbBgMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.5 });
+            const hbBg = new THREE.Mesh(hbBgBgGeo, hbBgMat);
+            hbBg.position.y = 5.5;
+            g.add(hbBg);
+
+            const hbFillGeo = new THREE.PlaneGeometry(5, 0.4);
+            const hbFillMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const hbFill = new THREE.Mesh(hbFillGeo, hbFillMat);
+            hbFill.position.z = 0.01;
+            hbBg.add(hbFill);
+
             return {
                 obj: g,
                 pos: g.position.clone(),
                 vel: new THREE.Vector3(),
                 speed: 1.2 + Math.random() * 0.8,
                 alive: true,
+                health: 100,
+                hbFill: hbFill,
                 hitCooldown: 0
             };
         }
@@ -774,19 +826,36 @@
                     // Collision with player
                     if (minDist < 6) {
                         if (targetPlayer.trick > 0 || (!targetPlayer.onGround && targetPlayer.vel.y < 0)) {
-                            // Defeated!
-                            en.alive = false;
-                            targetPlayer.rings += 5;
-                            updateUI();
-                            showNotification("KNUCKLES DEFEATED +5 RINGS", 1000);
-                            targetPlayer.vel.y = 0.8; // Bounce up
+                            if (en.hitCooldown <= 0) {
+                                // Hit Knuckles!
+                                en.health -= 34; // 3 hits to kill
+                                en.hitCooldown = 0.5;
+                                en.hbFill.scale.x = Math.max(0, en.health / 100);
+                                en.hbFill.position.x = -(1 - en.hbFill.scale.x) * 2.5;
+                                
+                                if (en.health <= 0) {
+                                    en.alive = false;
+                                    targetPlayer.rings += 15;
+                                    showNotification("KNUCKLES DEFEATED +15 RINGS", 1000);
+                                    targetPlayer.vel.y = 2.0; // SUPER BOUNCE
+                                } else {
+                                    showNotification("KNUCKLES INJURED!", 800);
+                                    targetPlayer.vel.y = 1.2; // Regular bounce
+                                }
+                                updateUI();
+                            }
                         } else if (en.hitCooldown <= 0) {
                             // Player hit
+                            targetPlayer.health = Math.max(0, targetPlayer.health - 20);
                             targetPlayer.rings = Math.max(0, targetPlayer.rings - 15);
                             targetPlayer.shake = 15;
-                            en.hitCooldown = 2; // Damage immunity for a sec
+                            en.hitCooldown = 2; 
                             updateUI();
-                            showNotification("HIT BY KNUCKLES! -15 RINGS", 1500);
+                            showNotification("HIT BY KNUCKLES! -20 HP", 1500);
+                            if (targetPlayer.health <= 0) {
+                                showNotification("PLAYER DEFEATED!", 3000);
+                                setTimeout(() => location.reload(), 2000);
+                            }
                             // Push player away
                             const push = targetPlayer.pos.clone().sub(en.pos).normalize().multiplyScalar(2);
                             targetPlayer.vel.add(push);
@@ -807,10 +876,15 @@
                 // Clear and rebuild radar
                 mapEl.innerHTML = '';
                 
+                // Keep center visible
+                const center = document.createElement('div');
+                center.className = 'radar-center';
+                mapEl.appendChild(center);
+                
                 // Rotation for radar (so North is where the player is facing)
                 const rot = -observer.yaw;
                 
-                // List of entities to show: Players and Boss
+                // List of entities to show
                 const entities = [
                     { pos: players[0].pos, type: 'p1' },
                     { pos: players[1].pos, type: 'p2' }
@@ -821,23 +895,17 @@
                 });
                 
                 entities.forEach(ent => {
-                    // Relative position
                     const relX = ent.pos.x - observer.pos.x;
                     const relZ = ent.pos.z - observer.pos.z;
-                    
-                    // Rotate based on player yaw
                     const rotX = relX * Math.cos(rot) - relZ * Math.sin(rot);
                     const rotZ = relX * Math.sin(rot) + relZ * Math.cos(rot);
-                    
                     const distSq = rotX * rotX + rotZ * rotZ;
                     
-                    // Inside or on the edge of the radar
                     let mapX, mapZ;
                     if (distSq < radarRange * radarRange) {
                         mapX = (rotX / radarRange) * 50 + 50;
                         mapZ = (rotZ / radarRange) * 50 + 50;
                     } else {
-                        // Clamp to edge
                         const dist = Math.sqrt(distSq);
                         mapX = (rotX / dist) * 50 + 50;
                         mapZ = (rotZ / dist) * 50 + 50;
@@ -873,6 +941,19 @@
         function updateUI() { 
             const p1 = document.getElementById('p1-rings'); if(p1) p1.innerText = players[0].rings;
             const p2 = document.getElementById('p2-rings'); if(p2 && state.is2P) p2.innerText = players[1].rings;
+            
+            const p1hp = document.getElementById('p1-hp-fill');
+            if (p1hp) {
+                p1hp.style.width = players[0].health + '%';
+                p1hp.classList.toggle('warning', players[0].health < 60);
+                p1hp.classList.toggle('critical', players[0].health < 30);
+            }
+            const p2hp = document.getElementById('p2-hp-fill');
+            if (p2hp && state.is2P) {
+                p2hp.style.width = players[1].health + '%';
+                p2hp.classList.toggle('warning', players[1].health < 60);
+                p2hp.classList.toggle('critical', players[1].health < 30);
+            }
         }
         function updateTimerUI() { const t = document.getElementById('timer-display'); if(t) { const m = Math.floor(state.time/60), s = state.time%60; t.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; } }
 
