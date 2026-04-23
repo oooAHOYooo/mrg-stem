@@ -527,6 +527,18 @@
         </div>
     </div>
 
+    <!-- Choice Popup Overlay -->
+    <div id="choice-overlay" class="overlay hidden" style="z-index: 200;">
+        <div class="modal-panel" style="max-width: 450px;">
+            <h2 id="choice-title">EVENT</h2>
+            <p id="choice-message">Would you like to help this customer?</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                <button class="btn btn-outline" style="flex: 1;" id="choice-no-btn">NO</button>
+                <button class="btn" style="flex: 1;" id="choice-yes-btn">YES</button>
+            </div>
+        </div>
+    </div>
+
     <div id="game-container"></div>
 
     <div id="hud">
@@ -711,6 +723,27 @@
             } else {
                 showNotification("NOT ENOUGH CASH!", 'danger');
             }
+        }
+
+        function showChoice(title, message, onYes, onNo) {
+            const overlay = document.getElementById('choice-overlay');
+            const titleEl = document.getElementById('choice-title');
+            const messageEl = document.getElementById('choice-message');
+            const yesBtn = document.getElementById('choice-yes-btn');
+            const noBtn = document.getElementById('choice-no-btn');
+
+            titleEl.innerText = title;
+            messageEl.innerText = message;
+            overlay.classList.remove('hidden');
+
+            yesBtn.onclick = () => {
+                overlay.classList.add('hidden');
+                if (onYes) onYes();
+            };
+            noBtn.onclick = () => {
+                overlay.classList.add('hidden');
+                if (onNo) onNo();
+            };
         }
 
         function showNotification(msg, type = 'success') {
@@ -1142,22 +1175,33 @@
             // Pause agent
             agent.state = 'event_active';
             
-            const choice = confirm(`${agent.isSpecial ? 'VIP' : 'NPC'} ${isUpset ? 'is complaining' : 'is thrilled'}!\n\nHelp them? (Costs $5.00 and time, but gains big reputation)`);
-            
-            if (choice && state.cash >= 5) {
-                state.cash -= 5;
-                state.reputation += isUpset ? 20 : 15;
-                showNotification("HELPED NPC! ✨");
-                createBubble(player, "Happy to help!", "success");
-            } else {
+            const eventTitle = agent.isSpecial ? '💎 VIP EVENT' : '👤 CUSTOMER EVENT';
+            const eventMsg = isUpset ? 'This customer is complaining! Help them? (Costs $5.00, gains +20 Likes)' : 'This customer is thrilled! Celebrate? (Costs $5.00, gains +15 Likes)';
+
+            showChoice(eventTitle, eventMsg, () => {
+                // YES CALLBACK
+                if (state.cash >= 5) {
+                    state.cash -= 5;
+                    state.reputation += isUpset ? 20 : 15;
+                    showNotification("HELPED NPC! ✨");
+                    createBubble(player, "Happy to help!", "success");
+                    agent.state = 'leaving';
+                    updateHUD();
+                } else {
+                    showNotification("NOT ENOUGH CASH!", 'danger');
+                    agent.state = 'leaving';
+                }
+            }, () => {
+                // NO CALLBACK
                 if (isUpset) state.reputation -= 10;
                 showNotification("IGNORED NPC.");
-            }
+                agent.state = 'leaving';
+                updateHUD();
+            });
 
-            agent.state = 'leaving';
+            // Set exit path
             const exitSide = Math.random() > 0.5 ? 30 : -30;
             agent.target = new THREE.Vector3(exitSide, 0, agent.mesh.position.z + (Math.random()-0.5)*5);
-            updateHUD();
         }
 
         function createBubble(mesh, text, type) {
