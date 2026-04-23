@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as THREE from 'three'
 import { createTerrain } from '../three/terrain.js'
 import { createCamera, updateCamera, resizeCamera, cleanupCamera, getCamera, getIsLocked } from '../three/camera.js'
-import { createPipMeshes, syncPipMeshes, updatePipAnimations, updatePipEyeTracking, getPipMeshMap } from '../three/pips.js'
+import { createPipMeshes, syncPipMeshes, updatePipAnimations, updatePipEyeTracking, getPipMeshMap, initSavedNotes, createNoteMesh } from '../three/pips.js'
 import { pickPip } from '../three/picking.js'
 import { updateGathering, isGathering } from '../three/gathering.js'
 import { useScene } from '../composables/useScene.js'
@@ -625,6 +625,17 @@ function onCanvasClick(event) {
     }
   }
 
+  if (currentMode.value === 'wizard' || currentMode.value === 'about') {
+    const hit = getGroundPoint(event, locked)
+    if (hit) {
+      const noteText = prompt('Enter a "Best Prompt" to leave as a note:')
+      if (noteText) {
+        createNoteMesh(noteText, hit.x, hit.z, scene)
+      }
+      return
+    }
+  }
+
   // Right click or special key for pokeball? 
   // Let's use left click if shift is held, or maybe just left click for pokeball in playful mode
   if (currentMode.value === 'playful') {
@@ -754,10 +765,12 @@ onMounted(() => {
   // Clock
   clock = new THREE.Clock()
 
-  // Create pip meshes from current state
   if (pips.value.length > 0) {
     createPipMeshes(pips.value, scene)
   }
+  
+  // Initialize saved prompts as 3D notes
+  initSavedNotes(scene)
 
   // Tiny companion pip (player proxy for cozy world presence)
   const body = new THREE.Mesh(

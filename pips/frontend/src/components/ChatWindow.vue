@@ -5,7 +5,7 @@ import { useApi } from '../composables/useApi.js'
 import { useWebSocket } from '../composables/useWebSocket.js'
 import { useDraggable } from '../composables/useDraggable.js'
 
-const { selectedPip, councilActive, chatOpen, pips, addPipExp } = useScene()
+const { selectedPip, councilActive, chatOpen, pips, addPipExp, speakToAgent, copyConversations } = useScene()
 const { chatWithPip } = useApi()
 const { messages: wsMessages } = useWebSocket()
 
@@ -50,12 +50,16 @@ async function sendMessage() {
 
   try {
     const response = await chatWithPip(pipId, text)
+    const reply = response?.reply || response?.content || response?.message || JSON.stringify(response)
     chatMessages.value.push({
       role: 'pip',
       name: pipName,
       color: pipColor,
-      content: response?.reply || response?.content || response?.message || JSON.stringify(response),
+      content: reply,
     })
+    
+    // Make the pip "talk" in the 3D world
+    speakToAgent(pipId, reply)
   } catch (err) {
     chatMessages.value.push({
       role: 'pip',
@@ -136,11 +140,11 @@ defineExpose({ focusInput })
     :style="dragStyles()"
   >
     <div
-      class="draggable"
-      style="font-weight: bold; margin-bottom: 8px; font-size: 14px; padding: 2px 0;"
+      class="draggable chat-header"
       @mousedown="onMouseDown"
     >
-      {{ headerText }}
+      <span>{{ headerText }}</span>
+      <button class="tool-btn" @click="copyConversations" title="Copy Conversation Logs">📋</button>
     </div>
 
     <div ref="messagesEl" class="chat-messages">

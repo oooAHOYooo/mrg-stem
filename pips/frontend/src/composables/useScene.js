@@ -620,7 +620,39 @@ export function useScene() {
     terminalOpen,
     toggleTerminal,
     createPip,
+    speakToAgent,
+    addPromptNote,
+    copyConversations,
   }
+}
+
+function speakToAgent(pipId, text) {
+  const { pips, updatePipInList } = useScene()
+  const pip = pips.value.find(p => p.id === pipId)
+  if (pip) {
+    updatePipInList({ id: pipId, currentSpeech: text })
+    // Clear speech after delay
+    setTimeout(() => {
+      updatePipInList({ id: pipId, currentSpeech: '' })
+    }, 6000)
+  }
+}
+
+function addPromptNote(text, x, z) {
+  const { activeGladeId } = useScene()
+  import('../three/pips.js').then(m => {
+    // We need to pass the scene. This might be tricky from here.
+    // Usually it's better to have a ref to the scene or a function in GladeCanvas
+  })
+}
+
+function copyConversations() {
+  const logs = localStorage.getItem('pips_conversations')
+  if (logs) {
+    navigator.clipboard.writeText(logs)
+    return true
+  }
+  return false
 }
 
 function seedGlades() {

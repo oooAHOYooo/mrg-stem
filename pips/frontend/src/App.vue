@@ -586,6 +586,13 @@ watch(
       <p>Pips serves as a visual 3D interface for your underlying AI processes and project management backends. Think of each <strong>"Pip"</strong> as a dedicated socket or API connection to an LLM running either locally or in the cloud.</p>
       <p>When you interact with a Pip, Pips takes your input and sends a payload to the backend server. The backend passes the project context and your prompt to the specialized LLM agent assigned to that Pip (like an Editor, or SysAdmin) for processing.</p>
       <p>The response is streamed back to the frontend and displayed as chat bubbles natively in the world. By distributing these agents into distinct <strong>"Glades"</strong>, Pips allows you to visually orchestrate and containerize the context of multiple agents operating simultaneously across your projects!</p>
+      
+      <div style="margin-top: 24px; padding: 12px; border: 1px solid rgba(193,133,255,0.3); border-radius: 8px; background: rgba(0,0,0,0.2);">
+        <h3 style="font-size: 14px; color: #c185ff; margin-bottom: 8px;">Latest Updates</h3>
+        <p style="font-size: 13px; margin-bottom: 8px;">v1.1.0: Added agent speech bubbles, project notes, and conversation tracking.</p>
+        <a href="https://github.com/oooAHOYooo/mrg-stem/blob/main/pips/frontend/src/three/ReleaseNotes.md" target="_blank" style="color: #8be9ff; font-size: 12px; text-decoration: none;">View Full Release Notes</a>
+      </div>
+
       <button class="council-btn" style="margin-top: 32px;" @click="setMode('explore')">Return to Network</button>
     </div>
   </div>

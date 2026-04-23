@@ -175,7 +175,7 @@ function updateSailingControls(delta) {
 }
 
 function updateExploreControls(delta, playful) {
-  const moveSpeed = playful ? (keys.shift ? 16 : 10) : (keys.shift ? 5.6 : 4.3)
+  const moveSpeed = playful ? (keys.shift ? 12 : 8) : (keys.shift ? 4.8 : 3.2)
   const accel = 50
   const damping = 10
 
@@ -205,6 +205,14 @@ function updateExploreControls(delta, playful) {
   camera.position.x += velocity.x * delta
   camera.position.z += velocity.z * delta
 
+  // Head bobbing logic
+  const isMoving = (keys.forward || keys.backward || keys.left || keys.right) && !playful
+  if (isMoving) {
+    moveTime += delta * (keys.shift ? 12 : 8)
+  } else {
+    moveTime = THREE.MathUtils.lerp(moveTime, Math.PI * 2, 0.1)
+  }
+
   if (!playful) {
     velocity.y -= 30 * delta
     const grounded = camera.position.y <= EYE_HEIGHT + 0.1
@@ -215,8 +223,13 @@ function updateExploreControls(delta, playful) {
     if (jumpTime > 0) jumpTime -= delta
     
     camera.position.y += velocity.y * delta
-    if (camera.position.y < EYE_HEIGHT) {
-        camera.position.y = EYE_HEIGHT
+    
+    // Smooth head bobbing application
+    const bobAmount = isMoving ? Math.sin(moveTime) * 0.04 : 0
+    const targetY = EYE_HEIGHT + bobAmount
+    
+    if (camera.position.y < targetY && velocity.y <= 0) {
+        camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.2)
         velocity.y = 0
     }
   } else {

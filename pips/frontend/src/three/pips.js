@@ -1,6 +1,37 @@
 import * as THREE from 'three'
 
 const pipMeshMap = new Map()
+const noteMeshes = []
+const speechBubbles = new Map()
+
+// Persistent store for prompts and conversations
+const PROMPTS_KEY = 'pips_best_prompts'
+const CONVO_KEY = 'pips_conversations'
+
+function getSavedPrompts() {
+  try {
+    return JSON.parse(localStorage.getItem(PROMPTS_KEY) || '[]')
+  } catch { return [] }
+}
+
+function savePrompt(text, x, z) {
+  const prompts = getSavedPrompts()
+  prompts.push({ text, x, z, id: Date.now() })
+  localStorage.setItem(PROMPTS_KEY, JSON.stringify(prompts.slice(-20))) // Keep last 20
+}
+
+function getSavedConversations() {
+  try {
+    return JSON.parse(localStorage.getItem(CONVO_KEY) || '{}')
+  } catch { return {} }
+}
+
+function saveConversation(pipId, speaker, text) {
+  const convos = getSavedConversations()
+  if (!convos[pipId]) convos[pipId] = []
+  convos[pipId].push({ speaker, text, time: Date.now() })
+  localStorage.setItem(CONVO_KEY, JSON.stringify(convos))
+}
 
 // Soft anime pastel palette
 const PIP_COLORS = [
@@ -90,7 +121,143 @@ export function syncPipMeshes(pips, scene) {
       }
       mesh.userData.currentHatId = pip.hat
     }
+
+    // Sync speech bubble if present
+    if (pip.currentSpeech && mesh.userData.lastSpeech !== pip.currentSpeech) {
+      updatePipSpeech(pip.id, pip.currentSpeech, scene)
+      mesh.userData.lastSpeech = pip.currentSpeech
+      saveConversation(pip.id, pip.name, pip.currentSpeech)
+    }
   })
+}
+
+export function initSavedNotes(scene) {
+  const prompts = getSavedPrompts()
+  prompts.forEach(p => {
+    createNoteMesh(p.text, p.x, p.z, scene)
+  })
+}
+
+function updatePipSpeech(pipId, text, scene) {
+  const group = pipMeshMap.get(pipId)
+  if (!group) return
+
+  // Remove old bubble
+  if (speechBubbles.has(pipId)) {
+    scene.remove(speechBubbles.get(pipId))
+  }
+
+  const bubble = buildSpeechBubble(text)
+  bubble.position.copy(group.position).add(new THREE.Vector3(0, 1.2, 0))
+  scene.add(bubble)
+  speechBubbles.set(pipId, bubble)
+
+  // Auto-remove after 6 seconds
+  setTimeout(() => {
+    if (speechBubbles.get(pipId) === bubble) {
+      scene.remove(bubble)
+      speechBubbles.delete(pipId)
+    }
+  }, 6000)
+}
+
+function buildSpeechBubble(text) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  
+  // Bubble background
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
+  ctx.beginPath()
+  ctx.roundRect(10, 10, 492, 90, 20)
+  ctx.fill()
+  
+  // Tail
+  ctx.beginPath()
+  ctx.moveTo(256, 100)
+  ctx.lineTo(240, 120)
+  ctx.lineTo(272, 100)
+  ctx.fill()
+
+  ctx.fillStyle = '#333'
+  ctx.font = '24px sans-serif'
+  ctx.textAlign = 'center'
+  
+  // Simple word wrap
+  const words = text.split(' ')
+  let line = ''
+  let y = 50
+  for (let n = 0; n < words.length; n++) {
+    let testLine = line + words[n] + ' '
+    if (ctx.measureText(testLine).width > 450 && n > 0) {
+      ctx.fillText(line, 256, y)
+      line = words[n] + ' '
+      y += 30
+      if (y > 90) break // truncate
+    } else {
+      line = testLine
+    }
+  }
+  ctx.fillText(line, 256, y)
+
+  const tex = new THREE.CanvasTexture(canvas)
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide })
+  const geo = new THREE.PlaneGeometry(2.4, 0.6)
+  const mesh = new THREE.Mesh(geo, mat)
+  
+  mesh.userData.isBubble = true
+  return mesh
+}
+
+export function createNoteMesh(text, x, z, scene) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 256
+  const ctx = canvas.getContext('2d')
+
+  // Sticky note look
+  const colors = ['#fff176', '#ff8a80', '#81d4fa', '#a5d6a7']
+  ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)]
+  ctx.fillRect(0, 0, 256, 256)
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.1)'
+  ctx.fillRect(0, 240, 256, 16) // soft shadow bottom
+
+  ctx.fillStyle = '#444'
+  ctx.font = 'bold 22px "Comic Sans MS", cursive, sans-serif'
+  ctx.textAlign = 'center'
+  
+  const words = text.split(' ')
+  let line = ''
+  let y = 60
+  for (let n = 0; n < words.length; n++) {
+    let testLine = line + words[n] + ' '
+    if (ctx.measureText(testLine).width > 220 && n > 0) {
+      ctx.fillText(line, 128, y)
+      line = words[n] + ' '
+      y += 30
+    } else {
+      line = testLine
+    }
+  }
+  ctx.fillText(line, 128, y)
+
+  const tex = new THREE.CanvasTexture(canvas)
+  const mat = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide })
+  const geo = new THREE.PlaneGeometry(1, 1)
+  const mesh = new THREE.Mesh(geo, mat)
+  
+  mesh.position.set(x, 0.05, z) // On floor
+  mesh.rotation.x = -Math.PI / 2
+  mesh.rotation.z = (Math.random() - 0.5) * 0.2 // Random tilt
+  
+  scene.add(mesh)
+  noteMeshes.push(mesh)
+  
+  // Save for persistence
+  savePrompt(text, x, z)
+  return mesh
 }
 
 const _eyeWorld = new THREE.Vector3()
@@ -256,6 +423,13 @@ export function updatePipAnimations(time) {
       // reset scale if no reaction
       group.scale.setScalar(1)
       group.rotation.x = 0
+    }
+
+    // Update speech bubbles to face camera
+    for (const [, bubble] of speechBubbles) {
+      if (camera) {
+        bubble.quaternion.copy(camera.quaternion)
+      }
     }
 
     i++
