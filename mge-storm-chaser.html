@@ -526,6 +526,36 @@
         <div id="warning-box">⚠️ SEVERE WEATHER WARNING: TORNADO DETECTED!</div>
     </div>
 
+    <!-- Premium Liquid Controls Overlay -->
+    <div id="controls-overlay-premium" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Outfit', sans-serif;">
+        <style>
+            .liquid-key {
+                width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
+                display: flex; justify-content: center; align-items: center;
+                font-weight: 900; font-size: 1rem; color: rgba(255, 255, 255, 0.4);
+                transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
+                position: relative; overflow: hidden;
+            }
+            .liquid-key.active {
+                color: #fff; transform: scale(0.92) translateY(3px);
+                background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            }
+            .control-row { display: flex; gap: 8px; }
+            .liquid-key.wide { width: 110px; font-size: 0.8rem; letter-spacing: 1px; }
+        </style>
+        <div class="control-row" style="justify-content: center;">
+            <div class="liquid-key" id="key-up">W</div>
+        </div>
+        <div class="control-row">
+            <div class="liquid-key" id="key-left">A</div>
+            <div class="liquid-key" id="key-down">S</div>
+            <div class="liquid-key" id="key-right">D</div>
+        </div>
+    </div>
+
     <!-- Premium Escape Overlay -->
     <div id="esc-overlay">
         <div class="keycap-container">
@@ -619,10 +649,20 @@
                 };
                 
                 window.addEventListener('keydown', (e) => {
-                    if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = true;
+                    const key = e.key.toLowerCase();
+                    if(key in this.carInput) {
+                        this.carInput[key] = true;
+                        const map = { 'w':'up', 'a':'left', 's':'down', 'd':'right' };
+                        if (map[key]) document.getElementById('key-'+map[key])?.classList.add('active');
+                    }
                 });
                 window.addEventListener('keyup', (e) => {
-                    if(e.key.toLowerCase() in this.carInput) this.carInput[e.key.toLowerCase()] = false;
+                    const key = e.key.toLowerCase();
+                    if(key in this.carInput) {
+                        this.carInput[key] = false;
+                        const map = { 'w':'up', 'a':'left', 's':'down', 'd':'right' };
+                        if (map[key]) document.getElementById('key-'+map[key])?.classList.remove('active');
+                    }
                 });
             }
 

@@ -446,6 +446,34 @@
         </div>
     </div>
 
+    <!-- Premium Liquid Controls Overlay -->
+    <div id="controls-overlay-premium" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Outfit', sans-serif;">
+        <style>
+            .liquid-key {
+                width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
+                display: flex; justify-content: center; align-items: center;
+                font-weight: 900; font-size: 1rem; color: rgba(255, 255, 255, 0.4);
+                transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
+                position: relative; overflow: hidden;
+            }
+            .liquid-key.active {
+                color: #fff; transform: scale(0.92) translateY(3px);
+                background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            }
+            .control-row { display: flex; gap: 8px; }
+            .liquid-key.wide { width: 150px; font-size: 0.7rem; letter-spacing: 1px; }
+        </style>
+        <div class="control-row">
+            <div class="liquid-key wide">🖱️ MOUSE: AIM MISSION</div>
+        </div>
+        <div class="control-row">
+            <div class="liquid-key wide" id="key-ignite">🚀 HOLD: IGNITE</div>
+        </div>
+    </div>
+
     <!-- Intro Overlay -->
     <div id="mission-overlay">
         <h1>LUNAR ARCHITECT</h1>
@@ -703,10 +731,10 @@
                 };
                 const stopIgnition = (e) => { if(e) e.preventDefault(); this.state.ignited = false; ignite.classList.remove('ignite-active'); };
 
-                ignite.addEventListener('mousedown', startIgnition);
-                ignite.addEventListener('mouseup', stopIgnition);
-                ignite.addEventListener('touchstart', startIgnition);
-                ignite.addEventListener('touchend', stopIgnition);
+                ignite.addEventListener('mousedown', e => { startIgnition(e); document.getElementById('key-ignite')?.classList.add('active'); });
+                ignite.addEventListener('mouseup', e => { stopIgnition(e); document.getElementById('key-ignite')?.classList.remove('active'); });
+                ignite.addEventListener('touchstart', e => { startIgnition(e); document.getElementById('key-ignite')?.classList.add('active'); });
+                ignite.addEventListener('touchend', e => { stopIgnition(e); document.getElementById('key-ignite')?.classList.remove('active'); });
 
                 // Manual Camera Rotation
                 window.addEventListener('mousedown', (e) => {

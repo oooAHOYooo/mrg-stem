@@ -350,19 +350,43 @@
         </div>
     </div>
 
-    <div id="controls-overlay">
-        <div class="control-item"><div class="control-key">W</div> Forward</div>
-        <div class="control-item"><div class="control-key">A</div> Left</div>
-        <div class="control-item"><div class="control-key">S</div> Backward</div>
-        <div class="control-item"><div class="control-key">D</div> Right</div>
-        <div class="control-item"><div class="control-key">SPACE</div> Jump</div>
-        <div class="control-item"><div class="control-key">F</div> Toggle Fly</div>
-        <div class="control-item"><div class="control-key">SHIFT</div> Fly Down</div>
-        <div class="control-item"><div class="control-key">Q</div> Change Block Size</div>
-        <div class="control-item"><div class="control-key">C</div> Select/Throw Pokeball</div>
-        <div class="control-item"><div class="control-key">L-CLICK</div> Break Block / Interact</div>
-        <div class="control-item"><div class="control-key">R-CLICK</div> <span id="rclick-action-text">Place Block</span></div>
-        <div class="control-item"><div class="control-key">1-9</div> Select Item</div>
+    <!-- Premium Liquid Controls Overlay -->
+    <div id="controls-overlay-premium" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Inter', sans-serif;">
+        <style>
+            .liquid-key {
+                width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
+                display: flex; justify-content: center; align-items: center;
+                font-weight: 900; font-size: 1rem; color: rgba(255, 255, 255, 0.4);
+                transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
+                position: relative; overflow: hidden;
+            }
+            .liquid-key.active {
+                color: #fff; transform: scale(0.92) translateY(3px);
+                background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            }
+            .control-row { display: flex; gap: 8px; }
+            .liquid-key.wide { width: 140px; font-size: 0.7rem; letter-spacing: 1px; }
+        </style>
+        <div class="control-row" style="justify-content: center;">
+            <div class="liquid-key" id="key-KeyW">W</div>
+        </div>
+        <div class="control-row">
+            <div class="liquid-key" id="key-KeyA">A</div>
+            <div class="liquid-key" id="key-KeyS">S</div>
+            <div class="liquid-key" id="key-KeyD">D</div>
+        </div>
+        <div class="control-row" style="margin-top: 5px;">
+            <div class="liquid-key wide" id="key-Space">SPACE: JUMP</div>
+        </div>
+        <div class="control-row">
+            <div class="liquid-key wide">🖱️ L-CLICK: BREAK</div>
+        </div>
+        <div class="control-row">
+            <div class="liquid-key wide">🖱️ R-CLICK: PLACE</div>
+        </div>
     </div>
 
     <div id="blocker">
@@ -2323,6 +2347,7 @@
         const downRaycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ) );
 
         const onKeyDown = function ( event ) {
+            document.getElementById('key-'+event.code)?.classList.add('active');
             if(inMenu || inRiddle) return;
             switch ( event.code ) {
                 case 'KeyC':
@@ -2406,6 +2431,7 @@
         };
 
         const onKeyUp = function ( event ) {
+            document.getElementById('key-'+event.code)?.classList.remove('active');
             switch ( event.code ) {
                 case 'KeyC':
                     // handled in keydown

@@ -10,6 +10,21 @@
 
 const mgeChangelog = [
     {
+        date: '2026-04-23',
+        title: 'New Experiment: Home Flip!',
+        gameId: 'home-flip',
+        icon: '🏠',
+        description: 'Take part in the neighborhood revitalization project!',
+        updates: [
+            'Buy distressed 3D properties along the main street',
+            'Perform exterior cleanup and structural repairs',
+            'Upgrade with modern tech and solar panels',
+            'Increase specialized "Street Vibes" community score',
+            'Flip houses for profit and reinvest in the neighborhood'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-04-20',
         title: 'New Sequel: Sonic 2!',
         gameId: 'sonic-2',

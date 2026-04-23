@@ -267,8 +267,37 @@
             <a href="mge.html" class="badge" style="color: white; border-color: rgba(255,255,255,0.4)">🏠 HUB</a>
         </div>
         <div class="hud-bottom" style="display: flex; justify-content: center;">
-            <div class="controls-hint">
-                <span style="color: var(--primary)">WASD / ARROWS</span> Move • <span style="color: var(--primary)">SPACE</span> Jump • Bounce on Enemies!
+            <!-- Premium Liquid Controls Overlay -->
+            <div id="controls-overlay-premium" style="display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Outfit', sans-serif; align-items: center;">
+                <style>
+                    .liquid-key {
+                        width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+                        border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
+                        display: flex; justify-content: center; align-items: center;
+                        font-weight: 900; font-size: 1rem; color: rgba(255, 255, 255, 0.4);
+                        transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
+                        position: relative; overflow: hidden;
+                    }
+                    .liquid-key.active {
+                        color: #fff; transform: scale(0.92) translateY(3px);
+                        background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5);
+                        box-shadow: 0 0 30px rgba(255, 255, 255, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.1);
+                    }
+                    .control-row { display: flex; gap: 8px; }
+                    .liquid-key.wide { width: 140px; font-size: 0.8rem; letter-spacing: 1px; }
+                </style>
+                <div class="control-row">
+                    <div class="liquid-key" id="key-up">W</div>
+                </div>
+                <div class="control-row">
+                    <div class="liquid-key" id="key-left">A</div>
+                    <div class="liquid-key" id="key-down">S</div>
+                    <div class="liquid-key" id="key-right">D</div>
+                </div>
+                <div class="control-row" style="margin-top: 5px;">
+                    <div class="liquid-key wide" id="key-jump">SPACE</div>
+                </div>
             </div>
         </div>
     </div>
@@ -518,8 +547,16 @@
         }
 
         function initControls() {
-            window.addEventListener('keydown', e => keys[e.code] = true);
-            window.addEventListener('keyup', e => keys[e.code] = false);
+            window.addEventListener('keydown', e => {
+                keys[e.code] = true;
+                const map = { 'KeyW':'up', 'ArrowUp':'up', 'KeyA':'left', 'ArrowLeft':'left', 'KeyS':'down', 'ArrowDown':'down', 'KeyD':'right', 'ArrowRight':'right', 'Space':'jump' };
+                if (map[e.code]) document.getElementById('key-'+map[e.code])?.classList.add('active');
+            });
+            window.addEventListener('keyup', e => {
+                keys[e.code] = false;
+                const map = { 'KeyW':'up', 'ArrowUp':'up', 'KeyA':'left', 'ArrowLeft':'left', 'KeyS':'down', 'ArrowDown':'down', 'KeyD':'right', 'ArrowRight':'right', 'Space':'jump' };
+                if (map[e.code]) document.getElementById('key-'+map[e.code])?.classList.remove('active');
+            });
 
             const joy = nipplejs.create({ zone: document.getElementById('joystick'), mode: 'static', position: {left: '60px', bottom: '60px'}, color: 'white' });
             joy.on('move', (e, d) => joyData = d);
