@@ -11,6 +11,7 @@ const farmStats = ref(makeEmptyFarmStats())
 const farmSpawnNotice = ref('')
 const activeGladeId = ref('glade-forge')
 const playerPosition = ref({ x: 0, z: 0 })
+const decorations = ref(getSavedDecorations())
 const fairies = ref([])
 const capturedFairies = ref(0)
 const pokeballs = ref(10)
@@ -57,9 +58,20 @@ const farmTools = [
   { key: '5', id: 'remove', label: 'Remove', color: '#e09494' },
 ]
 
+const decorTools = [
+  { key: '1', id: 'house', label: 'Tiny House', icon: '🏠', color: '#82ccdd' },
+  { key: '2', id: 'table', label: 'Crystal Table', icon: '💎', color: '#60a3bc' },
+  { key: '3', id: 'beanbag', label: 'Cozy Beanbag', icon: '🛋️', color: '#ffaf40' },
+  { key: '4', id: 'shroom', label: 'Glow Shroom', icon: '🍄', color: '#fffa65' },
+  { key: '5', id: 'bonsai', label: 'Bonsai Pip', icon: '🪴', color: '#78e08f' },
+  { key: '6', id: 'bench', label: 'Park Bench', icon: '🪑', color: '#b8e994' },
+  { key: 'C', id: 'clear', label: 'Clear Decor', icon: '🧹', color: '#eb4d4b' },
+]
+
 const modeDefinitions = [
   { id: 'explore', label: 'Explore' },
   { id: 'build', label: 'Build' },
+  { id: 'decorate', label: 'Decorate' },
   { id: 'playful', label: 'Playful' },
   { id: 'wizard', label: 'Wizard' },
   { id: 'about', label: 'About' },
@@ -67,6 +79,16 @@ const modeDefinitions = [
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
+}
+
+function getSavedDecorations() {
+  try {
+    return JSON.parse(localStorage.getItem('pips_decorations') || '[]')
+  } catch { return [] }
+}
+
+function saveDecorations(data) {
+  localStorage.setItem('pips_decorations', JSON.stringify(data))
 }
 
 function findActiveGlade() {
@@ -83,6 +105,7 @@ function updateActiveFarmStats() {
 
 export function useScene() {
   const buildMode = computed(() => currentMode.value === 'build')
+  const decorMode = computed(() => currentMode.value === 'decorate')
   const playfulMode = computed(() => currentMode.value === 'playful')
   const activeGlade = computed(() => findActiveGlade())
   const gladeSummaries = computed(() =>
@@ -177,6 +200,8 @@ export function useScene() {
         ? 'Wizard mode enabled'
         : modeId === 'about'
         ? 'About mode enabled'
+        : modeId === 'decorate'
+        ? 'Decoration mode open — Make it home!'
         : 'Explore mode enabled'
     return true
   }
@@ -195,11 +220,18 @@ export function useScene() {
   function toggleTerminal() {
     terminalOpen.value = !terminalOpen.value
     if (terminalOpen.value) {
-      setMode('explore') // Close other modes? or just overlay
+      // Keep mode as is
     }
   }
 
   function selectToolByKey(key) {
+    if (decorMode.value) {
+      const tool = decorTools.find((item) => item.key === key.toUpperCase())
+      if (tool) {
+        selectedTool.value = tool.id
+        return true
+      }
+    }
     const tool = farmTools.find((item) => item.key === key)
     if (!tool) return false
     selectedTool.value = tool.id
@@ -278,6 +310,45 @@ export function useScene() {
       gladeId: activeGladeId.value,
     })
     recomputeFarmStats()
+    return true
+  }
+
+  function placeDecoration(type, x, z) {
+    const glade = activeGlade.value
+    if (!glade) return false
+
+    if (type === 'clear') {
+      // Find nearest decor and remove it
+      let closest = null
+      let minDist = 2
+      decorations.value.forEach((d, idx) => {
+        const dx = d.x - x
+        const dz = d.z - z
+        const dist = Math.sqrt(dx * dx + dz * dz)
+        if (dist < minDist) {
+          minDist = dist
+          closest = idx
+        }
+      })
+      if (closest !== null) {
+        decorations.value.splice(closest, 1)
+        saveDecorations(decorations.value)
+        return true
+      }
+      return false
+    }
+
+    const id = `decor-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`
+    decorations.value.push({
+      id,
+      type,
+      x,
+      z,
+      gladeId: glade.id,
+      rotation: Math.random() * Math.PI * 2
+    })
+    saveDecorations(decorations.value)
+    triggerFxPulse()
     return true
   }
 
@@ -566,7 +637,9 @@ export function useScene() {
     playfulMode,
     selectedTool,
     farmTools,
+    decorTools,
     farmBlocks,
+    decorations,
     farmStats,
     farmSpawnNotice,
     activeGladeId,
@@ -587,6 +660,8 @@ export function useScene() {
     setMode,
     cycleMode,
     toggleBuildMode,
+    decorMode,
+    placeDecoration,
     cycleSlot,
     selectToolByKey,
     placeFarmBlock,

@@ -15,6 +15,10 @@ const {
   buildMode,
   currentMode,
   activeGlade,
+  decorMode,
+  decorTools,
+  decorations,
+  placeDecoration,
   gladeSlots,
   selectedTool,
   farmBlocks,
@@ -49,6 +53,7 @@ const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 const farmBlockMeshes = new Map()
 const farmZoneMeshes = new Map()
+const decorMeshes = new Map()
 const signpostMeshes = []
 let companionMesh = null
 const fairyMeshes = new Map()
@@ -119,6 +124,117 @@ function createFarmBlockMesh(block) {
   const mesh = new THREE.Mesh(geo, mat)
   mesh.position.set(block.x, geo.parameters.height / 2, block.z)
   return mesh
+}
+
+function syncDecorationMeshes() {
+  if (!scene) return
+  const seen = new Set(decorations.value.map((d) => d.id))
+
+  for (const [id, mesh] of decorMeshes) {
+    if (!seen.has(id)) {
+      scene.remove(mesh)
+      decorMeshes.delete(id)
+    }
+  }
+
+  for (const decor of decorations.value) {
+    if (decorMeshes.has(decor.id)) continue
+    const mesh = createDecorationMesh(decor)
+    scene.add(mesh)
+    decorMeshes.set(decor.id, mesh)
+  }
+}
+
+function createDecorationMesh(decor) {
+  const group = new THREE.Group()
+  let mainMesh
+
+  if (decor.type === 'house') {
+    // A cute tiny low-poly house
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 2, 2),
+      new THREE.MeshLambertMaterial({ color: 0xffffff })
+    )
+    body.position.y = 1
+    group.add(body)
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(2, 1.5, 4),
+      new THREE.MeshLambertMaterial({ color: 0xeb4d4b })
+    )
+    roof.position.y = 2.5
+    roof.rotation.y = Math.PI / 4
+    group.add(roof)
+    const door = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.6, 1),
+      new THREE.MeshLambertMaterial({ color: 0x5a3a2a })
+    )
+    door.position.set(0, 0.5, 1.01)
+    group.add(door)
+  } else if (decor.type === 'table') {
+    const top = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.8, 0.1, 12),
+      new THREE.MeshLambertMaterial({ color: 0x81ecec, transparent: true, opacity: 0.8 })
+    )
+    top.position.y = 0.5
+    group.add(top)
+    const leg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.2, 0.5, 8),
+      new THREE.MeshLambertMaterial({ color: 0xffffff })
+    )
+    leg.position.y = 0.25
+    group.add(leg)
+  } else if (decor.type === 'beanbag') {
+    const bag = new THREE.Mesh(
+      new THREE.SphereGeometry(0.6, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7),
+      new THREE.MeshLambertMaterial({ color: 0xffaf40 })
+    )
+    bag.rotation.x = Math.PI
+    bag.position.y = 0.3
+    group.add(bag)
+  } else if (decor.type === 'shroom') {
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.4, 12, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshLambertMaterial({ color: 0xfffa65, emissive: 0xfffa65, emissiveIntensity: 0.6 })
+    )
+    cap.position.y = 0.6
+    group.add(cap)
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.15, 0.6, 8),
+      new THREE.MeshLambertMaterial({ color: 0xffffff })
+    )
+    stem.position.y = 0.3
+    group.add(stem)
+  } else if (decor.type === 'bonsai') {
+    const pot = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.4, 0.3, 0.3, 12),
+      new THREE.MeshLambertMaterial({ color: 0x555555 })
+    )
+    pot.position.y = 0.15
+    group.add(pot)
+    const green = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.4),
+      new THREE.MeshLambertMaterial({ color: 0x78e08f })
+    )
+    green.position.y = 0.6
+    group.add(green)
+  } else if (decor.type === 'bench') {
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.1, 0.6),
+      new THREE.MeshLambertMaterial({ color: 0x5a3a2a })
+    )
+    seat.position.y = 0.4
+    group.add(seat)
+    const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.1), new THREE.MeshLambertMaterial({ color: 0x333333 }))
+    leg1.position.set(-0.6, 0.2, 0.2)
+    group.add(leg1)
+    const leg2 = leg1.clone(); leg2.position.x = 0.6; group.add(leg2)
+    const leg3 = leg1.clone(); leg3.position.z = -0.2; group.add(leg3)
+    const leg4 = leg1.clone(); leg4.position.set(0.6, 0.2, -0.2); group.add(leg4)
+  }
+
+  group.position.set(decor.x, 0, decor.z)
+  group.rotation.y = decor.rotation || 0
+  return group
 }
 
 function updateCompanion(elapsed) {
@@ -625,6 +741,14 @@ function onCanvasClick(event) {
     }
   }
 
+  if (decorMode.value) {
+    const hit = getGroundPoint(event, locked)
+    if (hit) {
+      placeDecoration(selectedTool.value, hit.x, hit.z)
+      return
+    }
+  }
+
   if (currentMode.value === 'wizard' || currentMode.value === 'about') {
     const hit = getGroundPoint(event, locked)
     if (hit) {
@@ -698,6 +822,7 @@ function animate() {
     updateGathering(delta, getPipMeshMap())
   }
   tickFarm(delta)
+  syncDecorationMeshes()
   updateCompanion(elapsed)
   updateFairies(delta, elapsed)
   updateWildPips(delta, elapsed)

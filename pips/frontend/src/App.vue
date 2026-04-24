@@ -71,6 +71,9 @@ const {
   setMode,
   cycleMode,
   toggleBuildMode,
+  decorMode,
+  decorTools,
+  placeDecoration,
   selectToolByKey,
   spawnDynamicGlade,
   terminalOpen,
@@ -146,10 +149,12 @@ function onKeyDown(event) {
   const keyCode = key.charCodeAt(0)
   const num = Number(key)
 
-  // 1-9 handling: Context-dependent
   if (num >= 1 && num <= 9) {
     if (buildMode.value && num <= 5) {
       // Build tool selection
+      selectToolByKey(key)
+    } else if (decorMode.value && num <= 6) {
+      // Decor tool selection
       selectToolByKey(key)
     } else {
       // Hotbar selection
@@ -158,6 +163,10 @@ function onKeyDown(event) {
     return
   } else if (key === '0') {
     selectedSlot.value = 9
+    return
+  }
+  if (key.toLowerCase() === 'c' && decorMode.value) {
+    selectToolByKey('c')
     return
   }
   if (key === 'f' || key === 'F') {
@@ -433,6 +442,27 @@ watch(
         Next spawn: <strong>{{ Math.ceil(farmStats.nextSpawnIn) }}s</strong>
       </div>
       <div class="last-action" v-if="farmSpawnNotice">{{ farmSpawnNotice }}</div>
+    </template>
+    
+    <template v-else-if="decorMode">
+      <div class="controls-title behavior-title">Decorate</div>
+      <div class="control-line">Transform the glade into a home</div>
+      <div class="controls-title behavior-title">Furniture & Props</div>
+      <div class="behavior-list">
+        <div
+          v-for="tool in decorTools"
+          :key="tool.id"
+          class="behavior-row decor-row"
+          :class="{ active: selectedTool === tool.id }"
+          @click="selectToolByKey(tool.key)"
+        >
+          <span class="keycap behavior-key" :style="{ backgroundColor: tool.color }">{{ tool.key }}</span>
+          <span>{{ tool.icon }} {{ tool.label }}</span>
+        </div>
+      </div>
+      <div class="last-action">
+        Click on the island ground to place. Use <strong>'C'</strong> to clear.
+      </div>
     </template>
 
     <template v-else-if="playfulMode">
