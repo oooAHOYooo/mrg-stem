@@ -580,7 +580,9 @@
                 alive: true,
                 health: 100,
                 hbFill: hbFill,
-                hitCooldown: 0
+                hitCooldown: 0,
+                squishTime: 0,
+                targetRing: null
             };
         }
 
@@ -825,7 +827,15 @@
 
                 if (en.hitCooldown > 0) en.hitCooldown -= delta;
 
-                // Find closest player to chase
+                // Squish Logic
+                if (en.squishTime > 0) {
+                    en.squishTime -= delta;
+                    en.obj.scale.set(1.4, 0.2, 1.4); // Squished look
+                    if (en.squishTime <= 0) en.obj.scale.set(1, 1, 1);
+                    continue; // Skip movement if squished
+                }
+
+                // Find closest player
                 let minDist = Infinity;
                 let targetPlayer = null;
                 players.forEach(p => {
@@ -833,22 +843,51 @@
                     if (d < minDist) { minDist = d; targetPlayer = p; }
                 });
 
-                if (targetPlayer && minDist < 300) {
-                    const dir = targetPlayer.pos.clone().sub(en.pos);
+                // Decide behavior: Hunt player or Collect rings
+                let moveTarget = null;
+                let isHunting = false;
+
+                if (targetPlayer && minDist < 200) {
+                    moveTarget = targetPlayer.pos;
+                    isHunting = true;
+                } else {
+                    // Collect rings mode
+                    if (!en.targetRing || !state.objects.rings.includes(en.targetRing)) {
+                        let nearestRingDist = Infinity;
+                        state.objects.rings.forEach(r => {
+                            const d = r.position.distanceTo(en.pos);
+                            if (d < nearestRingDist) { nearestRingDist = d; en.targetRing = r; }
+                        });
+                    }
+                    if (en.targetRing) {
+                        moveTarget = en.targetRing.position;
+                        // Check for collection
+                        if (en.pos.distanceTo(moveTarget) < 8) {
+                            scene.remove(en.targetRing);
+                            state.objects.rings.splice(state.objects.rings.indexOf(en.targetRing), 1);
+                            en.targetRing = null;
+                            showNotification("KNUCKLES STEALING RINGS!", 500);
+                        }
+                    }
+                }
+
+                if (moveTarget) {
+                    const dir = moveTarget.clone().sub(en.pos);
                     dir.y = 0;
                     dir.normalize();
-                    en.vel.lerp(dir.multiplyScalar(en.speed), 0.05);
+                    en.vel.lerp(dir.multiplyScalar(isHunting ? en.speed : en.speed * 0.7), 0.05);
                     en.pos.add(en.vel);
                     en.obj.position.copy(en.pos);
-                    en.obj.lookAt(targetPlayer.pos.x, 2.8, targetPlayer.pos.z);
+                    en.obj.lookAt(moveTarget.x, 2.8, moveTarget.z);
                     
                     // Collision with player
-                    if (minDist < 6) {
-                        if (targetPlayer.trick > 0 || (!targetPlayer.onGround && targetPlayer.vel.y < 0)) {
+                    if (isHunting && minDist < 6) {
+                        if (targetPlayer.trick > 0 || (!targetPlayer.onGround && targetPlayer.vel.y < -0.1)) {
                             if (en.hitCooldown <= 0) {
                                 // Hit Knuckles!
                                 en.health -= 34; // 3 hits to kill
                                 en.hitCooldown = 0.5;
+                                en.squishTime = 1.0; // Squish him!
                                 en.hbFill.scale.x = Math.max(0, en.health / 100);
                                 en.hbFill.position.x = -(1 - en.hbFill.scale.x) * 2.5;
                                 
@@ -858,7 +897,7 @@
                                     showNotification("KNUCKLES DEFEATED +15 RINGS", 1000);
                                     targetPlayer.vel.y = 2.0; // SUPER BOUNCE
                                 } else {
-                                    showNotification("KNUCKLES INJURED!", 800);
+                                    showNotification("CRUSHED!", 800);
                                     targetPlayer.vel.y = 1.2; // Regular bounce
                                 }
                                 updateUI();
