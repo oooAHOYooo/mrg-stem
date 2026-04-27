@@ -623,6 +623,10 @@
     <div id="game-container"></div>
 
     <div id="hud">
+        <div class="stat-badge" style="background: var(--primary); border-color: var(--secondary);">
+            <span class="stat-icon">🏢</span>
+            <span id="business-name-display" style="text-transform: uppercase; letter-spacing: 1px;">MY BUSINESS</span>
+        </div>
         <div class="stat-badge">
             <span class="stat-icon">📅</span>
             <span>DAY <span id="day-val" class="stat-value">1</span></span>
@@ -738,7 +742,8 @@
                     return;
                 }
                 state.name = nameInput;
-                document.getElementById('business-name-display').innerText = state.name;
+                const nameDisplay = document.getElementById('business-name-display');
+                if (nameDisplay) nameDisplay.innerText = state.name;
             }
             document.getElementById(`step-${step}`).classList.remove('active');
             document.getElementById(`step-${step + 1}`).classList.add('active');
@@ -782,6 +787,9 @@
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.8rem;">
                         <span style="color: #94a3b8;">SUPPLY INVENTORY</span>
                         <span id="inv-val" style="font-weight: 800;">${Math.floor(state.inventory)} / ${state.maxInventory}</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden;">
+                        <div id="inv-bar" style="width: ${(state.inventory / state.maxInventory) * 100}%; height: 100%; background: var(--secondary); transition: width 0.3s ease;"></div>
                     </div>
                     <button class="btn btn-outline" style="width: 100%; padding: 0.6rem; font-size: 0.8rem;" onclick="buySupplies()">RESTOCK SUPPLIES ($10.00)</button>
                 </div>
