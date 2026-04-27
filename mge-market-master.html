@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE: Market Master - Stock Market Tycoon</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #0a0f1e;
+            --panel: rgba(15, 23, 42, 0.8);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI HUD */
+        .hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .hud-left, .hud-right {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            pointer-events: auto;
+        }
+
+        .stat-badge {
+            background: var(--panel);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--success);
+        }
+
+        /* Trading Panel */
+        .trading-panel {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1100px;
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            padding: 25px;
+            z-index: 100;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .stock-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .stock-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stock-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .stock-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 120px 150px;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .stock-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            transform: scale(1.01);
+        }
+
+        .stock-item.selected {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .ticker { font-weight: 900; color: var(--secondary); font-family: 'Orbitron'; }
+        .company { color: #cbd5e1; font-weight: 600; font-size: 0.9rem; }
+        .price { font-weight: 800; text-align: right; }
+        .change { font-weight: 700; text-align: right; }
+        .change.up { color: var(--success); }
+        .change.down { color: var(--danger); }
+
+        /* Action Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .selected-info {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: 900;
+            font-family: 'Orbitron';
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn-buy { background: var(--success); color: #fff; }
+        .btn-sell { background: var(--danger); color: #fff; }
+        .btn-max { background: var(--primary); color: #fff; grid-column: span 2; }
+
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* News & Goal */
+        .news-container {
+            background: var(--panel);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--border);
+            padding: 15px 30px;
+            border-radius: 50px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            max-width: 600px;
+            width: 90%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .news-badge {
+            background: var(--accent);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .news-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            animation: ticker 15s linear infinite;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Portfolio */
+        .portfolio-mini {
+            background: var(--panel);
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .portfolio-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: #94a3b8;
+        }
+
+        /* Day Progress Bar */
+        .day-progress {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: var(--secondary);
+            width: 0%;
+            z-index: 101;
+            transition: width 0.1s linear;
+        }
+
+        /* Overlays */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: rgba(10, 15, 30, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .overlay h1 { font-family: 'Orbitron'; font-size: 4rem; margin-bottom: 20px; }
+        .overlay.hidden { display: none; }
+
+        .big-icon { font-size: 8rem; margin-bottom: 30px; }
+
+        .exit-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+
+    <a href="mge.html" class="exit-btn">← BACK TO HUB</a>
+
+    <div id="game-container"></div>
+
+    <div class="day-progress" id="day-progress"></div>
+
+    <div class="news-container">
+        <span class="news-badge">BREAKING NEWS</span>
+        <div class="news-text" id="news-text">Market opens today with high expectations for tech growth!</div>
+    </div>
+
+    <div class="hud">
+        <div class="hud-left">
+            <div class="stat-badge">
+                <span style="font-size: 1.5rem;">💰</span>
+                <div>
+                    <div class="stat-label">Available Cash</div>
+                    <div class="stat-value" id="cash-val">$10,000.00</div>
+                </div>
+            </div>
+            <div class="stat-badge" style="border-color: var(--secondary);">
+                <span style="font-size: 1.5rem;">📈</span>
+                <div>
+                    <div class="stat-label">Net Worth</div>
+                    <div class="stat-value" id="net-worth-val" style="color: var(--secondary);">$10,000.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hud-right">
+            <div class="stat-badge">
+                <span style="font-size: 1.5rem;">📅</span>
+                <div>
+                    <div class="stat-label">Day</div>
+                    <div class="stat-value" id="day-val" style="color: #fff;">1</div>
+                </div>
+            </div>
+            <div class="stat-badge" style="border-color: var(--accent);">
+                <span style="font-size: 1.5rem;">🎯</span>
+                <div>
+                    <div class="stat-label">Goal</div>
+                    <div class="stat-value" id="goal-val" style="color: var(--accent);">$100,000</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="trading-panel">
+        <div class="stock-list" id="stock-list">
+            <!-- Stocks will be injected here -->
+        </div>
+
+        <div class="controls">
+            <div class="selected-info">
+                <h2 id="selected-name" style="font-family: 'Orbitron'; color: var(--secondary);">SELECT A STOCK</h2>
+                <p id="selected-shares" style="color: #94a3b8; margin: 5px 0 15px;">You own: 0 shares</p>
+                
+                <div class="btn-group">
+                    <button class="btn btn-buy" id="buy-btn" onclick="trade('buy')" disabled>Buy 1 Share</button>
+                    <button class="btn btn-sell" id="sell-btn" onclick="trade('sell')" disabled>Sell 1 Share</button>
+                    <button class="btn btn-max" id="max-buy-btn" onclick="trade('max')" disabled>Max Buy (All Cash)</button>
+                    <button class="btn btn-max" style="background: #475569;" id="sell-all-btn" onclick="trade('sellall')" disabled>Sell All Shares</button>
+                </div>
+            </div>
+
+            <div class="portfolio-mini" id="portfolio-mini">
+                <h3 style="font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Your Holdings</h3>
+                <div id="portfolio-list">
+                    <!-- Portfolio items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win/Loss Overlays -->
+    <div id="win-overlay" class="overlay hidden">
+        <div class="big-icon">🏆</div>
+        <h1 style="color: var(--success);">WALL STREET WIZARD!</h1>
+        <p style="font-size: 1.5rem; color: #cbd5e1; max-width: 600px;">Congratulations! You turned $10,000 into $100,000. You've mastered the market!</p>
+        <button class="btn btn-max" style="width: 300px; margin-top: 40px;" onclick="location.reload()">Play Again</button>
+        <a href="mge.html" style="color: var(--secondary); margin-top: 20px; font-weight: 700;">Back to STEM Hub</a>
+    </div>
+
+    <div id="intro-overlay" class="overlay">
+        <div class="big-icon">📉</div>
+        <h1>MARKET MASTER</h1>
+        <p style="font-size: 1.2rem; color: #cbd5e1; max-width: 600px; margin-bottom: 30px;">
+            The market moves fast! Every <b>30 seconds</b> is a new day. 
+            React to the news, manage your portfolio, and reach <b>$100,000</b> to win.
+        </p>
+        <button class="btn btn-max" style="width: 300px;" onclick="startGame()">START TRADING 🚀</button>
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        const game = {
+            cash: 10000,
+            netWorth: 10000,
+            day: 1,
+            target: 100000,
+            selectedTicker: null,
+            portfolio: {}, // { TICKER: quantity }
+            daySeconds: 30,
+            currentSeconds: 0,
+            isRunning: false
+        };
+
+        const stocks = [
+            { ticker: 'NVDA', name: 'NVIDIA Corp', price: 208.27, basePrice: 208.27, sector: 'Tech', volatility: 0.08 },
+            { ticker: 'GOOGL', name: 'Alphabet Inc', price: 344.40, basePrice: 344.40, sector: 'Tech', volatility: 0.04 },
+            { ticker: 'AAPL', name: 'Apple Inc', price: 271.06, basePrice: 271.06, sector: 'Tech', volatility: 0.03 },
+            { ticker: 'MSFT', name: 'Microsoft Corp', price: 424.62, basePrice: 424.62, sector: 'Tech', volatility: 0.02 },
+            { ticker: 'AMZN', name: 'Amazon.com', price: 263.99, basePrice: 263.99, sector: 'Retail', volatility: 0.04 },
+            { ticker: 'META', name: 'Meta Platforms', price: 675.03, basePrice: 675.03, sector: 'Tech', volatility: 0.06 },
+            { ticker: 'TSLA', name: 'Tesla Inc', price: 376.30, basePrice: 376.30, sector: 'Auto', volatility: 0.10 },
+            { ticker: 'WMT', name: 'Walmart Inc', price: 129.92, basePrice: 129.92, sector: 'Retail', volatility: 0.01 }
+        ];
+
+        stocks.forEach(s => {
+            s.history = [s.price];
+            s.change = 0;
+            game.portfolio[s.ticker] = 0;
+        });
+
+        const newsPool = [
+            { text: "AI Revolution boosts tech sector!", effect: { sector: 'Tech', multiply: 1.05 } },
+            { text: "Interest rates stay flat, market steady.", effect: { all: true, multiply: 1.01 } },
+            { text: "Supply chain issues hit retail stocks.", effect: { sector: 'Retail', multiply: 0.95 } },
+            { text: "New electric battery breakthrough!", effect: { ticker: 'TSLA', multiply: 1.15 } },
+            { text: "Consumer spending reaches all-time high.", effect: { sector: 'Retail', multiply: 1.08 } },
+            { text: "Global chip shortage easing up.", effect: { ticker: 'NVDA', multiply: 1.10 } },
+            { text: "Regulators look into big tech data privacy.", effect: { sector: 'Tech', multiply: 0.92 } },
+            { text: "Energy costs rising, impact on logistics.", effect: { sector: 'Retail', multiply: 0.98 } }
+        ];
+
+        // --- THREE.JS SCENE ---
+        let scene, camera, renderer, cube;
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0x6366f1, 5, 100);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+
+            // Create a low-poly "Trading Desk"
+            const geometry = new THREE.BoxGeometry(2, 0.1, 1);
+            const material = new THREE.MeshPhongMaterial({ color: 0x1e293b });
+            const desk = new THREE.Mesh(geometry, material);
+            desk.position.y = -0.5;
+            scene.add(desk);
+
+            // Floating screens
+            for(let i=0; i<3; i++) {
+                const screenGeo = new THREE.PlaneGeometry(1.2, 0.8);
+                const screenMat = new THREE.MeshPhongMaterial({ 
+                    color: 0x6366f1, 
+                    transparent: true, 
+                    opacity: 0.2, 
+                    side: THREE.DoubleSide 
+                });
+                const screen = new THREE.Mesh(screenGeo, screenMat);
+                screen.position.set((i - 1) * 1.5, 0.5, -1);
+                screen.rotation.y = (i - 1) * 0.2;
+                scene.add(screen);
+                
+                // Add some "lines" to simulate charts
+                const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(-0.5, -0.3, 0.01),
+                    new THREE.Vector3(-0.2, 0.1, 0.01),
+                    new THREE.Vector3(0, -0.1, 0.01),
+                    new THREE.Vector3(0.3, 0.2, 0.01),
+                    new THREE.Vector3(0.5, 0.1, 0.01)
+                ]);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981 });
+                const line = new THREE.Line(lineGeo, lineMat);
+                screen.add(line);
+            }
+
+            camera.position.z = 3;
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- GAME LOGIC ---
+        function startGame() {
+            document.getElementById('intro-overlay').classList.add('hidden');
+            game.isRunning = true;
+            renderStockList();
+            updateHUD();
+            startDayCycle();
+        }
+
+        function startDayCycle() {
+            const cycleInterval = setInterval(() => {
+                if (!game.isRunning) {
+                    clearInterval(cycleInterval);
+                    return;
+                }
+
+                game.currentSeconds += 0.1;
+                const progress = (game.currentSeconds / game.daySeconds) * 100;
+                document.getElementById('day-progress').style.width = progress + '%';
+
+                if (game.currentSeconds >= game.daySeconds) {
+                    nextDay();
+                    game.currentSeconds = 0;
+                }
+            }, 100);
+        }
+
+        function nextDay() {
+            game.day++;
+            
+            // Pick a news event
+            const news = newsPool[Math.floor(Math.random() * newsPool.length)];
+            document.getElementById('news-text').innerText = news.text;
+            // Reset animation
+            const el = document.getElementById('news-text');
+            el.style.animation = 'none';
+            el.offsetHeight; /* trigger reflow */
+            el.style.animation = null;
+
+            // Update Stock Prices
+            stocks.forEach(s => {
+                let factor = 1 + (Math.random() - 0.5) * s.volatility;
+                
+                // Apply news effect
+                if (news.effect.all) factor *= news.effect.multiply;
+                if (news.effect.sector === s.sector) factor *= news.effect.multiply;
+                if (news.effect.ticker === s.ticker) factor *= news.effect.multiply;
+
+                const oldPrice = s.price;
+                s.price = s.price * factor;
+                s.change = ((s.price - oldPrice) / oldPrice) * 100;
+                s.history.push(s.price);
+            });
+
+            updateHUD();
+            renderStockList();
+            if (game.selectedTicker) updateSelectionDetails();
+            checkWinCondition();
+        }
+
+        function renderStockList() {
+            const list = document.getElementById('stock-list');
+            list.innerHTML = '';
+
+            stocks.forEach(s => {
+                const item = document.createElement('div');
+                item.className = `stock-item ${game.selectedTicker === s.ticker ? 'selected' : ''}`;
+                item.onclick = () => selectStock(s.ticker);
+
+                const changeClass = s.change >= 0 ? 'up' : 'down';
+                const changeSign = s.change >= 0 ? '+' : '';
+
+                item.innerHTML = `
+                    <div class="ticker">${s.ticker}</div>
+                    <div class="company">${s.name}</div>
+                    <div class="price">$${s.price.toFixed(2)}</div>
+                    <div class="change ${changeClass}">${changeSign}${s.change.toFixed(2)}%</div>
+                    <div style="text-align: right; font-size: 0.8rem; color: #94a3b8;">
+                        ${game.portfolio[s.ticker]} Shares
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function selectStock(ticker) {
+            game.selectedTicker = ticker;
+            renderStockList();
+            updateSelectionDetails();
+        }
+
+        function updateSelectionDetails() {
+            const s = stocks.find(x => x.ticker === game.selectedTicker);
+            document.getElementById('selected-name').innerText = `${s.name} (${s.ticker})`;
+            document.getElementById('selected-shares').innerText = `You own: ${game.portfolio[s.ticker]} shares ($${(game.portfolio[s.ticker] * s.price).toFixed(2)})`;
+            
+            // Enable buttons
+            document.getElementById('buy-btn').disabled = game.cash < s.price;
+            document.getElementById('sell-btn').disabled = game.portfolio[s.ticker] <= 0;
+            document.getElementById('max-buy-btn').disabled = game.cash < s.price;
+            document.getElementById('sell-all-btn').disabled = game.portfolio[s.ticker] <= 0;
+            
+            document.getElementById('buy-btn').innerText = `Buy 1 ($${s.price.toFixed(2)})`;
+        }
+
+        function trade(type) {
+            const s = stocks.find(x => x.ticker === game.selectedTicker);
+            if (!s) return;
+
+            if (type === 'buy') {
+                if (game.cash >= s.price) {
+                    game.cash -= s.price;
+                    game.portfolio[s.ticker]++;
+                }
+            } else if (type === 'sell') {
+                if (game.portfolio[s.ticker] > 0) {
+                    game.cash += s.price;
+                    game.portfolio[s.ticker]--;
+                }
+            } else if (type === 'max') {
+                const count = Math.floor(game.cash / s.price);
+                if (count > 0) {
+                    game.cash -= count * s.price;
+                    game.portfolio[s.ticker] += count;
+                }
+            } else if (type === 'sellall') {
+                const count = game.portfolio[s.ticker];
+                if (count > 0) {
+                    game.cash += count * s.price;
+                    game.portfolio[s.ticker] = 0;
+                }
+            }
+
+            updateHUD();
+            updateSelectionDetails();
+            renderStockList();
+            renderPortfolio();
+        }
+
+        function updateHUD() {
+            let portfolioValue = 0;
+            stocks.forEach(s => {
+                portfolioValue += game.portfolio[s.ticker] * s.price;
+            });
+
+            game.netWorth = game.cash + portfolioValue;
+            
+            document.getElementById('cash-val').innerText = `$${game.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('net-worth-val').innerText = `$${game.netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('day-val').innerText = game.day;
+
+            if (game.netWorth >= game.target) {
+                document.getElementById('net-worth-val').style.color = 'var(--success)';
+            } else {
+                document.getElementById('net-worth-val').style.color = 'var(--secondary)';
+            }
+        }
+
+        function renderPortfolio() {
+            const list = document.getElementById('portfolio-list');
+            list.innerHTML = '';
+            
+            let hasHoldings = false;
+            stocks.forEach(s => {
+                const qty = game.portfolio[s.ticker];
+                if (qty > 0) {
+                    hasHoldings = true;
+                    const val = qty * s.price;
+                    const row = document.createElement('div');
+                    row.className = 'portfolio-row';
+                    row.innerHTML = `
+                        <span>${s.ticker} (${qty})</span>
+                        <span style="color: #fff; font-weight: 700;">$${val.toFixed(2)}</span>
+                    `;
+                    list.appendChild(row);
+                }
+            });
+
+            if (!hasHoldings) {
+                list.innerHTML = '<div style="font-size: 0.8rem; font-style: italic; color: #64748b;">No shares owned yet.</div>';
+            }
+        }
+
+        function checkWinCondition() {
+            if (game.netWorth >= game.target) {
+                game.isRunning = false;
+                document.getElementById('win-overlay').classList.remove('hidden');
+            }
+        }
+
+        window.onload = () => {
+            initThree();
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
