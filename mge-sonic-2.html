@@ -185,7 +185,8 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
             }
         }
     </script>
@@ -274,6 +275,7 @@
 
     <script type="module">
         import * as THREE from 'three';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
         const CONFIG = {
             ACCEL: 0.12, MAX_SPEED: 2.5, DRAG: 0.98, GRAVITY: -0.025, JUMP: 0.92,
@@ -289,7 +291,7 @@
             lastFrame: performance.now(), 
             keys: {}, 
             bossSpawned: false,
-            objects: { rings: [], islands: [], butterflies: [], clouds: [], speedLines: [], trails: [], seekers: [], boss: null, pets: [], enemies: [] } 
+            objects: { rings: [], islands: [], butterflies: [], clouds: [], speedLines: [], trails: [], seekers: [], boss: null, pets: [], enemies: [], dino: null } 
         };
         const players = [
             { obj: null, pos: new THREE.Vector3(0,1.8,0), vel: new THREE.Vector3(), yaw: 0, rings: 0, health: 100, onGround: false, trick: 0, color: 0x3366ff, shake: 0, pet: null },
@@ -336,6 +338,7 @@
                 }
 
                 players.forEach((p, i) => { p.pet = createPet(p, i); });
+                loadDino();
 
                 window.addEventListener('keydown', e => { 
                     if(e.code === 'Space' && state.started && !players[0].onGround && players[0].trick === 0) players[0].trick=1;
@@ -608,6 +611,108 @@
             glass.position.y = 1;
             group.add(glass);
 
+        function loadDino() {
+            const loader = new OBJLoader();
+            loader.load('sonic-tinkercads/francis-3-dino-tinker.obj', (obj) => {
+                obj.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshStandardMaterial({ 
+                            color: 0x27ae60, 
+                            roughness: 0.5, 
+                            metalness: 0.2 
+                        });
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                obj.scale.set(5, 5, 5);
+                obj.position.set(0, 10, 0);
+                scene.add(obj);
+                state.objects.dino = {
+                    obj: obj,
+                    powerTimer: 0,
+                    powerState: 'idle',
+                    pos: new THREE.Vector3(0, 10, 0),
+                    vel: new THREE.Vector3()
+                };
+                showNotification("FRANCIS THE DINO HAS ARRIVED!", 3000);
+            }, undefined, (err) => {
+                console.error("Dino Load Error:", err);
+            });
+        }
+
+        function updateDino(delta) {
+            if (!state.objects.dino) return;
+            const d = state.objects.dino;
+            d.powerTimer -= delta;
+
+            if (d.powerTimer <= 0) {
+                const r = Math.random();
+                if (r < 0.33) {
+                    d.powerState = 'fire';
+                    d.powerTimer = 3;
+                    showNotification("DINO POWER: FIRE BREATH!", 1000);
+                } else if (r < 0.66) {
+                    d.powerState = 'stomp';
+                    d.powerTimer = 2;
+                    showNotification("DINO POWER: GROUND STOMP!", 1000);
+                    players.forEach(p => p.shake = 10);
+                } else {
+                    d.powerState = 'roar';
+                    d.powerTimer = 2;
+                    showNotification("RAAAAAAWR!", 2000);
+                }
+            }
+
+            if (d.powerState === 'fire') {
+                d.obj.rotation.y += delta * 5;
+                if (Math.random() < 0.3) {
+                    const fire = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshBasicMaterial({ color: 0xff4500 }));
+                    fire.position.copy(d.obj.position).add(new THREE.Vector3((Math.random()-0.5)*5, 5, (Math.random()-0.5)*5));
+                    scene.add(fire);
+                    const fVel = new THREE.Vector3((Math.random()-0.5)*2, 1, (Math.random()-0.5)*2);
+                    const fInt = setInterval(() => {
+                        fire.position.add(fVel);
+                        fire.scale.multiplyScalar(0.95);
+                        if (fire.scale.x < 0.1) {
+                            scene.remove(fire);
+                            clearInterval(fInt);
+                        }
+                    }, 30);
+                }
+            } else if (d.powerState === 'stomp') {
+                d.obj.position.y = 10 + Math.abs(Math.sin(performance.now() * 0.01)) * 5;
+            } else {
+                d.obj.rotation.y += delta;
+            }
+
+            const target = players[0].pos.clone().lerp(new THREE.Vector3(0, 10, 0), 0.8);
+            d.pos.lerp(target, 0.05);
+            d.obj.position.copy(d.pos);
+        }
+
+        function spawnBoss() {
+            if (state.bossSpawned) return;
+            state.bossSpawned = true;
+            
+            const group = new THREE.Group();
+            
+            // Core Pod
+            const pod = new THREE.Mesh(
+                new THREE.SphereGeometry(6, 32, 16, 0, Math.PI*2, 0, Math.PI/2), 
+                new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.2 })
+            );
+            pod.rotation.x = Math.PI;
+            group.add(pod);
+            
+            // Cockpit glass
+            const glass = new THREE.Mesh(
+                new THREE.SphereGeometry(5.8, 16, 16, 0, Math.PI*2, 0, Math.PI/2),
+                new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0.4 })
+            );
+            glass.position.y = 1;
+            group.add(glass);
+
             // Red body
             const body = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 16), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
             body.position.y = -1;
@@ -670,6 +775,7 @@
                 state.objects.seekers.forEach(s => { s.userData.angle += delta; s.position.x += Math.sin(s.userData.angle)*s.userData.speed; });
                 updatePlayers(delta);
                 updatePets(delta);
+                updateDino(delta);
                 updateLogic(delta);
                 updateRadar();
                 render();
