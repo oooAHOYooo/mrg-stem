@@ -43,95 +43,97 @@
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 900; color: var(--success); }
 
         /* Portfolio Ratio Bar */
-        .ratio-container { margin-top: 5px; width: 100%; height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; display: flex; }
-        .ratio-stock { background: var(--danger); height: 100%; transition: width 0.5s ease; }
-        .ratio-etf { background: var(--primary); height: 100%; transition: width 0.5s ease; }
-        .ratio-bond { background: var(--success); height: 100%; transition: width 0.5s ease; }
+        .ratio-container { margin-top: 5px; width: 100%; height: 12px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; display: flex; border: 1px solid rgba(255,255,255,0.1); }
+        .ratio-stock { background: var(--danger); height: 100%; transition: width 0.5s ease; position: relative; }
+        .ratio-etf { background: var(--primary); height: 100%; transition: width 0.5s ease; position: relative; }
+        .ratio-bond { background: var(--success); height: 100%; transition: width 0.5s ease; position: relative; }
+
+        .health-grade {
+            background: var(--accent); color: #000; padding: 4px 12px; border-radius: 10px; font-weight: 900; font-family: 'Orbitron'; font-size: 1rem; margin-left: 10px;
+            box-shadow: 0 0 15px var(--accent);
+        }
 
         /* Coach Market Mo */
         .coach-container { position: fixed; right: 30px; top: 180px; z-index: 200; display: flex; align-items: center; gap: 15px; pointer-events: none; }
         .coach-bubble {
-            background: #fff; color: #0f172a; padding: 15px 20px; border-radius: 20px; border-bottom-right-radius: 0;
-            max-width: 250px; font-size: 0.9rem; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            background: #fff; color: #0f172a; padding: 15px 25px; border-radius: 25px; border-bottom-right-radius: 0;
+            max-width: 300px; font-size: 0.95rem; font-weight: 700; box-shadow: 0 10px 35px rgba(0,0,0,0.5);
             opacity: 0; transform: scale(0.8) translateX(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            line-height: 1.4;
         }
         .coach-bubble.visible { opacity: 1; transform: scale(1) translateX(0); }
-        .coach-avatar { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.2rem; border: 4px solid #fff; box-shadow: 0 0 30px var(--primary); animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .coach-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; border: 4px solid #fff; box-shadow: 0 0 40px var(--primary); animation: float 3.5s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
         /* Trading Panel */
         .trading-panel {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 1400px;
-            background: var(--panel); backdrop-filter: blur(25px); border: 2px solid var(--border); border-radius: 35px;
-            padding: 20px; z-index: 100; display: grid; grid-template-columns: 1.1fr 1fr 0.9fr; gap: 20px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 1450px;
+            background: var(--panel); backdrop-filter: blur(25px); border: 2px solid var(--border); border-radius: 40px;
+            padding: 25px; z-index: 100; display: grid; grid-template-columns: 1.2fr 1fr 0.8fr; gap: 25px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
         }
 
-        .asset-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab { padding: 8px 15px; border-radius: 12px; background: rgba(255,255,255,0.05); cursor: pointer; font-weight: 800; font-size: 0.75rem; border: 1px solid transparent; }
-        .tab.active { background: var(--primary); border-color: #fff; }
+        .asset-tabs { display: flex; gap: 12px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; border-radius: 15px; background: rgba(255,255,255,0.05); cursor: pointer; font-weight: 800; font-size: 0.8rem; border: 1.5px solid transparent; transition: all 0.2s; }
+        .tab.active { background: var(--primary); border-color: #fff; box-shadow: 0 0 15px var(--primary); }
 
-        .stock-list { display: flex; flex-direction: column; gap: 10px; max-height: 450px; overflow-y: auto; padding-right: 10px; }
-        .stock-list::-webkit-scrollbar { width: 6px; }
+        .stock-list { display: flex; flex-direction: column; gap: 12px; max-height: 480px; overflow-y: auto; padding-right: 12px; }
+        .stock-list::-webkit-scrollbar { width: 8px; }
         .stock-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
         .stock-item {
-            background: rgba(255, 255, 255, 0.04); border: 2px solid transparent; border-radius: 18px; padding: 12px 15px;
-            display: grid; grid-template-columns: 40px 60px 1fr 80px 80px; align-items: center; cursor: pointer;
+            background: rgba(255, 255, 255, 0.04); border: 2px solid transparent; border-radius: 22px; padding: 15px 20px;
+            display: grid; grid-template-columns: 40px 70px 1fr 100px 100px; align-items: center; cursor: pointer;
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .stock-item:hover { background: rgba(255, 255, 255, 0.08); transform: scale(1.02); }
-        .stock-item.selected { background: rgba(99, 102, 241, 0.2); border-color: var(--primary); }
+        .stock-item.selected { background: rgba(99, 102, 241, 0.25); border-color: var(--primary); }
 
-        .asset-icon { font-size: 1.2rem; }
-        .ticker { font-weight: 900; color: var(--secondary); font-family: 'Orbitron'; font-size: 0.9rem; }
-        .company { color: #cbd5e1; font-weight: 700; font-size: 0.8rem; }
-        .price { font-weight: 800; text-align: right; font-family: 'Orbitron'; font-size: 0.85rem;}
-        .change { font-weight: 900; text-align: right; font-size: 0.8rem; }
+        .asset-icon { font-size: 1.5rem; }
+        .ticker { font-weight: 900; color: var(--secondary); font-family: 'Orbitron'; font-size: 1.1rem; }
+        .company { color: #cbd5e1; font-weight: 700; font-size: 0.9rem; }
+        .price { font-weight: 800; text-align: right; font-family: 'Orbitron'; font-size: 1rem;}
+        .change { font-weight: 900; text-align: right; font-size: 0.9rem; }
         .change.up { color: var(--success); }
         .change.down { color: var(--danger); }
 
         /* Action Controls */
-        .controls { display: flex; flex-direction: column; gap: 15px; }
-        .selected-info { background: rgba(0,0,0,0.4); padding: 20px; border-radius: 25px; border: 1px solid var(--border); position: relative; }
-        .chart-preview { width: 100%; height: 140px; background: rgba(0,0,0,0.5); border-radius: 20px; margin-bottom: 15px; border: 2px solid var(--border); overflow: hidden; }
+        .controls { display: flex; flex-direction: column; gap: 20px; }
+        .selected-info { background: rgba(0,0,0,0.5); padding: 25px; border-radius: 30px; border: 1px solid var(--border); position: relative; }
+        .chart-preview { width: 100%; height: 160px; background: rgba(0,0,0,0.6); border-radius: 25px; margin-bottom: 20px; border: 2px solid var(--border); overflow: hidden; }
         
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn { padding: 14px; border: none; border-radius: 15px; font-weight: 900; font-family: 'Orbitron'; text-transform: uppercase; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 0.8rem; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { padding: 16px; border: none; border-radius: 18px; font-weight: 900; font-family: 'Orbitron'; text-transform: uppercase; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 0.9rem; letter-spacing: 1px; }
         .btn:active { transform: scale(0.92); }
         .btn-buy { background: var(--success); color: #fff; }
         .btn-sell { background: var(--danger); color: #fff; }
         .btn-max { background: var(--primary); color: #fff; grid-column: span 2; }
         .btn:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
 
-        /* Achievements & Explainer */
-        .achievement-popup { position: fixed; bottom: 30px; left: 30px; z-index: 1000; background: linear-gradient(135deg, #1e293b, #0f172a); padding: 15px 25px; border-radius: 20px; display: flex; align-items: center; gap: 15px; border: 2px solid var(--accent); transform: translateX(-150%); transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .achievement-popup.visible { transform: translateX(0); }
+        /* News & World Events */
+        .news-container { background: var(--panel); backdrop-filter: blur(25px); border: 2.5px solid var(--border); padding: 15px 40px; border-radius: 60px; position: fixed; top: 25px; left: 50%; transform: translateX(-50%); z-index: 100; max-width: 800px; width: 90%; display: flex; align-items: center; gap: 25px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .news-badge { background: var(--accent); color: #000; padding: 6px 18px; border-radius: 12px; font-weight: 900; font-size: 0.85rem; }
+        .news-text { font-size: 1.1rem; font-weight: 700; color: #fff; white-space: nowrap; animation: ticker 8s linear infinite; }
 
-        /* News */
-        .news-container { background: var(--panel); backdrop-filter: blur(20px); border: 2px solid var(--border); padding: 12px 30px; border-radius: 60px; position: fixed; top: 25px; left: 50%; transform: translateX(-50%); z-index: 100; max-width: 700px; width: 90%; display: flex; align-items: center; gap: 20px; overflow: hidden; }
-        .news-badge { background: var(--accent); color: #000; padding: 5px 12px; border-radius: 10px; font-weight: 900; font-size: 0.75rem; }
-        .news-text { font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; animation: ticker 8s linear infinite; }
-        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .world-event-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.3);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
+            pointer-events: none; opacity: 0; transition: opacity 0.5s;
+        }
+        .world-event-overlay.visible { opacity: 1; pointer-events: auto; }
+        .world-event-card {
+            background: #fff; color: #000; padding: 50px; border-radius: 40px; text-align: center;
+            max-width: 600px; box-shadow: 0 50px 100px rgba(0,0,0,0.8); transform: translateY(100px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .world-event-overlay.visible .world-event-card { transform: translateY(0); }
 
-        .day-progress { position: fixed; bottom: 0; left: 0; height: 10px; background: linear-gradient(90deg, var(--secondary), var(--primary), var(--secondary)); background-size: 200% 100%; width: 0%; z-index: 101; animation: moveGradient 3s linear infinite; }
-        @keyframes moveGradient { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
-        .market-status-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-family: 'Orbitron'; font-size: 8rem; font-weight: 900; z-index: 1000; pointer-events: none; opacity: 0; text-shadow: 0 0 60px rgba(255,255,255,0.7); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        .portfolio-mini { background: var(--panel); border-radius: 30px; padding: 20px; border: 2px solid var(--border); display: flex; flex-direction: column; gap: 15px; }
-        .portfolio-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: #fff; font-weight: 700; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-        .explainer-btn { position: fixed; left: 30px; top: 250px; z-index: 100; background: var(--accent); color: #000; padding: 10px 20px; border-radius: 15px; font-weight: 900; cursor: pointer; border: none; font-family: 'Outfit'; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-
-        #explainer-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; background: #fff; color: #0f172a; padding: 40px; border-radius: 35px; z-index: 2000; box-shadow: 0 40px 100px rgba(0,0,0,0.8); display: none; }
-        #explainer-modal h2 { font-family: 'Orbitron'; margin-bottom: 15px; color: var(--primary); font-size: 1.5rem; }
-        #explainer-modal p { line-height: 1.5; font-size: 1rem; margin-bottom: 12px; }
-        .close-btn { background: var(--primary); color: #fff; padding: 12px 30px; border-radius: 15px; border: none; font-weight: 900; cursor: pointer; margin-top: 15px; width: 100%; }
+        /* Portfolio */
+        .portfolio-mini { background: var(--panel); border-radius: 35px; padding: 25px; border: 2px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
+        .portfolio-row { display: flex; justify-content: space-between; font-size: 1rem; color: #fff; font-weight: 700; padding-bottom: 12px; border-bottom: 2px solid rgba(255,255,255,0.05); }
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(10, 15, 30, 0.99); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 50px; }
         .overlay.hidden { display: none; }
-        .exit-btn { position: fixed; top: 25px; right: 25px; z-index: 2000; background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 15px; text-decoration: none; font-weight: 800; backdrop-filter: blur(15px); }
+        .exit-btn { position: fixed; top: 30px; right: 30px; z-index: 2000; background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.2); padding: 15px 30px; border-radius: 20px; text-decoration: none; font-weight: 900; backdrop-filter: blur(15px); }
     </style>
 </head>
 <body>
@@ -142,41 +144,43 @@
     <div id="bell-flash" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; opacity:0; transition:opacity 0.2s;"></div>
     <div class="market-status-overlay" id="market-status-overlay">OPEN</div>
 
-    <div class="day-progress" id="day-progress"></div>
+    <div class="day-progress" id="day-progress" style="position:fixed; bottom:0; left:0; height:12px; background:linear-gradient(90deg, var(--secondary), var(--primary)); width:0; z-index:101; transition: width 0.1s linear;"></div>
 
-    <button class="explainer-btn" onclick="openExplainer()">📦 Funds & Bonds?</button>
-
-    <div class="coach-container">
-        <div class="coach-bubble" id="coach-bubble">Hi! I'm Market Mo. Ready to make some big trades?</div>
-        <div class="coach-avatar">🤖</div>
+    <div class="world-event-overlay" id="world-event-overlay">
+        <div class="world-event-card">
+            <h1 style="font-family: 'Orbitron'; font-size: 3rem; margin-bottom: 20px; color: var(--danger);">🚨 WORLD EVENT 🚨</h1>
+            <h2 id="world-event-title" style="margin-bottom: 15px;">GLOBAL TECH CRASH</h2>
+            <p id="world-event-desc" style="font-size: 1.2rem; line-height: 1.6; margin-bottom: 30px;">A massive power outage has taken down the world's servers! Tech stocks are plummeting!</p>
+            <button class="btn btn-max" onclick="closeWorldEvent()" style="background: #000; color: #fff;">BRACE FOR IMPACT!</button>
+        </div>
     </div>
 
-    <div class="achievement-popup" id="achievement-popup">
-        <div style="font-size: 2.5rem;">🌟</div>
-        <div>
-            <div style="font-weight: 800; color: var(--accent); font-size: 0.7rem; text-transform: uppercase;">Achievement Unlocked</div>
-            <div id="achievement-title" style="font-weight: 900; font-size: 1rem; font-family: 'Orbitron';">TRADING ROOKIE</div>
-        </div>
+    <div class="coach-container">
+        <div class="coach-bubble" id="coach-bubble">Hi! I'm Market Mo. Ready to build a safe portfolio?</div>
+        <div class="coach-avatar">🤖</div>
     </div>
 
     <div class="news-container">
         <span class="news-badge">MARKET NEWS</span>
-        <div class="news-text" id="news-text">Preparing for market open... Get ready to trade!</div>
+        <div class="news-text" id="news-text">Market opening soon... Check your strategy!</div>
     </div>
 
     <div class="hud">
         <div class="hud-left">
             <div class="stat-badge">
-                <span style="font-size: 1.8rem;">💰</span>
+                <span style="font-size: 2rem;">💰</span>
                 <div>
-                    <div class="stat-label">Available Cash</div>
+                    <div class="stat-label">Spendable Cash</div>
                     <div class="stat-value" id="cash-val">$10,000.00</div>
                 </div>
             </div>
             <div class="stat-badge" style="border-color: var(--secondary);">
-                <span style="font-size: 1.8rem;">💎</span>
+                <span style="font-size: 2rem;">💎</span>
                 <div>
-                    <div class="stat-label">Net Worth</div>
+                    <div style="display:flex; align-items:center;">
+                        <div class="stat-label">Net Worth</div>
+                        <span class="health-grade" id="health-grade">A</span>
+                    </div>
                     <div class="stat-value" id="net-worth-val" style="color: var(--secondary);">$10,000.00</div>
                     <div class="ratio-container">
                         <div class="ratio-stock" id="ratio-stock" style="width: 0%"></div>
@@ -188,15 +192,15 @@
         </div>
 
         <div class="hud-right">
-            <div class="stat-badge" style="display: block; min-width: 250px;">
+            <div class="stat-badge" style="display: block; min-width: 260px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.2rem;">📅</span>
-                    <div class="stat-label">Time Elapsed</div>
+                    <span style="font-size: 1.4rem;">📅</span>
+                    <div class="stat-label">Timeline</div>
                 </div>
-                <div class="time-grid">
-                    <div class="time-unit">YEAR <b id="year-val">1</b></div>
-                    <div class="time-unit">QUARTER <b id="quarter-val">1</b></div>
-                    <div class="time-unit">DAY <b id="day-val">1</b></div>
+                <div class="time-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div style="text-align:center; background:rgba(0,0,0,0.3); padding:5px; border-radius:10px; font-size:0.7rem;">YEAR <b id="year-val" style="display:block; font-size:1rem; color:var(--secondary);">1</b></div>
+                    <div style="text-align:center; background:rgba(0,0,0,0.3); padding:5px; border-radius:10px; font-size:0.7rem;">QUART <b id="quarter-val" style="display:block; font-size:1rem; color:var(--secondary);">1</b></div>
+                    <div style="text-align:center; background:rgba(0,0,0,0.3); padding:5px; border-radius:10px; font-size:0.7rem;">DAY <b id="day-val" style="display:block; font-size:1rem; color:var(--secondary);">1</b></div>
                 </div>
             </div>
         </div>
@@ -207,7 +211,7 @@
             <div class="asset-tabs">
                 <div class="tab active" id="tab-all" onclick="filterAssets('all')">ALL</div>
                 <div class="tab" id="tab-stock" onclick="filterAssets('stock')">🏢 STOCKS</div>
-                <div class="tab" id="tab-etf" onclick="filterAssets('etf')">📦 FUNDS (ETF)</div>
+                <div class="tab" id="tab-etf" onclick="filterAssets('etf')">📦 FUNDS</div>
                 <div class="tab" id="tab-bond" onclick="filterAssets('bond')">🛡️ BONDS</div>
             </div>
             <div class="stock-list" id="stock-list"></div>
@@ -218,56 +222,34 @@
                 <div class="chart-preview">
                     <canvas id="chart-canvas" style="width:100%; height:100%;"></canvas>
                 </div>
-                <h2 id="selected-name" style="font-family: 'Orbitron'; font-size: 1.1rem; color: var(--secondary); margin-bottom: 5px;">SELECT ASSET</h2>
-                <p id="selected-shares" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 15px; font-weight: 600;">Owned: 0</p>
-                
+                <h2 id="selected-name" style="font-family: 'Orbitron'; font-size: 1.2rem; color: var(--secondary); margin-bottom: 5px;">SELECT ASSET</h2>
+                <p id="selected-shares" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600;">Holdings: 0</p>
                 <div class="btn-group">
                     <button class="btn btn-buy" id="buy-btn" onclick="trade('buy')" disabled>Buy</button>
                     <button class="btn btn-sell" id="sell-btn" onclick="trade('sell')" disabled>Sell</button>
-                    <button class="btn btn-max" id="max-buy-btn" onclick="trade('max')" disabled>Buy Maximum</button>
+                    <button class="btn btn-max" id="max-buy-btn" onclick="trade('max')" disabled>Buy All I Can</button>
                 </div>
             </div>
         </div>
 
         <div class="portfolio-mini">
-            <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--secondary); margin-bottom: 10px;">My Portfolio</h3>
+            <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--secondary); margin-bottom: 10px;">Portfolio Mix</h3>
             <div id="portfolio-list" style="max-height: 250px; overflow-y: auto;"></div>
-            
-            <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 15px; border: 1px solid var(--border);">
-                <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px;">MIX RATIO:</div>
-                <div style="display:flex; gap:10px; font-size: 0.7rem;">
-                    <span style="color: var(--danger);">● Stocks</span>
-                    <span style="color: var(--primary);">● Funds</span>
-                    <span style="color: var(--success);">● Bonds</span>
-                </div>
+            <div id="suggestion-box" style="margin-top: 15px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 15px; border: 1px solid var(--accent); color: var(--accent); font-size: 0.85rem; font-weight: 700;">
+                No suggestions yet. Buy some assets to see feedback!
             </div>
         </div>
     </div>
 
-    <div id="win-overlay" class="overlay hidden">
-        <div style="font-size: 8rem; margin-bottom: 30px;">🏦🏆</div>
-        <h1 style="color: var(--success); font-family: 'Orbitron'; font-size: 4rem;">MARKET MASTER!</h1>
-        <p style="font-size: 1.5rem; color: #cbd5e1; max-width: 800px;">Congratulations! You reached the $100,000 goal and built a healthy portfolio!</p>
-        <button class="btn btn-max" style="width: 350px; margin-top: 40px; font-size: 1.2rem;" onclick="location.reload()">Play Again 🚀</button>
-    </div>
-
     <div id="intro-overlay" class="overlay">
-        <div style="font-size: 8rem; margin-bottom: 30px;">📉📈</div>
+        <div style="font-size: 10rem; margin-bottom: 30px;">📉📈🚀</div>
         <h1 style="font-family: 'Orbitron'; font-size: 4rem; color: #fff;">MARKET MASTER</h1>
-        <p style="font-size: 1.3rem; color: #cbd5e1; max-width: 800px; line-height: 1.6; margin-bottom: 40px;">
-            Future Investor! Your goal is <b>$100,000</b>. <br>
-            Don't just pick one stock! Use <b>Funds (ETFs)</b> to buy bundles of companies, <br>
-            and <b>Bonds</b> to keep your money safe when the market is scary.
+        <p style="font-size: 1.4rem; color: #cbd5e1; max-width: 850px; line-height: 1.8; margin-bottom: 40px;">
+            Attention Investor! The market is about to open. <br>
+            <b>10 seconds = 1 Day.</b> Every <b>60 seconds</b>, a massive World Event will shake the economy! <br>
+            Build a balanced portfolio to survive the crashes and hit <b>$100,000</b>.
         </p>
-        <button class="btn btn-max" style="width: 350px; font-size: 1.5rem; padding: 20px;" onclick="startGame()">START INVESTING! 🚀</button>
-    </div>
-
-    <div id="explainer-modal">
-        <h2>Smart Investing for Kids!</h2>
-        <p><b>🏢 Single Stocks:</b> High risk! Like betting on one player in a game. If they win, you win big! If they lose, you lose big.</p>
-        <p><b>📦 Funds (ETFs):</b> Healthy! Like buying the whole team. If one player is tired, the others can still help you win. This is called <b>Diversification</b>.</p>
-        <p><b>🛡️ Bonds:</b> Very Safe! Like a savings piggy bank that slowly but surely adds money every day. Good for when you want to protect your profit.</p>
-        <button class="close-btn" onclick="closeExplainer()">Let's Invest!</button>
+        <button class="btn btn-max" style="width: 400px; font-size: 1.5rem; padding: 25px;" onclick="startGame()">ENTER THE FLOOR 🚀</button>
     </div>
 
     <script>
@@ -276,119 +258,136 @@
             cash: 10000, netWorth: 10000,
             day: 1, quarter: 1, year: 1,
             target: 100000,
-            selectedTicker: null,
-            filter: 'all',
-            portfolio: {}, 
-            daySeconds: 10, currentSeconds: 0,
-            isRunning: false,
-            achievements: { rookie: false, diversified: false, safe: false }
+            selectedTicker: null, filter: 'all',
+            portfolio: {}, daySeconds: 10, currentSeconds: 0,
+            worldEventSeconds: 60, currentWorldSeconds: 0,
+            isRunning: false, portfolioGrade: 'A'
         };
 
         const assets = [
-            { ticker: 'STEM-5', name: 'STEM Giant Fund', price: 500.00, type: 'etf', icon: '📦', volatility: 0.04, desc: 'Top 5 STEM Companies' },
-            { ticker: 'TECH-X', name: 'Tech Boom Fund', price: 250.00, type: 'etf', icon: '📦', volatility: 0.07, desc: 'All Tech companies bundle' },
-            { ticker: 'NVDA', name: 'NVIDIA AI', price: 208.27, type: 'stock', icon: '🏢', volatility: 0.15 },
-            { ticker: 'TSLA', name: 'Tesla Cars', price: 376.30, type: 'stock', icon: '🏢', volatility: 0.18 },
-            { ticker: 'AAPL', name: 'Apple Inc', price: 271.06, type: 'stock', icon: '🏢', volatility: 0.05 },
-            { ticker: 'SAFE-B', name: 'Secure Bond', price: 100.00, type: 'bond', icon: '🛡️', volatility: 0.01, yield: 0.002 },
-            { ticker: 'GOOGL', name: 'Google Search', price: 344.40, type: 'stock', icon: '🏢', volatility: 0.06 },
-            { ticker: 'AMZN', name: 'Amazon Store', price: 263.99, type: 'stock', icon: '🏢', volatility: 0.08 },
-            { ticker: 'WMT', name: 'Walmart Store', price: 129.92, type: 'stock', icon: '🏢', volatility: 0.03 }
+            { ticker: 'STEM-5', name: 'STEM Giant Fund', price: 500.00, type: 'etf', icon: '📦', volatility: 0.04, sector: 'Mixed' },
+            { ticker: 'TECH-X', name: 'Tech Boom Fund', price: 250.00, type: 'etf', icon: '📦', volatility: 0.07, sector: 'Tech' },
+            { ticker: 'NVDA', name: 'NVIDIA AI', price: 208.27, type: 'stock', icon: '🏢', volatility: 0.15, sector: 'Tech' },
+            { ticker: 'TSLA', name: 'Tesla Cars', price: 376.30, type: 'stock', icon: '🏢', volatility: 0.18, sector: 'Auto' },
+            { ticker: 'AAPL', name: 'Apple Inc', price: 271.06, type: 'stock', icon: '🏢', volatility: 0.05, sector: 'Tech' },
+            { ticker: 'SAFE-B', name: 'Secure Bond', price: 100.00, type: 'bond', icon: '🛡️', volatility: 0.01, yield: 0.003, sector: 'Safety' },
+            { ticker: 'GOOGL', name: 'Google Search', price: 344.40, type: 'stock', icon: '🏢', volatility: 0.06, sector: 'Tech' },
+            { ticker: 'AMZN', name: 'Amazon Store', price: 263.99, type: 'stock', icon: '🏢', volatility: 0.08, sector: 'Retail' },
+            { ticker: 'WMT', name: 'Walmart Store', price: 129.92, type: 'stock', icon: '🏢', volatility: 0.03, sector: 'Retail' }
         ];
 
-        assets.forEach(a => {
-            a.history = [a.price]; a.change = 0;
-            game.portfolio[a.ticker] = 0;
-        });
-
-        const newsPool = [
-            { text: "TECH BREAKTHROUGH! Single stocks surging!", effect: { type: 'stock', multiply: 1.12 } },
-            { text: "MARKET STABLE: Funds showing steady growth.", effect: { type: 'etf', multiply: 1.05 } },
-            { text: "MARKET CRASH! Bonds are the only safe place!", effect: { type: 'stock', multiply: 0.85, type2: 'etf', multiply2: 0.90 } },
-            { text: "HOLIDAY SEASON: Big boost for all assets!", effect: { all: true, multiply: 1.06 } }
+        const worldEvents = [
+            { title: "GLOBAL TECH CRASH", desc: "A massive power outage has taken down the world's servers! Tech stocks are plummeting!", effect: { sector: 'Tech', multiply: 0.7, type: 'stock', multiply2: 0.85 } },
+            { title: "MARS COLONY DISCOVERED", desc: "Humans have landed on Mars! Space and tech companies are going to the moon!", effect: { sector: 'Tech', multiply: 1.4, type: 'etf', multiply2: 1.2 } },
+            { title: "THE GREAT SHOPPING BOOM", desc: "A new global holiday has everyone spending! Retail and Amazon are surging!", effect: { sector: 'Retail', multiply: 1.5, type: 'stock', multiply2: 1.2 } },
+            { title: "ECONOMIC CRISIS", desc: "The market is scared! Everyone is selling stocks and buying Bonds for safety!", effect: { type: 'stock', multiply: 0.75, type2: 'etf', multiply2: 0.8, type3: 'bond', multiply3: 1.15 } },
+            { title: "AI REVOLUTION", desc: "Computers are now doing everything! NVIDIA and Google are worth billions more!", effect: { ticker: 'NVDA', multiply: 1.6, ticker2: 'GOOGL', multiply2: 1.4 } }
         ];
+
+        assets.forEach(a => { a.history = [a.price]; a.change = 0; game.portfolio[a.ticker] = 0; });
 
         // --- AUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBell(freq, dur) {
             const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            o.type = 'sine'; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(); o.stop(audioCtx.currentTime + dur);
-        }
-
-        // --- UI ---
-        function setMoText(text) {
-            const bubble = document.getElementById('coach-bubble'); bubble.innerText = text;
-            bubble.classList.add('visible'); setTimeout(() => bubble.classList.remove('visible'), 5000);
-        }
-
-        function unlockAchievement(id, title) {
-            if (game.achievements[id]) return; game.achievements[id] = true;
-            document.getElementById('achievement-title').innerText = title;
-            document.getElementById('achievement-popup').classList.add('visible');
-            playBell(1000, 1); setTimeout(() => document.getElementById('achievement-popup').classList.remove('visible'), 4000);
-        }
-
-        function openExplainer() { document.getElementById('explainer-modal').style.display = 'block'; }
-        function closeExplainer() { document.getElementById('explainer-modal').style.display = 'none'; }
-
-        function filterAssets(type) {
-            game.filter = type;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + type).classList.add('active');
-            renderStockList();
-        }
-
-        // --- THREE.JS ---
-        let scene, camera, renderer;
-        function initThree() {
-            scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('game-container').appendChild(renderer.domElement);
-            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-            const grid = new THREE.GridHelper(40, 40, 0x6366f1, 0x1e293b); grid.position.y = -2; scene.add(grid);
-            camera.position.set(0, 2, 6);
+            o.type = 'triangle'; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.2, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
         }
 
         // --- GAME LOGIC ---
         function startGame() {
             audioCtx.resume(); document.getElementById('intro-overlay').classList.add('hidden');
             game.isRunning = true; playBell(880, 1); flashStatus("MARKET OPEN", "#10b981");
-            setMoText("Welcome! Try buying an ETF Fund for a safer start!");
             renderStockList(); updateHUD(); startDayCycle();
         }
 
         function startDayCycle() {
             setInterval(() => {
                 if (!game.isRunning) return;
-                game.currentSeconds += 0.1;
+                game.currentSeconds += 0.1; game.currentWorldSeconds += 0.1;
                 document.getElementById('day-progress').style.width = (game.currentSeconds / game.daySeconds) * 100 + '%';
+                
                 if (game.currentSeconds >= game.daySeconds) { game.currentSeconds = 0; nextDay(); }
+                if (game.currentWorldSeconds >= game.worldEventSeconds) { game.currentWorldSeconds = 0; triggerWorldEvent(); }
             }, 100);
         }
 
         function nextDay() {
             game.day++; if (game.day > 90) { game.day = 1; game.quarter++; } if (game.quarter > 4) { game.quarter = 1; game.year++; }
-            const news = newsPool[Math.floor(Math.random() * newsPool.length)];
-            document.getElementById('news-text').innerText = news.text;
-
             assets.forEach(a => {
                 let factor = 1 + (Math.random() - 0.5) * a.volatility;
-                if (a.type === 'bond') factor = 1 + a.yield; // Steady growth for bonds
-                if (news.effect.all) factor *= news.effect.multiply;
-                if (news.effect.type === a.type) factor *= news.effect.multiply;
-                if (news.effect.type2 === a.type) factor *= news.effect.multiply2;
-                const old = a.price; a.price *= factor;
-                a.change = ((a.price - old) / old) * 100;
-                a.history.push(a.price);
+                if (a.type === 'bond') factor = 1 + a.yield;
+                const old = a.price; a.price *= factor; a.change = ((a.price - old) / old) * 100; a.history.push(a.price);
             });
-
             updateHUD(); renderStockList();
             if (game.selectedTicker) { updateSelection(); drawChart(); }
-            playBell(440, 0.4); checkWin();
+            if (game.day % 5 === 0) analyzePortfolio();
+        }
+
+        function triggerWorldEvent() {
+            game.isRunning = false;
+            const ev = worldEvents[Math.floor(Math.random() * worldEvents.length)];
+            document.getElementById('world-event-title').innerText = ev.title;
+            document.getElementById('world-event-desc').innerText = ev.desc;
+            document.getElementById('world-event-overlay').classList.add('visible');
+            playBell(220, 2); playBell(330, 2);
+
+            // Apply Effects
+            assets.forEach(a => {
+                let m = 1.0;
+                if (ev.effect.all) m *= ev.effect.multiply;
+                if (ev.effect.sector === a.sector) m *= ev.effect.multiply;
+                if (ev.effect.type === a.type) m *= ev.effect.multiply;
+                if (ev.effect.type2 === a.type) m *= ev.effect.multiply2;
+                if (ev.effect.type3 === a.type) m *= ev.effect.multiply3;
+                if (ev.effect.ticker === a.ticker) m *= ev.effect.multiply;
+                if (ev.effect.ticker2 === a.ticker) m *= ev.effect.multiply2;
+                a.price *= m; a.change = (m - 1) * 100; a.history.push(a.price);
+            });
+        }
+
+        function closeWorldEvent() {
+            document.getElementById('world-event-overlay').classList.remove('visible');
+            game.isRunning = true; flashStatus("MARKET RESUMED", "#6366f1");
+            updateHUD(); renderStockList();
+        }
+
+        function analyzePortfolio() {
+            let pVal = 0; let valByType = { stock: 0, etf: 0, bond: 0 };
+            let techVal = 0;
+            assets.forEach(a => {
+                const val = game.portfolio[a.ticker] * a.price;
+                pVal += val; valByType[a.type] += val;
+                if (a.sector === 'Tech') techVal += val;
+            });
+
+            if (pVal === 0) return;
+
+            let suggestion = "Portfolio looking good! Keep an eye on market trends.";
+            let grade = 'A';
+
+            const stockRatio = valByType.stock / pVal;
+            const techRatio = techVal / pVal;
+
+            if (stockRatio > 0.8) { 
+                suggestion = "Careful! You have way too many Single Stocks. Buy some Funds (ETFs) to be safer!";
+                grade = 'C';
+            } else if (techRatio > 0.7) {
+                suggestion = "Danger! You are 100% in Tech. If the internet goes down, you lose everything! Diversify!";
+                grade = 'D';
+            } else if (valByType.bond === 0 && game.netWorth > 30000) {
+                suggestion = "Smart move: Buy some Bonds to protect your profit in case of a crash.";
+                grade = 'B';
+            } else if (stockRatio < 0.4 && valByType.bond > 0.2) {
+                suggestion = "Very safe! Your portfolio is built like a pro. Keep it up!";
+                grade = 'A+';
+            }
+
+            game.portfolioGrade = grade;
+            document.getElementById('health-grade').innerText = grade;
+            document.getElementById('suggestion-box').innerText = "SUGGESTION: " + suggestion;
+            if (grade !== 'A+' && grade !== 'A') setMoText(suggestion);
         }
 
         function trade(type) {
@@ -396,60 +395,39 @@
             if (type === 'buy' && game.cash >= a.price) { game.cash -= a.price; game.portfolio[a.ticker]++; playBell(1000, 0.1); }
             else if (type === 'sell' && game.portfolio[a.ticker] > 0) { game.cash += a.price; game.portfolio[a.ticker]--; playBell(600, 0.1); }
             else if (type === 'max') { const count = Math.floor(game.cash / a.price); if (count > 0) { game.cash -= count * a.price; game.portfolio[a.ticker] += count; } }
-            updateHUD(); updateSelection(); renderStockList(); renderPortfolio();
-            checkDiversification();
-        }
-
-        function checkDiversification() {
-            let types = new Set();
-            assets.forEach(a => { if (game.portfolio[a.ticker] > 0) types.add(a.type); });
-            if (types.size >= 2) unlockAchievement('diversified', 'DIVERSIFIED!');
-            if (types.has('bond')) unlockAchievement('safe', 'SMART SAVER!');
+            updateHUD(); updateSelection(); renderStockList(); renderPortfolio(); analyzePortfolio();
         }
 
         function updateHUD() {
             let pVal = 0; let valByType = { stock: 0, etf: 0, bond: 0 };
-            assets.forEach(a => {
-                const val = game.portfolio[a.ticker] * a.price;
-                pVal += val; valByType[a.type] += val;
-            });
+            assets.forEach(a => { const val = game.portfolio[a.ticker] * a.price; pVal += val; valByType[a.type] += val; });
             game.netWorth = game.cash + pVal;
             document.getElementById('cash-val').innerText = `$${game.cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('net-worth-val').innerText = `$${game.netWorth.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('day-val').innerText = game.day; document.getElementById('quarter-val').innerText = game.quarter; document.getElementById('year-val').innerText = game.year;
-            
-            // Ratio Bar
             if (pVal > 0) {
                 document.getElementById('ratio-stock').style.width = (valByType.stock / pVal) * 100 + '%';
                 document.getElementById('ratio-etf').style.width = (valByType.etf / pVal) * 100 + '%';
                 document.getElementById('ratio-bond').style.width = (valByType.bond / pVal) * 100 + '%';
             }
+            if (game.netWorth >= game.target) { game.isRunning = false; alert("YOU WIN! Tycoon Status Reached!"); location.reload(); }
         }
 
         function renderStockList() {
             const list = document.getElementById('stock-list'); list.innerHTML = '';
             assets.forEach(a => {
                 if (game.filter !== 'all' && game.filter !== a.type) return;
-                const item = document.createElement('div');
-                item.className = `stock-item ${game.selectedTicker === a.ticker ? 'selected' : ''}`;
-                item.onclick = () => selectAsset(a.ticker);
-                item.innerHTML = `
-                    <div class="asset-icon">${a.icon}</div>
-                    <div class="ticker">${a.ticker}</div>
-                    <div class="company">${a.name}</div>
-                    <div class="price">$${a.price.toFixed(2)}</div>
-                    <div class="change ${a.change >= 0 ? 'up' : 'down'}">${a.change >= 0 ? '+' : ''}${a.change.toFixed(2)}%</div>
-                `;
+                const item = document.createElement('div'); item.className = `stock-item ${game.selectedTicker === a.ticker ? 'selected' : ''}`;
+                item.onclick = () => { game.selectedTicker = a.ticker; renderStockList(); updateSelection(); drawChart(); };
+                item.innerHTML = `<div class="asset-icon">${a.icon}</div><div class="ticker">${a.ticker}</div><div class="company">${a.name}</div><div class="price">$${a.price.toFixed(2)}</div><div class="change ${a.change >= 0 ? 'up' : 'down'}">${a.change >= 0 ? '+' : ''}${a.change.toFixed(2)}%</div>`;
                 list.appendChild(item);
             });
         }
 
-        function selectAsset(t) { game.selectedTicker = t; renderStockList(); updateSelection(); drawChart(); }
-
         function updateSelection() {
             const a = assets.find(x => x.ticker === game.selectedTicker);
             document.getElementById('selected-name').innerText = `${a.name} (${a.ticker})`;
-            document.getElementById('selected-shares').innerText = `Owned: ${game.portfolio[a.ticker]} ($${(game.portfolio[a.ticker] * a.price).toFixed(2)})`;
+            document.getElementById('selected-shares').innerText = `Holdings: ${game.portfolio[a.ticker]} ($${(game.portfolio[a.ticker] * a.price).toFixed(2)})`;
             document.getElementById('buy-btn').disabled = game.cash < a.price;
             document.getElementById('sell-btn').disabled = game.portfolio[a.ticker] <= 0;
             document.getElementById('max-buy-btn').disabled = game.cash < a.price;
@@ -457,37 +435,27 @@
 
         function renderPortfolio() {
             const list = document.getElementById('portfolio-list'); list.innerHTML = '';
-            assets.forEach(a => {
-                if (game.portfolio[a.ticker] > 0) {
-                    const row = document.createElement('div'); row.className = 'portfolio-row';
-                    row.innerHTML = `<span>${a.icon} ${a.ticker} (${game.portfolio[a.ticker]})</span><b>$${(game.portfolio[a.ticker] * a.price).toFixed(2)}</b>`;
-                    list.appendChild(row);
-                }
-            });
+            assets.forEach(a => { if (game.portfolio[a.ticker] > 0) { const row = document.createElement('div'); row.className = 'portfolio-row'; row.innerHTML = `<span>${a.icon} ${a.ticker}</span><b>$${(game.portfolio[a.ticker] * a.price).toFixed(2)}</b>`; list.appendChild(row); } });
         }
 
         function drawChart() {
-            const a = assets.find(x => x.ticker === game.selectedTicker);
-            const canvas = document.getElementById('chart-canvas'); const ctx = canvas.getContext('2d');
-            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-            const h = a.history; const max = Math.max(...h) * 1.1; const min = Math.min(...h) * 0.9;
+            const a = assets.find(x => x.ticker === game.selectedTicker); const canvas = document.getElementById('chart-canvas'); const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; const h = a.history;
+            const max = Math.max(...h) * 1.1; const min = Math.min(...h) * 0.9;
             ctx.strokeStyle = a.type === 'bond' ? '#10b981' : '#6366f1'; ctx.lineWidth = 3; ctx.beginPath();
-            h.forEach((p, i) => {
-                const x = (i / (h.length - 1 || 1)) * canvas.width;
-                const y = canvas.height - ((p - min) / (max - min)) * canvas.height;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            });
+            h.forEach((p, i) => { const x = (i / (h.length - 1 || 1)) * canvas.width; const y = canvas.height - ((p - min) / (max - min)) * canvas.height; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
             ctx.stroke();
         }
 
         function flashStatus(text, color) {
             const flash = document.getElementById('bell-flash'); const overlay = document.getElementById('market-status-overlay');
-            flash.style.background = `radial-gradient(circle, ${color}44 0%, transparent 70%)`;
-            flash.style.opacity = '1'; overlay.innerText = text; overlay.style.color = color; overlay.style.opacity = '1'; overlay.style.transform = 'translate(-50%, -50%) scale(1)';
+            flash.style.background = `radial-gradient(circle, ${color}44 0%, transparent 70%)`; flash.style.opacity = '1';
+            overlay.innerText = text; overlay.style.color = color; overlay.style.opacity = '1'; overlay.style.transform = 'translate(-50%, -50%) scale(1)';
             setTimeout(() => { flash.style.opacity = '0'; overlay.style.opacity = '0'; overlay.style.transform = 'translate(-50%, -50%) scale(0.5)'; }, 1000);
         }
 
-        function checkWin() { if (game.netWorth >= game.target) { game.isRunning = false; document.getElementById('win-overlay').classList.remove('hidden'); } }
+        function setMoText(text) { const bubble = document.getElementById('coach-bubble'); bubble.innerText = text; bubble.classList.add('visible'); setTimeout(() => bubble.classList.remove('visible'), 5000); }
+
         window.onload = () => { initThree(); };
     </script>
 </body>
