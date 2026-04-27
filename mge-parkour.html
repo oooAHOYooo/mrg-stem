@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Parkour - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+            --mge-accent: #ffe66d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
+            background: #222;
+            color: white;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-size: 14px;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid var(--mge-secondary);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .hud-item {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .hud-item strong {
+            color: var(--mge-secondary);
+        }
+
+        .timer {
+            color: var(--mge-accent);
+        }
+
+        .fall-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 107, 107, 0.9);
+            padding: 30px 60px;
+            border-radius: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: auto;
+            display: none;
+            z-index: 20;
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .controls-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid var(--mge-secondary);
+            font-size: 12px;
+            pointer-events: auto;
+            max-width: 250px;
+        }
+
+        .controls-info p {
+            margin: 5px 0;
+        }
+
+        .editor-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid var(--mge-primary);
+            pointer-events: auto;
+            max-width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .editor-panel h3 {
+            color: var(--mge-primary);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .editor-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .editor-section h4 {
+            color: var(--mge-secondary);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .platform-template {
+            background: rgba(107, 107, 255, 0.3);
+            border: 2px solid var(--mge-secondary);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: grab;
+            font-size: 11px;
+            user-select: none;
+        }
+
+        .platform-template:active {
+            cursor: grabbing;
+        }
+
+        .platform-template:hover {
+            background: rgba(107, 107, 255, 0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        button {
+            background: var(--mge-secondary);
+            color: #222;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--mge-accent);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-danger {
+            background: var(--mge-primary);
+        }
+
+        .toggle-editor {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            pointer-events: auto;
+            z-index: 90;
+        }
+
+        .platforms-list {
+            font-size: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .platform-item {
+            background: rgba(78, 205, 196, 0.2);
+            padding: 5px;
+            margin: 3px 0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .platform-item button {
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .input-group {
+            margin: 5px 0;
+            display: flex;
+            gap: 5px;
+            font-size: 11px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            flex: 1;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid var(--mge-secondary);
+            background: rgba(78, 205, 196, 0.1);
+            color: white;
+        }
+
+        .success-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(52, 211, 153, 0.9);
+            padding: 30px 60px;
+            border-radius: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+            display: none;
+            z-index: 20;
+            animation: successPop 1.5s ease-out forwards;
+        }
+
+        @keyframes successPop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            90% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer"></div>
+
+    <div class="ui-overlay">
+        <div class="hud">
+            <div class="hud-item">🎮 <strong>PARKOUR</strong></div>
+            <div class="hud-item">⏱️ <span class="timer">Time: <span id="timer">0.0s</span></span></div>
+            <div class="hud-item">📍 Platforms: <span id="platformCount">0</span></div>
+        </div>
+
+        <div class="controls-info">
+            <p><strong>Controls:</strong></p>
+            <p>W/A/S/D - Move</p>
+            <p>SPACE - Jump</p>
+            <p>SHIFT - Sprint</p>
+            <p>Mouse - Look Around</p>
+            <p><strong>Goal:</strong> Reach the finish!</p>
+        </div>
+
+        <button class="toggle-editor">Toggle Editor (E)</button>
+
+        <div class="editor-panel" id="editorPanel">
+            <h3>🏗️ Level Editor</h3>
+
+            <div class="editor-section">
+                <h4>Drag to place platforms:</h4>
+                <div class="platform-template" draggable="true" data-type="standard" data-width="2" data-height="0.5" data-depth="2">📦 Standard (2x2)</div>
+                <div class="platform-template" draggable="true" data-type="standard" data-width="1" data-height="0.5" data-depth="1">📦 Small (1x1)</div>
+                <div class="platform-template" draggable="true" data-type="jump-pad" data-width="1.5" data-height="0.3" data-depth="1.5">🚀 Jump Pad</div>
+                <div class="platform-template" draggable="true" data-type="moving" data-width="1.5" data-height="0.4" data-depth="1.5">🔄 Moving</div>
+                <div class="platform-template" draggable="true" data-type="finish" data-width="2" data-height="0.5" data-depth="2">🏁 Finish</div>
+            </div>
+
+            <div class="editor-section">
+                <h4>Platforms on level:</h4>
+                <div class="platforms-list" id="platformsList"></div>
+            </div>
+
+            <div class="editor-section">
+                <div class="btn-group">
+                    <button onclick="gameState.saveLevelToCode()">💾 Export</button>
+                    <button class="btn-danger" onclick="gameState.clearLevel()">🗑️ Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fall-message" id="fallMessage">💀 You fell! Restarting...</div>
+        <div class="success-message" id="successMessage">🎉 Level Complete!</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // Game State
+        const gameState = {
+            startTime: Date.now(),
+            platforms: [],
+            draggingPlatform: null,
+            editorActive: false,
+            platformIdCounter: 0,
+            saveLevelToCode() {
+                const levelData = this.platforms.map(p => ({
+                    type: p.type,
+                    pos: [p.position.x, p.position.y, p.position.z],
+                    size: [p.scale.x, p.scale.y, p.scale.z],
+                    color: p.userData.color
+                }));
+                console.log('Level data:', JSON.stringify(levelData, null, 2));
+                alert('Level exported to console');
+            },
+            clearLevel() {
+                if (confirm('Clear all platforms?')) {
+                    this.platforms.forEach(p => scene.remove(p));
+                    this.platforms = [];
+                    updatePlatformList();
+                }
+            }
+        };
+
+        window.gameState = gameState;
+
+        // THREE.js Scene Setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.Fog(0x1a1a2e, 500, 1000);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        document.getElementById('gameContainer').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(100, 100, 50);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.far = 500;
+        directionalLight.shadow.camera.left = -200;
+        directionalLight.shadow.camera.right = 200;
+        directionalLight.shadow.camera.top = 200;
+        directionalLight.shadow.camera.bottom = -200;
+        scene.add(directionalLight);
+
+        // Skybox-like background
+        const skyGeometry = new THREE.SphereGeometry(800, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: 0x2a2a3e,
+            side: THREE.BackSide
+        });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        // Ground plane (visual only, not physical collision)
+        const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -100;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Player / Camera Movement
+        const player = {
+            position: new THREE.Vector3(0, 5, 0),
+            velocity: new THREE.Vector3(0, 0, 0),
+            speed: 0.15,
+            sprintSpeed: 0.25,
+            jumpForce: 0.5,
+            gravity: 0.01,
+            onGround: false,
+            collisionRadius: 0.4
+        };
+
+        camera.position.copy(player.position);
+
+        // Input handling
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if (e.key === 'e' || e.key === 'E') {
+                gameState.editorActive = !gameState.editorActive;
+                document.getElementById('editorPanel').style.display = gameState.editorActive ? 'block' : 'none';
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Mouse look
+        let mouseX = 0, mouseY = 0;
+        let pitch = 0, yaw = 0;
+        document.addEventListener('mousemove', (e) => {
+            if (document.pointerLockElement || gameState.editorActive === false) {
+                mouseX = e.movementX * 0.002;
+                mouseY = e.movementY * 0.002;
+            }
+        });
+        document.addEventListener('click', () => {
+            document.body.requestPointerLock();
+        });
+
+        // Platform creation helper
+        function createPlatform(type, position, width = 2, height = 0.5, depth = 2, color = 0x4ecdc4) {
+            let geometry, material;
+
+            geometry = new THREE.BoxGeometry(width, height, depth);
+            material = new THREE.MeshStandardMaterial({
+                color: color,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.copy(position);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = {
+                type: type,
+                width: width,
+                height: height,
+                depth: depth,
+                color: color,
+                id: gameState.platformIdCounter++,
+                velocity: new THREE.Vector3(0, 0, 0),
+                moveDirection: new THREE.Vector3(1, 0, 0),
+                moveSpeed: 0.05,
+                moveRange: 10
+            };
+
+            scene.add(mesh);
+            gameState.platforms.push(mesh);
+            return mesh;
+        }
+
+        // Create default challenging level
+        function createDefaultLevel() {
+            // Start platform
+            createPlatform('standard', new THREE.Vector3(0, 0, 0), 3, 0.5, 3, 0x34d399);
+
+            // Ascending jumps
+            createPlatform('standard', new THREE.Vector3(5, 2, 0), 1.5, 0.5, 1.5, 0x4ecdc4);
+            createPlatform('standard', new THREE.Vector3(10, 4, 2), 1.5, 0.5, 1.5, 0x4ecdc4);
+            createPlatform('standard', new THREE.Vector3(14, 6, 5), 1.5, 0.5, 1.5, 0x4ecdc4);
+
+            // Jump pad
+            createPlatform('jump-pad', new THREE.Vector3(18, 8, 8), 1.5, 0.3, 1.5, 0xffe66d);
+
+            // Post jump-pad landing
+            createPlatform('standard', new THREE.Vector3(22, 12, 12), 2, 0.5, 2, 0x4ecdc4);
+
+            // Moving platforms section
+            createPlatform('moving', new THREE.Vector3(25, 12, 18), 1.5, 0.4, 1.5, 0xff6b6b);
+            createPlatform('standard', new THREE.Vector3(28, 11, 22), 1.5, 0.5, 1.5, 0x4ecdc4);
+
+            // Tricky jump
+            createPlatform('standard', new THREE.Vector3(32, 9, 26), 1, 0.5, 1, 0x4ecdc4);
+            createPlatform('standard', new THREE.Vector3(35, 8, 28), 1, 0.5, 1, 0x4ecdc4);
+            createPlatform('standard', new THREE.Vector3(38, 7, 30), 1, 0.5, 1, 0x4ecdc4);
+
+            // Final stretch
+            createPlatform('standard', new THREE.Vector3(40, 6, 33), 2, 0.5, 2, 0x4ecdc4);
+            createPlatform('standard', new THREE.Vector3(43, 4, 36), 2, 0.5, 2, 0x4ecdc4);
+
+            // Finish
+            createPlatform('finish', new THREE.Vector3(46, 2, 40), 3, 0.5, 3, 0xa78bfa);
+
+            updatePlatformList();
+        }
+
+        // Update platform list in editor
+        function updatePlatformList() {
+            const list = document.getElementById('platformsList');
+            list.innerHTML = '';
+            gameState.platforms.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = 'platform-item';
+                item.innerHTML = `
+                    <span>${p.userData.type} #${p.userData.id}</span>
+                    <button onclick="gameState.platforms.splice(gameState.platforms.indexOf(window.scene.getObjectById(${idx})), 1)">❌</button>
+                `;
+                list.appendChild(item);
+            });
+            document.getElementById('platformCount').textContent = gameState.platforms.length;
+        }
+
+        window.scene = scene;
+
+        // Drag and drop for level editor
+        renderer.domElement.addEventListener('dragover', (e) => {
+            if (!gameState.editorActive) return;
+            e.preventDefault();
+        });
+
+        renderer.domElement.addEventListener('drop', (e) => {
+            if (!gameState.editorActive) return;
+            e.preventDefault();
+
+            const rect = renderer.domElement.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(
+                (x / window.innerWidth) * 2 - 1,
+                -(y / window.innerHeight) * 2 + 1
+            );
+            raycaster.setFromCamera(mouse, camera);
+
+            const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+            const plane = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }));
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = player.position.y + 5;
+            scene.add(plane);
+
+            const intersects = raycaster.intersectObject(plane);
+            scene.remove(plane);
+
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                const type = e.dataTransfer.getData('text/plain');
+
+                const data = JSON.parse(type);
+                createPlatform(data.type, point, parseFloat(data.width), parseFloat(data.height), parseFloat(data.depth), 0x4ecdc4);
+                updatePlatformList();
+            }
+        });
+
+        document.querySelectorAll('.platform-template').forEach(el => {
+            el.addEventListener('dragstart', (e) => {
+                const data = {
+                    type: el.dataset.type,
+                    width: el.dataset.width,
+                    height: el.dataset.height,
+                    depth: el.dataset.depth
+                };
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            });
+        });
+
+        // Platform collision detection
+        function checkCollisions() {
+            let isColliding = false;
+            for (const platform of gameState.platforms) {
+                const dx = player.position.x - platform.position.x;
+                const dy = player.position.y - (platform.position.y + platform.userData.height / 2);
+                const dz = player.position.z - platform.position.z;
+
+                const hw = platform.userData.width / 2 + player.collisionRadius;
+                const hh = platform.userData.height / 2 + 0.1;
+                const hd = platform.userData.depth / 2 + player.collisionRadius;
+
+                if (Math.abs(dx) < hw && Math.abs(dy) < hh && Math.abs(dz) < hd) {
+                    if (player.velocity.y <= 0 && dy > 0.1) {
+                        player.position.y = platform.position.y + platform.userData.height / 2;
+                        player.velocity.y = 0;
+                        player.onGround = true;
+                        isColliding = true;
+
+                        // Jump pad boost
+                        if (platform.userData.type === 'jump-pad') {
+                            player.velocity.y = 1.2;
+                            player.onGround = false;
+                        }
+                    }
+                }
+            }
+            return isColliding;
+        }
+
+        // Update platform movements
+        function updatePlatforms() {
+            gameState.platforms.forEach(p => {
+                if (p.userData.type === 'moving') {
+                    p.position.add(p.userData.moveDirection.clone().multiplyScalar(p.userData.moveSpeed));
+
+                    if (Math.abs(p.position.x - (player.position.x + p.userData.moveRange)) > p.userData.moveRange) {
+                        p.userData.moveDirection.x *= -1;
+                    }
+                }
+            });
+        }
+
+        // Game loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update camera
+            yaw += mouseX;
+            pitch -= mouseY;
+            pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+            mouseX = 0;
+            mouseY = 0;
+
+            // Player movement
+            const forward = new THREE.Vector3(
+                Math.sin(yaw),
+                0,
+                Math.cos(yaw)
+            );
+            const right = new THREE.Vector3(
+                Math.cos(yaw),
+                0,
+                -Math.sin(yaw)
+            );
+
+            const moveSpeed = keys['shift'] ? player.sprintSpeed : player.speed;
+            if (keys['w']) player.velocity.add(forward.clone().multiplyScalar(moveSpeed));
+            if (keys['s']) player.velocity.add(forward.clone().multiplyScalar(-moveSpeed));
+            if (keys['a']) player.velocity.add(right.clone().multiplyScalar(-moveSpeed));
+            if (keys['d']) player.velocity.add(right.clone().multiplyScalar(moveSpeed));
+
+            // Jump
+            if (keys[' '] && player.onGround) {
+                player.velocity.y = player.jumpForce;
+                player.onGround = false;
+                keys[' '] = false;
+            }
+
+            // Gravity
+            player.velocity.y -= player.gravity;
+
+            // Friction
+            player.velocity.x *= 0.95;
+            player.velocity.z *= 0.95;
+
+            // Apply velocity
+            player.position.add(player.velocity);
+
+            // Collision
+            player.onGround = false;
+            checkCollisions();
+
+            // Update platforms
+            updatePlatforms();
+
+            // Fall detection
+            if (player.position.y < -50) {
+                document.getElementById('fallMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('fallMessage').style.display = 'none';
+                    player.position.copy(new THREE.Vector3(0, 5, 0));
+                    player.velocity.set(0, 0, 0);
+                    gameState.startTime = Date.now();
+                }, 2000);
+            }
+
+            // Finish line detection
+            const finishPlatform = gameState.platforms.find(p => p.userData.type === 'finish');
+            if (finishPlatform) {
+                const dx = player.position.x - finishPlatform.position.x;
+                const dz = player.position.z - finishPlatform.position.z;
+                if (Math.sqrt(dx * dx + dz * dz) < 2) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 1500);
+                }
+            }
+
+            // Update camera position and rotation
+            camera.position.copy(player.position);
+            camera.position.y += 0.6; // Eye height
+            camera.rotation.order = 'YXZ';
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+
+            // Update timer
+            const elapsed = (Date.now() - gameState.startTime) / 1000;
+            document.getElementById('timer').textContent = elapsed.toFixed(1) + 's';
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize
+        createDefaultLevel();
+        animate();
+    </script>
+</body>
+</html>
