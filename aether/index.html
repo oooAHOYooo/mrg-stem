@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Academy | Launchpad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Aether Security Protocol
+        (function() {
+            const AUTH_KEY = 'aether_access_granted';
+            if (sessionStorage.getItem(AUTH_KEY) !== 'true') {
+                const pass = prompt("AETHER SECURITY CLEARANCE REQUIRED\nEnter Authorization Code:");
+                if (pass && pass.toLowerCase() === 'aether') {
+                    sessionStorage.setItem(AUTH_KEY, 'true');
+                } else {
+                    alert("ACCESS DENIED: Invalid Authorization Code.");
+                    window.location.href = "../mge.html";
+                }
+            }
+        })();
+    </script>
+    <style>
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .launchpad {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .bg-video-overlay {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 70%),
+                linear-gradient(to bottom, transparent, #000);
+            z-index: 1;
+        }
+
+        .gate-container {
+            z-index: 10;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .gate-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4rem 2rem;
+            border-radius: 40px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gate-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .gate-card:hover {
+            transform: translateY(-20px);
+            border-color: var(--aether-primary);
+            background: rgba(0, 242, 255, 0.03);
+            box-shadow: 0 30px 60px -12px rgba(0, 242, 255, 0.1);
+        }
+
+        .gate-card:hover::before { opacity: 1; }
+
+        .gate-card h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .gate-card p {
+            color: var(--aether-text-dim);
+            font-weight: 300;
+        }
+
+        .gate-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        .header-logo {
+            position: absolute;
+            top: 4rem;
+            z-index: 10;
+            text-align: center;
+        }
+
+        /* Scanner Line Animation */
+        .scanner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--aether-primary);
+            box-shadow: 0 0 15px var(--aether-primary);
+            z-index: 100;
+            opacity: 0.3;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .gate-container { grid-template-columns: 1fr; }
+            .header-logo { top: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanner"></div>
+    <div class="bg-video-overlay"></div>
+
+    <div class="launchpad">
+        <div class="header-logo">
+            <div style="font-weight: 900; letter-spacing: 10px; font-size: 0.8rem; color: var(--aether-primary); margin-bottom: 10px;">IDENTITY AUTHORIZATION REQUIRED</div>
+            <div class="logo" style="font-size: 3rem;">AETHER<span>ACADEMY</span></div>
+        </div>
+
+        <div class="gate-container">
+            <!-- Student Gate -->
+            <a href="portal.html" class="gate-card">
+                <span class="gate-icon">🛠️</span>
+                <h2>Architect</h2>
+                <p>Enter the student terminal to begin your missions and earn XP.</p>
+            </a>
+
+            <!-- Admin Gate -->
+            <a href="hub.html" class="gate-card">
+                <span class="gate-icon">🛰️</span>
+                <h2>Commander</h2>
+                <p>Access the management hub to monitor activity and deploy lessons.</p>
+            </a>
+        </div>
+
+        <div style="position: absolute; bottom: 4rem; z-index: 10;">
+            <a href="#" style="color: var(--aether-text-dim); text-decoration: none; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">System Status: Optimal | v1.0.4</a>
+        </div>
+    </div>
+</body>
+</html>

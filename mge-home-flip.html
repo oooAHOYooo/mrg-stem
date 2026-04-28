@@ -452,18 +452,74 @@
             currentHouse: null,
             communityScore: 0,
             flips: 0,
+            propertyIdCounter: 4,
             properties: [
-                { id: 1, type: 'Cottage', price: 35000, condition: 20, pos: { x: -8, z: 0 }, color: 0x64748b },
-                { id: 2, type: 'Urban Box', price: 42000, condition: 15, pos: { x: 0, z: 0 }, color: 0x475569 },
-                { id: 3, type: 'Beach Pad', price: 48000, condition: 30, pos: { x: 8, z: 0 }, color: 0x334155 }
+                { id: 1, type: 'Cottage', price: 35000, condition: 20, pos: { x: -12, z: 0 }, color: 0x64748b, tier: 'Starter' },
+                { id: 2, type: 'Urban Box', price: 42000, condition: 15, pos: { x: -4, z: 0 }, color: 0x475569, tier: 'Starter' },
+                { id: 3, type: 'Beach Pad', price: 48000, condition: 30, pos: { x: 4, z: 0 }, color: 0x334155, tier: 'Starter' }
             ],
             renovations: {
                 cleanup: false,
                 repair: false,
                 modernize: false,
                 solar: false
-            }
+            },
+            startTime: 0,
+            milestones: [
+                { id: 'first_flip', target: 1, reward: 10000, msg: "FIRST FLIP BONUS!", achieved: false },
+                { id: 'money_100k', cashTarget: 100000, reward: 25000, msg: "SAVVY INVESTOR!", achieved: false },
+                { id: 'money_500k', cashTarget: 500000, reward: 100000, msg: "REAL ESTATE MOGUL!", achieved: false }
+            ],
+            buyerTypes: [
+                { name: 'Eco-Warrior Ivy', icon: '🌿', preference: 'solar', multiplier: 1.5, bio: 'Loves green energy!' },
+                { name: 'Techie Tom', icon: '💻', preference: 'modernize', multiplier: 1.4, bio: 'Wants a smart home.' },
+                { name: 'Family Fiona', icon: '👨‍👩‍👧', preference: 'repair', multiplier: 1.3, bio: 'Safety first!' },
+                { name: 'Artisan Art', icon: '🎨', preference: 'cleanup', multiplier: 1.2, bio: 'Sees the potential.' }
+            ],
+            offers: []
         };
+
+        function generateProperty() {
+            const types = [
+                { name: 'Cottage', tier: 'Starter', priceRange: [30000, 50000], color: 0x64748b },
+                { name: 'Urban Box', tier: 'Starter', priceRange: [40000, 60000], color: 0x475569 },
+                { name: 'Villa', tier: 'Premium', priceRange: [120000, 180000], color: 0x8b5cf6 },
+                { name: 'Mansion', tier: 'Premium', priceRange: [250000, 400000], color: 0xec4899 },
+                { name: 'Office', tier: 'Commercial', priceRange: [500000, 800000], color: 0x06b6d4 }
+            ];
+
+            // Pick type based on flips (unlock tiers)
+            let possibleTypes = types.filter(t => {
+                if (state.flips < 3) return t.tier === 'Starter';
+                if (state.flips < 8) return t.tier !== 'Commercial';
+                return true;
+            });
+
+            const type = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+            const price = Math.floor(Math.random() * (type.priceRange[1] - type.priceRange[0]) + type.priceRange[0]);
+            
+            // Find a new position (expand grid)
+            const count = state.properties.length;
+            const x = (count % 8) * 10 - 35;
+            const z = Math.floor(count / 8) * -15;
+
+            const newProp = {
+                id: state.propertyIdCounter++,
+                type: type.name,
+                tier: type.tier,
+                price: price,
+                condition: Math.floor(Math.random() * 30) + 10,
+                pos: { x: x, z: z },
+                color: type.color,
+                sold: false
+            };
+
+            state.properties.push(newProp);
+            const house = createHouse(newProp);
+            scene.add(house);
+            houseMeshes.push({ id: newProp.id, mesh: house });
+        }
+
 
         // --- UI LOGIC ---
         function startGame() {
@@ -479,17 +535,21 @@
                 const card = document.createElement('div');
                 card.className = `property-card ${p.sold ? 'sold' : ''}`;
                 card.innerHTML = `
-                    <div class="prop-price">$${p.price.toLocaleString()}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div class="prop-price">$${p.price.toLocaleString()}</div>
+                        <div style="font-size: 0.6rem; background: var(--primary); padding: 2px 8px; border-radius: 10px; font-weight: 900;">${p.tier}</div>
+                    </div>
                     <div style="font-weight: 800; margin-bottom: 1rem;">${p.type} #${p.id}</div>
                     <div class="prop-stat"><span>CONDITION</span><span>${p.condition}%</span></div>
-                    <div class="prop-stat"><span>STREET APPEAL</span><span>LOW</span></div>
-                    <button class="btn" style="width: 100%; margin-top: 1rem; padding: 0.5rem;" ${p.sold || state.hasHouse ? 'disabled' : ''} onclick="buyHouse(${p.id})">PURCHASE</button>
+                    <div class="prop-stat"><span>STATUS</span><span>${p.sold ? 'SOLD' : 'AVAILABLE'}</span></div>
+                    <button class="btn" style="width: 100%; margin-top: 1rem; padding: 0.5rem;" ${p.sold || state.hasHouse ? 'disabled' : ''} onclick="buyHouse(${p.id})">${p.sold ? 'SOLD' : (state.hasHouse ? 'ONE AT A TIME' : 'PURCHASE')}</button>
                 `;
                 list.appendChild(card);
             });
             
             document.getElementById('market-overlay').classList.remove('hidden');
         }
+
 
         function closeMarket() {
             document.getElementById('market-overlay').classList.add('hidden');
@@ -506,6 +566,7 @@
             state.hasHouse = true;
             state.currentHouse = p;
             state.renovations = { cleanup: false, repair: false, modernize: false, solar: false };
+            state.startTime = Date.now();
             
             updateHUD();
             closeMarket();
@@ -579,32 +640,119 @@
         function openSell() {
             const baseValue = state.currentHouse.price;
             const finalCondition = state.currentHouse.condition;
-            const profitMulti = 1 + (finalCondition / 100) + (state.communityScore / 200);
-            const sellPrice = Math.floor(baseValue * profitMulti);
+            const streetBonus = 1 + (state.communityScore / 200);
             
-            state.pendingSalePrice = sellPrice;
-            document.getElementById('sell-price').innerText = `$${sellPrice.toLocaleString()}`;
+            // Generate 3 random buyers
+            state.offers = [];
+            const selectedBuyers = [...state.buyerTypes].sort(() => 0.5 - Math.random()).slice(0, 3);
+            
+            selectedBuyers.forEach(buyer => {
+                let multiplier = 1 + (finalCondition / 100);
+                if (state.renovations[buyer.preference]) {
+                    multiplier *= buyer.multiplier;
+                }
+                
+                const offerPrice = Math.floor(baseValue * multiplier * streetBonus);
+                state.offers.push({
+                    buyer: buyer,
+                    price: offerPrice
+                });
+            });
+
+            const sellList = document.getElementById('sell-details');
+            sellList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">';
+            state.offers.forEach((offer, index) => {
+                sellList.innerHTML += `
+                    <div class="property-card" onclick="selectOffer(${index})" id="offer-${index}" style="cursor: pointer; border: 2px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.5rem;">${offer.buyer.icon}</span>
+                                <div>
+                                    <div style="font-weight: 800;">${offer.buyer.name}</div>
+                                    <div style="font-size: 0.7rem; color: #94a3b8;">${offer.buyer.bio}</div>
+                                </div>
+                            </div>
+                            <div style="font-family: 'Orbitron'; color: var(--success); font-weight: 900;">$${offer.price.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            sellList.innerHTML += '</div>';
+
+            document.getElementById('sell-price').innerText = "CHOOSE AN OFFER";
             document.getElementById('sell-overlay').classList.remove('hidden');
         }
+
+        function selectOffer(index) {
+            state.pendingSalePrice = state.offers[index].price;
+            document.getElementById('sell-price').innerText = `$${state.pendingSalePrice.toLocaleString()}`;
+            
+            // Highlight selected
+            state.offers.forEach((_, i) => {
+                const el = document.getElementById(`offer-${i}`);
+                if (el) {
+                    el.style.borderColor = (i === index) ? 'var(--primary)' : 'var(--border)';
+                    el.style.background = (i === index) ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255, 255, 255, 0.03)';
+                }
+            });
+        }
+
 
         function closeSell() {
             document.getElementById('sell-overlay').classList.add('hidden');
         }
 
         function confirmSale() {
+            if (!state.pendingSalePrice) {
+                alert("Select an offer first!");
+                return;
+            }
+
+            // Speed Bonus
+            const duration = (Date.now() - state.startTime) / 1000;
+            let bonusMsg = "";
+            if (duration < 60) { // Under 1 minute
+                const bonus = 5000;
+                state.cash += bonus;
+                bonusMsg = " + $5,000 SPEED BONUS!";
+            }
+
             state.cash += state.pendingSalePrice;
             state.flips++;
-            state.communityScore += 10;
+            state.communityScore = Math.min(100, state.communityScore + 10);
             state.hasHouse = false;
             state.currentHouse.sold = true;
             state.currentHouse = null;
+            state.pendingSalePrice = null;
 
+            checkMilestones();
             updateHUD();
             closeSell();
             toggleReno(false);
-            showNotification();
+            showNotification("HOUSE SOLD!" + bonusMsg);
             resetCamera();
             updateAllHouses();
+
+            // Generate a new property to keep the neighborhood growing
+            generateProperty();
+        }
+
+        function checkMilestones() {
+            state.milestones.forEach(m => {
+                if (!m.achieved) {
+                    if (m.target && state.flips >= m.target) {
+                        achieveMilestone(m);
+                    } else if (m.cashTarget && state.cash >= m.cashTarget) {
+                        achieveMilestone(m);
+                    }
+                }
+            });
+        }
+
+        function achieveMilestone(m) {
+            m.achieved = true;
+            state.cash += m.reward;
+            showNotification(`🏆 ${m.msg} (+$${m.reward.toLocaleString()})`);
         }
 
         function updateHUD() {
@@ -614,11 +762,13 @@
             document.getElementById('community-bar').style.width = `${state.communityScore}%`;
         }
 
-        function showNotification() {
+        function showNotification(msg) {
             const n = document.getElementById('notification');
+            n.innerText = msg;
             n.classList.add('show');
-            setTimeout(() => n.classList.remove('show'), 3000);
+            setTimeout(() => n.classList.remove('show'), 4000);
         }
+
 
         // --- THREE.JS LOGIC ---
         let scene, camera, renderer, controls, houseMeshes = [];
@@ -743,40 +893,75 @@
             const group = new THREE.Group();
             group.position.set(data.pos.x, 0, data.pos.z);
 
+            let height = 3;
+            let width = 4;
+            let depth = 4;
+
+            if (data.type === 'Villa') { height = 4.5; width = 6; depth = 5; }
+            if (data.type === 'Mansion') { height = 6; width = 8; depth = 7; }
+            if (data.type === 'Office') { height = 12; width = 6; depth = 6; }
+
+            group.userData.height = height; // Store for solar panels
+
             // Main box
-            const body = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), new THREE.MeshStandardMaterial({ color: data.color }));
-            body.position.y = 1.5;
+            const bodyGeo = new THREE.BoxGeometry(width, height, depth);
+            const body = new THREE.Mesh(bodyGeo, new THREE.MeshStandardMaterial({ color: data.color }));
+            body.position.y = height / 2;
             body.castShadow = true;
+            body.userData.type = 'body';
             group.add(body);
 
             // Roof
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 2, 4), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
-            roof.position.y = 4;
-            roof.rotation.y = Math.PI / 4;
-            group.add(roof);
+            if (data.type !== 'Office') {
+                const roofGeo = new THREE.ConeGeometry(width * 0.8, 2, 4);
+                const roof = new THREE.Mesh(roofGeo, new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+                roof.position.y = height + 1;
+                roof.rotation.y = Math.PI / 4;
+                roof.userData.type = 'roof';
+                group.add(roof);
+            } else {
+                // Flat roof for office
+                const roof = new THREE.Mesh(new THREE.BoxGeometry(width + 0.5, 0.5, depth + 0.5), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+                roof.position.y = height + 0.25;
+                roof.userData.type = 'roof';
+                group.add(roof);
+            }
 
             // Door
             const door = new THREE.Mesh(new THREE.PlaneGeometry(1, 1.8), new THREE.MeshStandardMaterial({ color: 0x451a03 }));
-            door.position.set(0, 0.9, 2.01);
+            door.position.set(0, 0.9, depth/2 + 0.01);
+            door.userData.type = 'door';
             group.add(door);
 
             // Windows
-            const win1 = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: 0x000000 }));
-            win1.position.set(1.2, 2, 2.01);
-            group.add(win1);
-            const win2 = win1.clone();
-            win2.position.x = -1.2;
-            group.add(win2);
+            function addWindow(x, y, z) {
+                const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: 0x000000 }));
+                win.position.set(x, y, z);
+                win.userData.type = 'window';
+                group.add(win);
+            }
+
+            addWindow(width/3, height * 0.6, depth/2 + 0.01);
+            addWindow(-width/3, height * 0.6, depth/2 + 0.01);
+
+            if (height > 5) { // Extra windows for tall buildings
+                addWindow(width/3, height * 0.3, depth/2 + 0.01);
+                addWindow(-width/3, height * 0.3, depth/2 + 0.01);
+                addWindow(width/3, height * 0.8, depth/2 + 0.01);
+                addWindow(-width/3, height * 0.8, depth/2 + 0.01);
+            }
 
             // Broken state indicators (trash blocks)
             const trash = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1), new THREE.MeshStandardMaterial({ color: 0x475569 }));
-            trash.position.set(1.5, 0.1, 3);
+            trash.position.set(width/2, 0.1, depth/2 + 1);
             trash.userData.isTrash = true;
             group.add(trash);
 
             group.userData.id = data.id; // Crucial for raycasting
             return group;
         }
+
+
 
         function showToast(msg) {
             const n = document.getElementById('notification');
@@ -796,7 +981,7 @@
                 });
                 // Add grass patch
                 if (!h.userData.hasGrass) {
-                    const grass = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+                    const grass = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
                     grass.rotation.x = -Math.PI / 2;
                     grass.position.y = 0.05;
                     h.add(grass);
@@ -806,30 +991,39 @@
 
             if (state.renovations.repair) {
                 // Make house cleaner
-                h.children[0].material.color.set(0x8b5cf6); // Vibrant purple
-                h.children[1].material.color.set(0x334155); // Newer roof
+                const body = h.children.find(c => c.userData.type === 'body');
+                if (body) body.material.color.set(0x8b5cf6); // Vibrant purple
+                
+                const roof = h.children.find(c => c.userData.type === 'roof');
+                if (roof) roof.material.color.set(0x334155); // Newer roof
             }
 
             if (state.renovations.modernize) {
                 // Glowing windows
-                h.children[3].material.emissive.set(0xec4899);
-                h.children[3].material.emissiveIntensity = 0.5;
-                h.children[4].material.emissive.set(0xec4899);
-                h.children[4].material.emissiveIntensity = 0.5;
-                h.children[0].material.color.set(0xec4899);
+                h.children.forEach(c => {
+                    if (c.userData.type === 'window') {
+                        c.material.emissive.set(0xec4899);
+                        c.material.emissiveIntensity = 0.6;
+                    }
+                    if (c.userData.type === 'body') {
+                        c.material.color.set(0xec4899);
+                    }
+                });
             }
 
             if (state.renovations.solar) {
                 // Add solar panel on roof
                 if (!h.userData.hasSolar) {
-                    const solar = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 1.5), new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.2 }));
-                    solar.position.set(0, 4.5, 0);
-                    solar.rotation.x = -Math.PI / 4;
+                    const height = h.userData.height || 3;
+                    const solar = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 2), new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.3 }));
+                    solar.position.set(0, height + 0.5, 0);
+                    solar.rotation.x = -Math.PI / 8;
                     h.add(solar);
                     h.userData.hasSolar = true;
                 }
             }
         }
+
 
         function updateAllHouses() {
             // After a sale, we might clear the sold house or mark it as "Premium"
