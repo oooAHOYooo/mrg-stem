@@ -274,6 +274,9 @@
         <button class="part-btn" data-part="tail">🐈<span class="part-label">TAIL</span></button>
         <button class="part-btn" data-part="hat">🎩<span class="part-label">HAT</span></button>
         <button class="part-btn" data-part="glasses">🕶️<span class="part-label">SPECS</span></button>
+        <button class="part-btn" data-part="crown">👑<span class="part-label">CROWN</span></button>
+        <button class="part-btn" data-part="sword">⚔️<span class="part-label">SWORD</span></button>
+        <button class="part-btn" data-part="mustache">🧔<span class="part-label">MUSTACHE</span></button>
     </div>
 
     <div class="ui-panel bottom-panel">
@@ -542,13 +545,67 @@
                     pupil.position.z = 0.25;
                     group.add(white, pupil);
                     break;
+                case 'mouth':
+                    const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.06, 12, 24, Math.PI), new THREE.MeshStandardMaterial({color: 0xff4f7b}));
+                    mouth.rotation.x = Math.PI / 2;
+                    group.add(mouth);
+                    break;
                 case 'horn':
                     const horn = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.8, 16), new THREE.MeshStandardMaterial({color: 0xffd700}));
                     group.add(horn);
                     break;
                 case 'ear':
-                    const ear = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.1, 16, 32), new THREE.MeshStandardMaterial({color: brushColor}));
+                    const ear = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.08, 16, 32), new THREE.MeshStandardMaterial({color: brushColor}));
                     group.add(ear);
+                    break;
+                case 'wing':
+                    const w1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.05), new THREE.MeshStandardMaterial({color: 0x818cf8}));
+                    w1.position.x = 0.6;
+                    w1.rotation.y = 0.2;
+                    const w2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.05), new THREE.MeshStandardMaterial({color: 0x818cf8}));
+                    w2.position.x = -0.6;
+                    w2.rotation.y = -0.2;
+                    group.add(w1, w2);
+                    break;
+                case 'tail':
+                    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 1.5, 8), new THREE.MeshStandardMaterial({color: brushColor}));
+                    tail.rotation.x = Math.PI / 4;
+                    group.add(tail);
+                    break;
+                case 'hat':
+                    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 16), new THREE.MeshStandardMaterial({color: 0x111827}));
+                    rim.position.y = -0.3;
+                    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.6, 16), new THREE.MeshStandardMaterial({color: 0x111827}));
+                    group.add(rim, top);
+                    break;
+                case 'glasses':
+                    const lRing = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.04, 12, 24), new THREE.MeshStandardMaterial({color: 0x27272a}));
+                    lRing.position.x = -0.25;
+                    const rRing = lRing.clone();
+                    rRing.position.x = 0.25;
+                    const br = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.04, 0.04), new THREE.MeshStandardMaterial({color: 0x27272a}));
+                    group.add(lRing, rRing, br);
+                    break;
+                case 'crown':
+                    const crownBase = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), new THREE.MeshStandardMaterial({color: 0xfacc15, metalness: 0.8, roughness: 0.2}));
+                    const gem = new THREE.Mesh(new THREE.SphereGeometry(0.06), new THREE.MeshStandardMaterial({color: 0xef4444}));
+                    gem.position.set(0, 0.2, 0.38);
+                    group.add(crownBase, gem);
+                    break;
+                case 'sword':
+                    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.03), new THREE.MeshStandardMaterial({color: 0x94a3b8, metalness: 0.9, roughness: 0.1}));
+                    const hilt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.1), new THREE.MeshStandardMaterial({color: 0x78350f}));
+                    hilt.position.y = -0.65;
+                    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35), new THREE.MeshStandardMaterial({color: 0x1e1b4b}));
+                    handle.position.y = -0.85;
+                    group.add(blade, hilt, handle);
+                    break;
+                case 'mustache':
+                    const mL = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshStandardMaterial({color: 0x1e293b}));
+                    mL.position.x = -0.15;
+                    const mR = mL.clone();
+                    mR.position.x = 0.15;
+                    group.add(mL, mR);
                     break;
                 default:
                     // Use a text or simple placeholder

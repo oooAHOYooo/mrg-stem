@@ -317,7 +317,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        let scene, camera, renderer, world = [];
+        let scene, camera, renderer, ground, world = [];
         let currentTool = 'build';
         let currentColor = 0xff4655;
         const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0xffd60a];
@@ -355,10 +355,9 @@
             camera.lookAt(0, 0, 0);
 
             // Renderer setup
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            document.body.appendChild(renderer.domElement);
 
             // Lighting
             const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -378,7 +377,7 @@
             // Ground
             const groundGeo = new THREE.PlaneGeometry(100, 100);
             const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a7c59 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
             scene.add(ground);
@@ -443,16 +442,22 @@
 
             window.addEventListener('click', () => {
                 raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(world);
+                const intersects = raycaster.intersectObjects([ground, ...world]);
 
                 if (currentTool === 'build' && intersects.length > 0) {
                     const hit = intersects[0];
                     const normal = hit.face.normal;
                     const newPos = hit.object.position.clone().add(normal);
-                    addBlock(newPos.x, newPos.y, newPos.z, currentColor);
-                } else if (currentTool === 'delete' && intersects.length > 0) {
+                    if (hit.object === ground) {
+                        const snappedX = Math.round(hit.point.x);
+                        const snappedZ = Math.round(hit.point.z);
+                        addBlock(snappedX, gridSize/2, snappedZ, currentColor);
+                    } else {
+                        addBlock(newPos.x, newPos.y, newPos.z, currentColor);
+                    }
+                } else if (currentTool === 'delete' && intersects.length > 0 && intersects[0].object !== ground) {
                     removeBlock(intersects[0].object);
-                } else if (currentTool === 'color' && intersects.length > 0) {
+                } else if (currentTool === 'color' && intersects.length > 0 && intersects[0].object !== ground) {
                     colorIndex = (colorIndex + 1) % colors.length;
                     currentColor = colors[colorIndex];
                     intersects[0].object.material.color.setHex(currentColor);

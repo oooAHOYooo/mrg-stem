@@ -179,6 +179,54 @@
             max-width: 1200px;
             margin: 3rem auto;
             padding: 0 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .experiments-grid.list-view {
+            grid-template-columns: 1fr !important;
+            gap: 2.5rem;
+            max-width: 1000px;
+        }
+
+        .experiments-grid.list-view .experiment-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 2.5rem;
+            padding: 2rem 3.5rem;
+            text-align: left;
+        }
+
+        .experiments-grid.list-view .experiment-card .experiment-icon {
+            font-size: 5rem;
+            margin-bottom: 0;
+            flex-shrink: 0;
+            animation: none !important;
+        }
+
+        .experiments-grid.list-view .experiment-card h2 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .experiments-grid.list-view .experiment-card p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .experiments-grid.list-view .experiment-card .experiment-link {
+            font-size: 1.3rem;
+            padding: 1.2rem 2.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .experiments-grid.list-view .experiment-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+                padding: 2.5rem;
+            }
         }
 
         .experiment-card {
@@ -565,32 +613,65 @@
                     creative coding projects, and mind-bending experiments. Dive in and explore!
                 </p>
 
+                <!-- View Toggle buttons for List View and Grid View -->
+                <div style="display: flex; justify-content: center; gap: 20px; margin: 1.5rem 0 2.5rem 0;">
+                    <button id="view-list-btn" onclick="toggleView('list')" style="display: flex; align-items: center; gap: 12px; padding: 14px 28px; border-radius: 30px; font-weight: 800; font-size: 1.15rem; border: 2px solid transparent; cursor: pointer; background: white; color: var(--mge-primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.2s;">
+                        🗂️ List View (Large)
+                    </button>
+                    <button id="view-grid-btn" onclick="toggleView('grid')" style="display: flex; align-items: center; gap: 12px; padding: 14px 28px; border-radius: 30px; font-weight: 800; font-size: 1.15rem; border: 2px solid transparent; cursor: pointer; background: white; color: var(--mge-primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: all 0.2s;">
+                        🧩 Grid View
+                    </button>
+                </div>
+
+                <style>
+                    #view-list-btn.active, #view-grid-btn.active {
+                        background: var(--mge-primary) !important;
+                        color: white !important;
+                        box-shadow: 0 5px 25px rgba(255,107,107,0.4) !important;
+                    }
+                    #view-list-btn:hover, #view-grid-btn:hover {
+                        transform: translateY(-2px);
+                    }
+                </style>
+
                 <!-- LEVEL: K-2 -->
                 <div class="grid-section-header" id="level-k2" style="border-color: #10b981;">
                 </div>
                 <div class="experiments-grid">
                     <div class="experiment-card featured-highlight" id="aqua-genesis" style="border-color: #0a9396; background: linear-gradient(135deg, #f0fdfa, #ffffff);">
-                        <h2 style="color: #005f73;">Aqua Genesis</h2>
-                        <p>Sensory-friendly 3D playground with high contrast oceanic colors.</p>
-                        <a href="mge-aqua-genesis.html" class="experiment-link" style="background: linear-gradient(135deg, #0a9396, #94d2bd);">Start Diving</a>
+                        <span class="experiment-icon">🌊</span>
+                        <div>
+                            <h2 style="color: #005f73;">Aqua Genesis</h2>
+                            <p>Sensory-friendly 3D playground with high contrast oceanic colors.</p>
+                            <a href="mge-aqua-genesis.html" class="experiment-link" style="background: linear-gradient(135deg, #0a9396, #94d2bd);">Start Diving</a>
+                        </div>
                     </div>
 
                     <div class="experiment-card featured-highlight" id="day-night" style="border-color: #6366f1; background: linear-gradient(135deg, #eef2ff, #ffffff);">
-                        <h2 style="background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Day & Night</h2>
-                        <p>Explore how Earth's rotation creates the cycle of light and dark.</p>
-                        <a href="mge-day-night.html" class="experiment-link" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">Explore Cycle</a>
+                        <span class="experiment-icon">☀️🌙</span>
+                        <div>
+                            <h2 style="background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Day & Night</h2>
+                            <p>Explore how Earth's rotation creates the cycle of light and dark.</p>
+                            <a href="mge-day-night.html" class="experiment-link" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">Explore Cycle</a>
+                        </div>
                     </div>
 
                     <div class="experiment-card featured-highlight" id="easter-hunt" style="border-color: #fca5a5; background: linear-gradient(135deg, #fff1f1, #ffffff);">
-                        <h2 style="background: linear-gradient(135deg, #f87171, #34d399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Easter Egg Hunt</h2>
-                        <p>Explore a forest as a rabbit and find hidden eggs in 60 seconds!</p>
-                        <a href="mge-easter-egg-hunt.html" class="experiment-link" style="background: linear-gradient(135deg, #f87171, #fbbf24);">Start Hunt</a>
+                        <span class="experiment-icon">🐰🥚</span>
+                        <div>
+                            <h2 style="background: linear-gradient(135deg, #f87171, #34d399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Easter Egg Hunt</h2>
+                            <p>Explore a forest as a rabbit and find hidden eggs in 60 seconds!</p>
+                            <a href="mge-easter-egg-hunt.html" class="experiment-link" style="background: linear-gradient(135deg, #f87171, #fbbf24);">Start Hunt</a>
+                        </div>
                     </div>
 
                     <div class="experiment-card" id="typing-racer" style="border-color: #4CAF50; background: linear-gradient(135deg, #f0fdf4, #ffffff);">
-                        <h2 style="color: #388E3C;">Typing Animal Race</h2>
-                        <p>Learn touch-typing while racing cute 3D animals!</p>
-                        <a href="mge-typing-racer.html" class="experiment-link" style="background: linear-gradient(135deg, #4CAF50, #388E3C);">Start Race</a>
+                        <span class="experiment-icon">🐾</span>
+                        <div>
+                            <h2 style="color: #388E3C;">Typing Animal Race</h2>
+                            <p>Learn touch-typing while racing cute 3D animals!</p>
+                            <a href="mge-typing-racer.html" class="experiment-link" style="background: linear-gradient(135deg, #4CAF50, #388E3C);">Start Race</a>
+                        </div>
                     </div>
                 </div>
 
@@ -939,6 +1020,29 @@
             overlay.style.display = 'none';
             iframe.src = 'about:blank';
             document.body.style.overflow = '';
+        });
+
+        function toggleView(view) {
+            const grids = document.querySelectorAll('.experiments-grid');
+            const listBtn = document.getElementById('view-list-btn');
+            const gridBtn = document.getElementById('view-grid-btn');
+            
+            if (view === 'list') {
+                grids.forEach(g => g.classList.add('list-view'));
+                if (listBtn) listBtn.classList.add('active');
+                if (gridBtn) gridBtn.classList.remove('active');
+                localStorage.setItem('mgeView', 'list');
+            } else {
+                grids.forEach(g => g.classList.remove('list-view'));
+                if (gridBtn) gridBtn.classList.add('active');
+                if (listBtn) listBtn.classList.remove('active');
+                localStorage.setItem('mgeView', 'grid');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedView = localStorage.getItem('mgeView') || 'list';
+            toggleView(savedView);
         });
     </script>
 </body>
