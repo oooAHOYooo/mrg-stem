@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gonzalex Robolox | MGE STEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --mge-primary: #ff4655;
@@ -11,16 +12,19 @@
             --mge-accent: #ffd60a;
             --mge-dark: #0f1419;
             --mge-light: #f5f5f5;
+            --mge-card-bg: rgba(25, 33, 44, 0.85);
+            --mge-roblox-topbar: rgba(0, 0, 0, 0.7);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--mge-dark);
             color: white;
             overflow: hidden;
@@ -41,97 +45,267 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
         }
 
-        .top-hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+        /* Modern Roblox-Inspired Topbar */
+        .topbar {
+            width: 100%;
             display: flex;
-            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
             pointer-events: auto;
             z-index: 100;
         }
 
-        .hud-panel {
-            background: rgba(15, 20, 25, 0.9);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 180, 216, 0.3);
+        .roblox-logo-stat {
+            background: var(--mge-roblox-topbar);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 12px;
-            padding: 15px 25px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            background: var(--mge-primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 70, 85, 0.4);
+            transform: rotate(-5deg);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--mge-accent);
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--mge-primary), #d0003c);
+            color: white;
+            text-decoration: none;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px rgba(255, 70, 85, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 70, 85, 0.4);
+        }
+
+        /* Chat Panel */
+        .chat-container {
+            position: absolute;
+            top: 85px;
+            left: 20px;
+            width: 320px;
+            height: 240px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            z-index: 95;
+            transition: all 0.3s ease;
+        }
+
+        .chat-log {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-right: 4px;
+        }
+
+        .chat-log::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .chat-msg {
+            color: #ffffff;
+            word-wrap: break-word;
+        }
+        .chat-msg.server {
+            color: #ffd60a;
+            font-weight: 600;
+        }
+        .chat-msg .name {
+            color: var(--mge-secondary);
+            font-weight: 600;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .chat-input:focus {
+            border-color: var(--mge-secondary);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-send-btn {
+            background: var(--mge-secondary);
+            border: none;
+            padding: 0 14px;
+            border-radius: 8px;
             color: white;
             font-weight: bold;
-            min-width: 120px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .chat-send-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
         }
 
-        .hud-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 5px;
-        }
-
-        .hud-value {
-            font-size: 1.5rem;
-            color: var(--mge-secondary);
-        }
-
-        .toolbar {
+        /* Roblox Inventory Hotbar (Bottom Center) */
+        .hotbar-container {
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            background: rgba(15, 20, 25, 0.88);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 16px;
             pointer-events: auto;
-            background: rgba(15, 20, 25, 0.95);
-            backdrop-filter: blur(15px);
-            padding: 15px;
-            border-radius: 15px;
-            border: 2px solid rgba(0, 180, 216, 0.2);
             z-index: 100;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.5);
         }
 
-        .tool-btn {
-            width: 60px;
-            height: 60px;
+        .hotbar-slot {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.06);
             border: 2px solid transparent;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            cursor: pointer;
-            font-size: 1.8rem;
+            border-radius: 12px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s;
-            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .tool-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
+        .hotbar-slot:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateY(-4px);
         }
 
-        .tool-btn.active {
+        .hotbar-slot.active {
+            background: rgba(0, 180, 216, 0.25);
             border-color: var(--mge-secondary);
-            background: rgba(0, 180, 216, 0.3);
-            box-shadow: 0 0 20px rgba(0, 180, 216, 0.6);
+            box-shadow: 0 0 16px rgba(0, 180, 216, 0.5);
+            transform: scale(1.04) translateY(-4px);
         }
 
+        .slot-key {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.4);
+            font-weight: 800;
+        }
+
+        .slot-icon {
+            font-size: 1.6rem;
+            margin-bottom: 2px;
+        }
+
+        .slot-label {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.3px;
+        }
+
+        /* Right Side: Control & Hints HUD Panel */
         .controls-panel {
             position: absolute;
             bottom: 30px;
             right: 30px;
-            background: rgba(15, 20, 25, 0.9);
+            background: rgba(15, 20, 25, 0.85);
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 180, 216, 0.3);
-            border-radius: 12px;
-            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 16px;
+            width: 240px;
             pointer-events: auto;
-            z-index: 100;
-            font-size: 0.9rem;
-            max-width: 200px;
+            z-index: 90;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .controls-title {
+            color: var(--mge-secondary);
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .control-row {
@@ -139,7 +313,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.85rem;
         }
 
         .control-row:last-child {
@@ -149,141 +324,252 @@
         .key {
             background: rgba(255, 255, 255, 0.1);
             padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.85rem;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.75rem;
             color: var(--mge-accent);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, var(--mge-primary), #ff0040);
-            color: white;
-            text-decoration: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            pointer-events: auto;
-            z-index: 100;
-            transition: all 0.2s;
-            font-size: 1rem;
+        /* Avatar Customizer Modal */
+        .customizer-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            background: rgba(15, 20, 25, 0.94);
+            backdrop-filter: blur(18px);
+            border: 2px solid var(--mge-secondary);
+            border-radius: 20px;
+            padding: 24px;
+            z-index: 1001;
+            display: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
         }
 
-        .back-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 70, 85, 0.5);
+        .customizer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
-        #info-panel {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            background: rgba(15, 20, 25, 0.9);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 180, 216, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            pointer-events: auto;
-            max-width: 250px;
-            font-size: 0.9rem;
-            z-index: 100;
-        }
-
-        .info-title {
+        .customizer-header h2 {
+            font-size: 1.4rem;
             color: var(--mge-secondary);
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            font-weight: 800;
         }
 
-        .info-text {
+        .close-customizer {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .close-customizer:hover {
+            color: var(--mge-primary);
+        }
+
+        .customizer-row {
+            margin-bottom: 18px;
+        }
+
+        .customizer-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
             color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
         }
 
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .color-option {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+
+        /* Start Screen (Menu & Play) */
         #start-screen {
             position: fixed;
             inset: 0;
-            background: linear-gradient(135deg, var(--mge-primary), var(--mge-secondary));
+            background: linear-gradient(135deg, #ff1b31, #001233);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             text-align: center;
+            transition: opacity 0.5s ease;
         }
 
         #start-screen h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+            letter-spacing: -1.5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        #start-screen p {
-            font-size: 1.3rem;
+        #start-screen .sub-text {
+            font-size: 1.25rem;
             margin-bottom: 40px;
-            opacity: 0.95;
+            opacity: 0.85;
+            color: rgba(255,255,255,0.85);
+            font-weight: 400;
+            letter-spacing: 0.5px;
         }
 
         .start-btn {
             background: white;
-            color: var(--mge-primary);
+            color: #d0003c;
             border: none;
-            padding: 18px 45px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 12px;
+            padding: 20px 55px;
+            font-size: 1.45rem;
+            font-weight: 800;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             margin: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
         }
 
         .start-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 16px 50px rgba(218, 0, 60, 0.4);
+            background: #fff5f5;
+        }
+
+        /* Quick Info Board on Start Screen */
+        .info-board {
+            margin-top: 35px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 16px 28px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            max-width: 500px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
 
+    <!-- Start & Play Menu -->
     <div id="start-screen">
-        <h1>🎮 Gonzalex Robolox</h1>
-        <p>Build, Create, and Explore Your World</p>
-        <button class="start-btn" onclick="startGame()">START BUILDING</button>
-        <a href="mge.html" class="start-btn" style="background: rgba(255, 255, 255, 0.3); text-decoration: none;">← Back to Hub</a>
+        <h1>
+            <span class="logo-box" style="width:58px; height:58px; font-size:2.2rem; transform: rotate(-5deg); border-radius:12px;">G</span>
+            Gonzalex Robolox
+        </h1>
+        <p class="sub-text">Build, customize, walk, and explore together in a 3D sandbox</p>
+        <div>
+            <button class="start-btn" onclick="startGame()">PLAY GAME</button>
+            <a href="mge.html" class="start-btn" style="background: rgba(255, 255, 255, 0.15); color: #fff; text-decoration: none;">← MGE Hub</a>
+        </div>
+        <div class="info-board">
+            🎮 <strong>Roblox Vibe Mode Enabled:</strong> 3rd person orbiting camera! Spawns fully controllable blocky avatar. Right click to rotate camera, wasd keys to walk, 1-5 keys for tools.
+        </div>
     </div>
 
+    <!-- UI Interaction Overlay -->
     <div id="ui-container">
-        <div class="top-hud">
-            <div class="hud-panel">
-                <div class="hud-label">Blocks Placed</div>
-                <div class="hud-value" id="block-count">0</div>
+        <!-- Roblox Inspired Topbar -->
+        <div class="topbar">
+            <div class="roblox-logo-stat">
+                <span class="logo-box">G</span>
+                <div>
+                    <div class="stat-label">Blocks Placed</div>
+                    <div class="stat-value" id="block-count">0</div>
+                </div>
+                <div style="width:1px; height:24px; background:rgba(255,255,255,0.15); margin:0 8px;"></div>
+                <div>
+                    <div class="stat-label">Server Mode</div>
+                    <div class="stat-value" id="mode-display" style="color: var(--mge-secondary);">3RD PERSON</div>
+                </div>
             </div>
-            <div class="hud-panel">
-                <div class="hud-label">Mode</div>
-                <div class="hud-value" id="mode-display">BUILD</div>
+
+            <div class="top-actions">
+                <button class="action-btn" onclick="resetCharacter()" title="Respawn Avatar">🔄 Reset Avatar</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #ffb703, #fb8500);" onclick="openCustomizer()" title="Customize Clothes">🎨 Avatar Clothes</button>
+                <button class="action-btn" onclick="goBack()">🚪 Leave</button>
             </div>
         </div>
 
-        <button class="back-btn" onclick="goBack()">← Back to Hub</button>
-
-        <div class="toolbar">
-            <button class="tool-btn active" id="build-tool" onclick="setTool('build')" title="Place Blocks">🧱</button>
-            <button class="tool-btn" id="delete-tool" onclick="setTool('delete')" title="Delete Blocks">🗑️</button>
-            <button class="tool-btn" id="color-tool" onclick="setTool('color')" title="Change Color">🎨</button>
-            <button class="tool-btn" id="camera-tool" onclick="setTool('camera')" title="Free Camera">📷</button>
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-log" id="chat-log">
+                <div class="chat-msg server">[Server]: Welcome to the Gonzalex server!</div>
+                <div class="chat-msg server">[Server]: Type and hit Send to chat.</div>
+            </div>
+            <div class="chat-input-wrapper">
+                <input type="text" class="chat-input" id="chat-input" placeholder="To chat click here..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+            </div>
         </div>
 
+        <!-- Toolbar (Roblox-like Hotbar) -->
+        <div class="hotbar-container">
+            <div class="hotbar-slot active" id="slot-1" onclick="selectSlot(1)" title="Place Blocks">
+                <span class="slot-key">1</span>
+                <span class="slot-icon">🧱</span>
+                <span class="slot-label">Build</span>
+            </div>
+            <div class="hotbar-slot" id="slot-2" onclick="selectSlot(2)" title="Delete Blocks">
+                <span class="slot-key">2</span>
+                <span class="slot-icon">🗑️</span>
+                <span class="slot-label">Delete</span>
+            </div>
+            <div class="hotbar-slot" id="slot-3" onclick="selectSlot(3)" title="Change Colors">
+                <span class="slot-key">3</span>
+                <span class="slot-icon">🎨</span>
+                <span class="slot-label">Paint</span>
+            </div>
+            <div class="hotbar-slot" id="slot-4" onclick="selectSlot(4)" title="Free Cam / Orbit">
+                <span class="slot-key">4</span>
+                <span class="slot-icon">📷</span>
+                <span class="slot-label">Camera</span>
+            </div>
+            <div class="hotbar-slot" id="slot-5" onclick="selectSlot(5)" title="Reset Camera View">
+                <span class="slot-key">5</span>
+                <span class="slot-icon">🔄</span>
+                <span class="slot-label">Reset View</span>
+            </div>
+        </div>
+
+        <!-- Sidebar / Details Controls Panel -->
         <div class="controls-panel">
-            <div style="margin-bottom: 10px; font-weight: bold; color: var(--mge-secondary);">CONTROLS</div>
+            <div class="controls-title">
+                <span>CONTROLS & SHORTCUTS</span>
+            </div>
             <div class="control-row">
-                <span>Move</span>
+                <span>Walk / Move</span>
                 <span class="key">WASD</span>
             </div>
             <div class="control-row">
@@ -291,27 +577,33 @@
                 <span class="key">SPACE</span>
             </div>
             <div class="control-row">
-                <span>Look Around</span>
-                <span class="key">MOUSE</span>
+                <span>Look Orbit</span>
+                <span class="key">RIGHT DRAG</span>
             </div>
             <div class="control-row">
-                <span>Build Block</span>
+                <span>Tool Use</span>
                 <span class="key">CLICK</span>
             </div>
             <div class="control-row">
-                <span>Rotate View</span>
-                <span class="key">Q/E</span>
+                <span>Select Tools</span>
+                <span class="key">1 - 5</span>
             </div>
         </div>
+    </div>
 
-        <div id="info-panel">
-            <div class="info-title">📖 Tips</div>
-            <div class="info-text">
-                • Use tools to build your world<br>
-                • Click on blocks to place/modify<br>
-                • Explore creative possibilities<br>
-                • Save your creation (coming soon)
-            </div>
+    <!-- Avatar Color Customizer Modal -->
+    <div class="customizer-modal" id="customizer-modal">
+        <div class="customizer-header">
+            <h2>Avatar Customizer</h2>
+            <button class="close-customizer" onclick="closeCustomizer()">&times;</button>
+        </div>
+        <div class="customizer-row">
+            <div class="customizer-label">Shirt & Top Color</div>
+            <div class="color-options" id="shirt-options"></div>
+        </div>
+        <div class="customizer-row">
+            <div class="customizer-label">Pants & Bottom Color</div>
+            <div class="color-options" id="pants-options"></div>
         </div>
     </div>
 
@@ -319,14 +611,97 @@
     <script>
         let scene, camera, renderer, ground, world = [];
         let currentTool = 'build';
-        let currentColor = 0xff4655;
-        const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0xffd60a];
-        let colorIndex = 0;
         let blockCount = 0;
         const gridSize = 1;
 
+        // Colors palette (Classic Roblox)
+        const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0x7209b7, 0x4cc9f0, 0x2ec4b6];
+        let currentColorIndex = 0;
+
+        // Player / Avatar setup
+        let playerGroup;
+        let headMesh, torsoMesh, leftArmMesh, rightArmMesh, leftLegMesh, rightLegMesh;
+        let walkTime = 0;
+
+        // Camera positioning (Roblox third person follow)
+        let cameraRadius = 12;
+        let cameraTheta = Math.PI / 4;
+        let cameraPhi = Math.PI / 6;
+
+        // Character Physics
+        const playerPos = new THREE.Vector3(0, 0, 0);
+        const playerVelocity = new THREE.Vector3(0, 0, 0);
+        let onGround = true;
+
+        // Web Audio Context & Effects
+        let audioCtx = null;
+
+        function initAudio() {
+            if (audioCtx) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Web Audio is not supported on this browser.');
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'place') {
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(320, now + 0.08);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'delete') {
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(60, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'jump') {
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(280, now + 0.12);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'oof') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(135, now);
+                    osc.frequency.exponentialRampToValueAtTime(75, now + 0.18);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                } else if (type === 'paint') {
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(160, now + 0.12);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
         function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
+            initAudio();
+            document.getElementById('start-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('start-screen').style.display = 'none';
+            }, 500);
             initGame();
         }
 
@@ -334,78 +709,155 @@
             window.location.href = 'mge.html';
         }
 
-        function setTool(tool) {
-            currentTool = tool;
-            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tool + '-tool').classList.add('active');
+        function selectSlot(slotNum) {
+            const toolNames = { 1: 'build', 2: 'delete', 3: 'color', 4: 'camera' };
+            if (slotNum === 5) {
+                // Instantly reset view
+                cameraTheta = Math.PI / 4;
+                cameraPhi = Math.PI / 6;
+                cameraRadius = 12;
+                return;
+            }
+            currentTool = toolNames[slotNum];
+            document.querySelectorAll('.hotbar-slot').forEach(slot => slot.classList.remove('active'));
+            document.getElementById('slot-' + slotNum).classList.add('active');
 
             const modeMap = { build: 'BUILD', delete: 'DELETE', color: 'COLOR', camera: 'CAMERA' };
-            document.getElementById('mode-display').textContent = modeMap[tool];
+            document.getElementById('mode-display').textContent = modeMap[currentTool];
         }
 
         function initGame() {
-            // Scene setup
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 100, 1000);
+            scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
             // Camera setup
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(10, 15, 20);
-            camera.lookAt(0, 0, 0);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
             // Renderer setup
-            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-            // Lighting
-            const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            sunLight.position.set(50, 50, 50);
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.62);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            sunLight.position.set(40, 60, 30);
             sunLight.castShadow = true;
             sunLight.shadow.mapSize.width = 2048;
             sunLight.shadow.mapSize.height = 2048;
-            sunLight.shadow.camera.left = -100;
-            sunLight.shadow.camera.right = 100;
-            sunLight.shadow.camera.top = 100;
-            sunLight.shadow.camera.bottom = -100;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 150;
+            const d = 40;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
             scene.add(sunLight);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-
-            // Ground
-            const groundGeo = new THREE.PlaneGeometry(100, 100);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a7c59 });
+            // Baseplate Ground (Roblox Studio style)
+            const groundGeo = new THREE.PlaneGeometry(120, 120);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x43a047, roughness: 0.9, metalness: 0.1 });
             ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Add some starter blocks
-            addBlock(0, gridSize/2, 0, 0x00b4d8);
-            addBlock(1, gridSize/2, 0, 0x00b4d8);
-            addBlock(-1, gridSize/2, 0, 0x00b4d8);
+            // Iconic Grid Helper for studs
+            const gridHelper = new THREE.GridHelper(120, 120, 0xffffff, 0x222222);
+            gridHelper.position.y = 0.01;
+            gridHelper.material.opacity = 0.25;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
 
-            // Input handling
+            // Build Player Avatar (Blocky Roblox Guy)
+            createAvatar();
+
+            // Setup starter blocks
+            addBlock(0, gridSize / 2, 0, 0x118ab2);
+            addBlock(1, gridSize / 2, 0, 0xef476f);
+            addBlock(-1, gridSize / 2, 0, 0xffd166);
+
+            // Customizer interface initialization
+            initCustomizerMenu();
+
+            // Controls listeners
             setupControls();
 
-            // Animation loop
+            // Animation Loop
             animate();
         }
 
-        function addBlock(x, y, z, color) {
+        function createAvatar() {
+            playerGroup = new THREE.Group();
+            scene.add(playerGroup);
+
+            // Head (classic blocky yellow head)
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xffd166, roughness: 0.7 });
+            headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMat);
+            headMesh.position.y = 1.15;
+            headMesh.castShadow = true;
+            playerGroup.add(headMesh);
+
+            // Torso (Cyan blue shirt)
+            const shirtMat = new THREE.MeshStandardMaterial({ color: 0x118ab2, roughness: 0.8 });
+            torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), shirtMat);
+            torsoMesh.position.y = 0.55;
+            torsoMesh.castShadow = true;
+            playerGroup.add(torsoMesh);
+
+            // Arms
+            leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            leftArmMesh.position.set(-0.52, 0.55, 0);
+            leftArmMesh.castShadow = true;
+            playerGroup.add(leftArmMesh);
+
+            rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            rightArmMesh.position.set(0.52, 0.55, 0);
+            rightArmMesh.castShadow = true;
+            playerGroup.add(rightArmMesh);
+
+            // Legs
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x06d6a0, roughness: 0.8 });
+            leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), pantsMat);
+            leftLegMesh.position.set(-0.19, -0.22, 0);
+            leftLegMesh.castShadow = true;
+            playerGroup.add(leftLegMesh);
+
+            rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), pantsMat);
+            rightLegMesh.position.set(0.19, -0.22, 0);
+            rightLegMesh.castShadow = true;
+            playerGroup.add(rightLegMesh);
+
+            // Scale and set position
+            playerGroup.scale.set(1.15, 1.15, 1.15);
+            playerPos.set(0, 1.25, 0);
+            playerGroup.position.copy(playerPos);
+        }
+
+        function resetCharacter() {
+            playSound('oof');
+            playerPos.set(0, 5, 0);
+            playerVelocity.set(0, 0, 0);
+            playerGroup.position.copy(playerPos);
+            addChatMessage('[Server] Resawn player avatar safely.');
+        }
+
+        function addBlock(x, y, z, hexColor) {
             const geo = new THREE.BoxGeometry(gridSize, gridSize, gridSize);
-            const mat = new THREE.MeshStandardMaterial({ color: color });
+            const mat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82 });
             const block = new THREE.Mesh(geo, mat);
             block.position.set(x, y, z);
             block.castShadow = true;
             block.receiveShadow = true;
-            block.userData = { x, y, z, color };
+            block.userData = { x, y, z, color: hexColor };
             scene.add(block);
             world.push(block);
             blockCount++;
-            updateUI();
+            document.getElementById('block-count').innerText = blockCount;
             return block;
         }
 
@@ -413,21 +865,22 @@
             scene.remove(block);
             world = world.filter(b => b !== block);
             blockCount--;
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('block-count').textContent = blockCount;
+            document.getElementById('block-count').innerText = blockCount;
         }
 
         let keys = {};
         let mouseX = 0, mouseY = 0;
-        let mouseDown = false;
+        let mouseDownRight = false;
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2();
 
         function setupControls() {
-            window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
+            window.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+                if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                    selectSlot(parseInt(e.key));
+                }
+            });
             window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
             window.addEventListener('mousemove', (e) => {
@@ -435,32 +888,64 @@
                 mouseY = e.clientY;
                 mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+                if (mouseDownRight) {
+                    cameraTheta -= e.movementX * 0.005;
+                    cameraPhi += e.movementY * 0.005;
+                    // Clamp looking angle
+                    cameraPhi = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, cameraPhi));
+                }
             });
 
-            window.addEventListener('mousedown', () => { mouseDown = true; });
-            window.addEventListener('mouseup', () => { mouseDown = false; });
+            window.addEventListener('mousedown', (e) => {
+                if (e.button === 2) {
+                    mouseDownRight = true;
+                }
+            });
 
-            window.addEventListener('click', () => {
+            window.addEventListener('mouseup', (e) => {
+                if (e.button === 2) {
+                    mouseDownRight = false;
+                }
+            });
+
+            // Prevent right-click context menu to freely orbit
+            window.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            window.addEventListener('click', (e) => {
+                // Make sure we didn't click on top UI
+                if (e.clientY < 75 || e.clientX < 340 && e.clientY < 350) return;
+
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects([ground, ...world]);
 
-                if (currentTool === 'build' && intersects.length > 0) {
+                if (intersects.length > 0) {
                     const hit = intersects[0];
-                    const normal = hit.face.normal;
-                    const newPos = hit.object.position.clone().add(normal);
-                    if (hit.object === ground) {
-                        const snappedX = Math.round(hit.point.x);
-                        const snappedZ = Math.round(hit.point.z);
-                        addBlock(snappedX, gridSize/2, snappedZ, currentColor);
-                    } else {
-                        addBlock(newPos.x, newPos.y, newPos.z, currentColor);
+                    if (currentTool === 'build') {
+                        const normal = hit.face.normal;
+                        const newPos = hit.object.position.clone().add(normal);
+
+                        if (hit.object === ground) {
+                            const snappedX = Math.round(hit.point.x);
+                            const snappedZ = Math.round(hit.point.z);
+                            // Avoid placing on same block already occupied
+                            const taken = world.some(b => Math.abs(b.position.x - snappedX) < 0.1 && Math.abs(b.position.z - snappedZ) < 0.1 && Math.abs(b.position.y - gridSize / 2) < 0.1);
+                            if (!taken) {
+                                addBlock(snappedX, gridSize / 2, snappedZ, colors[currentColorIndex]);
+                                playSound('place');
+                            }
+                        } else {
+                            addBlock(newPos.x, newPos.y, newPos.z, colors[currentColorIndex]);
+                            playSound('place');
+                        }
+                    } else if (currentTool === 'delete' && hit.object !== ground) {
+                        removeBlock(hit.object);
+                        playSound('delete');
+                    } else if (currentTool === 'color' && hit.object !== ground) {
+                        currentColorIndex = (currentColorIndex + 1) % colors.length;
+                        hit.object.material.color.setHex(colors[currentColorIndex]);
+                        playSound('paint');
                     }
-                } else if (currentTool === 'delete' && intersects.length > 0 && intersects[0].object !== ground) {
-                    removeBlock(intersects[0].object);
-                } else if (currentTool === 'color' && intersects.length > 0 && intersects[0].object !== ground) {
-                    colorIndex = (colorIndex + 1) % colors.length;
-                    currentColor = colors[colorIndex];
-                    intersects[0].object.material.color.setHex(currentColor);
                 }
             });
 
@@ -471,33 +956,157 @@
             });
         }
 
-        const playerSpeed = 0.3;
-        const rotationSpeed = 0.02;
+        function initCustomizerMenu() {
+            const shirtOpt = document.getElementById('shirt-options');
+            const pantsOpt = document.getElementById('pants-options');
+
+            colors.forEach((c) => {
+                const sBtn = document.createElement('div');
+                sBtn.className = 'color-option';
+                sBtn.style.backgroundColor = '#' + c.toString(16).padStart(6, '0');
+                sBtn.onclick = () => {
+                    torsoMesh.material.color.setHex(c);
+                    playSound('paint');
+                };
+                shirtOpt.appendChild(sBtn);
+
+                const pBtn = document.createElement('div');
+                pBtn.className = 'color-option';
+                pBtn.style.backgroundColor = '#' + c.toString(16).padStart(6, '0');
+                pBtn.onclick = () => {
+                    leftLegMesh.material.color.setHex(c);
+                    rightLegMesh.material.color.setHex(c);
+                    playSound('paint');
+                };
+                pantsOpt.appendChild(pBtn);
+            });
+        }
+
+        function openCustomizer() {
+            document.getElementById('customizer-modal').style.display = 'block';
+        }
+
+        function closeCustomizer() {
+            document.getElementById('customizer-modal').style.display = 'none';
+        }
+
+        function addChatMessage(msgText) {
+            const log = document.getElementById('chat-log');
+            const msgEl = document.createElement('div');
+            msgEl.className = 'chat-msg';
+            msgEl.innerHTML = msgText;
+            log.appendChild(msgEl);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const inp = document.getElementById('chat-input');
+            const txt = inp.value.trim();
+            if (txt === '') return;
+            addChatMessage(`<span class="name">You:</span> ${txt}`);
+            inp.value = '';
+
+            // Automated Roblox simulation reply
+            setTimeout(() => {
+                const replies = [
+                    "Let's build a tower!",
+                    "Your avatar looks great!",
+                    "Whoa, how did you make that block there?",
+                    "Check out my items!",
+                    "This game feels exactly like Roblox!"
+                ];
+                const r = replies[Math.floor(Math.random() * replies.length)];
+                addChatMessage(`<span class="name">Noob:</span> ${r}`);
+            }, 1500);
+        }
+
+        // Animated physics & movement settings
+        const walkSpeed = 0.12;
+        const jumpStrength = 0.15;
+        const gravity = 0.006;
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Camera movement
-            if (keys['w']) camera.position.z -= playerSpeed;
-            if (keys['s']) camera.position.z += playerSpeed;
-            if (keys['a']) camera.position.x -= playerSpeed;
-            if (keys['d']) camera.position.x += playerSpeed;
-            if (keys[' ']) camera.position.y += playerSpeed;
-            if (keys['shift']) camera.position.y -= playerSpeed;
-            if (keys['q']) camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationSpeed);
-            if (keys['e']) camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed);
+            // Basic Player movement wasd relative to Camera
+            const forward = new THREE.Vector3(
+                -Math.sin(cameraTheta),
+                0,
+                -Math.cos(cameraTheta)
+            ).normalize();
 
-            // Free camera look
-            if (mouseDown && currentTool === 'camera') {
-                const direction = camera.position.clone().normalize();
-                const up = new THREE.Vector3(0, 1, 0);
-                const right = new THREE.Vector3().crossVectors(up, direction).normalize();
+            const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
 
-                if (Math.abs(mouseX - window.innerWidth / 2) > 5) {
-                    const angle = (mouseX - window.innerWidth / 2) * 0.001;
-                    camera.position.applyAxisAngle(up, angle);
-                }
+            let moving = false;
+            if (keys['w']) { playerPos.addScaledVector(forward, walkSpeed); moving = true; }
+            if (keys['s']) { playerPos.addScaledVector(forward, -walkSpeed); moving = true; }
+            if (keys['a']) { playerPos.addScaledVector(side, walkSpeed); moving = true; }
+            if (keys['d']) { playerPos.addScaledVector(side, -walkSpeed); moving = true; }
+
+            // Turn player direction
+            if (moving) {
+                const angle = Math.atan2(forward.x, forward.z);
+                if (keys['w']) playerGroup.rotation.y = angle + Math.PI;
+                if (keys['s']) playerGroup.rotation.y = angle;
+                if (keys['a']) playerGroup.rotation.y = angle - Math.PI / 2;
+                if (keys['d']) playerGroup.rotation.y = angle + Math.PI / 2;
             }
+
+            // Gravity & Ground physics checks
+            let groundLevel = 0;
+            // Raycast down for accurate block height detection
+            const downRay = new THREE.Raycaster(new THREE.Vector3(playerPos.x, playerPos.y + 1, playerPos.z), new THREE.Vector3(0, -1, 0));
+            const intersectDown = downRay.intersectObjects([ground, ...world]);
+            if (intersectDown.length > 0) {
+                const hitDist = intersectDown[0].distance;
+                groundLevel = playerPos.y + 1 - hitDist;
+            }
+
+            if (playerPos.y > groundLevel) {
+                playerVelocity.y -= gravity;
+                onGround = false;
+            } else {
+                playerPos.y = groundLevel;
+                playerVelocity.y = 0;
+                onGround = true;
+            }
+
+            // Spacebar Jumps
+            if (keys[' '] && onGround) {
+                playerVelocity.y = jumpStrength;
+                playSound('jump');
+                onGround = false;
+            }
+
+            // Apply movement velocity
+            playerPos.y += playerVelocity.y;
+            playerGroup.position.copy(playerPos);
+
+            // Out of bounds check
+            if (playerPos.y < -15) {
+                resetCharacter();
+                addChatMessage('[Server] Safe recovery spawn.');
+            }
+
+            // Walking animations
+            if (moving && onGround) {
+                walkTime += 0.2;
+                leftLegMesh.rotation.x = Math.sin(walkTime) * 0.6;
+                rightLegMesh.rotation.x = -Math.sin(walkTime) * 0.6;
+                leftArmMesh.rotation.x = -Math.sin(walkTime) * 0.5;
+                rightArmMesh.rotation.x = Math.sin(walkTime) * 0.5;
+            } else {
+                leftLegMesh.rotation.x = 0;
+                rightLegMesh.rotation.x = 0;
+                leftArmMesh.rotation.x = 0;
+                rightArmMesh.rotation.x = 0;
+            }
+
+            // Follow Camera Positioning
+            camera.position.x = playerPos.x + cameraRadius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
+            camera.position.z = playerPos.z + cameraRadius * Math.cos(cameraTheta) * Math.cos(cameraPhi);
+            camera.position.y = playerPos.y + cameraRadius * Math.sin(cameraPhi) + 1.35;
+            camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
 
             renderer.render(scene, camera);
         }

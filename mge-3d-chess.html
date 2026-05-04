@@ -204,6 +204,151 @@
             text-align: right;
             z-index: 10;
         }
+
+        /* --- COSMIC HELPER PREMIUM STYLES --- */
+        .cosmic-helper-btn {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(10, 10, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            color: #0ff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .cosmic-helper-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 35px rgba(0, 255, 255, 0.7);
+            transform: scale(1.08);
+            border-color: #0ff;
+        }
+        .cosmic-helper-panel {
+            position: fixed;
+            top: 165px;
+            right: 20px;
+            width: 330px;
+            background: rgba(10, 10, 30, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 22px;
+            z-index: 999;
+            box-shadow: 0 0 45px rgba(0, 255, 255, 0.2);
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            font-family: 'Outfit', sans-serif;
+            animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .helper-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            padding-bottom: 10px;
+        }
+        .helper-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #0ff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        }
+        .helper-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.6rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .helper-close-btn:hover {
+            color: #ff00ff;
+        }
+        .helper-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        #helper-status {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+        .helper-move-container, .helper-eval-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .helper-label {
+            font-size: 0.72rem;
+            letter-spacing: 1.2px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Orbitron', sans-serif;
+        }
+        .recommended-move {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ff00ff;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+        .cosmic-eval {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #0ff;
+        }
+        .helper-explanation {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.45;
+            background: rgba(0, 255, 255, 0.03);
+            border-left: 3px solid #0ff;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+        }
+        .helper-action-btn {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(255, 0, 255, 0.25));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            color: #fff;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 1.2px;
+            transition: all 0.3s;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+        .helper-action-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.45), rgba(255, 0, 255, 0.45));
+            border-color: #0ff;
+            box-shadow: 0 0 18px rgba(0, 255, 255, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -215,6 +360,31 @@
     <div class="status-panel" id="turn-panel">
         <div class="turn-indicator"></div>
         <span id="turn-text">WHITE'S TURN</span>
+    </div>
+
+    <!-- COSMIC HELPER UI -->
+    <div id="cosmic-helper-btn" class="cosmic-helper-btn" onclick="toggleHelper()" title="Cosmic Advisor">?</div>
+
+    <div id="cosmic-helper-panel" class="cosmic-helper-panel">
+        <div class="helper-header">
+            <span class="helper-title">COSMIC ADVISOR</span>
+            <button class="helper-close-btn" onclick="toggleHelper()">×</button>
+        </div>
+        <div class="helper-content">
+            <div id="helper-status">Analyzing cosmic alignment...</div>
+            <div class="helper-move-container">
+                <span class="helper-label">BEST MOVE</span>
+                <div id="recommended-move" class="recommended-move">-</div>
+            </div>
+            <div class="helper-eval-container">
+                <span class="helper-label">ADVANTAGE</span>
+                <div id="cosmic-eval" class="cosmic-eval">Even (0.00)</div>
+            </div>
+            <div id="move-suggestion-reason" class="helper-explanation">
+                White is in a neutral position. Establish control of the galactic core.
+            </div>
+            <button class="helper-action-btn" onclick="applySuggestedMove()">TRANSMUTE MOVE</button>
+        </div>
     </div>
 
 
@@ -472,6 +642,10 @@
                 document.getElementById('winner-screen').style.display = 'flex';
                 document.getElementById('winner-text').innerText = 'DRAW';
             }
+
+            if (typeof updateHelper === 'function') {
+                updateHelper();
+            }
         }
 
         updateBoard();
@@ -661,6 +835,156 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
+        // --- COSMIC HELPER SYSTEM ---
+        const pieceValues = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+        let suggestedMoveObj = null;
+
+        function evaluateBoard() {
+            let eval = 0;
+            const board = game.board();
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece) {
+                        const val = pieceValues[piece.type];
+                        eval += piece.color === 'w' ? val : -val;
+                    }
+                }
+            }
+            return eval;
+        }
+
+        function minimax(game, depth, alpha, beta, isMaximizingPlayer) {
+            if (depth === 0 || game.game_over()) {
+                return evaluateBoard();
+            }
+            const possibleMoves = game.moves();
+            if (isMaximizingPlayer) {
+                let maxEval = -Infinity;
+                for (let i = 0; i < possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    let ev = minimax(game, depth - 1, alpha, beta, false);
+                    game.undo();
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let i = 0; i < possibleMoves.length; i++) {
+                    game.move(possibleMoves[i]);
+                    let ev = minimax(game, depth - 1, alpha, beta, true);
+                    game.undo();
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function findBestMove() {
+            const possibleMoves = game.moves({ verbose: true });
+            if (possibleMoves.length === 0) return null;
+            
+            let bestMove = null;
+            let bestValue = game.turn() === 'w' ? -Infinity : Infinity;
+            
+            for (let i = 0; i < possibleMoves.length; i++) {
+                const move = possibleMoves[i];
+                game.move(move.san);
+                const boardValue = minimax(game, 2, -Infinity, Infinity, game.turn() === 'w');
+                game.undo();
+                
+                if (game.turn() === 'w') {
+                    if (boardValue > bestValue) {
+                        bestValue = boardValue;
+                        bestMove = move;
+                    }
+                } else {
+                    if (boardValue < bestValue) {
+                        bestValue = boardValue;
+                        bestMove = move;
+                    }
+                }
+            }
+            return { move: bestMove, value: bestValue };
+        }
+
+        function toggleHelper() {
+            const panel = document.getElementById('cosmic-helper-panel');
+            if (panel.style.display === 'flex') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'flex';
+                updateHelper();
+            }
+        }
+
+        function updateHelper() {
+            const panel = document.getElementById('cosmic-helper-panel');
+            if (panel.style.display !== 'flex') return;
+
+            if (game.game_over()) {
+                document.getElementById('helper-status').innerText = "Cosmic forces align - game over.";
+                document.getElementById('recommended-move').innerText = "-";
+                document.getElementById('cosmic-eval').innerText = "Ended";
+                document.getElementById('move-suggestion-reason').innerText = "No moves are possible.";
+                suggestedMoveObj = null;
+                return;
+            }
+
+            document.getElementById('helper-status').innerText = "Analyzing cosmic alignment...";
+            
+            setTimeout(() => {
+                const result = findBestMove();
+                if (result && result.move) {
+                    suggestedMoveObj = result.move;
+                    document.getElementById('recommended-move').innerText = result.move.san;
+                    
+                    const evalValue = (result.value / 100).toFixed(2);
+                    const playerEval = game.turn() === 'w' ? evalValue : -evalValue;
+                    
+                    let advantageText = "";
+                    if (playerEval > 0) advantageText = `White +${playerEval}`;
+                    else if (playerEval < 0) advantageText = `Black ${playerEval}`;
+                    else advantageText = "Even (0.00)";
+                    
+                    document.getElementById('cosmic-eval').innerText = advantageText;
+                    
+                    let explanation = "";
+                    const move = result.move;
+                    const pieceType = move.piece.toUpperCase();
+                    
+                    if (move.flags.includes('c')) {
+                        explanation = `Capture enemy forces to establish tactical dominance. Material gain is imminent.`;
+                    } else if (move.flags.includes('k') || move.flags.includes('q')) {
+                        explanation = `Castle to safeguard the ruler and align celestial defenses.`;
+                    } else if (move.piece === 'p') {
+                        explanation = `Advance the frontline pawn forces toward the galactic threshold.`;
+                    } else if (move.piece === 'n' || move.piece === 'b') {
+                        explanation = `Position specialized cosmic units (${pieceType}) to exert maximum field control.`;
+                    } else {
+                        explanation = `Maneuver your ${pieceType} strategically to open stellar sightlines.`;
+                    }
+                    
+                    document.getElementById('move-suggestion-reason').innerText = explanation;
+                    document.getElementById('helper-status').innerText = `${game.turn() === 'w' ? 'White' : 'Black'} to act.`;
+                } else {
+                    document.getElementById('recommended-move').innerText = "-";
+                    document.getElementById('cosmic-eval').innerText = "Stalemate";
+                    document.getElementById('move-suggestion-reason').innerText = "No cosmic lines are open.";
+                    suggestedMoveObj = null;
+                }
+            }, 50);
+        }
+
+        function applySuggestedMove() {
+            if (suggestedMoveObj) {
+                attemptMove(suggestedMoveObj.from, suggestedMoveObj.to);
+            }
+        }
     </script>
 </body>
 </html>

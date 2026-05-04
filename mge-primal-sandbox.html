@@ -329,55 +329,193 @@
             }
         });
 
+        // --- PROCEDURAL HIGH-QUALITY TEXTURES ---
+        function createProceduralTexture(type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            if (type === 'grass') {
+                ctx.fillStyle = '#224a1b';
+                ctx.fillRect(0, 0, 512, 512);
+
+                // Blade variations
+                for (let i = 0; i < 35000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    const r = Math.random() * 2;
+                    const greenVal = Math.floor(60 + Math.random() * 50);
+                    ctx.fillStyle = `rgb(${Math.floor(15 + Math.random() * 25)}, ${greenVal}, ${Math.floor(5 + Math.random() * 15)})`;
+                    ctx.fillRect(x, y, r, r);
+                }
+                
+                // Subtle brown spots
+                for (let i = 0; i < 4000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    ctx.fillStyle = `rgba(75, 52, 28, 0.12)`;
+                    ctx.fillRect(x, y, 2 + Math.random() * 2, 2 + Math.random() * 2);
+                }
+            } else if (type === 'stone') {
+                ctx.fillStyle = '#616d75';
+                ctx.fillRect(0, 0, 512, 512);
+                
+                // Fine granite speckling
+                for (let i = 0; i < 45000; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    const size = 1 + Math.random() * 2.5;
+                    const colorVal = Math.floor(75 + Math.random() * 85);
+                    ctx.fillStyle = `rgb(${colorVal}, ${colorVal + 4}, ${colorVal + 12})`;
+                    ctx.fillRect(x, y, size, size);
+                }
+                
+                // Natural veins
+                ctx.strokeStyle = 'rgba(42, 42, 42, 0.35)';
+                ctx.lineWidth = 1.2;
+                for (let i = 0; i < 6; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(Math.random() * 512, Math.random() * 512);
+                    for (let j = 0; j < 6; j++) {
+                        ctx.lineTo(Math.random() * 512, Math.random() * 512);
+                    }
+                    ctx.stroke();
+                }
+            } else if (type === 'wood') {
+                // Warm rich cedar wood grain pattern
+                ctx.fillStyle = '#613411';
+                ctx.fillRect(0, 0, 512, 512);
+                
+                ctx.fillStyle = '#522909';
+                for (let i = 0; i < 512; i += 3) {
+                    if (Math.random() > 0.45) {
+                        ctx.fillRect(0, i, 512, 1 + Math.random() * 3.5);
+                    }
+                }
+                // Wood knots
+                for (let i = 0; i < 6; i++) {
+                    const x = Math.random() * 512;
+                    const y = Math.random() * 512;
+                    ctx.fillStyle = '#301804';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5 + Math.random() * 11, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            return texture;
+        }
+
         // --- LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
         scene.add(ambientLight);
 
-        const sunLight = new THREE.DirectionalLight(0xfff5e1, 1.0);
-        sunLight.position.set(100, 200, 100);
+        // Advanced Hemisphere light for ground bounce
+        const hemiLight = new THREE.HemisphereLight(0xdceefb, 0x0a140d, 0.55);
+        scene.add(hemiLight);
+
+        const sunLight = new THREE.DirectionalLight(0xfff5e1, 1.1);
+        sunLight.position.set(120, 240, 120);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.mapSize.width = 4096;
+        sunLight.shadow.mapSize.height = 4096;
         sunLight.shadow.camera.near = 0.5;
-        sunLight.shadow.camera.far = 500;
-        sunLight.shadow.camera.left = -200;
-        sunLight.shadow.camera.right = 200;
-        sunLight.shadow.camera.top = 200;
-        sunLight.shadow.camera.bottom = -200;
+        sunLight.shadow.camera.far = 1000;
+        sunLight.shadow.camera.left = -350;
+        sunLight.shadow.camera.right = 350;
+        sunLight.shadow.camera.top = 350;
+        sunLight.shadow.camera.bottom = -350;
+        sunLight.shadow.bias = -0.0001;
         scene.add(sunLight);
 
         // --- ENVIRONMENT ---
+        const grassTex = createProceduralTexture('grass');
+        grassTex.repeat.set(100, 100);
+
+        const grassBumpTex = createProceduralTexture('grass');
+        grassBumpTex.repeat.set(100, 100);
+
         // Ground
         const groundGeo = new THREE.PlaneGeometry(1000, 1000);
         const groundMat = new THREE.MeshStandardMaterial({ 
-            color: 0x3d8c40, 
+            map: grassTex, 
+            bumpMap: grassBumpTex,
+            bumpScale: 0.12,
             roughness: 0.8,
-            metalness: 0.2
+            metalness: 0.1
         });
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Add some basic trees
+        const materials = {
+            stone: new THREE.MeshStandardMaterial({ 
+                map: createProceduralTexture('stone'),
+                bumpMap: createProceduralTexture('stone'),
+                bumpScale: 0.08,
+                roughness: 0.7,
+                metalness: 0.2
+            }),
+            wood: new THREE.MeshStandardMaterial({ 
+                map: createProceduralTexture('wood'),
+                bumpMap: createProceduralTexture('wood'),
+                bumpScale: 0.05,
+                roughness: 0.5,
+                metalness: 0.05
+            }),
+            glass: new THREE.MeshPhysicalMaterial({ 
+                color: 0xe6f7ff, 
+                transparent: true, 
+                opacity: 0.5,
+                roughness: 0.02,
+                metalness: 0.15,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.05,
+                transmission: 0.9,
+                ior: 1.5,
+                thickness: 0.4
+            }),
+            glow: new THREE.MeshStandardMaterial({ 
+                color: 0x55efc4, 
+                emissive: 0x55efc4, 
+                emissiveIntensity: 0.6,
+                roughness: 0.15,
+                metalness: 0.8
+            })
+        };
+
+        // Add some basic trees with layered high-poly pine silhouette
         function createTree(x, z) {
             const group = new THREE.Group();
             
-            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 5, 8);
-            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4d2902 });
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = 2.5;
+            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.75, 6, 12);
+            const trunk = new THREE.Mesh(trunkGeo, materials.wood);
+            trunk.position.y = 3;
             trunk.castShadow = true;
             trunk.receiveShadow = true;
             group.add(trunk);
 
-            const leavesGeo = new THREE.ConeGeometry(3, 8, 8);
-            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1a5e1a });
-            const leaves = new THREE.Mesh(leavesGeo, leavesMat);
-            leaves.position.y = 7;
-            leaves.castShadow = true;
-            leaves.receiveShadow = true;
-            group.add(leaves);
+            const leavesMat = new THREE.MeshStandardMaterial({ 
+                color: 0x1f471a,
+                roughness: 0.85,
+                metalness: 0.08,
+                flatShading: true
+            });
+
+            // High poly multi-layer pine look
+            for (let i = 0; i < 3; i++) {
+                const leavesGeo = new THREE.ConeGeometry(3.6 - i * 0.75, 5.2, 14);
+                const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+                leaves.position.y = 6.0 + i * 2.8;
+                leaves.castShadow = true;
+                leaves.receiveShadow = true;
+                group.add(leaves);
+            }
 
             group.position.set(x, 0, z);
             scene.add(group);
@@ -392,13 +530,6 @@
         const objects = [];
         const physicsObjects = [];
         let physicsEnabled = false;
-
-        const materials = {
-            stone: new THREE.MeshStandardMaterial({ color: 0x7f8c8d }),
-            wood: new THREE.MeshStandardMaterial({ color: 0x964b00 }),
-            glass: new THREE.MeshStandardMaterial({ color: 0x81ecec, transparent: true, opacity: 0.5 }),
-            glow: new THREE.MeshStandardMaterial({ color: 0x55efc4, emissive: 0x55efc4, emissiveIntensity: 0.5 })
-        };
 
         let currentTool = 'build';
         let currentMaterial = 'stone';
@@ -596,7 +727,11 @@
         });
 
         // --- PLAYER MOVEMENT ---
+        // --- PLAYER MOVEMENT & ADVANCED CONTROLS ---
         const moveState = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+        let isSprinting = false;
+        let isCrouching = false;
+
         window.addEventListener('keydown', (e) => {
             switch(e.code) {
                 case 'KeyW': moveState.forward = true; break;
@@ -604,7 +739,8 @@
                 case 'KeyA': moveState.left = true; break;
                 case 'KeyD': moveState.right = true; break;
                 case 'Space': moveState.up = true; break;
-                case 'ShiftLeft': moveState.down = true; break;
+                case 'ShiftLeft': moveState.down = true; isSprinting = true; break;
+                case 'KeyC': isCrouching = true; break;
             }
         });
         window.addEventListener('keyup', (e) => {
@@ -614,40 +750,88 @@
                 case 'KeyA': moveState.left = false; break;
                 case 'KeyD': moveState.right = false; break;
                 case 'Space': moveState.up = false; break;
-                case 'ShiftLeft': moveState.down = false; break;
+                case 'ShiftLeft': moveState.down = false; isSprinting = false; break;
+                case 'KeyC': isCrouching = false; break;
             }
         });
 
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
-        // --- ANIMATION REAM ---
+        // Bobbing & camera tilting variables
+        let bobTime = 0;
+        let cameraTiltZ = 0;
+
+        // --- ANIMATION FRAME ---
         let prevTime = performance.now();
         function animate() {
             requestAnimationFrame(animate);
 
             const time = performance.now();
-            const delta = (time - prevTime) / 1000;
+            const delta = Math.min((time - prevTime) / 1000, 0.1); // cap max delta
 
             if (controls.isLocked) {
-                const moveSpeed = 50.0;
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
-                velocity.y -= velocity.y * 10.0 * delta;
+                let baseHeight = 1.6;
+                if (isCrouching) baseHeight = 0.9;
+
+                // Adjust movement speeds dynamically
+                let moveSpeed = 42.0;
+                if (isSprinting && (physicsEnabled || camera.position.y <= baseHeight + 0.1)) moveSpeed = 75.0;
+                if (isCrouching) moveSpeed = 20.0;
+
+                velocity.x -= velocity.x * 8.5 * delta;
+                velocity.z -= velocity.z * 8.5 * delta;
 
                 direction.z = Number(moveState.forward) - Number(moveState.backward);
                 direction.x = Number(moveState.right) - Number(moveState.left);
-                direction.y = Number(moveState.up) - Number(moveState.down);
                 direction.normalize();
 
                 if (moveState.forward || moveState.backward) velocity.z -= direction.z * moveSpeed * delta;
                 if (moveState.left || moveState.right) velocity.x -= direction.x * moveSpeed * delta;
-                if (moveState.up || moveState.down) velocity.y += direction.y * moveSpeed * delta;
+
+                // Physics mode jumping vs. flight mode flying
+                if (physicsEnabled) {
+                    if (camera.position.y > baseHeight) {
+                        velocity.y -= 26.0 * delta; // Gravity fall
+                    } else if (moveState.up) {
+                        velocity.y = 8.5; // Upward impulse
+                    } else {
+                        velocity.y -= velocity.y * 10.0 * delta;
+                    }
+                } else {
+                    // Flying mode flight
+                    velocity.y -= velocity.y * 8.5 * delta;
+                    direction.y = Number(moveState.up) - Number(moveState.down);
+                    if (moveState.up || moveState.down) velocity.y += direction.y * moveSpeed * delta;
+                }
 
                 controls.moveRight(-velocity.x * delta);
                 controls.moveForward(-velocity.z * delta);
                 camera.position.y += velocity.y * delta;
-                if(camera.position.y < 1.6) camera.position.y = 1.6;
+
+                // Correct height minimums
+                if (camera.position.y < baseHeight) {
+                    camera.position.y = baseHeight;
+                    velocity.y = 0;
+                }
+
+                // --- HEAD BOBBING & STRAFE TILT ---
+                const groundDist = camera.position.y - baseHeight;
+                const speedSq = velocity.x * velocity.x + velocity.z * velocity.z;
+                if (speedSq > 0.1 && groundDist < 0.15) {
+                    const bobFreq = isSprinting ? 12.0 : 8.0;
+                    const bobAmp = isSprinting ? 0.08 : 0.045;
+                    bobTime += delta * bobFreq;
+                    camera.position.y += Math.sin(bobTime) * bobAmp;
+
+                    // Camera strafe leaning rotation around Z axis
+                    const targetTiltZ = -velocity.x * 0.0011;
+                    cameraTiltZ += (targetTiltZ - cameraTiltZ) * 4.5 * delta;
+                } else {
+                    bobTime = 0;
+                    cameraTiltZ += (0 - cameraTiltZ) * 4.5 * delta;
+                }
+                camera.rotation.z = cameraTiltZ;
             }
 
             // --- PHYSICS SIM ---
@@ -676,15 +860,50 @@
                 });
             }
 
-            // Sky Cycle
-            const skyTime = (time * 0.01) % 360;
-            const skyColor = new THREE.Color().setHSL(0.6, 0.5, 0.5 + Math.sin(skyTime * 0.01) * 0.3);
+            // --- ADVANCED METEOROLOGY & LIGHTING CYCLE ---
+            const dayDuration = 320; // 5.3 minutes
+            const t = (time * 0.001) % dayDuration;
+            const dayFraction = t / dayDuration;
+
+            let skyColor, sunColor, sunIntensity;
+
+            if (dayFraction < 0.22) { // Dawn to sunrise
+                const alpha = dayFraction / 0.22;
+                skyColor = new THREE.Color(0x233142).lerp(new THREE.Color(0xf1935c), alpha);
+                sunColor = new THREE.Color(0xffaa66);
+                sunIntensity = 0.5 * alpha;
+            } else if (dayFraction < 0.7) { // High day
+                const alpha = (dayFraction - 0.22) / 0.48;
+                skyColor = new THREE.Color(0xa3daff).lerp(new THREE.Color(0xe0f2fe), alpha);
+                sunColor = new THREE.Color(0xfff5e1);
+                sunIntensity = 1.15;
+            } else if (dayFraction < 0.8) { // Twilight/Sunset
+                const alpha = (dayFraction - 0.7) / 0.1;
+                skyColor = new THREE.Color(0x2c1654).lerp(new THREE.Color(0xe25f38), 1 - alpha).lerp(new THREE.Color(0x884a8a), alpha);
+                sunColor = new THREE.Color(0xfa7268);
+                sunIntensity = 1.1 * (1 - alpha);
+            } else { // Nighttime
+                const alpha = (dayFraction - 0.8) / 0.2;
+                skyColor = new THREE.Color(0x0a0f1d).lerp(new THREE.Color(0x0e1324), alpha);
+                sunColor = new THREE.Color(0x23395d);
+                sunIntensity = 0.1;
+            }
+
             scene.background = skyColor;
             if(scene.fog) scene.fog.color = skyColor;
 
-            // Header UI
-            const now = new Date();
-            document.getElementById('time-display').textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            hemiLight.color.copy(skyColor);
+            sunLight.color.copy(sunColor);
+            sunLight.intensity = sunIntensity;
+
+            // In-game local clocks vs computer time
+            const hour = Math.floor(dayFraction * 24);
+            const min = Math.floor((dayFraction * 24 % 1) * 60);
+            const h12 = hour % 12 || 12;
+            const padMin = min < 10 ? '0' + min : min;
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            document.getElementById('time-display').textContent = `${h12}:${padMin} ${ampm}`;
+
             document.getElementById('obj-count').textContent = objects.length + physicsObjects.length;
             document.getElementById('pos-display').textContent = `${Math.round(camera.position.x)}, ${Math.round(camera.position.y)}, ${Math.round(camera.position.z)}`;
 
