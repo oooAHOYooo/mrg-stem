@@ -61,6 +61,40 @@
             z-index: 100;
         }
 
+        .top-left-cluster {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hamburger-menu {
+            background: var(--mge-roblox-topbar);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .hamburger-menu:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .hamburger-menu span {
+            display: block;
+            width: 24px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
         .roblox-logo-stat {
             background: var(--mge-roblox-topbar);
             backdrop-filter: blur(12px);
@@ -73,18 +107,19 @@
         }
 
         .logo-box {
-            background: var(--mge-primary);
+            background: #ffffff;
             width: 28px;
             height: 28px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 1rem;
-            color: white;
-            box-shadow: 0 0 10px rgba(255, 70, 85, 0.4);
-            transform: rotate(-5deg);
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: #000000;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            transform: rotate(-10deg);
+            border: 3px solid #000000;
         }
 
         .stat-label {
@@ -124,6 +159,55 @@
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 70, 85, 0.4);
+        }
+
+        /* Player List (Top Right) */
+        .player-list {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            pointer-events: auto;
+            z-index: 90;
+        }
+
+        .player-list-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .player-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 4px;
+        }
+
+        .player-entry.me {
+            border-left: 3px solid var(--mge-secondary);
+        }
+
+        .player-name {
+            font-weight: 600;
+        }
+
+        .player-stat {
+            font-weight: 800;
+            color: var(--mge-accent);
+            font-size: 0.75rem;
         }
 
         /* Chat Panel */
@@ -502,16 +586,23 @@
     <div id="ui-container">
         <!-- Roblox Inspired Topbar -->
         <div class="topbar">
-            <div class="roblox-logo-stat">
-                <span class="logo-box">G</span>
-                <div>
-                    <div class="stat-label">Blocks Placed</div>
-                    <div class="stat-value" id="block-count">0</div>
+            <div class="top-left-cluster">
+                <div class="hamburger-menu" title="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
-                <div style="width:1px; height:24px; background:rgba(255,255,255,0.15); margin:0 8px;"></div>
-                <div>
-                    <div class="stat-label">Server Mode</div>
-                    <div class="stat-value" id="mode-display" style="color: var(--mge-secondary);">3RD PERSON</div>
+                <div class="roblox-logo-stat">
+                    <span class="logo-box">G</span>
+                    <div>
+                        <div class="stat-label">Blocks Placed</div>
+                        <div class="stat-value" id="block-count">0</div>
+                    </div>
+                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.15); margin:0 8px;"></div>
+                    <div>
+                        <div class="stat-label">Server Mode</div>
+                        <div class="stat-value" id="mode-display" style="color: var(--mge-secondary);">3RD PERSON</div>
+                    </div>
                 </div>
             </div>
 
@@ -519,6 +610,23 @@
                 <button class="action-btn" onclick="resetCharacter()" title="Respawn Avatar">🔄 Reset Avatar</button>
                 <button class="action-btn" style="background: linear-gradient(135deg, #ffb703, #fb8500);" onclick="openCustomizer()" title="Customize Clothes">🎨 Avatar Clothes</button>
                 <button class="action-btn" onclick="goBack()">🚪 Leave</button>
+            </div>
+        </div>
+
+        <!-- Player List -->
+        <div class="player-list">
+            <div class="player-list-title">Players</div>
+            <div class="player-entry me">
+                <span class="player-name">You</span>
+                <span class="player-stat" id="list-stat">0</span>
+            </div>
+            <div class="player-entry">
+                <span class="player-name">BuildBot_01</span>
+                <span class="player-stat">42</span>
+            </div>
+            <div class="player-entry">
+                <span class="player-name">NoobRunner</span>
+                <span class="player-stat">7</span>
             </div>
         </div>
 
@@ -623,15 +731,91 @@
         let headMesh, torsoMesh, leftArmMesh, rightArmMesh, leftLegMesh, rightLegMesh;
         let walkTime = 0;
 
-        // Camera positioning (Roblox third person follow)
-        let cameraRadius = 12;
-        let cameraTheta = Math.PI / 4;
-        let cameraPhi = Math.PI / 6;
 
         // Character Physics
         const playerPos = new THREE.Vector3(0, 0, 0);
         const playerVelocity = new THREE.Vector3(0, 0, 0);
         let onGround = true;
+
+        // --- NEW: Game Configuration & Textures ---
+        const GameConfig = {
+            walkSpeed: 0.12,
+            jumpStrength: 0.15,
+            gravity: 0.006,
+            camera: {
+                radius: 12,
+                theta: Math.PI / 4,
+                phi: Math.PI / 6
+            },
+            colors: [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0x7209b7, 0x4cc9f0, 0x2ec4b6]
+        };
+
+        let textures = {};
+
+        function generateTextures() {
+            // 1. Create the iconic "Stud" texture for the top of blocks
+            const studCanvas = document.createElement('canvas');
+            studCanvas.width = 128;
+            studCanvas.height = 128;
+            const ctx = studCanvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 128, 128);
+            
+            // Draw 4 studs
+            const drawStud = (x, y) => {
+                ctx.beginPath();
+                ctx.arc(x, y, 22, 0, Math.PI * 2);
+                ctx.fillStyle = '#e0e0e0';
+                ctx.fill();
+                ctx.strokeStyle = '#cccccc';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Highlight
+                ctx.beginPath();
+                ctx.arc(x - 5, y - 5, 8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.fill();
+            };
+            
+            const offset = 32;
+            drawStud(offset, offset);
+            drawStud(128 - offset, offset);
+            drawStud(offset, 128 - offset);
+            drawStud(128 - offset, 128 - offset);
+            
+            textures.stud = new THREE.CanvasTexture(studCanvas);
+            textures.stud.wrapS = textures.stud.wrapT = THREE.RepeatWrapping;
+
+            // 2. Create the iconic "Roblox Smile" face
+            const faceCanvas = document.createElement('canvas');
+            faceCanvas.width = 256;
+            faceCanvas.height = 256;
+            const fctx = faceCanvas.getContext('2d');
+            
+            // Transparent background
+            fctx.clearRect(0, 0, 256, 256);
+            
+            // Eyes
+            fctx.fillStyle = '#000000';
+            fctx.beginPath();
+            fctx.arc(90, 100, 18, 0, Math.PI * 2);
+            fctx.fill();
+            fctx.beginPath();
+            fctx.arc(166, 100, 18, 0, Math.PI * 2);
+            fctx.fill();
+            
+            // Mouth (U-shape smile)
+            fctx.beginPath();
+            fctx.arc(128, 140, 60, 0.2 * Math.PI, 0.8 * Math.PI);
+            fctx.lineWidth = 12;
+            fctx.lineCap = 'round';
+            fctx.stroke();
+            
+            textures.face = new THREE.CanvasTexture(faceCanvas);
+        }
 
         // Web Audio Context & Effects
         let audioCtx = null;
@@ -696,8 +880,10 @@
             }
         }
 
+
         function startGame() {
             initAudio();
+            generateTextures();
             document.getElementById('start-screen').style.opacity = 0;
             setTimeout(() => {
                 document.getElementById('start-screen').style.display = 'none';
@@ -713,9 +899,9 @@
             const toolNames = { 1: 'build', 2: 'delete', 3: 'color', 4: 'camera' };
             if (slotNum === 5) {
                 // Instantly reset view
-                cameraTheta = Math.PI / 4;
-                cameraPhi = Math.PI / 6;
-                cameraRadius = 12;
+                GameConfig.camera.theta = Math.PI / 4;
+                GameConfig.camera.phi = Math.PI / 6;
+                GameConfig.camera.radius = 12;
                 return;
             }
             currentTool = toolNames[slotNum];
@@ -760,7 +946,14 @@
 
             // Baseplate Ground (Roblox Studio style)
             const groundGeo = new THREE.PlaneGeometry(120, 120);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x43a047, roughness: 0.9, metalness: 0.1 });
+            const groundMat = new THREE.MeshStandardMaterial({ 
+                color: 0x43a047, 
+                roughness: 0.9, 
+                metalness: 0.1,
+                map: textures.stud
+            });
+            // Repeat ground studs
+            groundMat.map.repeat.set(60, 60);
             ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
@@ -769,9 +962,33 @@
             // Iconic Grid Helper for studs
             const gridHelper = new THREE.GridHelper(120, 120, 0xffffff, 0x222222);
             gridHelper.position.y = 0.01;
-            gridHelper.material.opacity = 0.25;
+            gridHelper.material.opacity = 0.15;
             gridHelper.material.transparent = true;
             scene.add(gridHelper);
+
+            // Iconic Spawn Location Plate
+            const spawnGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.1, 32);
+            const spawnMat = new THREE.MeshStandardMaterial({ 
+                color: 0xcccccc, 
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            const spawnPlate = new THREE.Mesh(spawnGeo, spawnMat);
+            spawnPlate.position.y = 0.05;
+            scene.add(spawnPlate);
+            
+            // Add decal-like logo to spawn
+            const decalGeo = new THREE.PlaneGeometry(3, 3);
+            const decalMat = new THREE.MeshStandardMaterial({ 
+                map: textures.face, 
+                transparent: true, 
+                opacity: 0.6,
+                depthWrite: false
+            });
+            const decal = new THREE.Mesh(decalGeo, decalMat);
+            decal.rotation.x = -Math.PI / 2;
+            decal.position.y = 0.11;
+            scene.add(decal);
 
             // Build Player Avatar (Blocky Roblox Guy)
             createAvatar();
@@ -796,8 +1013,20 @@
             scene.add(playerGroup);
 
             // Head (classic blocky yellow head)
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffd166, roughness: 0.7 });
-            headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMat);
+            const skinColor = 0xffd166;
+            const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+            
+            // Create materials array for the head to apply face to front
+            const headMats = [
+                headMat, // right
+                headMat, // left
+                headMat, // top
+                headMat, // bottom
+                new THREE.MeshStandardMaterial({ color: skinColor, map: textures.face, transparent: true }), // front
+                headMat  // back
+            ];
+            
+            headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMats);
             headMesh.position.y = 1.15;
             headMesh.castShadow = true;
             playerGroup.add(headMesh);
@@ -848,8 +1077,21 @@
 
         function addBlock(x, y, z, hexColor) {
             const geo = new THREE.BoxGeometry(gridSize, gridSize, gridSize);
-            const mat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82 });
-            const block = new THREE.Mesh(geo, mat);
+            
+            // Materials array for blocks (studs on top)
+            const blockMat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82 });
+            const studMat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82, map: textures.stud });
+            
+            const mats = [
+                blockMat, // right
+                blockMat, // left
+                studMat,  // top
+                blockMat, // bottom
+                blockMat, // front
+                blockMat  // back
+            ];
+            
+            const block = new THREE.Mesh(geo, mats);
             block.position.set(x, y, z);
             block.castShadow = true;
             block.receiveShadow = true;
@@ -858,6 +1100,7 @@
             world.push(block);
             blockCount++;
             document.getElementById('block-count').innerText = blockCount;
+            document.getElementById('list-stat').innerText = blockCount;
             return block;
         }
 
@@ -866,6 +1109,7 @@
             world = world.filter(b => b !== block);
             blockCount--;
             document.getElementById('block-count').innerText = blockCount;
+            document.getElementById('list-stat').innerText = blockCount;
         }
 
         let keys = {};
@@ -890,10 +1134,10 @@
                 mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
                 if (mouseDownRight) {
-                    cameraTheta -= e.movementX * 0.005;
-                    cameraPhi += e.movementY * 0.005;
+                    GameConfig.camera.theta -= e.movementX * 0.005;
+                    GameConfig.camera.phi += e.movementY * 0.005;
                     // Clamp looking angle
-                    cameraPhi = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, cameraPhi));
+                    GameConfig.camera.phi = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, GameConfig.camera.phi));
                 }
             });
 
@@ -931,19 +1175,25 @@
                             // Avoid placing on same block already occupied
                             const taken = world.some(b => Math.abs(b.position.x - snappedX) < 0.1 && Math.abs(b.position.z - snappedZ) < 0.1 && Math.abs(b.position.y - gridSize / 2) < 0.1);
                             if (!taken) {
-                                addBlock(snappedX, gridSize / 2, snappedZ, colors[currentColorIndex]);
+                                addBlock(snappedX, gridSize / 2, snappedZ, GameConfig.colors[currentColorIndex]);
                                 playSound('place');
                             }
                         } else {
-                            addBlock(newPos.x, newPos.y, newPos.z, colors[currentColorIndex]);
+                            addBlock(newPos.x, newPos.y, newPos.z, GameConfig.colors[currentColorIndex]);
                             playSound('place');
                         }
                     } else if (currentTool === 'delete' && hit.object !== ground) {
                         removeBlock(hit.object);
                         playSound('delete');
                     } else if (currentTool === 'color' && hit.object !== ground) {
-                        currentColorIndex = (currentColorIndex + 1) % colors.length;
-                        hit.object.material.color.setHex(colors[currentColorIndex]);
+                        currentColorIndex = (currentColorIndex + 1) % GameConfig.colors.length;
+                        const newColor = GameConfig.colors[currentColorIndex];
+                        // Update all faces of the block
+                        if (Array.isArray(hit.object.material)) {
+                            hit.object.material.forEach(m => m.color.setHex(newColor));
+                        } else {
+                            hit.object.material.color.setHex(newColor);
+                        }
                         playSound('paint');
                     }
                 }
@@ -960,7 +1210,7 @@
             const shirtOpt = document.getElementById('shirt-options');
             const pantsOpt = document.getElementById('pants-options');
 
-            colors.forEach((c) => {
+            GameConfig.colors.forEach((c) => {
                 const sBtn = document.createElement('div');
                 sBtn.className = 'color-option';
                 sBtn.style.backgroundColor = '#' + c.toString(16).padStart(6, '0');
@@ -1003,7 +1253,22 @@
             const inp = document.getElementById('chat-input');
             const txt = inp.value.trim();
             if (txt === '') return;
+            
             addChatMessage(`<span class="name">You:</span> ${txt}`);
+            
+            // Emote System
+            if (txt.toLowerCase() === '/e dance') {
+                isDancing = true;
+                danceTime = 0;
+                addChatMessage('<span class="server">[Emote] You started dancing!</span>');
+            } else if (txt.toLowerCase() === '/e wave') {
+                isWaving = true;
+                waveTime = 0;
+                addChatMessage('<span class="server">[Emote] You waved!</span>');
+            } else if (txt.toLowerCase() === '/e reset' || txt.toLowerCase() === '/reset') {
+                resetCharacter();
+            }
+
             inp.value = '';
 
             // Automated Roblox simulation reply
@@ -1020,28 +1285,38 @@
             }, 1500);
         }
 
-        // Animated physics & movement settings
-        const walkSpeed = 0.12;
-        const jumpStrength = 0.15;
-        const gravity = 0.006;
+        // Walking animations
+        let isDancing = false, danceTime = 0;
+        let isWaving = false, waveTime = 0;
 
         function animate() {
             requestAnimationFrame(animate);
+            
+            // Update timers
+            if (isDancing) danceTime += 0.05;
+            if (isWaving) {
+                waveTime += 0.1;
+                if (waveTime > Math.PI * 2) {
+                    isWaving = false;
+                    rightArmMesh.rotation.z = 0;
+                    rightArmMesh.rotation.x = 0;
+                }
+            }
 
             // Basic Player movement wasd relative to Camera
             const forward = new THREE.Vector3(
-                -Math.sin(cameraTheta),
+                -Math.sin(GameConfig.camera.theta),
                 0,
-                -Math.cos(cameraTheta)
+                -Math.cos(GameConfig.camera.theta)
             ).normalize();
 
             const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
 
             let moving = false;
-            if (keys['w']) { playerPos.addScaledVector(forward, walkSpeed); moving = true; }
-            if (keys['s']) { playerPos.addScaledVector(forward, -walkSpeed); moving = true; }
-            if (keys['a']) { playerPos.addScaledVector(side, walkSpeed); moving = true; }
-            if (keys['d']) { playerPos.addScaledVector(side, -walkSpeed); moving = true; }
+            if (keys['w']) { playerPos.addScaledVector(forward, GameConfig.walkSpeed); moving = true; }
+            if (keys['s']) { playerPos.addScaledVector(forward, -GameConfig.walkSpeed); moving = true; }
+            if (keys['a']) { playerPos.addScaledVector(side, GameConfig.walkSpeed); moving = true; }
+            if (keys['d']) { playerPos.addScaledVector(side, -GameConfig.walkSpeed); moving = true; }
 
             // Turn player direction
             if (moving) {
@@ -1063,7 +1338,7 @@
             }
 
             if (playerPos.y > groundLevel) {
-                playerVelocity.y -= gravity;
+                playerVelocity.y -= GameConfig.gravity;
                 onGround = false;
             } else {
                 playerPos.y = groundLevel;
@@ -1073,7 +1348,7 @@
 
             // Spacebar Jumps
             if (keys[' '] && onGround) {
-                playerVelocity.y = jumpStrength;
+                playerVelocity.y = GameConfig.jumpStrength;
                 playSound('jump');
                 onGround = false;
             }
@@ -1088,24 +1363,42 @@
                 addChatMessage('[Server] Safe recovery spawn.');
             }
 
-            // Walking animations
+            // --- ANIMATIONS ---
             if (moving && onGround) {
+                isDancing = false; 
                 walkTime += 0.2;
                 leftLegMesh.rotation.x = Math.sin(walkTime) * 0.6;
                 rightLegMesh.rotation.x = -Math.sin(walkTime) * 0.6;
                 leftArmMesh.rotation.x = -Math.sin(walkTime) * 0.5;
                 rightArmMesh.rotation.x = Math.sin(walkTime) * 0.5;
+            } else if (isDancing) {
+                walkTime += 0.15;
+                playerGroup.position.y = playerPos.y + Math.abs(Math.sin(walkTime * 2)) * 0.2;
+                playerGroup.rotation.y += 0.05;
+                leftArmMesh.rotation.z = Math.sin(walkTime * 4) * 0.8;
+                rightArmMesh.rotation.z = -Math.sin(walkTime * 4) * 0.8;
+            } else if (isWaving) {
+                rightArmMesh.rotation.z = 1.2 + Math.sin(waveTime * 8) * 0.4;
+                rightArmMesh.rotation.x = -0.5;
+            } else if (!onGround) {
+                // Roblox Jump Pose
+                leftArmMesh.rotation.x = -0.3;
+                rightArmMesh.rotation.x = -0.3;
+                leftLegMesh.rotation.x = 0.2;
+                rightLegMesh.rotation.x = -0.2;
             } else {
                 leftLegMesh.rotation.x = 0;
                 rightLegMesh.rotation.x = 0;
                 leftArmMesh.rotation.x = 0;
                 rightArmMesh.rotation.x = 0;
+                leftArmMesh.rotation.z = 0;
+                rightArmMesh.rotation.z = 0;
             }
 
             // Follow Camera Positioning
-            camera.position.x = playerPos.x + cameraRadius * Math.sin(cameraTheta) * Math.cos(cameraPhi);
-            camera.position.z = playerPos.z + cameraRadius * Math.cos(cameraTheta) * Math.cos(cameraPhi);
-            camera.position.y = playerPos.y + cameraRadius * Math.sin(cameraPhi) + 1.35;
+            camera.position.x = playerPos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+            camera.position.z = playerPos.z + GameConfig.camera.radius * Math.cos(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+            camera.position.y = playerPos.y + GameConfig.camera.radius * Math.sin(GameConfig.camera.phi) + 1.35;
             camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
 
             renderer.render(scene, camera);
