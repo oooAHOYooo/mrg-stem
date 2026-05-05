@@ -235,6 +235,122 @@
         @media (max-width: 768px) {
             .joystick-container, .jump-btn { display: flex; }
         }
+
+        /* Mission Dashboard */
+        #mission-dashboard {
+            position: fixed;
+            top: 100px;
+            right: 24px;
+            background: var(--ui-glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            width: 280px;
+            pointer-events: auto;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 150;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .mission-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            font-weight: 900;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mission-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .mission-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .mission-checkbox.done {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .mission-item.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        /* Tutorial Overlay */
+        #tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+
+        .tutorial-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 2px solid var(--primary);
+            border-radius: 40px;
+            padding: 50px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.5);
+        }
+
+        .tutorial-icon { font-size: 4rem; margin-bottom: 20px; }
+        .tutorial-btn {
+            background: var(--primary);
+            color: #000;
+            padding: 16px 48px;
+            border-radius: 99px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s;
+            border: none;
+        }
+        .tutorial-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(250, 204, 21, 0.5); }
+
+        /* Mini-Game HUD */
+        #minigame-hud {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            padding: 10px 30px;
+            border-radius: 99px;
+            font-weight: 900;
+            display: none;
+            z-index: 400;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -266,6 +382,17 @@
             <div class="badge">🏰 SUPER ALDO 63</div>
             <a href="mge.html" class="badge" style="color: white; border-color: rgba(255,255,255,0.4)">🏠 HUB</a>
         </div>
+
+        <div id="mission-dashboard">
+            <div class="mission-title">
+                <span>🎯 Active Missions</span>
+            </div>
+            <div id="mission-list">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+
+        <div id="minigame-hud">STOMP-A-THON: 0</div>
         <div class="hud-bottom" style="display: flex; justify-content: center;">
             <!-- Premium Liquid Controls Overlay -->
             <div id="controls-overlay-premium" style="display: flex; flex-direction: column; gap: 8px; pointer-events: none; font-family: 'Outfit', sans-serif; align-items: center;">
@@ -313,6 +440,28 @@
         <div class="close-btn" id="close-popup">GOT IT!</div>
     </div>
 
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay">
+        <div class="tutorial-card">
+            <div class="tutorial-icon">👨🏻‍🔧</div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to MGE Castle!</h1>
+            <p style="font-size: 1.1rem; color: rgba(255,255,255,0.8); line-height: 1.6;">
+                You are <b>Aldo</b>, the STEM Engineer. Explore the world, stomp on glitches (purple blobs) to learn STEM facts, and enter portals to reach other dimensions!
+            </p>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; flex: 1;">
+                    <div style="font-weight: 900; color: var(--primary);">WASD</div>
+                    <div style="font-size: 0.8rem;">Move Around</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; flex: 1;">
+                    <div style="font-weight: 900; color: var(--primary);">SPACE</div>
+                    <div style="font-size: 0.8rem;">Super Jump</div>
+                </div>
+            </div>
+            <button class="tutorial-btn" id="start-game-btn">LET'S GO!</button>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -350,9 +499,101 @@
         };
 
         let scene, camera, renderer, clock = new THREE.Clock();
-        let player, keys = {}, isPaused = false;
+        let player, keys = {}, isPaused = true; // Start paused for tutorial
         let pLinks = [], enemies = [], joyData = null;
         let pVelocity = new THREE.Vector3();
+
+        const MISSIONS = [
+            { id: 'explore', text: 'Explore the Castle Ground', done: false },
+            { id: 'stomp', text: 'Stomp 3 Glitch Blobs', done: false, count: 0, target: 3 },
+            { id: 'minigame', text: 'Enter the Challenge Ring', done: false }
+        ];
+
+        class MissionManager {
+            static updateUI() {
+                const list = document.getElementById('mission-list');
+                list.innerHTML = '';
+                MISSIONS.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = `mission-item ${m.done ? 'completed' : ''}`;
+                    const progress = m.target ? ` (${m.count}/${m.target})` : '';
+                    item.innerHTML = `
+                        <div class="mission-checkbox ${m.done ? 'done' : ''}">${m.done ? '✓' : ''}</div>
+                        <span>${m.text}${progress}</span>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            static complete(id) {
+                const m = MISSIONS.find(m => m.id === id);
+                if (m && !m.done) {
+                    m.done = true;
+                    this.updateUI();
+                    // Play a sound or effect?
+                }
+            }
+
+            static progress(id) {
+                const m = MISSIONS.find(m => m.id === id);
+                if (m && !m.done && m.target) {
+                    m.count++;
+                    if (m.count >= m.target) m.done = true;
+                    this.updateUI();
+                }
+            }
+        }
+
+        class MiniGameManager {
+            constructor() {
+                this.isActive = false;
+                this.timer = 0;
+                this.score = 0;
+                this.hud = document.getElementById('minigame-hud');
+            }
+
+            start() {
+                if (this.isActive) return;
+                this.isActive = true;
+                this.score = 0;
+                this.timer = 30;
+                this.hud.style.display = 'block';
+                this.updateHUD();
+                MissionManager.complete('minigame');
+                
+                // Spawn a bunch of enemies
+                for(let i=0; i<10; i++) {
+                    enemies.push(new EnemyEntity((Math.random()-0.5)*60, (Math.random()-0.5)*60));
+                }
+            }
+
+            update(dt) {
+                if (!this.isActive) return;
+                this.timer -= dt;
+                if (this.timer <= 0) {
+                    this.end();
+                }
+                this.updateHUD();
+            }
+
+            addScore() {
+                if (!this.isActive) return;
+                this.score++;
+                this.updateHUD();
+            }
+
+            updateHUD() {
+                this.hud.innerText = `STOMP-A-THON: ${this.score} | TIME: ${Math.ceil(this.timer)}s`;
+            }
+
+            end() {
+                this.isActive = false;
+                this.hud.style.display = 'none';
+                alert(`Mini-Game Over! Your Score: ${this.score}`);
+            }
+        }
+
+        const miniGame = new MiniGameManager();
 
         class EnemyEntity {
             constructor(x, z) {
@@ -414,9 +655,19 @@
             buildWorld();
             spawnPlayer();
             initControls();
+            MissionManager.updateUI();
 
             // Initial enemies
             for(let i=0; i<8; i++) enemies.push(new EnemyEntity((Math.random()-0.5)*100, (Math.random()-0.5)*100));
+
+            // Mini-Game Ring
+            const ringGeo = new THREE.TorusGeometry(5, 0.5, 16, 32);
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.5, transparent: true, opacity: 0.8 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(40, 0.1, 40);
+            scene.add(ring);
+            window.challengeRing = ring;
 
             animate();
             
@@ -434,6 +685,14 @@
                     setTimeout(() => ls.remove(), 500);
                 }
             }, 600);
+
+            // Setup Start Game Button
+            document.getElementById('start-game-btn').addEventListener('click', () => {
+                isPaused = false;
+                gsap.to('#tutorial-overlay', { opacity: 0, duration: 0.5, onComplete: () => {
+                    document.getElementById('tutorial-overlay').style.display = 'none';
+                }});
+            });
         }
 
         function buildWorld() {
@@ -458,6 +717,41 @@
                 const angle = (i/CONFIG.portals.length) * Math.PI * 2;
                 createPedestal(Math.cos(angle)*rad, Math.sin(angle)*rad, p);
             });
+
+            // Signposts
+            buildSignpost(0, 0, 15, "Welcome to\nMGE Castle!", "Explore the world to find portals!");
+            buildSignpost(35, 0, 35, "CHALLENGE\nRING", "Stomp glitches for points!");
+        }
+
+        function buildSignpost(x, y, z, text, subtext) {
+            const group = new THREE.Group();
+            
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 6, 0.4), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            post.position.y = 3;
+            group.add(post);
+
+            const board = new THREE.Mesh(new THREE.BoxGeometry(5, 3, 0.5), new THREE.MeshStandardMaterial({ color: 0x92400e }));
+            board.position.y = 5.5;
+            group.add(board);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 24px Outfit, Arial';
+            ctx.textAlign = 'center';
+            const lines = text.split('\n');
+            lines.forEach((line, i) => ctx.fillText(line, 128, 45 + i * 30));
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            const label = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 2.5), new THREE.MeshBasicMaterial({ map: tex }));
+            label.position.set(0, 5.5, 0.26);
+            group.add(label);
+
+            group.position.set(x, y, z);
+            scene.add(group);
         }
 
         function buildCastle() {
@@ -641,10 +935,23 @@
                     if(!e.stomped) {
                         const d = player.position.distanceTo(e.mesh.position);
                         if(d < 2 && player.position.y > e.mesh.position.y + 0.8 && pVelocity.y < 0) {
-                            e.stomp(); pVelocity.y = CONFIG.jumpForce * 0.6;
+                            e.stomp(); 
+                            pVelocity.y = CONFIG.jumpForce * 0.6;
+                            MissionManager.progress('stomp');
+                            if (miniGame.isActive) miniGame.addScore();
                         }
                     }
                 });
+
+                // Check Missions
+                if (player.position.distanceTo(new THREE.Vector3(0,0,0)) < 20) MissionManager.complete('explore');
+                if (window.challengeRing && player.position.distanceTo(window.challengeRing.position) < 5) {
+                    miniGame.start();
+                }
+
+                // Update MiniGame
+                miniGame.update(dt);
+                if (window.challengeRing) window.challengeRing.rotation.z += dt * 2;
 
                 pLinks.forEach(p => {
                     if (p.children[1]) {
