@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wild Stallions: Sunset Split | MGE Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f2fe;
+            --neon-magenta: #f472b6;
+            --neon-yellow: #ffe66d;
+            --stamina-color: #10b981;
+            --ui-glass: rgba(10, 10, 20, 0.85);
+            --border-glow: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #05050a;
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            user-select: none;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #050510 0%, #150525 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .loader-logo {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 30px var(--neon-magenta));
+            animation: gallop-bounce 0.8s infinite alternate ease-in-out;
+            display: inline-block;
+        }
+
+        @keyframes gallop-bounce {
+            0% { transform: translateY(0) rotate(-5deg); }
+            100% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        .loader-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ff007f, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .loader-bar-container {
+            width: 320px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            padding: 2px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .loader-fill {
+            width: 10%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff007f, #00f2fe);
+            border-radius: 99px;
+            box-shadow: 0 0 15px #00f2fe;
+            transition: width 0.1s ease;
+        }
+
+        .loader-status {
+            margin-top: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        /* Screen Split Setup */
+        #game-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .split-pane {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        #pane-p1 {
+            border-right: 3px solid rgba(0, 242, 254, 0.4);
+            box-shadow: 10px 0 30px rgba(0, 242, 254, 0.1);
+        }
+
+        #pane-p2 {
+            border-left: 3px solid rgba(244, 114, 182, 0.4);
+            box-shadow: -10px 0 30px rgba(244, 114, 182, 0.1);
+        }
+
+        /* Unified HUD layout for both panes */
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-tag {
+            background: var(--ui-glass);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            border-left: 4px solid var(--neon-cyan);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        #pane-p2 .player-tag {
+            border-left-color: var(--neon-magenta);
+        }
+
+        .distance-tag {
+            background: var(--ui-glass);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.9rem;
+            color: var(--neon-yellow);
+        }
+
+        .hud-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .center-announcement {
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .center-announcement.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .hud-bottom {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .dashboard-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        /* Stamina & Speed visualizers */
+        .gauge-container {
+            background: var(--ui-glass);
+            padding: 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-glow);
+            width: 200px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .gauge-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stamina-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stamina-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #059669, #10b981);
+            width: 100%;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .stamina-fill.exhausted {
+            background: linear-gradient(90deg, #dc2626, #ef4444) !important;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+            animation: pulse-stamina 0.3s infinite alternate;
+        }
+
+        @keyframes pulse-stamina {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .speedometer {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: white;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .speedometer span {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.4);
+            font-weight: 700;
+        }
+
+        /* Controls Manual overlay for each side */
+        .controls-card {
+            background: rgba(10, 10, 25, 0.9);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--neon-cyan);
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            max-width: 180px;
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #pane-p2 .controls-card {
+            border-color: var(--neon-magenta);
+        }
+
+        .controls-card h4 {
+            margin: 0 0 8px 0;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: var(--neon-yellow);
+            letter-spacing: 0.5px;
+        }
+
+        .key-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .keycap {
+            background: rgba(255,255,255,0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border-bottom: 2px solid rgba(0,0,0,0.5);
+        }
+
+        /* Progress indicator bar on top center of the screen */
+        #race-progress-container {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            max-width: 80vw;
+            height: 16px;
+            background: rgba(10,10,25,0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 99px;
+            border: 2px solid rgba(255,255,255,0.15);
+            padding: 3px;
+            box-sizing: border-box;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .progress-line {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-marker {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            transition: left 0.1s linear;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+
+        .progress-marker.marker-p1 {
+            color: var(--neon-cyan);
+            filter: drop-shadow(0 0 8px var(--neon-cyan));
+        }
+
+        .progress-marker.marker-p2 {
+            color: var(--neon-magenta);
+            filter: drop-shadow(0 0 8px var(--neon-magenta));
+        }
+
+        /* Welcome / Setup Screen */
+        #lobby-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #050512 0%, #100520 100%);
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .lobby-panel {
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(20px);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 40px;
+            width: 900px;
+            max-width: 95vw;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+
+        .lobby-title-glow {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffe66d, #ff007f, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 30px rgba(244, 114, 182, 0.3));
+        }
+
+        .lobby-subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .horse-selection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .player-selector-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .player-selector-card.p1-card {
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .player-selector-card.p2-card {
+            border-color: rgba(244, 114, 182, 0.3);
+        }
+
+        .player-selector-card h3 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+        }
+
+        .player-selector-card.p1-card h3 { color: var(--neon-cyan); }
+        .player-selector-card.p2-card h3 { color: var(--neon-magenta); }
+
+        .horse-preview-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .color-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-dot.selected {
+            transform: scale(1.2);
+            border-color: white;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .start-race-btn {
+            background: linear-gradient(135deg, #ffe66d, #ff007f);
+            color: black;
+            border: none;
+            padding: 16px 64px;
+            font-size: 1.8rem;
+            font-weight: 900;
+            border-radius: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 15px 40px rgba(244, 114, 182, 0.4);
+        }
+
+        .start-race-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 50px rgba(244, 114, 182, 0.6);
+        }
+
+        /* Countdown Overlay */
+        #countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #countdown-text {
+            font-size: 10rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: 0 0 50px rgba(255,255,255,0.5);
+            transform: scale(0.5);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #countdown-text.pop {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+
+        /* Speed trails and screenshake details */
+        .screenshake {
+            animation: shake 0.15s infinite alternate;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            100% { transform: translate(-1px, -1px) rotate(0.5deg); }
+        }
+
+        /* ESC hub button */
+        .esc-hud-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(10, 10, 20, 0.8);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+
+        .esc-hud-btn:hover {
+            background: var(--neon-magenta);
+            border-color: white;
+            box-shadow: 0 0 15px var(--neon-magenta);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- ESC Hub button -->
+    <a href="mge.html" class="esc-hud-btn">🏠 LEAVE RACE</a>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">🐎</div>
+            <h1 class="loader-title">WILD STALLIONS: SUNSET SPLIT</h1>
+            <div class="loader-bar-container">
+                <div id="loading-bar" class="loader-fill"></div>
+            </div>
+            <p id="loading-text" class="loader-status">Assembling low-poly canyons...</p>
+        </div>
+    </div>
+
+    <!-- Lobby/Setup Screen -->
+    <div id="lobby-screen">
+        <div class="lobby-panel">
+            <h1 class="lobby-title-glow">CHOOSE YOUR STALLION</h1>
+            <p class="lobby-subtitle">Fast-paced, dual-viewport horse racing action. Control rhythm, whip for turbo, and jump obstacles!</p>
+            
+            <div class="horse-selection-grid">
+                <!-- Player 1 Selection -->
+                <div class="player-selector-card p1-card">
+                    <h3>PLAYER 1</h3>
+                    <div class="horse-preview-icon" id="preview-icon-p1">🐎</div>
+                    <div class="color-options" id="colors-p1">
+                        <div class="color-dot selected" style="background-color: #8b5cf6;" data-color="0x8b5cf6" data-name="Mustang"></div>
+                        <div class="color-dot" style="background-color: #3b82f6;" data-color="0x3b82f6" data-name="Pegasus"></div>
+                        <div class="color-dot" style="background-color: #10b981;" data-color="0x10b981" data-name="Jade"></div>
+                        <div class="color-dot" style="background-color: #ef4444;" data-color="0xef4444" data-name="Flame"></div>
+                    </div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: rgba(255,255,255,0.8);" id="name-p1">Mustang</div>
+                </div>
+
+                <!-- Player 2 Selection -->
+                <div class="player-selector-card p2-card">
+                    <h3>PLAYER 2</h3>
+                    <div class="horse-preview-icon" id="preview-icon-p2">🐎</div>
+                    <div class="color-options" id="colors-p2">
+                        <div class="color-dot selected" style="background-color: #f43f5e;" data-color="0xf43f5e" data-name="Ruby"></div>
+                        <div class="color-dot" style="background-color: #f59e0b;" data-color="0xf59e0b" data-name="Palomino"></div>
+                        <div class="color-dot" style="background-color: #06b6d4;" data-color="0x06b6d4" data-name="Glacier"></div>
+                        <div class="color-dot" style="background-color: #ec4899;" data-color="0xec4899" data-name="Nebula"></div>
+                    </div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: rgba(255,255,255,0.8);" id="name-p2">Ruby</div>
+                </div>
+            </div>
+
+            <button class="start-race-btn" id="lobby-start-btn">ENGAGE SPUR! ⚡</button>
+        </div>
+    </div>
+
+    <!-- Countdown screen -->
+    <div id="countdown-overlay">
+        <div id="countdown-text">READY</div>
+    </div>
+
+    <!-- Race Progress bar (floating on top center) -->
+    <div id="race-progress-container">
+        <div class="progress-line">
+            <!-- P1 marker -->
+            <div class="progress-marker marker-p1" id="marker-p1" style="left: 5%;">🐎</div>
+            <!-- P2 marker -->
+            <div class="progress-marker marker-p2" id="marker-p2" style="left: 5%;">🐎</div>
+            <!-- Finish flag -->
+            <div class="progress-marker" style="left: 95%; color: var(--neon-yellow);">🏁</div>
+        </div>
+    </div>
+
+    <!-- Dual split-screen windows -->
+    <div id="game-container">
+        <!-- Player 1 Pane -->
+        <div class="split-pane" id="pane-p1">
+            <div class="hud">
+                <div class="hud-header">
+                    <div class="player-tag">Player 1</div>
+                    <div class="distance-tag" id="distance-p1">0m / 1000m</div>
+                </div>
+                <div class="hud-center">
+                    <div class="center-announcement" id="announcement-p1">TURBO!</div>
+                </div>
+                <div class="hud-bottom">
+                    <div class="dashboard-row">
+                        <!-- Controls manual -->
+                        <div class="controls-card">
+                            <h4>Rider Manual</h4>
+                            <div class="key-row"><span>Steer:</span><span class="keycap">A</span> <span class="keycap">D</span></div>
+                            <div class="key-row"><span>Spur Gallop:</span><span class="keycap">Tap W</span></div>
+                            <div class="key-row"><span>Spur Slow:</span><span class="keycap">Tap S</span></div>
+                            <div class="key-row"><span>Spur Jump:</span><span class="keycap">SPACE</span></div>
+                            <div class="key-row" style="color: var(--neon-cyan);"><span>Whip/Turbo:</span><span class="keycap">L.SHIFT</span></div>
+                        </div>
+                        
+                        <!-- Visualizers -->
+                        <div style="display: flex; gap: 15px;">
+                            <div class="gauge-container">
+                                <div class="gauge-label">
+                                    <span>Horse Stamina</span>
+                                    <span id="stamina-text-p1">100%</span>
+                                </div>
+                                <div class="stamina-bar">
+                                    <div class="stamina-fill" id="stamina-fill-p1"></div>
+                                </div>
+                            </div>
+                            <div class="gauge-container" style="width: 140px;">
+                                <div class="gauge-label"><span>Velocity</span></div>
+                                <div class="speedometer" id="speed-p1">0 <span>mph</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player 2 Pane -->
+        <div class="split-pane" id="pane-p2">
+            <div class="hud">
+                <div class="hud-header">
+                    <div class="player-tag">Player 2</div>
+                    <div class="distance-tag" id="distance-p2">0m / 1000m</div>
+                </div>
+                <div class="hud-center">
+                    <div class="center-announcement" id="announcement-p2">TURBO!</div>
+                </div>
+                <div class="hud-bottom">
+                    <div class="dashboard-row">
+                        <!-- Controls manual -->
+                        <div class="controls-card">
+                            <h4>Rider Manual</h4>
+                            <div class="key-row"><span>Steer:</span><span class="keycap">←</span> <span class="keycap">→</span></div>
+                            <div class="key-row"><span>Spur Gallop:</span><span class="keycap">Tap ↑</span></div>
+                            <div class="key-row"><span>Spur Slow:</span><span class="keycap">Tap ↓</span></div>
+                            <div class="key-row"><span>Spur Jump:</span><span class="keycap">ENTER</span></div>
+                            <div class="key-row" style="color: var(--neon-magenta);"><span>Whip/Turbo:</span><span class="keycap">R.SHIFT</span></div>
+                        </div>
+                        
+                        <!-- Visualizers -->
+                        <div style="display: flex; gap: 15px;">
+                            <div class="gauge-container">
+                                <div class="gauge-label">
+                                    <span>Horse Stamina</span>
+                                    <span id="stamina-text-p2">100%</span>
+                                </div>
+                                <div class="stamina-bar">
+                                    <div class="stamina-fill" id="stamina-fill-p2"></div>
+                                </div>
+                            </div>
+                            <div class="gauge-container" style="width: 140px;">
+                                <div class="gauge-label"><span>Velocity</span></div>
+                                <div class="speedometer" id="speed-p2">0 <span>mph</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        // Synthesized Sound Effects (Web Audio API)
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playHoof(speedPercent) {
+                this.init();
+                if (this.ctx.state === 'suspended') return;
+                
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(45 + speedPercent * 20, t);
+                osc.frequency.exponentialRampToValueAtTime(10, t + 0.1);
+                
+                gain.gain.setValueAtTime(0.3 * speedPercent, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.12);
+            }
+            playWhip() {
+                this.init();
+                if (this.ctx.state === 'suspended') return;
+                
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(1500, t);
+                osc.frequency.exponentialRampToValueAtTime(200, t + 0.15);
+                
+                gain.gain.setValueAtTime(0.2, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.16);
+            }
+            playWhinny() {
+                this.init();
+                if (this.ctx.state === 'suspended') return;
+                
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, t);
+                osc.frequency.linearRampToValueAtTime(800, t + 0.1);
+                osc.frequency.linearRampToValueAtTime(600, t + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(100, t + 0.6);
+                
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+                
+                // Add minor pitch distortion (vibes)
+                const vibrato = this.ctx.createOscillator();
+                const vibGain = this.ctx.createGain();
+                vibrato.frequency.value = 15;
+                vibGain.gain.value = 100;
+                
+                vibrato.connect(vibGain);
+                vibGain.connect(osc.frequency);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                vibrato.start(t);
+                osc.start(t);
+                vibrato.stop(t + 0.6);
+                osc.stop(t + 0.6);
+            }
+            playJump() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(120, t);
+                osc.frequency.exponentialRampToValueAtTime(320, t + 0.25);
+                gain.gain.setValueAtTime(0.25, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.3);
+            }
+            playCrash() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, t);
+                osc.frequency.exponentialRampToValueAtTime(30, t + 0.4);
+                gain.gain.setValueAtTime(0.5, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            }
+            playBoost() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc1.frequency.setValueAtTime(440, t);
+                osc1.frequency.setValueAtTime(880, t + 0.08);
+                osc2.frequency.setValueAtTime(554, t);
+                osc2.frequency.setValueAtTime(1109, t + 0.08);
+                gain.gain.setValueAtTime(0.15, t);
+                gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc1.start(t);
+                osc2.start(t);
+                osc1.stop(t + 0.3);
+                osc2.stop(t + 0.3);
+            }
+            playVictory() {
+                this.init();
+                const t = this.ctx.currentTime;
+                const notes = [523, 659, 783, 1046];
+                notes.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(0.15, t + i * 0.1 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t + i * 0.1);
+                    osc.stop(t + i * 0.1 + 0.5);
+                });
+            }
+        }
+        const sfx = new SoundFX();
+
+        // Game Configuration
+        const MAP_LENGTH = 1000; // Finish line in meters
+        const TRACK_WIDTH = 12; // Width of three lanes (-4, 0, 4)
+        const LANE_OFFSET = 4;
+        const SPEED_TROT = 20;
+        const SPEED_CANTER = 32;
+        const SPEED_GALLOP = 45;
+        const SPEED_TURBO = 65;
+
+        // Player States
+        const p1 = {
+            id: 1,
+            color: 0x8b5cf6,
+            name: "Mustang",
+            z: 0,
+            targetLane: 1, // 0: Left, 1: Center, 2: Right
+            actualX: 0,
+            y: 0,
+            speed: 0,
+            targetSpeed: 0,
+            stamina: 100,
+            exhausted: false,
+            exhaustedTimer: 0,
+            turbo: false,
+            isJumping: false,
+            jumpProgress: 0,
+            lastSpurTime: 0,
+            speedScale: 0, // For rhythm feedback
+            pane: document.getElementById('pane-p1'),
+            staminaFill: document.getElementById('stamina-fill-p1'),
+            staminaText: document.getElementById('stamina-text-p1'),
+            speedText: document.getElementById('speed-p1'),
+            distText: document.getElementById('distance-p1'),
+            announcement: document.getElementById('announcement-p1'),
+            marker: document.getElementById('marker-p1'),
+            finished: false,
+            finishTime: 0,
+            mesh: null,
+            legs: [],
+            dust: null,
+            hoofTimer: 0
+        };
+
+        const p2 = {
+            id: 2,
+            color: 0xf43f5e,
+            name: "Ruby",
+            z: 0,
+            targetLane: 1,
+            actualX: 0,
+            y: 0,
+            speed: 0,
+            targetSpeed: 0,
+            stamina: 100,
+            exhausted: false,
+            exhaustedTimer: 0,
+            turbo: false,
+            isJumping: false,
+            jumpProgress: 0,
+            lastSpurTime: 0,
+            speedScale: 0,
+            pane: document.getElementById('pane-p2'),
+            staminaFill: document.getElementById('stamina-fill-p2'),
+            staminaText: document.getElementById('stamina-text-p2'),
+            speedText: document.getElementById('speed-p2'),
+            distText: document.getElementById('distance-p2'),
+            announcement: document.getElementById('announcement-p2'),
+            marker: document.getElementById('marker-p2'),
+            finished: false,
+            finishTime: 0,
+            mesh: null,
+            legs: [],
+            dust: null,
+            hoofTimer: 0
+        };
+
+        let keys = {};
+        let scene, clock = new THREE.Clock();
+        let renderer;
+        let camera1, camera2; // Left and Right cameras
+        let gameActive = false;
+        let countdownActive = false;
+        let raceFinished = false;
+
+        // Level objects list (for collision checks)
+        let objects = []; // Obstacles, speed boosts, stamina items
+        let environmentDecoration = [];
+
+        // Loading Screen Progress
+        let progress = 10;
+        let loadInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadInterval);
+                setTimeout(showLobby, 500);
+            }
+            document.getElementById('loading-bar').style.width = progress + '%';
+        }, 150);
+
+        function showLobby() {
+            gsap.to('#loading-screen', { opacity: 0, duration: 0.5, onComplete: () => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }});
+        }
+
+        // Lobby Color Selectors
+        function initLobbyEvents() {
+            const colorsP1 = document.querySelectorAll('#colors-p1 .color-dot');
+            colorsP1.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    colorsP1.forEach(d => d.classList.remove('selected'));
+                    dot.classList.add('selected');
+                    p1.color = parseInt(dot.getAttribute('data-color'));
+                    p1.name = dot.getAttribute('data-name');
+                    document.getElementById('name-p1').innerText = p1.name;
+                    document.getElementById('preview-icon-p1').style.color = dot.style.backgroundColor;
+                });
+            });
+
+            const colorsP2 = document.querySelectorAll('#colors-p2 .color-dot');
+            colorsP2.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    colorsP2.forEach(d => d.classList.remove('selected'));
+                    dot.classList.add('selected');
+                    p2.color = parseInt(dot.getAttribute('data-color'));
+                    p2.name = dot.getAttribute('data-name');
+                    document.getElementById('name-p2').innerText = p2.name;
+                    document.getElementById('preview-icon-p2').style.color = dot.style.backgroundColor;
+                });
+            });
+
+            document.getElementById('lobby-start-btn').addEventListener('click', () => {
+                sfx.playWhinny();
+                gsap.to('#lobby-screen', { opacity: 0, scale: 0.95, duration: 0.5, onComplete: () => {
+                    document.getElementById('lobby-screen').style.display = 'none';
+                    startCountdown();
+                }});
+            });
+        }
+        initLobbyEvents();
+
+        function startCountdown() {
+            document.getElementById('countdown-overlay').style.display = 'flex';
+            const countText = document.getElementById('countdown-text');
+            
+            const runCount = (value, callback) => {
+                countText.innerText = value;
+                countText.className = 'pop';
+                setTimeout(() => {
+                    countText.className = '';
+                    setTimeout(callback, 200);
+                }, 800);
+            };
+
+            runCount("READY", () => {
+                runCount("3", () => {
+                    runCount("2", () => {
+                        runCount("1", () => {
+                            countText.style.color = '#ffe66d';
+                            runCount("RIDE!", () => {
+                                document.getElementById('countdown-overlay').style.display = 'none';
+                                sfx.playWhinny();
+                                gameActive = true;
+                                clock.getDelta(); // reset delta clock
+                            });
+                        });
+                    });
+                });
+            });
+        }
+
+        // Initialize Three.js Engine
+        function initEngine() {
+            scene = new THREE.Scene();
+            
+            // Sunset sky gradient simulated with custom light + fog
+            scene.background = new THREE.Color(0x1a082e); // Deep purple sunset sky
+            scene.fog = new THREE.FogExp2(0xf472b6, 0.005); // Neon pink fog for sunset horizon look
+
+            // Setup Cameras
+            camera1 = new THREE.PerspectiveCamera(65, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+            camera2 = new THREE.PerspectiveCamera(65, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+
+            // Positioning initial cameras behind player zones
+            camera1.position.set(0, 5, -8);
+            camera2.position.set(0, 5, -8);
+
+            // Renderer Setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Divide canvas among P1 and P2 panes
+            p1.pane.appendChild(renderer.domElement);
+            // Share the same canvas element by absolute positioning or placing it in body
+            renderer.domElement.style.position = 'absolute';
+            renderer.domElement.style.top = '0';
+            renderer.domElement.style.left = '0';
+            renderer.domElement.style.width = '100vw';
+            renderer.domElement.style.height = '100vh';
+            renderer.domElement.style.zIndex = '1';
+            document.getElementById('game-container').insertBefore(renderer.domElement, p1.pane);
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambient);
+
+            const sunLight = new THREE.DirectionalLight(0xff9a9e, 1.2); // Warm sunset light
+            sunLight.position.set(100, 40, -100);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            sunLight.shadow.camera.near = 0.5;
+            sunLight.shadow.camera.far = 500;
+            const d = 40;
+            sunLight.shadow.camera.left = -d;
+            sunLight.shadow.camera.right = d;
+            sunLight.shadow.camera.top = d;
+            sunLight.shadow.camera.bottom = -d;
+            scene.add(sunLight);
+
+            // Additional rim light for cyber vibe
+            const rimLight = new THREE.DirectionalLight(0x00f2fe, 0.6);
+            rimLight.position.set(-80, 20, 80);
+            scene.add(rimLight);
+
+            buildTrack();
+            spawnHorses();
+            buildDecorations();
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function onWindowResize() {
+            camera1.aspect = (window.innerWidth / 2) / window.innerHeight;
+            camera1.updateProjectionMatrix();
+            camera2.aspect = (window.innerWidth / 2) / window.innerHeight;
+            camera2.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Procedural Horse Generation (No assets required!)
+        function createHorseMesh(colorHex) {
+            const horseGroup = new THREE.Group();
+
+            // Materials
+            const horseMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.6, metalness: 0.1, flatShading: true });
+            const maneMat = new THREE.MeshStandardMaterial({ color: 0x111115, roughness: 0.7, flatShading: true });
+            const leatherMat = new THREE.MeshStandardMaterial({ color: 0x3d2005, roughness: 0.8 });
+            const neonTrimMat = new THREE.MeshBasicMaterial({ color: colorHex });
+
+            // Torso (Body)
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 2.4), horseMat);
+            torso.position.y = 1.6;
+            torso.castShadow = true;
+            torso.receiveShadow = true;
+            horseGroup.add(torso);
+
+            // Neck
+            const neck = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.6), horseMat);
+            neck.position.set(0, 0.9, 0.9);
+            neck.rotation.x = -Math.PI / 4;
+            neck.castShadow = true;
+            torso.add(neck);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 1.0), horseMat);
+            head.position.set(0, 0.5, 0.4);
+            head.rotation.x = Math.PI / 8;
+            head.castShadow = true;
+            neck.add(head);
+
+            // Ears
+            const earL = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.3, 4), horseMat);
+            earL.position.set(0.18, 0.3, -0.2);
+            head.add(earL);
+            const earR = earL.clone();
+            earR.position.x = -0.18;
+            head.add(earR);
+
+            // Mane (Hair)
+            const mane = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.2, 0.25), maneMat);
+            mane.position.set(0, 0.2, -0.35);
+            neck.add(mane);
+
+            // Saddle / Blanket
+            const saddle = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.6, 1.2), leatherMat);
+            saddle.position.set(0, 0.22, -0.1);
+            torso.add(saddle);
+
+            // Rider (Cowboy/Cowgirl Simple Low-Poly)
+            const riderGroup = new THREE.Group();
+            riderGroup.position.set(0, 0.5, -0.1);
+            
+            // Rider Torso
+            const riderTorso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 0.4), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, flatShading: true }));
+            riderTorso.position.y = 0.4;
+            riderGroup.add(riderTorso);
+
+            // Rider Head
+            const riderHead = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.35, 0.35), new THREE.MeshStandardMaterial({ color: 0xfbcfe8, flatShading: true }));
+            riderHead.position.y = 0.95;
+            riderGroup.add(riderHead);
+
+            // Cowboy Hat
+            const hatBrim = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.8), new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true }));
+            hatBrim.position.y = 1.1;
+            riderGroup.add(hatBrim);
+            const hatCrown = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.25, 0.42), new THREE.MeshStandardMaterial({ color: 0x78350f, flatShading: true }));
+            hatCrown.position.y = 1.22;
+            riderGroup.add(hatCrown);
+
+            torso.add(riderGroup);
+
+            // Tail
+            const tail = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 0.2), maneMat);
+            tail.position.set(0, 0.2, -1.35);
+            tail.rotation.x = Math.PI / 10;
+            tail.castShadow = true;
+            torso.add(tail);
+
+            // Legs System (Front-Left, Front-Right, Back-Left, Back-Right)
+            const legGeo = new THREE.BoxGeometry(0.25, 1.2, 0.25);
+            
+            const createLeg = (x, z) => {
+                const pivot = new THREE.Group();
+                pivot.position.set(x, -0.5, z);
+                
+                const legMesh = new THREE.Mesh(legGeo, horseMat);
+                legMesh.position.y = -0.5;
+                legMesh.castShadow = true;
+                pivot.add(legMesh);
+                
+                // Neon Horse Hoof (Glow!)
+                const hoof = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.2, 0.28), neonTrimMat);
+                hoof.position.y = -1.1;
+                pivot.add(hoof);
+
+                torso.add(pivot);
+                return pivot;
+            };
+
+            const legs = [
+                createLeg(0.4, 0.8),   // FL
+                createLeg(-0.4, 0.8),  // FR
+                createLeg(0.4, -0.8),  // BL
+                createLeg(-0.4, -0.8)  // BR
+            ];
+
+            return { group: horseGroup, legs, torso, tail, rider: riderGroup };
+        }
+
+        function spawnHorses() {
+            // Player 1
+            const horse1Data = createHorseMesh(p1.color);
+            p1.mesh = horse1Data.group;
+            p1.legs = horse1Data.legs;
+            p1.torso = horse1Data.torso;
+            p1.tail = horse1Data.tail;
+            p1.rider = horse1Data.rider;
+            p1.mesh.position.set(-LANE_OFFSET, 0, 0);
+            scene.add(p1.mesh);
+
+            // Player 2
+            const horse2Data = createHorseMesh(p2.color);
+            p2.mesh = horse2Data.group;
+            p2.legs = horse2Data.legs;
+            p2.torso = horse2Data.torso;
+            p2.tail = horse2Data.tail;
+            p2.rider = horse2Data.rider;
+            p2.mesh.position.set(LANE_OFFSET, 0, 0);
+            scene.add(p2.mesh);
+
+            // Create procedural dust particle generators for galloping kickback
+            p1.dust = createDustSystem();
+            p2.dust = createDustSystem();
+            scene.add(p1.dust);
+            scene.add(p2.dust);
+        }
+
+        function createDustSystem() {
+            const particleCount = 40;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const scales = new Float32Array(particleCount);
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i*3] = 0;
+                positions[i*3+1] = -10; // Hide initially
+                positions[i*3+2] = 0;
+                scales[i] = 0;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
+
+            const mat = new THREE.PointsMaterial({
+                color: 0xe0a96d, // Dust color
+                size: 0.6,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.NormalBlending
+            });
+
+            const points = new THREE.Points(geometry, mat);
+            points.userData = {
+                velocities: new Float32Array(particleCount * 3),
+                lifes: new Float32Array(particleCount),
+                index: 0
+            };
+            return points;
+        }
+
+        function emitDust(dustSystem, originX, originZ, horseSpeed) {
+            if (horseSpeed < 5) return;
+            const geo = dustSystem.geometry;
+            const posAttr = geo.attributes.position;
+            const scaleAttr = geo.attributes.scale;
+            
+            const index = dustSystem.userData.index;
+            
+            // Emit 2 dust particles
+            for (let k = 0; k < 2; k++) {
+                const pIdx = (index + k) % 40;
+                
+                posAttr.array[pIdx * 3] = originX + (Math.random() - 0.5) * 0.5;
+                posAttr.array[pIdx * 3 + 1] = 0.2 + Math.random() * 0.3;
+                posAttr.array[pIdx * 3 + 2] = originZ - 1.2; // Emit behind horse
+
+                dustSystem.userData.velocities[pIdx * 3] = (Math.random() - 0.5) * 1.5;
+                dustSystem.userData.velocities[pIdx * 3 + 1] = 1.0 + Math.random() * 2;
+                dustSystem.userData.velocities[pIdx * 3 + 2] = -horseSpeed * 0.3 - Math.random() * 3;
+
+                dustSystem.userData.lifes[pIdx] = 1.0; // Life is 100%
+                scaleAttr.array[pIdx] = 0.6 + Math.random() * 0.8;
+            }
+
+            dustSystem.userData.index = (index + 2) % 40;
+            posAttr.needsUpdate = true;
+            scaleAttr.needsUpdate = true;
+        }
+
+        function updateDustSystem(dustSystem, delta) {
+            const geo = dustSystem.geometry;
+            const posAttr = geo.attributes.position;
+            const scaleAttr = geo.attributes.scale;
+            const v = dustSystem.userData.velocities;
+            const life = dustSystem.userData.lifes;
+
+            for (let i = 0; i < 40; i++) {
+                if (life[i] > 0) {
+                    life[i] -= delta * 1.5;
+                    
+                    posAttr.array[i * 3] += v[i * 3] * delta;
+                    posAttr.array[i * 3 + 1] += v[i * 3 + 1] * delta;
+                    posAttr.array[i * 3 + 2] += v[i * 3 + 2] * delta;
+
+                    // Gravity pull on dust
+                    v[i * 3 + 1] -= 2.0 * delta;
+
+                    scaleAttr.array[i] *= 0.95; // Shrink
+                    
+                    if (life[i] <= 0) {
+                        life[i] = 0;
+                        posAttr.array[i * 3 + 1] = -10; // Hide
+                    }
+                }
+            }
+            posAttr.needsUpdate = true;
+            scaleAttr.needsUpdate = true;
+        }
+
+        // Build 3D Speedway track and procedurally generated canyon walls
+        function buildTrack() {
+            // Track ground
+            const trackGeo = new THREE.PlaneGeometry(TRACK_WIDTH * 3, MAP_LENGTH + 200);
+            const trackMat = new THREE.MeshStandardMaterial({
+                color: 0x110c1c, // Dark high-tech cyber dirt
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const track = new THREE.Mesh(trackGeo, trackMat);
+            track.rotation.x = -Math.PI / 2;
+            track.position.set(0, 0, MAP_LENGTH / 2);
+            track.receiveShadow = true;
+            scene.add(track);
+
+            // Glowy neon side rails
+            const railGeo = new THREE.BoxGeometry(0.4, 0.4, MAP_LENGTH + 200);
+            const railMatL = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
+            const railMatR = new THREE.MeshBasicMaterial({ color: 0xf472b6 });
+
+            const leftRail = new THREE.Mesh(railGeo, railMatL);
+            leftRail.position.set(-TRACK_WIDTH, 0.2, MAP_LENGTH / 2);
+            scene.add(leftRail);
+
+            const rightRail = new THREE.Mesh(railGeo, railMatR);
+            rightRail.position.set(TRACK_WIDTH, 0.2, MAP_LENGTH / 2);
+            scene.add(rightRail);
+
+            // Central dividing dashed lines
+            const lineGeo = new THREE.BoxGeometry(0.15, 0.02, 3);
+            const dashMat = new THREE.MeshBasicMaterial({ color: 0xffe66d });
+            for (let z = 0; z < MAP_LENGTH + 100; z += 15) {
+                const lineL = new THREE.Mesh(lineGeo, dashMat);
+                lineL.position.set(-LANE_OFFSET/2, 0.02, z);
+                scene.add(lineL);
+
+                const lineR = new THREE.Mesh(lineGeo, dashMat);
+                lineR.position.set(LANE_OFFSET/2, 0.02, z);
+                scene.add(lineR);
+            }
+
+            // Finish Line neon banner
+            const archPillarGeo = new THREE.CylinderGeometry(0.5, 0.5, 12, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+            
+            const pillarL = new THREE.Mesh(archPillarGeo, pillarMat);
+            pillarL.position.set(-TRACK_WIDTH, 6, MAP_LENGTH);
+            scene.add(pillarL);
+
+            const pillarR = pillarL.clone();
+            pillarR.position.x = TRACK_WIDTH;
+            scene.add(pillarR);
+
+            // Banner Crossbeam
+            const beamGeo = new THREE.BoxGeometry(TRACK_WIDTH * 2, 2, 0.8);
+            const beamMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6 });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.set(0, 12, MAP_LENGTH);
+            scene.add(beam);
+
+            // Glowing FINISH sign
+            const finishSignCanvas = document.createElement('canvas');
+            finishSignCanvas.width = 512;
+            finishSignCanvas.height = 128;
+            const ctx = finishSignCanvas.getContext('2d');
+            ctx.fillStyle = '#110c1c';
+            ctx.fillRect(0,0,512,128);
+            ctx.strokeStyle = '#ffe66d';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(10,10,492,108);
+            ctx.fillStyle = '#00f2fe';
+            ctx.font = 'bold 70px Outfit, Impact';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#00f2fe';
+            ctx.shadowBlur = 15;
+            ctx.fillText('FINISH LINE', 256, 88);
+
+            const signTex = new THREE.CanvasTexture(finishSignCanvas);
+            const signPlane = new THREE.Mesh(new THREE.PlaneGeometry(16, 4), new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide }));
+            signPlane.position.set(0, 12, MAP_LENGTH + 0.45);
+            scene.add(signPlane);
+        }
+
+        // Procedural interactive hurdles, boosts and stamina carrots
+        function buildDecorations() {
+            // Sandbox canyon borders using stylized rock spires
+            const canyonRockGeo = new THREE.DodecahedronGeometry(8, 1);
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0xcc6655, roughness: 0.9, flatShading: true }); // Dusty orange rocks
+
+            for (let z = 50; z < MAP_LENGTH + 200; z += 24) {
+                // Left rocks
+                const rockL = new THREE.Mesh(canyonRockGeo, rockMat);
+                rockL.scale.set(1, 2 + Math.random() * 2, 1);
+                rockL.position.set(-TRACK_WIDTH - 8 - Math.random() * 10, 0, z);
+                rockL.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+                scene.add(rockL);
+                environmentDecoration.push(rockL);
+
+                // Right rocks
+                const rockR = new THREE.Mesh(canyonRockGeo, rockMat);
+                rockR.scale.set(1, 2 + Math.random() * 2, 1);
+                rockR.position.set(TRACK_WIDTH + 8 + Math.random() * 10, 0, z);
+                rockR.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+                scene.add(rockR);
+                environmentDecoration.push(rockR);
+            }
+
+            // Interactive track items: HURDLES, CARROTS, BOOSTS
+            const hurdleGeo = new THREE.BoxGeometry(3.5, 1.2, 0.4);
+            const hurdleMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.9 }); // Wooden hurdle
+            const neonStripe = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+
+            const carrotGeo = new THREE.OctahedronGeometry(0.5, 0);
+            const carrotMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.8 }); // Green stamina carrot
+
+            const boostGeo = new THREE.ConeGeometry(0.8, 0.1, 4);
+            const boostMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+
+            const lanes = [-LANE_OFFSET, 0, LANE_OFFSET];
+
+            for (let z = 100; z < MAP_LENGTH - 50; z += 40 + Math.random() * 30) {
+                const laneIdx = Math.floor(Math.random() * 3);
+                const laneX = lanes[laneIdx];
+                const itemType = Math.random();
+
+                if (itemType < 0.45) {
+                    // Spawn Hurdle
+                    const hurdleGroup = new THREE.Group();
+                    
+                    const gate = new THREE.Mesh(hurdleGeo, hurdleMat);
+                    gate.position.y = 0.6;
+                    gate.castShadow = true;
+                    hurdleGroup.add(gate);
+
+                    // Warning neon sign on hurdle
+                    const trim = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 0.45), neonStripe);
+                    trim.position.set(0, 0.9, 0);
+                    hurdleGroup.add(trim);
+
+                    hurdleGroup.position.set(laneX, 0, z);
+                    scene.add(hurdleGroup);
+                    
+                    objects.push({
+                        type: 'hurdle',
+                        x: laneX,
+                        z: z,
+                        lane: laneIdx,
+                        mesh: hurdleGroup,
+                        boundingBox: new THREE.Box3().setFromObject(hurdleGroup),
+                        cleared: false
+                    });
+                } else if (itemType < 0.75) {
+                    // Spawn Stamina Carrot
+                    const crystal = new THREE.Mesh(carrotGeo, carrotMat);
+                    crystal.position.set(laneX, 1.0, z);
+                    scene.add(crystal);
+
+                    objects.push({
+                        type: 'carrot',
+                        x: laneX,
+                        z: z,
+                        lane: laneIdx,
+                        mesh: crystal,
+                        boundingBox: new THREE.Box3().setFromObject(crystal),
+                        cleared: false
+                    });
+                } else {
+                    // Spawn Speed Boost Pad
+                    const pad = new THREE.Mesh(boostGeo, boostMat);
+                    pad.rotation.x = Math.PI / 2;
+                    pad.position.set(laneX, 0.05, z);
+                    scene.add(pad);
+
+                    objects.push({
+                        type: 'boost',
+                        x: laneX,
+                        z: z,
+                        lane: laneIdx,
+                        mesh: pad,
+                        boundingBox: new THREE.Box3().setFromObject(pad),
+                        cleared: false
+                    });
+                }
+            }
+        }
+
+        // Input Handling
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+
+            if (!gameActive) return;
+
+            // Player 1 Rhythmic Spur (W)
+            if (e.code === 'KeyW' && !p1.exhausted && !p1.finished) {
+                const now = performance.now();
+                const diff = now - p1.lastSpurTime;
+                p1.lastSpurTime = now;
+
+                if (diff < 450) {
+                    // Rhythmically tapping speeds up to Gallop
+                    p1.targetSpeed = SPEED_GALLOP;
+                } else if (diff < 900) {
+                    p1.targetSpeed = SPEED_CANTER;
+                } else {
+                    p1.targetSpeed = SPEED_TROT;
+                }
+                sfx.playHoof(p1.speed / SPEED_TURBO);
+            }
+
+            // Player 1 Spur Slow (S)
+            if (e.code === 'KeyS' && !p1.finished) {
+                p1.targetSpeed = Math.max(0, p1.targetSpeed - 8);
+            }
+
+            // Player 1 Lane Changes
+            if (e.code === 'KeyA' && !p1.finished) {
+                p1.targetLane = Math.max(0, p1.targetLane - 1);
+            }
+            if (e.code === 'KeyD' && !p1.finished) {
+                p1.targetLane = Math.min(2, p1.targetLane + 1);
+            }
+
+            // Player 1 Spur Jump
+            if (e.code === 'Space' && !p1.isJumping && !p1.finished) {
+                p1.isJumping = true;
+                p1.jumpProgress = 0;
+                sfx.playJump();
+            }
+
+            // Player 2 Rhythmic Spur (Up Arrow)
+            if (e.code === 'ArrowUp' && !p2.exhausted && !p2.finished) {
+                const now = performance.now();
+                const diff = now - p2.lastSpurTime;
+                p2.lastSpurTime = now;
+
+                if (diff < 450) {
+                    p2.targetSpeed = SPEED_GALLOP;
+                } else if (diff < 900) {
+                    p2.targetSpeed = SPEED_CANTER;
+                } else {
+                    p2.targetSpeed = SPEED_TROT;
+                }
+                sfx.playHoof(p2.speed / SPEED_TURBO);
+            }
+
+            // Player 2 Spur Slow (Down Arrow)
+            if (e.code === 'ArrowDown' && !p2.finished) {
+                p2.targetSpeed = Math.max(0, p2.targetSpeed - 8);
+            }
+
+            // Player 2 Lane Changes
+            if (e.code === 'ArrowLeft' && !p2.finished) {
+                p2.targetLane = Math.max(0, p2.targetLane - 1);
+            }
+            if (e.code === 'ArrowRight' && !p2.finished) {
+                p2.targetLane = Math.min(2, p2.targetLane + 1);
+            }
+
+            // Player 2 Spur Jump
+            if (e.code === 'Enter' && !p2.isJumping && !p2.finished) {
+                p2.isJumping = true;
+                p2.jumpProgress = 0;
+                sfx.playJump();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Main Simulation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!scene) return;
+
+            const delta = Math.min(clock.getDelta(), 0.1); // Clamp delta to avoid heavy lag jumps
+
+            if (gameActive) {
+                updatePlayer(p1, delta);
+                updatePlayer(p2, delta);
+                checkCollisions();
+                updateEnvironment(delta);
+                updateLamps();
+            }
+
+            // Render Split Viewports
+            if (renderer) {
+                // Viewport 1 (Left Half)
+                renderer.setViewport(0, 0, window.innerWidth / 2, window.innerHeight);
+                renderer.setScissor(0, 0, window.innerWidth / 2, window.innerHeight);
+                renderer.setScissorTest(true);
+                renderer.render(scene, camera1);
+
+                // Viewport 2 (Right Half)
+                renderer.setViewport(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
+                renderer.setScissor(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
+                renderer.setScissorTest(true);
+                renderer.render(scene, camera2);
+            }
+        }
+
+        // Animate meshes (legs, tail bobbing) organically based on speed
+        function animateHorseMeshes(p, delta) {
+            if (p.speed < 1) {
+                // Reset leg positions when idle
+                p.legs.forEach(leg => leg.rotation.x = 0);
+                p.torso.position.y = 1.6;
+                p.rider.position.y = 0.5;
+                return;
+            }
+
+            const oscSpeed = p.speed * 0.4;
+            const time = performance.now() * 0.005 * oscSpeed;
+
+            // Gallop leg rotation pattern
+            p.legs[0].rotation.x = Math.sin(time) * 0.6; // Front Left
+            p.legs[1].rotation.x = -Math.sin(time) * 0.6; // Front Right
+            p.legs[2].rotation.x = -Math.sin(time) * 0.5; // Back Left
+            p.legs[3].rotation.x = Math.sin(time) * 0.5; // Back Right
+
+            // Torso galloping bobbing
+            p.torso.position.y = 1.6 + Math.abs(Math.sin(time * 2)) * 0.25;
+            p.torso.rotation.z = Math.sin(time) * 0.05;
+
+            // Tail wag
+            p.tail.rotation.z = Math.sin(time * 3) * 0.15;
+
+            // Rider jockey bob
+            p.rider.position.y = 0.5 + Math.sin(time * 2) * 0.08;
+            p.rider.rotation.x = Math.PI / 12 + Math.abs(Math.sin(time)) * 0.05; // Lean forward
+        }
+
+        function updatePlayer(p, delta) {
+            // Decelerate over time if keys aren't actively being spurred
+            if (!p.finished) {
+                p.targetSpeed = Math.max(0, p.targetSpeed - 5 * delta);
+            }
+
+            // Spur active Turbo with Left Shift (P1) or Right Shift (P2)
+            const turboKey = p.id === 1 ? 'ShiftLeft' : 'ShiftRight';
+            if (keys[turboKey] && !p.exhausted && p.stamina > 0 && p.speed > 5 && !p.finished) {
+                p.turbo = true;
+                p.targetSpeed = SPEED_TURBO;
+                p.stamina = Math.max(0, p.stamina - 18 * delta); // Heavy stamina burn
+                showAnnouncement(p, "TURBO! WHIP IT!", p.id === 1 ? 'var(--neon-cyan)' : 'var(--neon-magenta)');
+
+                // Sound and screenshake details
+                if (Math.random() < 0.1) {
+                    sfx.playWhip();
+                }
+                p.pane.classList.add('screenshake');
+            } else {
+                p.turbo = false;
+                p.pane.classList.remove('screenshake');
+                
+                // Natural stamina recovery if not sprinting
+                if (p.speed < SPEED_CANTER) {
+                    p.stamina = Math.min(100, p.stamina + 12 * delta); // Faster recover at slow speeds
+                } else if (p.speed < SPEED_GALLOP) {
+                    p.stamina = Math.min(100, p.stamina + 5 * delta);
+                }
+            }
+
+            // Exhaustion penalty check
+            if (p.stamina <= 0 && !p.exhausted) {
+                p.exhausted = true;
+                p.exhaustedTimer = 3.0; // Exhausted for 3 seconds
+                p.targetSpeed = 12; // Slow to crawl trot
+                sfx.playWhinny();
+            }
+
+            if (p.exhausted) {
+                p.exhaustedTimer -= delta;
+                p.staminaFill.classList.add('exhausted');
+                showAnnouncement(p, "EXHAUSTED!", '#dc2626');
+                if (p.exhaustedTimer <= 0) {
+                    p.exhausted = false;
+                    p.staminaFill.classList.remove('exhausted');
+                    hideAnnouncement(p);
+                }
+            }
+
+            // Speed interpolation for realistic momentum weight
+            p.speed += (p.targetSpeed - p.speed) * 4 * delta;
+
+            // Move Z forward along racetrack
+            p.z += p.speed * 1.4 * delta;
+
+            // Target lane X calculation
+            const lanes = [-LANE_OFFSET, 0, LANE_OFFSET];
+            const targetX = lanes[p.targetLane];
+            p.actualX += (targetX - p.actualX) * 8 * delta;
+
+            // Jump height simulation
+            if (p.isJumping) {
+                p.jumpProgress += delta * 3.5;
+                p.y = Math.sin(p.jumpProgress * Math.PI) * 2.2; // Sinuoidal jump arc
+                
+                // Rotate horse forward slightly during jump peak
+                p.mesh.rotation.x = -Math.cos(p.jumpProgress * Math.PI) * 0.15;
+
+                if (p.jumpProgress >= 1.0) {
+                    p.isJumping = false;
+                    p.y = 0;
+                    p.mesh.rotation.x = 0;
+                    sfx.playHoof(p.speed / SPEED_TURBO);
+                }
+            }
+
+            // Update 3D horse group coordinates
+            p.mesh.position.set(p.actualX, p.y, p.z);
+            p.mesh.rotation.y = (targetX - p.actualX) * -0.05; // Lean into lanes steer
+
+            // Gallop animation
+            animateHorseMeshes(p, delta);
+
+            // Dust kicking particles
+            p.hoofTimer += delta * p.speed;
+            if (p.hoofTimer > 8 && !p.isJumping) {
+                p.hoofTimer = 0;
+                emitDust(p.dust, p.mesh.position.x, p.mesh.position.z, p.speed);
+                sfx.playHoof(p.speed / SPEED_TURBO);
+            }
+            updateDustSystem(p.dust, delta);
+
+            // Smooth cameras follow spring
+            const camera = p.id === 1 ? camera1 : camera2;
+            const camTargetX = p.mesh.position.x * 0.8;
+            const camTargetY = p.mesh.position.y + 4.5;
+            const camTargetZ = p.mesh.position.z - 7.5;
+
+            camera.position.x += (camTargetX - camera.position.x) * 5 * delta;
+            camera.position.y += (camTargetY - camera.position.y) * 5 * delta;
+            camera.position.z += (camTargetZ - camera.position.z) * 10 * delta;
+            camera.lookAt(new THREE.Vector3(p.mesh.position.x, p.mesh.position.y + 1.5, p.mesh.position.z + 5.0));
+
+            // Update dashboard text
+            p.speedText.innerHTML = `${Math.floor(p.speed)} <span>mph</span>`;
+            p.staminaText.innerText = `${Math.floor(p.stamina)}%`;
+            p.staminaFill.style.width = `${p.stamina}%`;
+            p.distText.innerText = `${Math.floor(p.z)}m / ${MAP_LENGTH}m`;
+
+            // Race progress top marker updater
+            const progPercent = Math.min(95, 5 + (p.z / MAP_LENGTH) * 90);
+            p.marker.style.left = `${progPercent}%`;
+
+            // Check race completion
+            if (p.z >= MAP_LENGTH && !p.finished) {
+                p.finished = true;
+                p.finishTime = performance.now();
+                p.targetSpeed = 0;
+                sfx.playVictory();
+                checkWinner();
+            }
+        }
+
+        // Real-time track obstacles and boost pads intersections
+        function checkCollisions() {
+            const checkP = (p) => {
+                if (p.finished) return;
+                
+                const pBox = new THREE.Box3().setFromObject(p.mesh);
+
+                objects.forEach(obj => {
+                    if (obj.cleared) return;
+
+                    // Quick lane + distance check before precise bounding box check
+                    const distToObj = Math.abs(obj.z - p.z);
+                    if (distToObj < 1.5 && obj.lane === p.targetLane) {
+                        
+                        if (obj.type === 'hurdle') {
+                            if (p.isJumping && p.y > 0.8) {
+                                // Gracefully cleared hurdle!
+                                obj.cleared = true;
+                                sfx.playBoost();
+                                showAnnouncement(p, "CLEARED! +10 Stamina", 'var(--neon-yellow)');
+                                p.stamina = Math.min(100, p.stamina + 10);
+                                setTimeout(() => hideAnnouncement(p), 1000);
+                            } else {
+                                // Crash! Heavy penalty
+                                obj.cleared = true;
+                                p.speed = 0;
+                                p.targetSpeed = 0;
+                                p.stamina = Math.max(0, p.stamina - 20);
+                                sfx.playCrash();
+                                showAnnouncement(p, "CRASHED! Slowed Down", '#ef4444');
+                                gsap.to(p.mesh.rotation, { z: 0.3, duration: 0.1, yoyo: true, repeat: 3 });
+                                setTimeout(() => hideAnnouncement(p), 1500);
+                            }
+                        } else if (obj.type === 'carrot') {
+                            // Recover stamina carrot
+                            obj.cleared = true;
+                            scene.remove(obj.mesh);
+                            p.stamina = Math.min(100, p.stamina + 35);
+                            sfx.playBoost();
+                            showAnnouncement(p, "CARROT! +35 Stamina", '#10b981');
+                            setTimeout(() => hideAnnouncement(p), 1000);
+                        } else if (obj.type === 'boost') {
+                            // Speed boost pad
+                            obj.cleared = true;
+                            p.targetSpeed = SPEED_TURBO + 10;
+                            p.speed = SPEED_TURBO + 5;
+                            sfx.playBoost();
+                            showAnnouncement(p, "SPEED PAD BOOST!", '#00ffcc');
+                            setTimeout(() => hideAnnouncement(p), 1000);
+                        }
+                    }
+                });
+            };
+
+            checkP(p1);
+            checkP(p2);
+        }
+
+        function checkWinner() {
+            if (p1.finished && p2.finished && !raceFinished) {
+                raceFinished = true;
+                gameActive = false;
+                
+                let winnerText = "";
+                let subtext = "";
+                if (p1.finishTime < p2.finishTime) {
+                    winnerText = "PLAYER 1 WINS!";
+                    subtext = `${p1.name} Stallion takes the trophy!`;
+                } else if (p2.finishTime < p1.finishTime) {
+                    winnerText = "PLAYER 2 WINS!";
+                    subtext = `${p2.name} Stallion takes the trophy!`;
+                } else {
+                    winnerText = "IT'S A DRAW!";
+                    subtext = "Flawless spur rhythm on both sides!";
+                }
+
+                // Show full finish banner announcement
+                showAnnouncement(p1, winnerText, 'var(--neon-yellow)');
+                showAnnouncement(p2, winnerText, 'var(--neon-yellow)');
+                
+                setTimeout(() => {
+                    alert(`🏆 RACE RESULTS 🏆\n\n${winnerText}\n${subtext}\n\nClick OK to race again!`);
+                    resetRace();
+                }, 1500);
+            }
+        }
+
+        function resetRace() {
+            p1.z = 0; p1.speed = 0; p1.targetSpeed = 0; p1.stamina = 100; p1.finished = false; p1.targetLane = 1; p1.actualX = 0;
+            p2.z = 0; p2.speed = 0; p2.targetSpeed = 0; p2.stamina = 100; p2.finished = false; p2.targetLane = 1; p2.actualX = 0;
+            raceFinished = false;
+            
+            objects.forEach(obj => {
+                obj.cleared = false;
+                if (obj.type !== 'hurdle' && !scene.children.includes(obj.mesh)) {
+                    scene.add(obj.mesh);
+                }
+            });
+
+            hideAnnouncement(p1);
+            hideAnnouncement(p2);
+            startCountdown();
+        }
+
+        function showAnnouncement(p, text, colorHex) {
+            p.announcement.innerText = text;
+            p.announcement.style.color = colorHex;
+            p.announcement.classList.add('visible');
+        }
+
+        function hideAnnouncement(p) {
+            p.announcement.classList.remove('visible');
+        }
+
+        function updateEnvironment(delta) {
+            // Minor rotational spin for collected item carrot meshes to look dynamic
+            objects.forEach(obj => {
+                if (obj.type === 'carrot' && !obj.cleared) {
+                    obj.mesh.rotation.y += delta * 2;
+                    obj.mesh.rotation.z += delta * 0.5;
+                }
+            });
+        }
+
+        function updateLamps() {
+            // Keep procedural light follow behind players
+        }
+
+        // Run engine initialization on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initEngine();
+        });
+    </script>
+</body>
+</html>
