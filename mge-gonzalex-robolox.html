@@ -624,9 +624,52 @@
             max-width: 500px;
             line-height: 1.5;
         }
+        
+        /* Easter Egg Special FX */
+        @keyframes screenShake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shaking {
+            animation: screenShake 0.2s infinite !important;
+        }
+        #egg-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 0, 0.12);
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .egg-flash-text {
+            font-size: 12rem;
+            font-weight: 900;
+            color: #ffd60a;
+            text-shadow: 0 0 20px #fff, 0 0 60px #ff4655, 0 0 100px #ffd60a;
+            animation: flashLight 0.18s infinite alternate;
+        }
+        @keyframes flashLight {
+            from { opacity: 0.4; transform: scale(0.9) rotate(-3deg); }
+            to { opacity: 1; transform: scale(1.1) rotate(3deg); }
+        }
     </style>
 </head>
 <body>
+    <!-- Easter Egg Lightning Layer -->
+    <div id="egg-overlay"><div class="egg-flash-text">⚡ 67 ⚡</div></div>
+
     <canvas id="canvas"></canvas>
 
     <!-- Start & Play Menu -->
@@ -836,6 +879,14 @@
             { q: "I am a set of instructions grouped together under one name! What am I?", a: "A FUNCTION!" },
             { q: "I am text surrounded by quotes, like 'Hello'! Don't pull my string!", a: "A STRING variable!" }
         ];
+
+        // --- NEW: Wizard NPC Variables ---
+        let wizardNPC = null;
+        let lastWizardTime = 0;
+        
+        // --- NEW: Easter Egg Variables ---
+        let eggCount = 0;
+        let isSillyMode = false;
 
         // Colors palette (Classic Roblox)
         const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0x7209b7, 0x4cc9f0, 0x2ec4b6];
@@ -1318,6 +1369,9 @@
             // Build Riddle Teacher NPC
             createRiddleNPC();
 
+            // Build Logic Wizard NPC
+            createWizardNPC();
+
             // Setup starter blocks
             addBlock(0, gridSize / 2, 0, 0x118ab2);
             addBlock(1, gridSize / 2, 0, 0xef476f);
@@ -1480,6 +1534,90 @@
                 addChatMessage(`<span class="name" style="color:#7209b7;">📜 Riddle Coder:</span> The answer is... 🌟 **${r.a}**! Haha! You're getting super smart! Try to code that in your future game! 🎮`);
                 playSound('jump');
             }, 5000);
+        }
+
+        function createWizardNPC() {
+            const group = new THREE.Group();
+            scene.add(group);
+            const skinColor = 0xffd166;
+            const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+            
+            const wizFaceCanvas = document.createElement('canvas'); wizFaceCanvas.width = 256; wizFaceCanvas.height = 256;
+            const wctx = wizFaceCanvas.getContext('2d'); wctx.fillStyle = '#000'; 
+            wctx.fillRect(70, 95, 32, 12); wctx.fillRect(154, 95, 32, 12); // Focused eyes
+            wctx.beginPath(); wctx.arc(128, 150, 18, 0, Math.PI*2); wctx.fill(); // Open mouth
+            const wizTex = new THREE.CanvasTexture(wizFaceCanvas);
+
+            const hMats = [headMat, headMat, headMat, headMat, new THREE.MeshStandardMaterial({ color: skinColor, map: wizTex, transparent: true }), headMat];
+            const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), hMats); rHead.position.y = 1.15; rHead.castShadow = true; group.add(rHead);
+
+            const rTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), new THREE.MeshStandardMaterial({ color: 0x00b4d8, roughness: 0.8 }));
+            rTorso.position.y = 0.55; rTorso.castShadow = true; group.add(rTorso);
+
+            const rArmL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat); rArmL.position.set(-0.52, 0.55, 0); group.add(rArmL);
+            const rArmR = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat); rArmR.position.set(0.52, 0.55, 0); group.add(rArmR);
+            const rLegL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({color: 0x1a1a1a})); rLegL.position.set(-0.19, -0.22, 0); group.add(rLegL);
+            const rLegR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({color: 0x1a1a1a})); rLegR.position.set(0.19, -0.22, 0); group.add(rLegR);
+
+            const cGeo = new THREE.ConeGeometry(0.36, 0.65, 12); const cMat = new THREE.MeshStandardMaterial({color: 0x7209b7});
+            const hat = new THREE.Mesh(cGeo, cMat); hat.position.y = 1.65; group.add(hat);
+
+            group.scale.set(1.15, 1.15, 1.15);
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = 'rgba(0,180,216,0.85)'; ctx.fillRect(0,0,256,64);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center'; ctx.fillText("🧙 Code Wizard", 128, 40);
+            const tex = new THREE.CanvasTexture(canvas); const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: tex}));
+            sprite.position.y = 2.0; sprite.scale.set(2, 0.5, 1); group.add(sprite);
+
+            group.position.set(-6, 0.5, -4); // Left side of world
+            group.lookAt(0, 0.5, 0);
+            wizardNPC = group;
+        }
+
+        function spoutWizardLesson() {
+            const lessons = [
+                "An ALGORITHM is like a magical recipe step-by-step for a robot! 🍳🤖",
+                "Computers don't hear you, they just look at electric 1's and 0's! 💻",
+                "LOOPS let you repeat epic things over and over without boring code! 🔁",
+                "Variables are magic boxes holding numbers and player names! 📦📦",
+                "Every professional coder breaks things! Fix bugs to become powerful! 🐞✨"
+            ];
+            const randomMsg = lessons[Math.floor(Math.random() * lessons.length)];
+            addChatMessage(`<span class="name" style="color:#00b4d8;">🧙 Wizard:</span> ${randomMsg}`);
+            playSound('paint');
+        }
+
+        function triggerEasterEgg() {
+            if (eggCount >= 2) {
+                addChatMessage('<span class="server">[Console]: Chaos tokens spent. Limits enforced.</span>');
+                return;
+            }
+            eggCount++;
+            addChatMessage('<span class="server" style="color:#ffd60a; font-weight:900; font-size:1rem;">🔥 [SYSTEM ALERT]: CODE 67 CHAOS ENGAGED! 🔥</span>');
+            
+            document.body.classList.add('shaking');
+            const overlay = document.getElementById('egg-overlay');
+            overlay.style.display = 'flex';
+            isSillyMode = true;
+            
+            playSound('oof'); setTimeout(()=>playSound('jump'), 300); setTimeout(()=>playSound('oof'), 600);
+
+            // Ambient light flash
+            let originalIntensity = 0.62;
+            let lights = scene.children.filter(o => o.isAmbientLight);
+            if(lights.length > 0) {
+                lights[0].intensity = 6.0; // BLINDING LIGHTNING
+                setTimeout(() => lights[0].intensity = originalIntensity, 600);
+            }
+
+            setTimeout(() => {
+                document.body.classList.remove('shaking');
+                overlay.style.display = 'none';
+                isSillyMode = false;
+                playerGroup.scale.set(1.15, 1.15, 1.15);
+                playerGroup.rotation.z = 0;
+                addChatMessage('<span class="server">[System]: Reality anchor restabilized.</span>');
+            }, 6000);
         }
 
         function createRemoteAvatar() {
@@ -1769,6 +1907,8 @@
                 addChatMessage('<span class="server">[Emote] You waved!</span>');
             } else if (txt.toLowerCase() === '/e reset' || txt.toLowerCase() === '/reset') {
                 resetCharacter();
+            } else if (txt === '67') {
+                triggerEasterEgg();
             }
 
             inp.value = '';
@@ -1918,7 +2058,19 @@
             }
 
             // --- LOCAL ANIMATIONS ---
-            if (moving && onGround) {
+            if (isSillyMode) {
+                const sillyTime = Date.now() * 0.012;
+                playerGroup.position.y = playerPos.y + Math.abs(Math.sin(sillyTime)) * 1.8;
+                playerGroup.rotation.y += 0.35;
+                playerGroup.rotation.z = Math.sin(sillyTime * 0.7) * 0.5;
+                const sScale = 1.15 + Math.sin(sillyTime * 0.9) * 0.5;
+                playerGroup.scale.set(sScale, sScale, sScale);
+                
+                leftLegMesh.rotation.x = Math.sin(sillyTime * 4) * 1.2;
+                rightLegMesh.rotation.x = -Math.sin(sillyTime * 4) * 1.2;
+                leftArmMesh.rotation.z = Math.PI/2 + Math.sin(sillyTime * 3);
+                rightArmMesh.rotation.z = -Math.PI/2 - Math.sin(sillyTime * 3);
+            } else if (moving && onGround) {
                 isDancing = false; 
                 walkTime += 0.2;
                 leftLegMesh.rotation.x = Math.sin(walkTime) * 0.6;
@@ -1991,6 +2143,18 @@
                 if (distance < 5 && (Date.now() - lastRiddleTime > 15000)) {
                     lastRiddleTime = Date.now();
                     spoutRiddle();
+                }
+            }
+
+            // --- WIZARD NPC LOGIC ---
+            if (wizardNPC) {
+                const wTime = Date.now() * 0.0012;
+                wizardNPC.position.y = 0.45 + Math.abs(Math.sin(wTime)) * 0.15; // Bouncing
+                
+                const distToWiz = playerPos.distanceTo(wizardNPC.position);
+                if (distToWiz < 5 && (Date.now() - lastWizardTime > 18000)) {
+                    lastWizardTime = Date.now();
+                    spoutWizardLesson();
                 }
             }
 

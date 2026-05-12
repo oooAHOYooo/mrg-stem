@@ -10,6 +10,21 @@
 
 const mgeChangelog = [
     {
+        date: '2026-05-12',
+        title: 'New Game: Vector Launch!',
+        gameId: 'vector-launch',
+        icon: '🚀',
+        description: 'Master the physics of parabolic trajectory in this explosive new challenge!',
+        updates: [
+            'Matter.js implementation for realistic elastic collisions',
+            'Dynamic rubber-band launcher mechanics',
+            'Vector pathway prediction line',
+            '4 distinct testing chambers with varying difficulty',
+            'Particle physics based explosions on direct impact'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-04-23',
         title: 'MGE v1.0.1 - Pip Labs Unleashed!',
         gameId: 'pips-lab-toggle',
