@@ -492,39 +492,13 @@
             }
         ];
 
-        // Helper to dynamically process an image, convert whiteish pixels to transparent, return data URL
-        async function processImage(src) {
+        // Helper to ensure images are loaded so scales are available immediately
+        async function preloadImage(src) {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.crossOrigin = "Anonymous";
                 img.src = src;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    
-                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imgData.data;
-                    
-                    // Loop through pixels and make white transparent
-                    for(let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i+1];
-                        const b = data[i+2];
-                        // Threshold for "white" background
-                        if (r > 235 && g > 235 && b > 235) {
-                            data[i+3] = 0; // Set Alpha to 0
-                        }
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-                    resolve(canvas.toDataURL());
-                };
-                img.onerror = () => {
-                    console.error("Failed to load", src);
-                    resolve(src); // fallback
-                };
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null); // Fallback handle
             });
         }
 
@@ -552,6 +526,11 @@
         }
 
         function addTarget(world, x, y) {
+            const img = preloadedAssets.enemy;
+            // Pre-calculate perfect scale from real image resolution immediately
+            const scaleX = img ? (config.targetRadius * 2.2) / img.width : 0.1;
+            const scaleY = img ? (config.targetRadius * 2.2) / img.height : 0.1;
+
             const target = Bodies.circle(x, y, config.targetRadius, {
                 label: 'target',
                 restitution: 0.3,
@@ -559,25 +538,20 @@
                 density: 0.005,
                 render: {
                     sprite: {
-                        texture: textures.enemy,
-                        xScale: (config.targetRadius * 2) / 512, // Default size estimate, normalized later
-                        yScale: (config.targetRadius * 2) / 512
+                        texture: assets.enemy,
+                        xScale: scaleX,
+                        yScale: scaleY
                     }
                 }
             });
             
-            // Adjust scaling if image loads
-            const img = new Image();
-            img.src = textures.enemy;
-            img.onload = () => {
-                target.render.sprite.xScale = (config.targetRadius * 2.4) / img.width;
-                target.render.sprite.yScale = (config.targetRadius * 2.4) / img.height;
-            };
-
             Composite.add(world, target);
             gameState.targetsLeft++;
             return target;
         }
+
+        // Container to store loaded image elements to measure dimensions
+        const preloadedAssets = {};
 
         // Main Game Singleton
         const game = {
@@ -589,15 +563,15 @@
             mouseConstraint: null,
 
             async init() {
+                // Preload EVERYTHING so measurements are instant
+                console.log("Preloading graphics...");
+                preloadedAssets.bird = await preloadImage(assets.bird);
+                preloadedAssets.enemy = await preloadImage(assets.enemy);
+
                 // Set absolute constraints properly based on viewport size
                 config.width = window.innerWidth;
                 config.height = window.innerHeight;
                 config.anchorY = config.height - 220;
-
-                // Process assets to have smooth transparency
-                console.log("Processing sprites...");
-                textures.bird = await processImage(assets.bird);
-                textures.enemy = await processImage(assets.enemy);
                 
                 // Hide loader
                 document.getElementById('loader').style.opacity = '0';
@@ -732,6 +706,10 @@
             spawnBird() {
                 if (gameState.birdCount <= 0) return;
 
+                const img = preloadedAssets.bird;
+                const scaleX = img ? (config.birdRadius * 2.2) / img.width : 0.1;
+                const scaleY = img ? (config.birdRadius * 2.2) / img.height : 0.1;
+
                 const bird = Bodies.circle(this.anchor.x, this.anchor.y, config.birdRadius, {
                     label: 'bird',
                     restitution: 0.4,
@@ -739,19 +717,12 @@
                     density: 0.005,
                     render: {
                         sprite: {
-                            texture: textures.bird,
-                            xScale: 0.1, // Temp
-                            yScale: 0.1
+                            texture: assets.bird,
+                            xScale: scaleX,
+                            yScale: scaleY
                         }
                     }
                 });
-
-                const img = new Image();
-                img.src = textures.bird;
-                img.onload = () => {
-                    bird.render.sprite.xScale = (config.birdRadius * 2.4) / img.width;
-                    bird.render.sprite.yScale = (config.birdRadius * 2.4) / img.height;
-                };
 
                 Composite.add(this.engine.world, bird);
                 

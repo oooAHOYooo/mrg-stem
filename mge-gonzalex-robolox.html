@@ -887,6 +887,14 @@
         // --- NEW: Easter Egg Variables ---
         let eggCount = 0;
         let isSillyMode = false;
+
+        // Persistent World Environmental Pointers
+        let sunLight = null;
+        let ambientLight = null;
+
+        // Spanish Mentor NPC Variables
+        let spanishNPC = null;
+        let lastSpanishTime = 0;
         
         // --- JUICINESS MECHANICS ---
         let particles = [];
@@ -1304,10 +1312,10 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
             // Lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.62);
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.62);
             scene.add(ambientLight);
 
-            const sunLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            sunLight = new THREE.DirectionalLight(0xffffff, 0.7);
             sunLight.position.set(40, 60, 30);
             sunLight.castShadow = true;
             sunLight.shadow.mapSize.width = 2048;
@@ -1375,6 +1383,9 @@
 
             // Build Logic Wizard NPC
             createWizardNPC();
+
+            // Build Bilingual Spanish Mentor NPC
+            createSpanishNPC();
 
             // Setup starter blocks
             addBlock(0, gridSize / 2, 0, 0x118ab2);
@@ -1622,6 +1633,60 @@
                 playerGroup.rotation.z = 0;
                 addChatMessage('<span class="server">[System]: Reality anchor restabilized.</span>');
             }, 6000);
+        }
+
+        function createSpanishNPC() {
+            const group = new THREE.Group();
+            scene.add(group);
+            const skin = 0xffd166;
+            const hMat = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.7 });
+            
+            const fCanvas = document.createElement('canvas'); fCanvas.width = 256; fCanvas.height = 256;
+            const fctx = fCanvas.getContext('2d'); fctx.fillStyle = '#000'; 
+            fctx.beginPath(); fctx.arc(80, 90, 15, 0, Math.PI*2); fctx.fill();
+            fctx.beginPath(); fctx.arc(176, 90, 15, 0, Math.PI*2); fctx.fill();
+            fctx.beginPath(); fctx.arc(128, 150, 45, 0, Math.PI); fctx.lineWidth = 10; fctx.stroke();
+            const fTex = new THREE.CanvasTexture(fCanvas);
+
+            const mats = [hMat, hMat, hMat, hMat, new THREE.MeshStandardMaterial({ color: skin, map: fTex, transparent: true }), hMat];
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), mats); head.position.y = 1.15; head.castShadow = true; group.add(head);
+
+            // Torso
+            const t = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), new THREE.MeshStandardMaterial({color:0xff4655}));
+            t.position.y = 0.55; t.castShadow = true; group.add(t);
+            
+            // Limbs
+            const lMat = new THREE.MeshStandardMaterial({color:0xffffff}); // white pants
+            const lLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), lMat); lLeg.position.set(-0.19, -0.22, 0); group.add(lLeg);
+            const rLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), lMat); rLeg.position.set(0.19, -0.22, 0); group.add(rLeg);
+            const lArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), hMat); lArm.position.set(-0.52, 0.55, 0); group.add(lArm);
+            const rArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), hMat); rArm.position.set(0.52, 0.55, 0); group.add(rArm);
+
+            // Billboard Tag
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = 'rgba(255,70,85,0.9)'; ctx.fillRect(0,0,256,64);
+            ctx.fillStyle = 'white'; ctx.font = 'bold 21px Inter'; ctx.textAlign = 'center'; ctx.fillText("🇲🇽 Maestro Builder", 128, 40);
+            const tex = new THREE.CanvasTexture(canvas); const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: tex}));
+            sprite.position.y = 1.6; sprite.scale.set(2, 0.5, 1); group.add(sprite);
+
+            group.scale.set(1.15, 1.15, 1.15);
+            group.position.set(0, 0.5, 6.5); // Position behind players' starting zone
+            group.rotation.y = Math.PI; // Facing original origin
+            spanishNPC = group;
+        }
+
+        function spoutSpanishLesson() {
+            const dict = [
+                { s: "¡Hola amigos! Vamos a construir algo.", e: "Hello friends! Let's build something." },
+                { s: "Excelente trabajo construyendo bloques.", e: "Excellent job constructing blocks." },
+                { s: "El color rojo es 'red'. ¡Muy bonito!", e: "The color rojo is red. Very pretty!" },
+                { s: "Aprender informática es genial.", e: "Learning computer science is awesome." },
+                { s: "Haz un doble salto presionando Espacio.", e: "Perform a double jump by pressing Space." }
+            ];
+            const p = dict[Math.floor(Math.random() * dict.length)];
+            addChatMessage(`<span class="name" style="color:#ff4655;">🇲🇽 Maestro:</span> ${p.s}`);
+            setTimeout(() => addChatMessage(`<span class="name" style="color:#ff4655;">🇲🇽 Maestro (English):</span> "${p.e}" ✨`), 2800);
+            playSound('paint');
         }
 
         function createRemoteAvatar() {
@@ -1989,6 +2054,22 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            // --- PASSIVE ENVIRONMENTAL DAY/NIGHT CYCLE ---
+            const timeScalar = Date.now() * 0.00012; 
+            const currentLightValue = Math.max(0.15, 0.5 + Math.sin(timeScalar) * 0.5);
+            if (ambientLight) ambientLight.intensity = 0.2 + currentLightValue * 0.42;
+            if (sunLight) {
+                sunLight.intensity = currentLightValue * 0.75;
+                sunLight.position.x = Math.cos(timeScalar) * 40;
+                sunLight.position.z = Math.sin(timeScalar) * 30;
+                sunLight.position.y = Math.max(5, Math.sin(timeScalar) * 60);
+            }
+            // Lerp between light blue and dark nighttime blue
+            const peakDay = new THREE.Color(0x87ceeb); 
+            const midNight = new THREE.Color(0x0a1024);
+            scene.background.copy(midNight).lerp(peakDay, currentLightValue);
+            if(scene.fog) scene.fog.color.copy(scene.background);
+
             // --- NETWORK SYNC TASK ---
             if (isMultiplayer && conn && conn.open) {
                 if (!remotePlayer) {
@@ -2199,6 +2280,16 @@
                 if (distToWiz < 5 && (Date.now() - lastWizardTime > 18000)) {
                     lastWizardTime = Date.now();
                     spoutWizardLesson();
+                }
+            }
+
+            // --- SPANISH NPC LOGIC ---
+            if (spanishNPC) {
+                spanishNPC.position.y = 0.5 + Math.sin(Date.now() * 0.0015) * 0.05; // Slight float animation
+                const distToMaestro = playerPos.distanceTo(spanishNPC.position);
+                if (distToMaestro < 5 && (Date.now() - lastSpanishTime > 18000)) {
+                    lastSpanishTime = Date.now();
+                    spoutSpanishLesson();
                 }
             }
 
