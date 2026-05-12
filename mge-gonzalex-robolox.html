@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gonzalex Robolox | MGE STEM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             --mge-primary: #ff4655;
@@ -548,6 +549,68 @@
             background: #fff5f5;
         }
 
+        .multiplayer-ui {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .multi-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mp-input {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            width: 180px;
+            text-align: center;
+        }
+
+        .mp-btn {
+            background: var(--mge-secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .mp-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        #network-status {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 200;
+            display: none;
+            border: 1px solid var(--mge-secondary);
+            color: #fff;
+        }
+
         /* Quick Info Board on Start Screen */
         .info-board {
             margin-top: 35px;
@@ -574,13 +637,30 @@
         </h1>
         <p class="sub-text">Build, customize, walk, and explore together in a 3D sandbox</p>
         <div>
-            <button class="start-btn" onclick="startGame()">PLAY GAME</button>
+            <button class="start-btn" onclick="startGame('solo')">PLAY SOLO</button>
             <a href="mge.html" class="start-btn" style="background: rgba(255, 255, 255, 0.15); color: #fff; text-decoration: none;">← MGE Hub</a>
+        </div>
+
+        <div class="multiplayer-ui">
+            <h3 style="color: #ffd60a; font-weight: 800; font-size: 1.2rem; text-transform: uppercase;">⚡ 2-Player Multiplayer</h3>
+            <div class="multi-row">
+                <button class="mp-btn" style="background: #06d6a0;" onclick="hostGame()">Host Server</button>
+                <span style="align-self: center; font-weight: 800; opacity: 0.6;">OR</span>
+                <input type="text" id="join-code-input" class="mp-input" placeholder="Enter Code...">
+                <button class="mp-btn" onclick="joinGame()">Join</button>
+            </div>
+            <div id="host-info" style="margin-top: 5px; font-size: 0.9rem; display: none; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;">
+                Give this code to friend: <strong id="my-peer-id" style="color: #00b4d8; font-size: 1.1rem; letter-spacing: 1px;">Loading...</strong>
+            </div>
+            <div id="connection-msg" style="font-size: 0.85rem; color: #ffd60a; margin-top: 5px;"></div>
         </div>
         <div class="info-board">
             🎮 <strong>Roblox Vibe Mode Enabled:</strong> 3rd person orbiting camera! Spawns fully controllable blocky avatar. Right click to rotate camera, wasd keys to walk, 1-5 keys for tools.
         </div>
     </div>
+
+    <!-- Network Status Badge -->
+    <div id="network-status">Connecting...</div>
 
     <!-- UI Interaction Overlay -->
     <div id="ui-container">
@@ -678,7 +758,7 @@
             </div>
             <div class="control-row">
                 <span>Walk / Move</span>
-                <span class="key">WASD</span>
+                <span class="key">WASD / ARROWS</span>
             </div>
             <div class="control-row">
                 <span>Jump</span>
@@ -721,6 +801,29 @@
         let currentTool = 'build';
         let blockCount = 0;
         const gridSize = 1;
+
+        // --- NETWORKING VARIABLES ---
+        let peer = null;
+        let conn = null;
+        let isMultiplayer = false;
+        let isHost = false;
+        let remotePlayer = null; // To support 2 players, keeping it simple.
+        let lastPosSent = {x:0, y:0, z:0, ry:0};
+        let networkTick = 0;
+        let connectedPeerId = null;
+        let localPlayerColors = { shirt: 0x118ab2, pants: 0x06d6a0 };
+        let remotePlayerColors = { shirt: 0x118ab2, pants: 0x06d6a0 };
+        // Animations state for network sync
+        let remoteState = {
+            pos: {x:0,y:0,z:0},
+            rotY: 0,
+            moving: false,
+            onGround: true,
+            isDancing: false,
+            isWaving: false,
+            walkTime: 0,
+            waveTime: 0
+        };
 
         // Colors palette (Classic Roblox)
         const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0x7209b7, 0x4cc9f0, 0x2ec4b6];
@@ -881,17 +984,224 @@
         }
 
 
-        function startGame() {
+        // --- NETWORKING CORE LOGIC ---
+        function initPeer(callback) {
+            // Generate a short numeric ID for convenience if needed, or just random
+            const shortId = 'GONZ-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+            peer = new Peer(shortId, { debug: 2 });
+            
+            document.getElementById('connection-msg').innerText = 'Initializing connection...';
+            
+            peer.on('open', (id) => {
+                console.log('My peer ID is: ' + id);
+                document.getElementById('my-peer-id').innerText = id;
+                document.getElementById('connection-msg').innerText = 'Ready to connect!';
+                if(callback) callback();
+            });
+            
+            peer.on('error', (err) => {
+                console.error(err);
+                alert('Networking Error: ' + err.type + ". " + err.message);
+                document.getElementById('connection-msg').innerText = 'Connection Failed.';
+            });
+
+            peer.on('connection', (incomingConn) => {
+                if (conn) {
+                    // Limit to 2 player as requested
+                    incomingConn.close();
+                    return;
+                }
+                conn = incomingConn;
+                isMultiplayer = true;
+                isHost = true;
+                setupConnection();
+            });
+        }
+
+        function hostGame() {
+            if (!peer) {
+                document.getElementById('host-info').style.display = 'block';
+                initPeer();
+            }
+        }
+
+        function joinGame() {
+            const idToJoin = document.getElementById('join-code-input').value.trim().toUpperCase();
+            if (!idToJoin) {
+                alert("Please enter a friend's Code!");
+                return;
+            }
+            
+            if (!peer) {
+                initPeer(() => {
+                    connectToPeer(idToJoin);
+                });
+            } else {
+                connectToPeer(idToJoin);
+            }
+        }
+
+        function connectToPeer(id) {
+            document.getElementById('connection-msg').innerText = 'Connecting to ' + id + '...';
+            conn = peer.connect(id, { reliable: true });
+            isMultiplayer = true;
+            isHost = false;
+            setupConnection();
+        }
+
+        function setupConnection() {
+            conn.on('open', () => {
+                document.getElementById('connection-msg').innerText = 'Connected Successfully!';
+                document.getElementById('connection-msg').style.color = '#06d6a0';
+                
+                // Wait 0.5s then start game automatically
+                setTimeout(() => {
+                    startGame('multi');
+                }, 800);
+            });
+            
+            conn.on('data', (data) => {
+                handleNetworkData(data);
+            });
+            
+            conn.on('close', () => {
+                addChatMessage('<span class="server">[Network]: Other player disconnected.</span>');
+                if (remotePlayer) {
+                    scene.remove(remotePlayer.group);
+                    remotePlayer = null;
+                }
+                document.getElementById('network-status').style.display = 'none';
+            });
+        }
+
+        function sendData(type, payload) {
+            if (conn && conn.open) {
+                conn.send({ type, payload });
+            }
+        }
+
+        function handleNetworkData(msg) {
+            const { type, payload } = msg;
+            
+            if (type === 'init_sync') {
+                // Host sends existing world to client
+                // clear current and load host's world
+                while(world.length > 0) removeBlock(world[0]);
+                payload.world.forEach(b => {
+                    addBlock(b.x, b.y, b.z, b.color, true); // true avoids broadcasting back
+                });
+                addChatMessage('<span class="server">[Network] World synced from Host!</span>');
+                
+                // Send my colors back to host
+                sendData('update_colors', localPlayerColors);
+            } 
+            else if (type === 'pos') {
+                // Update remote state for interpolation/rendering
+                remoteState = { ...remoteState, ...payload };
+                if (remotePlayer) {
+                    remotePlayer.group.position.set(payload.pos.x, payload.pos.y, payload.pos.z);
+                    remotePlayer.group.rotation.y = payload.rotY;
+                }
+            }
+            else if (type === 'block_add') {
+                addBlock(payload.x, payload.y, payload.z, payload.color, true);
+                playSound('place');
+            }
+            else if (type === 'block_remove') {
+                // Find block near target position
+                const block = world.find(b => Math.abs(b.position.x - payload.x) < 0.1 && Math.abs(b.position.y - payload.y) < 0.1 && Math.abs(b.position.z - payload.z) < 0.1);
+                if (block) {
+                    removeBlock(block, true);
+                    playSound('delete');
+                }
+            }
+            else if (type === 'block_paint') {
+                 const block = world.find(b => Math.abs(b.position.x - payload.x) < 0.1 && Math.abs(b.position.y - payload.y) < 0.1 && Math.abs(b.position.z - payload.z) < 0.1);
+                 if (block) {
+                     if (Array.isArray(block.material)) {
+                        block.material.forEach(m => m.color.setHex(payload.color));
+                    } else {
+                        block.material.color.setHex(payload.color);
+                    }
+                    playSound('paint');
+                 }
+            }
+            else if (type === 'chat') {
+                const log = document.getElementById('chat-log');
+                const msgEl = document.createElement('div');
+                msgEl.className = 'chat-msg';
+                msgEl.innerHTML = `<span class="name" style="color:#ff4655">Friend:</span> ${payload.msg}`;
+                log.appendChild(msgEl);
+                log.scrollTop = log.scrollHeight;
+            }
+            else if (type === 'update_colors') {
+                remotePlayerColors = payload;
+                if (remotePlayer) {
+                    remotePlayer.torso.material.color.setHex(remotePlayerColors.shirt);
+                    remotePlayer.leftLeg.material.color.setHex(remotePlayerColors.pants);
+                    remotePlayer.rightLeg.material.color.setHex(remotePlayerColors.pants);
+                }
+            }
+        }
+
+        function updatePlayerListUI() {
+            const list = document.querySelector('.player-list');
+            // Clear other dummy entries, keep title and me
+            list.innerHTML = `
+                <div class="player-list-title">Players</div>
+                <div class="player-entry me">
+                    <span class="player-name">You (Host)</span>
+                    <span class="player-stat" id="list-stat">${blockCount}</span>
+                </div>
+            `;
+            
+            if (isMultiplayer) {
+                 const item = document.createElement('div');
+                 item.className = 'player-entry';
+                 item.innerHTML = `
+                    <span class="player-name" style="color:#ff4655">Friend</span>
+                    <span class="player-stat">Live</span>
+                 `;
+                 list.appendChild(item);
+            }
+        }
+
+        function startGame(mode) {
             initAudio();
             generateTextures();
             document.getElementById('start-screen').style.opacity = 0;
             setTimeout(() => {
                 document.getElementById('start-screen').style.display = 'none';
             }, 500);
+            
+            if (mode === 'multi') {
+                const status = document.getElementById('network-status');
+                status.innerText = isHost ? '📡 MULTIPLAYER (HOST)' : '📡 MULTIPLAYER (GUEST)';
+                status.style.display = 'block';
+                document.getElementById('mode-display').innerText = "MULTIPLAYER";
+                updatePlayerListUI();
+            } else {
+                 // Clean dummies to default mock list
+            }
+            
             initGame();
+
+            // If host, send existing map to guest immediately
+            if (isMultiplayer && isHost) {
+                const mapData = world.map(b => ({
+                    x: b.position.x, y: b.position.y, z: b.position.z, color: b.userData.color
+                }));
+                setTimeout(() => {
+                     sendData('init_sync', { world: mapData });
+                     sendData('update_colors', localPlayerColors);
+                }, 1000);
+            } else if (isMultiplayer && !isHost) {
+                // guest asks to sync or just waits
+            }
         }
 
         function goBack() {
+            if (conn) conn.close();
             window.location.href = 'mge.html';
         }
 
@@ -909,7 +1219,7 @@
             document.getElementById('slot-' + slotNum).classList.add('active');
 
             const modeMap = { build: 'BUILD', delete: 'DELETE', color: 'COLOR', camera: 'CAMERA' };
-            document.getElementById('mode-display').textContent = modeMap[currentTool];
+            document.getElementById('mode-display').textContent = isMultiplayer ? 'MULTIPLAYER' : modeMap[currentTool];
         }
 
         function initGame() {
@@ -1065,6 +1375,83 @@
             playerGroup.scale.set(1.15, 1.15, 1.15);
             playerPos.set(0, 1.25, 0);
             playerGroup.position.copy(playerPos);
+
+            // Initial local color store
+            torsoMesh.material.color.setHex(localPlayerColors.shirt);
+            leftLegMesh.material.color.setHex(localPlayerColors.pants);
+            rightLegMesh.material.color.setHex(localPlayerColors.pants);
+        }
+
+        function createRemoteAvatar() {
+            const remoteGroup = new THREE.Group();
+            scene.add(remoteGroup);
+
+            const skinColor = 0xffd166;
+            const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+            const headMats = [
+                headMat, headMat, headMat, headMat,
+                new THREE.MeshStandardMaterial({ color: skinColor, map: textures.face, transparent: true }),
+                headMat
+            ];
+            
+            const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMats);
+            rHead.position.y = 1.15;
+            rHead.castShadow = true;
+            remoteGroup.add(rHead);
+
+            const rTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), new THREE.MeshStandardMaterial({ color: remotePlayerColors.shirt, roughness: 0.8 }));
+            rTorso.position.y = 0.55;
+            rTorso.castShadow = true;
+            remoteGroup.add(rTorso);
+
+            const rLeftArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            rLeftArm.position.set(-0.52, 0.55, 0);
+            rLeftArm.castShadow = true;
+            remoteGroup.add(rLeftArm);
+
+            const rRightArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            rRightArm.position.set(0.52, 0.55, 0);
+            rRightArm.castShadow = true;
+            remoteGroup.add(rRightArm);
+
+            const rLeftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: remotePlayerColors.pants, roughness: 0.8 }));
+            rLeftLeg.position.set(-0.19, -0.22, 0);
+            rLeftLeg.castShadow = true;
+            remoteGroup.add(rLeftLeg);
+
+            const rRightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: remotePlayerColors.pants, roughness: 0.8 }));
+            rRightLeg.position.set(0.19, -0.22, 0);
+            rRightLeg.castShadow = true;
+            remoteGroup.add(rRightLeg);
+
+            remoteGroup.scale.set(1.15, 1.15, 1.15);
+            
+            // Setup name tag
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256; canvas.height = 64;
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(0,0,256,64);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 28px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText("Guest Player", 128, 40);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({map: tex});
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.position.y = 1.6;
+            sprite.scale.set(1.5, 0.4, 1);
+            remoteGroup.add(sprite);
+
+            remotePlayer = {
+                group: remoteGroup,
+                torso: rTorso,
+                leftArm: rLeftArm,
+                rightArm: rRightArm,
+                leftLeg: rLeftLeg,
+                rightLeg: rRightLeg,
+                walkTime: 0
+            };
         }
 
         function resetCharacter() {
@@ -1072,24 +1459,16 @@
             playerPos.set(0, 5, 0);
             playerVelocity.set(0, 0, 0);
             playerGroup.position.copy(playerPos);
-            addChatMessage('[Server] Resawn player avatar safely.');
+            addChatMessage('[Server] Respawn player avatar safely.', true);
         }
 
-        function addBlock(x, y, z, hexColor) {
+        function addBlock(x, y, z, hexColor, isFromNetwork = false) {
             const geo = new THREE.BoxGeometry(gridSize, gridSize, gridSize);
             
-            // Materials array for blocks (studs on top)
             const blockMat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82 });
             const studMat = new THREE.MeshStandardMaterial({ color: hexColor, roughness: 0.82, map: textures.stud });
             
-            const mats = [
-                blockMat, // right
-                blockMat, // left
-                studMat,  // top
-                blockMat, // bottom
-                blockMat, // front
-                blockMat  // back
-            ];
+            const mats = [blockMat, blockMat, studMat, blockMat, blockMat, blockMat];
             
             const block = new THREE.Mesh(geo, mats);
             block.position.set(x, y, z);
@@ -1101,10 +1480,18 @@
             blockCount++;
             document.getElementById('block-count').innerText = blockCount;
             document.getElementById('list-stat').innerText = blockCount;
+
+            if (isMultiplayer && !isFromNetwork) {
+                 sendData('block_add', { x, y, z, color: hexColor });
+            }
+
             return block;
         }
 
-        function removeBlock(block) {
+        function removeBlock(block, isFromNetwork = false) {
+            if (isMultiplayer && !isFromNetwork) {
+                sendData('block_remove', { x: block.position.x, y: block.position.y, z: block.position.z });
+            }
             scene.remove(block);
             world = world.filter(b => b !== block);
             blockCount--;
@@ -1198,6 +1585,9 @@
                         } else {
                             hit.object.material.color.setHex(newColor);
                         }
+                        if (isMultiplayer) {
+                            sendData('block_paint', { x: hit.object.position.x, y: hit.object.position.y, z: hit.object.position.z, color: newColor });
+                        }
                         playSound('paint');
                     }
                 }
@@ -1220,6 +1610,8 @@
                 sBtn.style.backgroundColor = '#' + c.toString(16).padStart(6, '0');
                 sBtn.onclick = () => {
                     torsoMesh.material.color.setHex(c);
+                    localPlayerColors.shirt = c;
+                    if(isMultiplayer) sendData('update_colors', localPlayerColors);
                     playSound('paint');
                 };
                 shirtOpt.appendChild(sBtn);
@@ -1230,6 +1622,8 @@
                 pBtn.onclick = () => {
                     leftLegMesh.material.color.setHex(c);
                     rightLegMesh.material.color.setHex(c);
+                    localPlayerColors.pants = c;
+                    if(isMultiplayer) sendData('update_colors', localPlayerColors);
                     playSound('paint');
                 };
                 pantsOpt.appendChild(pBtn);
@@ -1260,6 +1654,10 @@
             
             addChatMessage(`<span class="name">You:</span> ${txt}`);
             
+            if (isMultiplayer) {
+                sendData('chat', { msg: txt });
+            }
+            
             // Emote System
             if (txt.toLowerCase() === '/e dance') {
                 isDancing = true;
@@ -1275,25 +1673,35 @@
 
             inp.value = '';
 
-            // Automated Roblox simulation reply
+            // Updated Kid-Friendly AI Helper reply
             setTimeout(() => {
-                const replies = [
-                    "OOF",
-                    "pls donate robux",
-                    "abc for mom",
-                    "my dad works at roblox and he will ban u",
-                    "anyone want to trade???",
-                    "im lagging so hard rn",
-                    "im reporting you to roblox",
-                    "how do i jump??",
-                    "free robux at www.totallylegitsite.com !! (don't actually click that)",
-                    "bruh",
-                    "im gonna tell my mom on u",
-                    "stop hacking!!",
-                    "anyone have pet dog?"
+                const lower = txt.toLowerCase();
+                let r = "";
+                
+                const generalSuggestions = [
+                    "That sounds super cool! 🚀 You should try building a giant rocket ship next!",
+                    "Whoa! With skills like that, you could build an epic dragon castle! 🏰",
+                    "You are totally winning today! 🏆 Let's build a super-fast racing track!",
+                    "Brilliant idea! 💡 I challenge you to build a floating island in the sky!",
+                    "Hahaha, you are so funny! 😄 Hey, can you build a giant pizza? I'm hungry!",
+                    "Epic! 😎 How about building a top-secret robot base?",
+                    "That is AWESOME! 🎉 Why not build a rainbow bridge across the whole world?",
+                    "Wow, you're really creative! ✨ Can you build a mini version of your own house?"
                 ];
-                const r = replies[Math.floor(Math.random() * replies.length)];
-                addChatMessage(`<span class="name">xX_NoobSlayer99_Xx:</span> ${r}`);
+
+                if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
+                    r = "Hi there, fellow creator! 👋 Are you ready to build something absolutely EPIC today?";
+                } else if (lower.includes("build") || lower.includes("make")) {
+                    r = "YESSS!! Building stuff is the best part! Let's make a giant dinosaur that shoots lasers! 🦖💥";
+                } else if (lower.includes("cool") || lower.includes("awesome") || lower.includes("great")) {
+                    r = "I know, right?! You have major skills! 🌟 Let's celebrate by building a massive disco dance floor!";
+                } else if (lower.includes("how")) {
+                    r = "You just pick the 'Build' tool and click anywhere! Easy win! 🎮 What masterwork are we making first?";
+                } else {
+                    r = generalSuggestions[Math.floor(Math.random() * generalSuggestions.length)];
+                }
+
+                addChatMessage(`<span class="name" style="color:#ffd60a;">🚀 SuperBuildBot:</span> ${r}`);
             }, 1500);
         }
 
@@ -1304,6 +1712,34 @@
         function animate() {
             requestAnimationFrame(animate);
             
+            // --- NETWORK SYNC TASK ---
+            if (isMultiplayer && conn && conn.open) {
+                if (!remotePlayer) {
+                    createRemoteAvatar();
+                }
+                
+                networkTick++;
+                // Send status every ~3 frames (~50ms approx at 60fps)
+                if (networkTick % 3 === 0) {
+                    // Only transmit if significant change happened to save BW
+                    const dPos = Math.abs(playerPos.x - lastPosSent.x) + Math.abs(playerPos.y - lastPosSent.y) + Math.abs(playerPos.z - lastPosSent.z);
+                    const dRot = Math.abs(playerGroup.rotation.y - lastPosSent.ry);
+                    
+                    // We still send occasionally just to ensure no lag desync
+                    if (dPos > 0.02 || dRot > 0.02 || networkTick % 30 === 0) {
+                         sendData('pos', {
+                             pos: { x: playerPos.x, y: playerPos.y, z: playerPos.z },
+                             rotY: playerGroup.rotation.y,
+                             moving: keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright'],
+                             onGround: onGround,
+                             isDancing: isDancing,
+                             isWaving: isWaving
+                         });
+                         lastPosSent = { x: playerPos.x, y: playerPos.y, z: playerPos.z, ry: playerGroup.rotation.y };
+                    }
+                }
+            }
+
             // Update timers
             if (isDancing) danceTime += 0.05;
             if (isWaving) {
@@ -1325,23 +1761,29 @@
             const side = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
 
             let moving = false;
-            if (keys['w']) { playerPos.addScaledVector(forward, GameConfig.walkSpeed); moving = true; }
-            if (keys['s']) { playerPos.addScaledVector(forward, -GameConfig.walkSpeed); moving = true; }
-            if (keys['a']) { playerPos.addScaledVector(side, GameConfig.walkSpeed); moving = true; }
-            if (keys['d']) { playerPos.addScaledVector(side, -GameConfig.walkSpeed); moving = true; }
+            const isAnyDown = keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright'];
+            
+            const keyUp = keys['w'] || keys['arrowup'];
+            const keyDown = keys['s'] || keys['arrowdown'];
+            const keyLeft = keys['a'] || keys['arrowleft'];
+            const keyRight = keys['d'] || keys['arrowright'];
+
+            if (keyUp) { playerPos.addScaledVector(forward, GameConfig.walkSpeed); moving = true; }
+            if (keyDown) { playerPos.addScaledVector(forward, -GameConfig.walkSpeed); moving = true; }
+            if (keyLeft) { playerPos.addScaledVector(side, GameConfig.walkSpeed); moving = true; }
+            if (keyRight) { playerPos.addScaledVector(side, -GameConfig.walkSpeed); moving = true; }
 
             // Turn player direction
             if (moving) {
                 const angle = Math.atan2(forward.x, forward.z);
-                if (keys['w']) playerGroup.rotation.y = angle + Math.PI;
-                if (keys['s']) playerGroup.rotation.y = angle;
-                if (keys['a']) playerGroup.rotation.y = angle - Math.PI / 2;
-                if (keys['d']) playerGroup.rotation.y = angle + Math.PI / 2;
+                if (keyUp) playerGroup.rotation.y = angle + Math.PI;
+                if (keyDown) playerGroup.rotation.y = angle;
+                if (keyLeft) playerGroup.rotation.y = angle - Math.PI / 2;
+                if (keyRight) playerGroup.rotation.y = angle + Math.PI / 2;
             }
 
             // Gravity & Ground physics checks
             let groundLevel = 0;
-            // Raycast down for accurate block height detection
             const downRay = new THREE.Raycaster(new THREE.Vector3(playerPos.x, playerPos.y + 1, playerPos.z), new THREE.Vector3(0, -1, 0));
             const intersectDown = downRay.intersectObjects([ground, ...world]);
             if (intersectDown.length > 0) {
@@ -1372,10 +1814,10 @@
             // Out of bounds check
             if (playerPos.y < -15) {
                 resetCharacter();
-                addChatMessage('[Server] Safe recovery spawn.');
+                addChatMessage('[Server] Safe recovery spawn.', true);
             }
 
-            // --- ANIMATIONS ---
+            // --- LOCAL ANIMATIONS ---
             if (moving && onGround) {
                 isDancing = false; 
                 walkTime += 0.2;
@@ -1393,18 +1835,49 @@
                 rightArmMesh.rotation.z = 1.2 + Math.sin(waveTime * 8) * 0.4;
                 rightArmMesh.rotation.x = -0.5;
             } else if (!onGround) {
-                // Roblox Jump Pose
                 leftArmMesh.rotation.x = -0.3;
                 rightArmMesh.rotation.x = -0.3;
                 leftLegMesh.rotation.x = 0.2;
                 rightLegMesh.rotation.x = -0.2;
             } else {
-                leftLegMesh.rotation.x = 0;
-                rightLegMesh.rotation.x = 0;
-                leftArmMesh.rotation.x = 0;
-                rightArmMesh.rotation.x = 0;
-                leftArmMesh.rotation.z = 0;
-                rightArmMesh.rotation.z = 0;
+                leftLegMesh.rotation.x = 0; rightLegMesh.rotation.x = 0;
+                leftArmMesh.rotation.x = 0; rightArmMesh.rotation.x = 0;
+                leftArmMesh.rotation.z = 0; rightArmMesh.rotation.z = 0;
+            }
+
+            // --- REMOTE ANIMATIONS & RENDERING ---
+            if (remotePlayer) {
+                // We use remoteState properties for logic
+                if (remoteState.moving && remoteState.onGround) {
+                     remotePlayer.walkTime += 0.2;
+                     remotePlayer.leftLeg.rotation.x = Math.sin(remotePlayer.walkTime) * 0.6;
+                     remotePlayer.rightLeg.rotation.x = -Math.sin(remotePlayer.walkTime) * 0.6;
+                     remotePlayer.leftArm.rotation.x = -Math.sin(remotePlayer.walkTime) * 0.5;
+                     remotePlayer.rightArm.rotation.x = Math.sin(remotePlayer.walkTime) * 0.5;
+                     remotePlayer.leftArm.rotation.z = 0;
+                     remotePlayer.rightArm.rotation.z = 0;
+                } else if (remoteState.isDancing) {
+                     remotePlayer.walkTime += 0.15;
+                     remotePlayer.group.position.y = remoteState.pos.y + Math.abs(Math.sin(remotePlayer.walkTime * 2)) * 0.2;
+                     remotePlayer.group.rotation.y += 0.05;
+                     remotePlayer.leftArm.rotation.z = Math.sin(remotePlayer.walkTime * 4) * 0.8;
+                     remotePlayer.rightArm.rotation.z = -Math.sin(remotePlayer.walkTime * 4) * 0.8;
+                } else if (remoteState.isWaving) {
+                     remotePlayer.walkTime += 0.15;
+                     remotePlayer.rightArm.rotation.z = 1.2 + Math.sin(remotePlayer.walkTime * 8) * 0.4;
+                     remotePlayer.rightArm.rotation.x = -0.5;
+                } else if (!remoteState.onGround) {
+                     remotePlayer.leftArm.rotation.x = -0.3;
+                     remotePlayer.rightArm.rotation.x = -0.3;
+                     remotePlayer.leftLeg.rotation.x = 0.2;
+                     remotePlayer.rightLeg.rotation.x = -0.2;
+                     remotePlayer.leftArm.rotation.z = 0;
+                     remotePlayer.rightArm.rotation.z = 0;
+                } else {
+                     remotePlayer.leftLeg.rotation.x = 0; remotePlayer.rightLeg.rotation.x = 0;
+                     remotePlayer.leftArm.rotation.x = 0; remotePlayer.rightArm.rotation.x = 0;
+                     remotePlayer.leftArm.rotation.z = 0; remotePlayer.rightArm.rotation.z = 0;
+                }
             }
 
             // Follow Camera Positioning
