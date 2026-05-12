@@ -824,6 +824,18 @@
             walkTime: 0,
             waveTime: 0
         };
+        
+        // --- NEW: Riddle NPC Variables ---
+        let riddleNPC = null;
+        let lastRiddleTime = 0;
+        const riddles = [
+            { q: "I make decisions in your code. If you are happy, you run the next line! What am I?", a: "An 'IF' statement!" },
+            { q: "I am not a real bug, but programmers try to catch me all day long! What am I?", a: "A CODE BUG! 🐞" },
+            { q: "I loop and loop until a condition is false. Don't get stuck forever!", a: "A While Loop!" },
+            { q: "I hold information like your score or name! What box am I?", a: "A VARIABLE!" },
+            { q: "I am a set of instructions grouped together under one name! What am I?", a: "A FUNCTION!" },
+            { q: "I am text surrounded by quotes, like 'Hello'! Don't pull my string!", a: "A STRING variable!" }
+        ];
 
         // Colors palette (Classic Roblox)
         const colors = [0xff4655, 0x00b4d8, 0xffd60a, 0x06d6a0, 0xef476f, 0x7209b7, 0x4cc9f0, 0x2ec4b6];
@@ -1303,6 +1315,9 @@
             // Build Player Avatar (Blocky Roblox Guy)
             createAvatar();
 
+            // Build Riddle Teacher NPC
+            createRiddleNPC();
+
             // Setup starter blocks
             addBlock(0, gridSize / 2, 0, 0x118ab2);
             addBlock(1, gridSize / 2, 0, 0xef476f);
@@ -1380,6 +1395,91 @@
             torsoMesh.material.color.setHex(localPlayerColors.shirt);
             leftLegMesh.material.color.setHex(localPlayerColors.pants);
             rightLegMesh.material.color.setHex(localPlayerColors.pants);
+        }
+
+        function createRiddleNPC() {
+            const group = new THREE.Group();
+            scene.add(group);
+
+            const skinColor = 0xffd166;
+            const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+            
+            const npcFaceCanvas = document.createElement('canvas');
+            npcFaceCanvas.width = 256; npcFaceCanvas.height = 256;
+            const nfctx = npcFaceCanvas.getContext('2d');
+            nfctx.fillStyle = '#000'; 
+            nfctx.beginPath(); nfctx.arc(80, 90, 15, 0, Math.PI * 2); nfctx.fill();
+            nfctx.beginPath(); nfctx.arc(176, 90, 15, 0, Math.PI * 2); nfctx.fill();
+            nfctx.beginPath(); nfctx.arc(128, 140, 50, 0.1 * Math.PI, 0.9 * Math.PI); nfctx.lineWidth = 10; nfctx.stroke();
+            const npcFaceTex = new THREE.CanvasTexture(npcFaceCanvas);
+
+            const headMats = [
+                headMat, headMat, headMat, headMat,
+                new THREE.MeshStandardMaterial({ color: skinColor, map: npcFaceTex, transparent: true }),
+                headMat
+            ];
+            
+            const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMats);
+            rHead.position.y = 1.15;
+            rHead.castShadow = true;
+            group.add(rHead);
+
+            const rTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), new THREE.MeshStandardMaterial({ color: 0x7209b7, roughness: 0.8 }));
+            rTorso.position.y = 0.55;
+            rTorso.castShadow = true;
+            group.add(rTorso);
+
+            const rLeftArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            rLeftArm.position.set(-0.52, 0.55, 0);
+            rLeftArm.castShadow = true;
+            group.add(rLeftArm);
+
+            const rRightArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            rRightArm.position.set(0.52, 0.55, 0);
+            rRightArm.castShadow = true;
+            group.add(rRightArm);
+
+            const rLeftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.8 }));
+            rLeftLeg.position.set(-0.19, -0.22, 0);
+            rLeftLeg.castShadow = true;
+            group.add(rLeftLeg);
+
+            const rRightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.8 }));
+            rRightLeg.position.set(0.19, -0.22, 0);
+            rRightLeg.castShadow = true;
+            group.add(rRightLeg);
+
+            group.scale.set(1.15, 1.15, 1.15);
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256; canvas.height = 64;
+            ctx.fillStyle = 'rgba(114,9,183,0.85)';
+            ctx.fillRect(0,0,256,64);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 22px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText("📜 Riddle Coder NPC", 128, 40);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({map: tex});
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.position.y = 1.6;
+            sprite.scale.set(1.8, 0.5, 1);
+            group.add(sprite);
+
+            group.position.set(5, 0.5, -5);
+            group.lookAt(0, 0.5, 0);
+            riddleNPC = group;
+        }
+
+        function spoutRiddle() {
+            const r = riddles[Math.floor(Math.random() * riddles.length)];
+            addChatMessage(`<span class="name" style="color:#7209b7;">📜 Riddle Coder:</span> Hey you! Guess this coding riddle: ${r.q}`);
+            playSound('paint');
+            setTimeout(() => {
+                addChatMessage(`<span class="name" style="color:#7209b7;">📜 Riddle Coder:</span> The answer is... 🌟 **${r.a}**! Haha! You're getting super smart! Try to code that in your future game! 🎮`);
+                playSound('jump');
+            }, 5000);
         }
 
         function createRemoteAvatar() {
@@ -1877,6 +1977,20 @@
                      remotePlayer.leftLeg.rotation.x = 0; remotePlayer.rightLeg.rotation.x = 0;
                      remotePlayer.leftArm.rotation.x = 0; remotePlayer.rightArm.rotation.x = 0;
                      remotePlayer.leftArm.rotation.z = 0; remotePlayer.rightArm.rotation.z = 0;
+                }
+            }
+
+            // --- RIDDLE NPC FLOATING & PROXIMITY LOGIC ---
+            if (riddleNPC) {
+                const clock = Date.now() * 0.001;
+                riddleNPC.position.y = 0.5 + Math.sin(clock * 2) * 0.08;
+                riddleNPC.rotation.y = Math.sin(clock) * 0.1;
+                
+                const distance = playerPos.distanceTo(riddleNPC.position);
+                // Trigger if player gets close and 15 seconds cooldown passed
+                if (distance < 5 && (Date.now() - lastRiddleTime > 15000)) {
+                    lastRiddleTime = Date.now();
+                    spoutRiddle();
                 }
             }
 
