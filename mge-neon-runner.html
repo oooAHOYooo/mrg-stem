@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGE Neon Space Runner - Synthwave 3D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Outfit', sans-serif; color: white; user-select: none; touch-action: none;}
+        #ui { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; z-index: 10; }
+        .score-box { text-align: center; text-shadow: 0 0 10px #00ffff; }
+        .label { font-size: 0.9rem; letter-spacing: 2px; opacity: 0.8; }
+        .val { font-size: 3rem; }
+        #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; transition: opacity 0.4s; }
+        h1 { font-size: 4rem; background: linear-gradient(to bottom, #0ff, #f0f); -webkit-background-clip: text; color: transparent; margin: 0; text-shadow: 0 0 20px rgba(0,255,255,0.5); }
+        p { font-size: 1.2rem; margin-bottom: 30px; opacity: 0.7; }
+        button { background: transparent; border: 3px solid #0ff; color: #0ff; font-family: inherit; font-size: 1.5rem; font-weight: bold; padding: 15px 40px; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 15px #0ff; transition: 0.2s; border-radius: 8px;}
+        button:hover { background: #0ff; color: #000; box-shadow: 0 0 30px #0ff; }
+        .nav-home { position: absolute; top: 20px; left: 20px; color: white; text-decoration: none; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px; font-weight: bold; pointer-events: auto; z-index: 200; }
+    </style>
+</head>
+<body>
+    <a href="mge.html" class="nav-home">⬅ Hub</a>
+    <div id="ui">
+        <div></div>
+        <div class="score-box"><div class="label">DISTANCE</div><div class="val" id="score">000</div></div>
+    </div>
+    
+    <div id="overlay">
+        <h1 id="ov-title">NEON RUNNER</h1>
+        <p id="ov-sub">USE LEFT / RIGHT ARROWS OR MOUSE TO DODGE</p>
+        <button id="start-btn" onclick="startGame()">INITIATE GRID</button>
+    </div>
+
+    <script>
+        let scene, camera, renderer, grid, ship;
+        let speed = 0.5;
+        let score = 0;
+        let isPlaying = false;
+        let obstacles = [];
+        let particles = [];
+        
+        const lanes = [-6, 0, 6];
+        let targetLane = 0; // 0 is center, -1 is left, 1 is right
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000011, 0.015);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 4, 10);
+            camera.lookAt(0, 2, -10);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.body.appendChild(renderer.domElement);
+
+            // Lights
+            const amb = new THREE.AmbientLight(0x222244);
+            scene.add(amb);
+            const dir = new THREE.DirectionalLight(0x00ffff, 1);
+            dir.position.set(5, 10, 7);
+            scene.add(dir);
+
+            // Ground grid
+            const gridGeom = new THREE.PlaneGeometry(200, 1000, 40, 100);
+            const gridMat = new THREE.MeshBasicMaterial({ color: 0x8800ff, wireframe: true, transparent: true, opacity: 0.3 });
+            grid = new THREE.Mesh(gridGeom, gridMat);
+            grid.rotation.x = -Math.PI / 2;
+            grid.position.z = -450;
+            scene.add(grid);
+
+            // Synthwave Sun
+            const sunGeo = new THREE.CircleGeometry(40, 32);
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xff00aa, side: THREE.DoubleSide });
+            const sun = new THREE.Mesh(sunGeo, sunMat);
+            sun.position.set(0, 15, -150);
+            scene.add(sun);
+
+            // Ship
+            const shipGeo = new THREE.ConeGeometry(1, 3, 4);
+            const shipMat = new THREE.MeshPhongMaterial({ color: 0x00ffff, emissive: 0x005555, flatShading: true });
+            ship = new THREE.Mesh(shipGeo, shipMat);
+            ship.rotation.x = Math.PI / 2;
+            ship.position.y = 1.2;
+            scene.add(ship);
+
+            // Event Listeners
+            window.addEventListener('keydown', (e) => {
+                if(!isPlaying) return;
+                if(e.key === 'ArrowLeft' && targetLane > -1) targetLane--;
+                if(e.key === 'ArrowRight' && targetLane < 1) targetLane++;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if(!isPlaying) return;
+                const x = (e.clientX / window.innerWidth) * 2 - 1;
+                if (x < -0.3) targetLane = -1;
+                else if (x > 0.3) targetLane = 1;
+                else targetLane = 0;
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if(!isPlaying) return;
+                const x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+                if (x < -0.3) targetLane = -1;
+                else if (x > 0.3) targetLane = 1;
+                else targetLane = 0;
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            animate();
+        }
+
+        function spawnObstacle() {
+            const geo = new THREE.BoxGeometry(3, 3, 3);
+            const mat = new THREE.MeshPhongMaterial({ color: 0xff00aa, emissive: 0x550022, flatShading: true });
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set(lanes[Math.floor(Math.random() * 3)], 1.5, -100);
+            scene.add(m);
+            obstacles.push(m);
+        }
+
+        function spawnParticles(x,y,z) {
+            for(let i=0; i<10; i++) {
+                const pGeo = new THREE.BoxGeometry(0.5,0.5,0.5);
+                const pMat = new THREE.MeshBasicMaterial({color:0x00ffff});
+                const p = new THREE.Mesh(pGeo, pMat);
+                p.position.set(x,y,z);
+                p.userData = { vel: new THREE.Vector3((Math.random()-0.5)*0.5, (Math.random())*0.5, (Math.random()-0.5)*0.5) };
+                scene.add(p);
+                particles.push(p);
+            }
+        }
+
+        function resetGame() {
+            obstacles.forEach(o => scene.remove(o));
+            obstacles = [];
+            score = 0;
+            speed = 0.5;
+            targetLane = 0;
+            ship.position.set(0, 1.2, 0);
+            ship.rotation.set(Math.PI/2, 0, 0);
+            document.getElementById('score').innerText = "000";
+        }
+
+        function startGame() {
+            resetGame();
+            isPlaying = true;
+            document.getElementById('overlay').style.opacity = 0;
+            setTimeout(() => document.getElementById('overlay').style.pointerEvents = 'none', 400);
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            document.getElementById('ov-title').innerText = "CRASH DETECTED";
+            document.getElementById('ov-sub').innerText = "FINAL DISTANCE: " + Math.floor(score);
+            document.getElementById('start-btn').innerText = "RETRY SIMULATION";
+            const overlay = document.getElementById('overlay');
+            overlay.style.opacity = 1;
+            overlay.style.pointerEvents = 'auto';
+            spawnParticles(ship.position.x, ship.position.y, ship.position.z);
+        }
+
+        let lastTime = 0;
+        function animate(time) {
+            requestAnimationFrame(animate);
+            
+            if (isPlaying) {
+                // Move Ship smoothly to target lane
+                const destX = lanes[targetLane + 1];
+                ship.position.x += (destX - ship.position.x) * 0.15;
+                // Bank effect
+                ship.rotation.z = (destX - ship.position.x) * -0.1;
+
+                // Move grid texture illusion
+                grid.position.z += speed;
+                if (grid.position.z > 0) grid.position.z = -50;
+
+                // Increment difficulty & score
+                score += speed * 0.1;
+                speed += 0.0002;
+                document.getElementById('score').innerText = Math.floor(score).toString().padStart(3, '0');
+
+                // Spawn obs periodically based on random chance and time
+                if (Math.random() < 0.03) spawnObstacle();
+
+                // Handle obstacles
+                for(let i = obstacles.length - 1; i >= 0; i--) {
+                    const ob = obstacles[i];
+                    ob.position.z += speed * 2;
+                    ob.rotation.y += 0.05;
+                    ob.rotation.x += 0.02;
+
+                    // Collision detection
+                    if (Math.abs(ob.position.z - ship.position.z) < 1.5 && Math.abs(ob.position.x - ship.position.x) < 2.5) {
+                        gameOver();
+                    }
+
+                    if (ob.position.z > 15) {
+                        scene.remove(ob);
+                        obstacles.splice(i, 1);
+                    }
+                }
+            }
+
+            // Handle particles
+            for(let i = particles.length - 1; i>=0; i--) {
+                const p = particles[i];
+                p.position.add(p.userData.vel);
+                p.userData.vel.y -= 0.01; // gravity
+                p.scale.multiplyScalar(0.95);
+                if(p.scale.x < 0.1) { scene.remove(p); particles.splice(i,1); }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -11,6 +11,21 @@
 const mgeChangelog = [
     {
         date: '2026-05-12',
+        title: 'New Release: Neon Space Runner!',
+        gameId: 'neon-runner',
+        icon: '⚡',
+        description: 'Blast off into a retro-synthwave dimension in this high-speed 3D avoider!',
+        updates: [
+            'Silky smooth 60FPS WebGL Rendering via Three.js',
+            'Responsive dynamic input: Supports mouse, touch, and arrow keys',
+            'Progressive velocity speed scaling system',
+            'Full 3D explosion dynamics and bank physics',
+            'Atmospheric volumetric fog and retro grid illusion'
+        ],
+        category: 'major'
+    },
+    {
+        date: '2026-05-12',
         title: 'New Game: Vector Launch!',
         gameId: 'vector-launch',
         icon: '🚀',

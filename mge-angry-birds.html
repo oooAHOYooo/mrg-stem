@@ -3,981 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGE Vector Launch - STEM Physics Playground</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <title>Vector Launch 3D - STEM Physics Playground</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #ff6b6b;
-            --secondary: #4ecdc4;
-            --accent: #ffe66d;
-            --dark: #1a1a2e;
-            --light: #ffffff;
-        }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #87CEEB;
-            font-family: 'Outfit', sans-serif;
-            touch-action: none;
-        }
-
-        #game-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: bottom center;
-        }
-
-        /* UI Overlay */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            z-index: 10;
-        }
-
-        .hud-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .stat-box {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 12px 24px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 2px solid #fff;
-            pointer-events: auto;
-        }
-
-        .score-label {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .score-value {
-            font-size: 2rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--primary), #ff007f);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .level-info {
-            text-align: center;
-        }
-
-        .level-title {
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: var(--dark);
-        }
-
-        .birds-left {
-            display: flex;
-            gap: 6px;
-            margin-top: 5px;
-        }
-
-        .bird-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--primary);
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .btn-restart {
-            background: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            transition: transform 0.2s;
-            pointer-events: auto;
-        }
-
-        .btn-restart:hover {
-            transform: rotate(180deg) scale(1.1);
-        }
-
-        /* Game Overlay Windows */
-        .overlay-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        .overlay-screen.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .card {
-            background: white;
-            padding: 40px;
-            border-radius: 30px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            max-width: 400px;
-            width: 90%;
-            transform: translateY(20px);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .overlay-screen.visible .card {
-            transform: translateY(0);
-        }
-
-        .card h1 {
-            font-size: 2.5rem;
-            font-weight: 900;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .card p {
-            color: #475569;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .main-btn {
-            background: linear-gradient(135deg, var(--primary), #ff5252);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: 800;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .main-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.6);
-        }
-
-        .icon-lg {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        /* Loading Screen */
-        #loader {
-            position: fixed;
-            inset: 0;
-            background: var(--dark);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-        }
-
-        .loader-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-top-color: var(--secondary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Vector Line Helper */
-        .vector-guide {
-            position: absolute;
-            pointer-events: none;
-            stroke: white;
-            stroke-dasharray: 5,5;
-            stroke-width: 3;
-            opacity: 0.6;
-        }
-
-        .tutorial-hint {
-            position: absolute;
-            bottom: 150px;
-            left: 180px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            pointer-events: none;
-            animation: floatHint 2s infinite ease-in-out;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        @keyframes floatHint {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+        :root { --primary: #ff6b6b; --secondary: #4ecdc4; --dark: #1a1a2e; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
+        body { margin: 0; overflow: hidden; font-family: 'Outfit', sans-serif; background: #87ceeb; touch-action: none; }
+        #game-container { width: 100vw; height: 100vh; position: relative; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; padding: 20px; z-index: 10; }
+        .hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .stat-box { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); padding: 12px 24px; border-radius: 16px; border: 2px solid #fff; pointer-events: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .score-label { font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px;}
+        .score-value { font-size: 2rem; font-weight: 900; color: var(--primary); }
+        .level-title { font-size: 1.2rem; font-weight: 900; color: #334155;}
+        .birds-left { display: flex; gap: 6px; margin-top: 5px; justify-content: center;}
+        .bird-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--primary); border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .btn-restart { background: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; pointer-events: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.2s;}
+        .btn-restart:hover { transform: scale(1.1); }
         
-        .back-home {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            text-decoration: none;
-            color: #333;
-            font-weight: 800;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .back-home:hover {
-            transform: translateX(-5px);
-            background: #f8f9fa;
-        }
+        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 100; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .card { background: white; padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); border: 5px solid var(--secondary); max-width: 400px;}
+        .card h1 { font-size: 3rem; font-weight: 900; margin-bottom: 20px; background: linear-gradient(135deg, #ff6b6b, #ff007f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .main-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 18px 45px; font-size: 1.3rem; font-weight: 900; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 25px rgba(78, 205, 196, 0.4); transition: transform 0.2s; text-transform: uppercase;}
+        .main-btn:hover { transform: translateY(-3px) scale(1.05); }
+        
+        #loader { position: fixed; inset: 0; background: var(--dark); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 1000; transition: opacity 0.5s; }
+        .loading-text { font-size: 2rem; font-weight: 900; letter-spacing: 2px; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.5; } to { opacity: 1; } }
+        
+        .hint-bubble { position: absolute; bottom: 120px; left: 120px; background: rgba(255,255,255,0.9); color: #1a1a2e; padding: 12px 20px; border-radius: 20px; font-weight: 800; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 3px solid var(--secondary); animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .lang-btn { pointer-events: auto; background: rgba(255,255,255,0.9); border: 2px solid #ddd; border-radius: 15px; padding: 8px 15px; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px; font-family: inherit;}
+        .lang-btn:hover { border-color: var(--primary); transform: scale(1.05); }
     </style>
 </head>
 <body>
-
-    <!-- Background images / assets in memory will be handled in JS -->
-
     <div id="loader">
-        <div class="loader-spinner"></div>
-        <p style="margin-top: 15px; font-weight: bold; letter-spacing: 1px;">PREPARING LAUNCH PHYSICS...</p>
+        <div class="loading-text" id="txt-loading">COMPILING 3D WORLD...</div>
+        <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">Extruding SVG Vectors & Lighting Physics</div>
     </div>
-
-    <a href="mge.html" class="back-home">⬅ Back to Hub</a>
-
     <div id="game-container">
-        <!-- The main canvas generated by Matter.js will sit here -->
-        <svg id="overlay-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></svg>
-        
         <div id="ui-layer">
             <div class="hud-top">
-                <div style="width: 120px;"></div> <!-- Spacer for Back button -->
-                <div class="stat-box level-info">
-                    <div class="level-title" id="level-name">LEVEL 1: BASICS</div>
-                    <div class="birds-left" id="birds-container">
-                        <!-- Dots added dynamically -->
-                    </div>
+                <div style="display:flex; gap: 10px;">
+                    <a href="mge.html" id="txt-back" style="pointer-events:auto; color:#333; background:#fff; padding:8px 20px; border-radius:15px; font-weight:900; text-decoration:none; display:flex; align-items:center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">⬅ BACK</a>
+                    <button class="lang-btn" id="lang-switcher"><span id="txt-lang-flag">🇪🇸</span> <span id="txt-lang-code">ES</span></button>
+                </div>
+                <div class="stat-box" style="text-align:center; min-width: 150px;">
+                    <div id="level-name" class="level-title">3D LAB 1</div>
+                    <div id="birds-container" class="birds-left"></div>
                 </div>
                 <div style="display: flex; gap: 15px; align-items: center;">
-                    <div class="stat-box">
-                        <div class="score-label">SCORE</div>
+                    <div class="stat-box" style="text-align: right;">
+                        <div class="score-label" id="txt-score-lbl">SCIENTIFIC SCORE</div>
                         <div class="score-value" id="score-text">0000</div>
                     </div>
-                    <button class="btn-restart" onclick="game.restartLevel()" title="Restart Level">🔄</button>
+                    <button class="btn-restart" id="btn-restart-game">🔄</button>
                 </div>
             </div>
-            <div></div> <!-- Spacer -->
         </div>
+        <div class="hint-bubble" id="txt-tut">DRAG BIRD TO LAUNCH!</div>
     </div>
 
-    <div id="tutorial" class="tutorial-hint">Drag back to Aim!</div>
+    <div id="win-screen" class="overlay-screen"><div class="card"><h1 id="txt-win-h">EXPERIMENTAL SUCCESS!</h1><button class="main-btn" id="btn-next-level">NEXT STAGE</button></div></div>
+    <div id="lose-screen" class="overlay-screen"><div class="card"><h1 id="txt-lose-h">INSUFFICIENT VELOCITY</h1><button class="main-btn" id="btn-retry-level">RETRY EXPERIMENT</button></div></div>
+    <div id="final-screen" class="overlay-screen"><div class="card"><h1 id="txt-fin-h">THEORETICAL CHAMPION!</h1><button class="main-btn" onclick="window.location='mge.html'" id="txt-fin-btn">BACK TO LAB</button></div></div>
 
-    <!-- Level Win/Over Overlays -->
-    <div id="win-screen" class="overlay-screen">
-        <div class="card">
-            <span class="icon-lg">🏆</span>
-            <h1>MISSION COMPLETE!</h1>
-            <p>Perfect physics calculation! Targets neutralized.</p>
-            <div style="margin: 20px 0; font-size: 1.2rem;">
-                <strong>Total Score: </strong><span id="win-score" style="color: var(--primary); font-weight: 900;">0</span>
-            </div>
-            <button class="main-btn" onclick="game.nextLevel()">NEXT LEVEL</button>
-        </div>
-    </div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+        import * as CANNON from 'cannon-es';
 
-    <div id="gameover-screen" class="overlay-screen">
-        <div class="card">
-            <span class="icon-lg">💥</span>
-            <h1>OUT OF BIRDS</h1>
-            <p>The structure held firm. Adjust your trajectory!</p>
-            <button class="main-btn" style="background: linear-gradient(135deg, #64748b, #475569);" onclick="game.restartLevel()">TRY AGAIN</button>
-        </div>
-    </div>
+        // --- STATE & CONFIG ---
+        const state = { 
+            score: 0, lvl: 0, ammo: 0, targetsLeft: 0, 
+            lang: 'en', activeBird: null, launched: false, won: false,
+            dragging: false
+        };
 
-    <div id="victory-all-screen" class="overlay-screen">
-        <div class="card">
-            <span class="icon-lg">🎉</span>
-            <h1>GENIUS SCIENTIST!</h1>
-            <p>You completed all available test chambers. You're a physics master!</p>
-            <button class="main-btn" onclick="location.href='mge.html'">BACK TO LAB</button>
-            <button class="main-btn" style="margin-top: 10px; background: none; color: #475569; box-shadow: none;" onclick="game.resetGame()">Play Again</button>
-        </div>
-    </div>
+        const langPack = {
+            en: { back: '⬅ BACK', score: 'SCORE', winH: 'SUCCESS!', winBtn: 'NEXT STAGE', loseH: 'FAILURE', loseBtn: 'RETRY', finH: 'CHAMPION!', loading: 'COMPILING 3D WORLD...', tut: 'DRAG BIRD TO LAUNCH!', lvl1: 'CHAMBER 1: IMPACT', lvl2: 'CHAMBER 2: DEFENSE', lvl3: 'CHAMBER 3: GOLIATH' },
+            es: { back: '⬅ ATRÁS', score: 'PUNTAJE', winH: '¡ÉXITO!', winBtn: 'SIGUIENTE NIVEL', loseH: 'FALLO', loseBtn: 'REINTENTAR', finH: '¡CAMPEÓN!', loading: 'COMPILANDO MUNDO 3D...', tut: '¡ARRASTRA PARA LANZAR!', lvl1: 'CÁMARA 1: IMPACTO', lvl2: 'CÁMARA 2: DEFENSA', lvl3: 'CÁMARA 3: GOLIAT' }
+        };
 
-    <script>
-        // Matter.js Modules aliases
-        const { Engine, Render, Runner, Bodies, Composite, Constraint, MouseConstraint, Mouse, Events, Body, Vector } = Matter;
-
-        // Configuration & Game State
         const config = {
-            width: window.innerWidth,
-            height: window.innerHeight,
-            groundHeight: 60,
-            birdRadius: 25,
-            targetRadius: 30,
-            anchorX: 220,
-            anchorY: 0, // Set dynamic based on height
-            maxDrag: 150
-        };
-        config.anchorY = config.height - 220;
-
-        const gameState = {
-            score: 0,
-            currentLevel: 0,
-            birdCount: 0,
-            launched: false,
-            currentBird: null,
-            isLevelOver: false,
-            targetsLeft: 0
+            anchor: new THREE.Vector3(-12, 6, 0),
+            maxDrag: 5,
+            groundLevel: 0,
+            gravity: -9.82 * 2
         };
 
-        // Asset Loader & Image Processing to remove white background
-        const assets = {
-            bird: 'static/imgs/mge-bird.png',
-            enemy: 'static/imgs/mge-enemy.png',
-            bg: 'static/imgs/mge-bg.png'
-        };
+        // --- THREE JS & CANNON SETUP ---
+        const container = document.getElementById('game-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#87ceeb');
+        scene.fog = new THREE.FogExp2('#a1e4ff', 0.008);
 
-        const textures = {};
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 35);
+        camera.lookAt(5, 5, 0);
 
-        // Levels Definition
-        const levels = [
-            {
-                name: "CHAMBER 1: FOUNDATIONS",
-                birds: 3,
-                build: (world) => {
-                    const groundY = config.height - config.groundHeight;
-                    const wallX = config.width - 400;
-                    // Base stack
-                    addRect(world, wallX, groundY - 60, 100, 120, 'wood'); // Left block
-                    addRect(world, wallX + 150, groundY - 60, 100, 120, 'wood'); // Right block
-                    addRect(world, wallX + 75, groundY - 130, 300, 20, 'wood'); // Top plank
-                    addTarget(world, wallX + 75, groundY - 180); // Target on top
-                }
-            },
-            {
-                name: "CHAMBER 2: PYRAMID SCHEME",
-                birds: 3,
-                build: (world) => {
-                    const groundY = config.height - config.groundHeight;
-                    const cx = config.width - 350;
-                    // Stack structure
-                    addRect(world, cx - 60, groundY - 40, 40, 80, 'stone');
-                    addRect(world, cx + 60, groundY - 40, 40, 80, 'stone');
-                    addRect(world, cx, groundY - 90, 200, 20, 'wood');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        const hemi = new THREE.HemisphereLight('#ffffff', '#8d6e63', 0.6);
+        scene.add(hemi);
+        const dirLight = new THREE.DirectionalLight('#ffffff', 1);
+        dirLight.position.set(20, 30, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(2048, 2048);
+        dirLight.shadow.camera.left = -30; dirLight.shadow.camera.right = 30;
+        dirLight.shadow.camera.top = 30; dirLight.shadow.camera.bottom = -15;
+        scene.add(dirLight);
+
+        // Ground
+        const groundGeo = new THREE.PlaneGeometry(200, 200);
+        const groundMat = new THREE.MeshStandardMaterial({ color: '#4caf50', roughness: 0.8 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Slingshot Mesh (Simple Post)
+        const postGeo = new THREE.CylinderGeometry(0.3, 0.5, 8, 8);
+        const postMat = new THREE.MeshStandardMaterial({ color: '#5d4037', roughness: 0.7 });
+        const post = new THREE.Mesh(postGeo, postMat);
+        post.position.copy(config.anchor);
+        post.position.y = 4;
+        post.castShadow = true;
+        scene.add(post);
+
+        // Sling Band (Line)
+        const bandMat = new THREE.LineBasicMaterial({ color: '#ff6b6b', linewidth: 5 });
+        const bandGeo = new THREE.BufferGeometry().setFromPoints([config.anchor, config.anchor]);
+        const bandLine = new THREE.Line(bandGeo, bandMat);
+        bandLine.frustumCulled = false;
+        scene.add(bandLine);
+
+        // Physics World
+        const world = new CANNON.World();
+        world.gravity.set(0, config.gravity, 0);
+        // High accuracy solver
+        world.solver.iterations = 10;
+        world.broadphase = new CANNON.SAPBroadphase(world);
+
+        const groundBody = new CANNON.Body({ type: CANNON.Body.STATIC, shape: new CANNON.Plane() });
+        groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+        world.addBody(groundBody);
+
+        // Physics tracking arrays
+        let bodiesToUpdate = []; // { mesh, body }
+        let targets = []; // tracking active enemy bodies
+        
+        // --- SVG LOADER & EXTRUDER ---
+        const svgCache = { bird: null, enemy: null };
+
+        async function loadAndExtrudeSVG(url, scale = 0.01, depth = 5) {
+            const loader = new SVGLoader();
+            return new Promise((resolve) => {
+                loader.load(url, (data) => {
+                    const group = new THREE.Group();
+                    const paths = data.paths;
                     
-                    addTarget(world, cx, groundY - 30); // Inside target
-                    
-                    addRect(world, cx - 40, groundY - 140, 40, 80, 'stone');
-                    addRect(world, cx + 40, groundY - 140, 40, 80, 'stone');
-                    addRect(world, cx, groundY - 190, 140, 20, 'wood');
-                    
-                    addTarget(world, cx, groundY - 220); // Top target
-                }
-            },
-            {
-                name: "CHAMBER 3: THE FORTRESS",
-                birds: 4,
-                build: (world) => {
-                    const groundY = config.height - config.groundHeight;
-                    const x1 = config.width - 450;
-                    const x2 = config.width - 250;
-                    
-                    // Left pillar
-                    addRect(world, x1, groundY - 80, 30, 160, 'stone');
-                    addRect(world, x1 + 60, groundY - 80, 30, 160, 'stone');
-                    addRect(world, x1 + 30, groundY - 170, 120, 20, 'wood');
-                    addTarget(world, x1 + 30, groundY - 200);
-                    
-                    // Right pillar
-                    addRect(world, x2, groundY - 80, 30, 160, 'stone');
-                    addRect(world, x2 + 60, groundY - 80, 30, 160, 'stone');
-                    addRect(world, x2 + 30, groundY - 170, 120, 20, 'wood');
-                    addTarget(world, x2 + 30, groundY - 200);
-                    
-                    // Connecting bridge
-                    addRect(world, (x1+x2)/2 + 30, groundY - 230, 280, 20, 'glass');
-                    
-                    // Top level
-                    addTarget(world, (x1+x2)/2 + 30, groundY - 270);
-                }
-            },
-             {
-                name: "CHAMBER 4: HIGH VELOCITY",
-                birds: 4,
-                build: (world) => {
-                    const groundY = config.height - config.groundHeight;
-                    const cx = config.width - 300;
-                    
-                    // High tower
-                    for(let i=0; i<4; i++) {
-                        const y = groundY - 50 - (i*100);
-                        addRect(world, cx - 40, y, 20, 100, 'stone');
-                        addRect(world, cx + 40, y, 20, 100, 'stone');
-                        addRect(world, cx, y - 60, 120, 20, 'wood');
+                    for (let i = 0; i < paths.length; i++) {
+                        const path = paths[i];
+                        const style = path.userData.style;
+                        const fillColor = style.fill;
                         
-                        if (i % 2 === 0) addTarget(world, cx, y);
+                        if (fillColor && fillColor !== 'none') {
+                            // Parse base opacity
+                            const opacity = style.fillOpacity !== undefined ? style.fillOpacity : 1;
+                            const transparent = opacity < 1 || fillColor.includes('rgba');
+                            
+                            const material = new THREE.MeshStandardMaterial({
+                                color: new THREE.Color().setStyle(fillColor),
+                                roughness: 0.4,
+                                metalness: 0.1,
+                                depthWrite: true,
+                                transparent: transparent,
+                                opacity: transparent ? 0.6 : 1
+                            });
+                            
+                            const shapes = SVGLoader.createShapes(path);
+                            for (let j = 0; j < shapes.length; j++) {
+                                const shape = shapes[j];
+                                // Extrude! This makes the SVG 3D
+                                const geometry = new THREE.ExtrudeGeometry(shape, {
+                                    depth: depth,
+                                    bevelEnabled: true,
+                                    bevelThickness: 1,
+                                    bevelSize: 0.5,
+                                    bevelSegments: 3
+                                });
+                                const mesh = new THREE.Mesh(geometry, material);
+                                mesh.castShadow = true;
+                                mesh.receiveShadow = true;
+                                group.add(mesh);
+                            }
+                        }
                     }
-                    addTarget(world, cx, groundY - 480); // Very top
                     
-                    // Guardian wall in front
-                    addRect(world, cx - 180, groundY - 60, 40, 120, 'stone');
-                    addRect(world, cx - 180, groundY - 180, 40, 120, 'wood');
+                    // Center geometry relative to its box
+                    const box = new THREE.Box3().setFromObject(group);
+                    const center = box.getCenter(new THREE.Vector3());
+                    group.children.forEach(child => {
+                        child.position.sub(center);
+                    });
+                    
+                    // Group adjustments: Correct orientation (SVG has Y down)
+                    const container = new THREE.Group();
+                    group.scale.set(scale, -scale, scale); // Flip Y axes
+                    container.add(group);
+                    resolve(container);
+                });
+            });
+        }
+
+        // --- FACTORY FUNCTIONS ---
+
+        function createPhysicBlock(x, y, z, w, h, d, color = '#8d6e63') {
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(w, h, d),
+                new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1 })
+            );
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+
+            const body = new CANNON.Body({
+                mass: 2,
+                shape: new CANNON.Box(new CANNON.Vec3(w / 2, h / 2, d / 2)),
+                position: new CANNON.Vec3(x, y, z)
+            });
+            // Add minimal damping to stabilize structure
+            body.angularDamping = 0.5;
+            world.addBody(body);
+            bodiesToUpdate.push({ mesh, body });
+        }
+
+        function createPhysicTarget(x, y, z) {
+            const mesh = svgCache.enemy.clone();
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+
+            const body = new CANNON.Body({
+                mass: 1,
+                shape: new CANNON.Sphere(1.2), // Approx size
+                position: new CANNON.Vec3(x, y, z)
+            });
+            world.addBody(body);
+            bodiesToUpdate.push({ mesh, body, isTarget: true });
+            targets.push(body);
+            state.targetsLeft++;
+            
+            // Add logic to detect hard collisions on the body
+            body.addEventListener('collide', (evt) => {
+                const impact = evt.contact.getImpactVelocityAlongNormal();
+                if (Math.abs(impact) > 4) {
+                    killTarget(body);
+                }
+            });
+        }
+
+        function killTarget(body) {
+            const idx = targets.indexOf(body);
+            if (idx > -1) {
+                targets.splice(idx, 1);
+                // Find in bodiesToUpdate to delete properly later
+                const entry = bodiesToUpdate.find(b => b.body === body);
+                if (entry && !entry.dead) {
+                    entry.dead = true;
+                    state.targetsLeft--;
+                    state.score += 1000;
+                    updateScore();
+                    createExplosion(entry.mesh.position);
+                    
+                    // Remove mesh after brief delay/instantly
+                    scene.remove(entry.mesh);
+                    world.removeBody(body);
+                    
+                    if (state.targetsLeft <= 0) {
+                        setTimeout(() => triggerWin(), 1500);
+                    }
                 }
             }
+        }
+
+        function createExplosion(pos) {
+            // Simple visual feedback: puff particles
+            const pCount = 8;
+            const geo = new THREE.SphereGeometry(0.4, 8, 8);
+            const mat = new THREE.MeshBasicMaterial({ color: '#32cd32' });
+            for (let i = 0; i < pCount; i++) {
+                const p = new THREE.Mesh(geo, mat);
+                p.position.copy(pos);
+                scene.add(p);
+                const vel = new THREE.Vector3((Math.random() - 0.5) * 0.5, Math.random() * 0.5, (Math.random() - 0.5) * 0.5);
+                
+                const animate = () => {
+                    p.position.add(vel);
+                    p.scale.multiplyScalar(0.9);
+                    if (p.scale.x < 0.05) {
+                        scene.remove(p);
+                    } else {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                animate();
+            }
+        }
+
+        function spawnBird() {
+            if (state.ammo <= 0 || state.activeBird) return;
+            
+            const mesh = svgCache.bird.clone();
+            mesh.position.copy(config.anchor);
+            scene.add(mesh);
+            
+            state.activeBird = {
+                mesh: mesh,
+                body: null, // not physics-driven until released
+                launched: false
+            };
+            
+            state.dragging = false;
+            updateUI();
+        }
+
+        function launchBird(vector) {
+            if (!state.activeBird) return;
+            
+            const birdObj = state.activeBird;
+            const body = new CANNON.Body({
+                mass: 5,
+                shape: new CANNON.Sphere(1), // physics collision sphere
+                position: new CANNON.Vec3(birdObj.mesh.position.x, birdObj.mesh.position.y, birdObj.mesh.position.z),
+                linearDamping: 0.01,
+                angularDamping: 0.1
+            });
+            world.addBody(body);
+            
+            // Vector logic: Vector goes from bird pos TO anchor, scaled
+            const impulse = new CANNON.Vec3(vector.x * 35, vector.y * 35, 0);
+            body.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
+            
+            birdObj.body = body;
+            birdObj.launched = true;
+            bodiesToUpdate.push(birdObj);
+            
+            state.ammo--;
+            document.getElementById('txt-tut').style.display = 'none';
+            
+            // Hide band
+            bandLine.visible = false;
+            
+            state.activeBird = null; // cleared for next
+            updateUI();
+            
+            // In a few seconds check game over/spawn next
+            setTimeout(checkGameEndConditions, 5000);
+        }
+
+        function checkGameEndConditions() {
+            if (state.won) return;
+            if (state.targetsLeft > 0) {
+                if (state.ammo > 0) {
+                    spawnBird();
+                } else {
+                    // Check if all moving stopped? Simple delay for now
+                    setTimeout(() => {
+                        if (state.targetsLeft > 0 && !state.won) {
+                            document.getElementById('lose-screen').style.display = 'flex';
+                        }
+                    }, 3000);
+                }
+            }
+        }
+
+        function triggerWin() {
+            if (state.won) return;
+            state.won = true;
+            state.score += state.ammo * 2000;
+            updateScore();
+            document.getElementById('win-screen').style.display = 'flex';
+        }
+
+        // --- INTERACTION LOGIC ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const verticalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // XY Plane intersecting at Z=0
+        const intersection = new THREE.Vector3();
+
+        function onPointerDown(e) {
+            if (state.activeBird && !state.activeBird.launched) {
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const birdBoundingBox = new THREE.Box3().setFromObject(state.activeBird.mesh);
+                const dist = raycaster.ray.distanceToPoint(state.activeBird.mesh.position);
+                if (dist < 2) {
+                    state.dragging = true;
+                    bandLine.visible = true;
+                }
+            }
+        }
+
+        function onPointerMove(e) {
+            if (state.dragging && state.activeBird) {
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                raycaster.ray.intersectPlane(verticalPlane, intersection);
+                
+                // Limit drag length
+                const offset = new THREE.Vector3().subVectors(intersection, config.anchor);
+                if (offset.length() > config.maxDrag) {
+                    offset.normalize().multiplyScalar(config.maxDrag);
+                }
+                
+                state.activeBird.mesh.position.copy(config.anchor).add(offset);
+                // Ensure Z is kept close to 0
+                state.activeBird.mesh.position.z = 0;
+
+                // Update rubber band geometry
+                const points = [config.anchor.clone(), state.activeBird.mesh.position.clone()];
+                bandLine.geometry.setFromPoints(points);
+            }
+        }
+
+        function onPointerUp() {
+            if (state.dragging && state.activeBird) {
+                state.dragging = false;
+                const pullVector = new THREE.Vector3().subVectors(config.anchor, state.activeBird.mesh.position);
+                if (pullVector.length() > 1.5) {
+                    launchBird(pullVector);
+                } else {
+                    // Snap back
+                    state.activeBird.mesh.position.copy(config.anchor);
+                    bandLine.visible = false;
+                }
+            }
+        }
+
+        window.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- LEVEL DEFINITIONS ---
+        const levels = [
+            { birds: 3, build: () => {
+                // Simple wood structure
+                createPhysicBlock(15, 2, 0, 1.5, 4, 2);
+                createPhysicBlock(21, 2, 0, 1.5, 4, 2);
+                createPhysicBlock(18, 4.5, 0, 8, 1, 2);
+                createPhysicTarget(18, 6, 0);
+            }},
+            { birds: 3, build: () => {
+                // Two towers
+                createPhysicBlock(14, 3, 0, 1.5, 6, 2, '#9e9e9e');
+                createPhysicBlock(18, 3, 0, 1.5, 6, 2, '#9e9e9e');
+                createPhysicBlock(16, 6.5, 0, 6, 1, 2);
+                createPhysicTarget(16, 2, 0);
+                
+                createPhysicBlock(24, 3, 0, 1.5, 6, 2, '#9e9e9e');
+                createPhysicBlock(28, 3, 0, 1.5, 6, 2, '#9e9e9e');
+                createPhysicBlock(26, 6.5, 0, 6, 1, 2);
+                createPhysicTarget(26, 8, 0);
+            }},
+            { birds: 4, build: () => {
+                // Goliath
+                for(let y=1; y<=3; y++){
+                    const h = (y-0.5)*3;
+                    createPhysicBlock(15, h, 0, 1, 3, 2, '#8d6e63');
+                    createPhysicBlock(25, h, 0, 1, 3, 2, '#8d6e63');
+                    createPhysicBlock(20, y*3, 0, 12, 0.5, 2, '#5d4037');
+                    createPhysicTarget(20, h, 0);
+                }
+                createPhysicTarget(20, 11, 0);
+            }}
         ];
 
-        // Helper to ensure images are loaded so scales are available immediately
-        async function preloadImage(src) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.src = src;
-                img.onload = () => resolve(img);
-                img.onerror = () => resolve(null); // Fallback handle
-            });
-        }
-
-        // Helper factories for bodies
-        function addRect(world, x, y, w, h, type) {
-            let color, friction, restitution, density;
-            switch(type) {
-                case 'wood': color = '#b97a57'; friction = 0.6; restitution = 0.1; density = 0.002; break;
-                case 'stone': color = '#7f8c8d'; friction = 0.8; restitution = 0.05; density = 0.008; break;
-                case 'glass': color = '#a3d8f4'; friction = 0.3; restitution = 0.2; density = 0.001; break;
+        function loadLevel(index) {
+            if (index >= levels.length) {
+                document.getElementById('final-screen').style.display = 'flex';
+                return;
             }
-            const body = Bodies.rectangle(x, y, w, h, {
-                label: 'block',
-                friction: friction,
-                restitution: restitution,
-                density: density,
-                render: {
-                    fillStyle: color,
-                    strokeStyle: '#2c3e50',
-                    lineWidth: 2
-                }
-            });
-            Composite.add(world, body);
-            return body;
-        }
-
-        function addTarget(world, x, y) {
-            const img = preloadedAssets.enemy;
-            // Pre-calculate perfect scale from real image resolution immediately
-            const scaleX = img ? (config.targetRadius * 2.2) / img.width : 0.1;
-            const scaleY = img ? (config.targetRadius * 2.2) / img.height : 0.1;
-
-            const target = Bodies.circle(x, y, config.targetRadius, {
-                label: 'target',
-                restitution: 0.3,
-                friction: 0.5,
-                density: 0.005,
-                render: {
-                    sprite: {
-                        texture: assets.enemy,
-                        xScale: scaleX,
-                        yScale: scaleY
-                    }
-                }
-            });
+            state.lvl = index;
+            state.ammo = levels[index].birds;
+            state.targetsLeft = 0;
+            state.won = false;
             
-            Composite.add(world, target);
-            gameState.targetsLeft++;
-            return target;
+            // Clear existing bodies & meshes
+            bodiesToUpdate.forEach(item => {
+                scene.remove(item.mesh);
+                if (item.body) world.removeBody(item.body);
+            });
+            bodiesToUpdate = [];
+            targets = [];
+            if (state.activeBird) {
+                scene.remove(state.activeBird.mesh);
+                state.activeBird = null;
+            }
+
+            // Hide overlays
+            document.querySelectorAll('.overlay-screen').forEach(el => el.style.display = 'none');
+            
+            // Build
+            levels[index].build();
+            updateUI();
+            setTimeout(spawnBird, 500);
         }
 
-        // Container to store loaded image elements to measure dimensions
-        const preloadedAssets = {};
-
-        // Main Game Singleton
-        const game = {
-            engine: null,
-            render: null,
-            runner: null,
-            sling: null,
-            anchor: null,
-            mouseConstraint: null,
-
-            async init() {
-                // Preload EVERYTHING so measurements are instant
-                console.log("Preloading graphics...");
-                preloadedAssets.bird = await preloadImage(assets.bird);
-                preloadedAssets.enemy = await preloadImage(assets.enemy);
-
-                // Set absolute constraints properly based on viewport size
-                config.width = window.innerWidth;
-                config.height = window.innerHeight;
-                config.anchorY = config.height - 220;
-                
-                // Hide loader
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
-
-                // Setup Matter.js World
-                this.engine = Engine.create();
-                const world = this.engine.world;
-
-                this.render = Render.create({
-                    element: document.getElementById('game-container'),
-                    engine: this.engine,
-                    options: {
-                        width: config.width,
-                        height: config.height,
-                        wireframes: false,
-                        background: 'transparent',
-                        hasBounds: false
-                    }
-                });
-                
-                // Apply background to the canvas directly via css style (to enable cover scaling)
-                this.render.canvas.style.backgroundImage = `url('${assets.bg}')`;
-
-                // Static Anchor for the Sling
-                this.anchor = { x: config.anchorX, y: config.anchorY };
-
-                // Ground & Walls
-                const ground = Bodies.rectangle(config.width / 2, config.height - config.groundHeight / 2, config.width * 2, config.groundHeight, {
-                    isStatic: true,
-                    render: { fillStyle: '#2ecc71', strokeStyle: '#27ae60', lineWidth: 8 }
-                });
-                Composite.add(world, ground);
-
-                // Sling constraint (invisible)
-                this.sling = Constraint.create({
-                    pointA: this.anchor,
-                    bodyB: null,
-                    stiffness: 0.08,
-                    damping: 0.05,
-                    render: { visible: false } // We'll draw custom vector lines in the animation loop
-                });
-                Composite.add(world, this.sling);
-
-                // Add Mouse Control
-                const mouse = Mouse.create(this.render.canvas);
-                this.mouseConstraint = MouseConstraint.create(this.engine, {
-                    mouse: mouse,
-                    constraint: {
-                        stiffness: 0.2,
-                        render: { visible: false }
-                    }
-                });
-                Composite.add(world, this.mouseConstraint);
-
-                // Setup Game Events & Loop
-                this.setupEvents();
-
-                Render.run(this.render);
-                this.runner = Runner.create();
-                Runner.run(this.runner, this.engine);
-
-                this.loadLevel(0);
-                
-                // Start custom rendering loop for effects and overlay lines
-                this.gameLoop();
-                
-                // Adjust viewport on resize
-                window.addEventListener('resize', () => {
-                    location.reload(); // Simplest fix for dynamic canvas re-orientation
-                });
-            },
-
-            setupEvents() {
-                // Handle Launch Logic on Mouse Release
-                Events.on(this.mouseConstraint, 'enddrag', (event) => {
-                    if (event.body === gameState.currentBird && !gameState.launched) {
-                        // Detect distance to release
-                        const dist = Vector.magnitude(Vector.sub(gameState.currentBird.position, this.anchor));
-                        if (dist > 20) { // Released from stretched state
-                            gameState.launched = true;
-                            // Let it fly for a fraction of a second before detaching constraint
-                            setTimeout(() => {
-                                this.sling.bodyB = null;
-                                gameState.birdCount--;
-                                this.updateBirdsUI();
-                                
-                                // Hide tutorial once launched
-                                document.getElementById('tutorial').style.opacity = 0;
-
-                                // Check logic after launch settled
-                                setTimeout(() => this.checkNextAction(), 3000);
-                            }, 50);
-                        }
-                    }
-                });
-
-                // Collision Handling
-                Events.on(this.engine, 'collisionStart', (event) => {
-                    const pairs = event.pairs;
-                    pairs.forEach((pair) => {
-                        const { bodyA, bodyB } = pair;
-                        
-                        // Did something hit a target?
-                        const isTarget = (b) => b.label === 'target';
-                        const isImpact = (b) => b.label === 'block' || b.label === 'bird';
-                        
-                        if ((isTarget(bodyA) || isTarget(bodyB)) && pair.collision.depth > 1) {
-                            // Calculate momentum of collision
-                            const force = Math.abs(bodyA.speed) + Math.abs(bodyB.speed);
-                            if (force > 3) {
-                                const victim = isTarget(bodyA) ? bodyA : bodyB;
-                                this.destroyTarget(victim);
-                            }
-                        }
-                    });
-                });
-
-                // Update event before step to enforce anchor max distance constraint manually
-                Events.on(this.engine, 'beforeUpdate', () => {
-                    if (this.mouseConstraint.body === gameState.currentBird && !gameState.launched) {
-                        const dist = Vector.sub(gameState.currentBird.position, this.anchor);
-                        if (Vector.magnitude(dist) > config.maxDrag) {
-                            // Limit drag distance
-                            const limitedPos = Vector.add(this.anchor, Vector.mult(Vector.normalise(dist), config.maxDrag));
-                            Body.setPosition(gameState.currentBird, limitedPos);
-                        }
-                    }
-                });
-            },
-
-            spawnBird() {
-                if (gameState.birdCount <= 0) return;
-
-                const img = preloadedAssets.bird;
-                const scaleX = img ? (config.birdRadius * 2.2) / img.width : 0.1;
-                const scaleY = img ? (config.birdRadius * 2.2) / img.height : 0.1;
-
-                const bird = Bodies.circle(this.anchor.x, this.anchor.y, config.birdRadius, {
-                    label: 'bird',
-                    restitution: 0.4,
-                    friction: 0.3,
-                    density: 0.005,
-                    render: {
-                        sprite: {
-                            texture: assets.bird,
-                            xScale: scaleX,
-                            yScale: scaleY
-                        }
-                    }
-                });
-
-                Composite.add(this.engine.world, bird);
-                
-                this.sling.bodyB = bird;
-                gameState.currentBird = bird;
-                gameState.launched = false;
-            },
-
-            loadLevel(index) {
-                if (index >= levels.length) {
-                    this.showOverlay('victory-all-screen');
-                    return;
-                }
-
-                // Clear existing
-                const world = this.engine.world;
-                // Remove blocks and targets, keep ground and mouse constraint and anchor
-                const allBodies = Composite.allBodies(world);
-                allBodies.forEach(b => {
-                    if (b.label === 'block' || b.label === 'target' || b.label === 'bird') {
-                        Composite.remove(world, b);
-                    }
-                });
-
-                // Reset State
-                const lvl = levels[index];
-                gameState.currentLevel = index;
-                gameState.birdCount = lvl.birds;
-                gameState.targetsLeft = 0;
-                gameState.isLevelOver = false;
-                gameState.launched = false;
-
-                document.getElementById('level-name').innerText = lvl.name;
-                this.updateBirdsUI();
-                this.hideAllOverlays();
-
-                // Build structure
-                lvl.build(world);
-
-                // Spawn first bird
-                setTimeout(() => this.spawnBird(), 500);
-            },
-
-            restartLevel() {
-                this.loadLevel(gameState.currentLevel);
-            },
-
-            nextLevel() {
-                this.loadLevel(gameState.currentLevel + 1);
-            },
-
-            resetGame() {
-                gameState.score = 0;
-                this.updateScoreUI(0);
-                this.loadLevel(0);
-            },
-
-            destroyTarget(targetBody) {
-                // Ensure we don't count double destruction
-                if (!Composite.allBodies(this.engine.world).includes(targetBody)) return;
-
-                // Create particle explosion effect here
-                this.createExplosion(targetBody.position.x, targetBody.position.y, '#2ecc71');
-
-                Composite.remove(this.engine.world, targetBody);
-                gameState.targetsLeft--;
-                
-                this.addScore(500);
-
-                // Check win condition
-                if (gameState.targetsLeft <= 0) {
-                    setTimeout(() => this.checkLevelWin(), 1500);
-                }
-            },
-
-            addScore(points) {
-                gameState.score += points;
-                this.updateScoreUI(gameState.score);
-            },
-
-            updateScoreUI(val) {
-                const str = val.toString().padStart(4, '0');
-                document.getElementById('score-text').innerText = str;
-                document.getElementById('win-score').innerText = str;
-            },
-
-            updateBirdsUI() {
-                const container = document.getElementById('birds-container');
-                container.innerHTML = '';
-                for (let i = 0; i < gameState.birdCount; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = 'bird-dot';
-                    container.appendChild(dot);
-                }
-            },
-
-            checkNextAction() {
-                if (gameState.isLevelOver) return;
-
-                // Check if remaining targets exist
-                if (gameState.targetsLeft > 0) {
-                    if (gameState.birdCount > 0) {
-                        // Still got ammo, clear the old bird if it's slow
-                        if (gameState.currentBird && gameState.currentBird.speed < 0.5) {
-                            // Ready to spawn next
-                            this.spawnBird();
-                        } else {
-                            // Wait a bit more if moving
-                            setTimeout(() => this.checkNextAction(), 1000);
-                        }
-                    } else {
-                        // Wait for total rest to confirm loss
-                        setTimeout(() => {
-                            if (gameState.targetsLeft > 0) this.showOverlay('gameover-screen');
-                        }, 2000);
-                    }
-                }
-            },
-
-            checkLevelWin() {
-                if (gameState.targetsLeft === 0 && !gameState.isLevelOver) {
-                    gameState.isLevelOver = true;
-                    // Bonus points for remaining birds
-                    const bonus = gameState.birdCount * 1000;
-                    if (bonus > 0) {
-                         this.addScore(bonus);
-                    }
-                    setTimeout(() => this.showOverlay('win-screen'), 1000);
-                }
-            },
-
-            showOverlay(id) {
-                document.getElementById(id).classList.add('visible');
-            },
-
-            hideAllOverlays() {
-                document.querySelectorAll('.overlay-screen').forEach(el => el.classList.remove('visible'));
-            },
-
-            createExplosion(x, y, color) {
-                // Visual only, using Canvas rendering in post-render custom step or separate divs?
-                // For simplicity and cool modern effect, append CSS particle burst
-                const burst = document.createElement('div');
-                burst.style.position = 'absolute';
-                burst.style.left = `${x}px`;
-                burst.style.top = `${y}px`;
-                burst.style.pointerEvents = 'none';
-                document.body.appendChild(burst);
-                
-                for (let i = 0; i < 15; i++) {
-                    const p = document.createElement('div');
-                    p.style.position = 'absolute';
-                    p.style.width = `${Math.random() * 10 + 5}px`;
-                    p.style.height = p.style.width;
-                    p.style.borderRadius = '50%';
-                    p.style.background = color;
-                    p.style.opacity = 1;
-                    p.style.transform = 'translate(-50%, -50%)';
-                    burst.appendChild(p);
-                    
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = Math.random() * 60 + 20;
-                    const tx = Math.cos(angle) * dist;
-                    const ty = Math.sin(angle) * dist;
-                    
-                    p.animate([
-                        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
-                        { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-                    ], {
-                        duration: 600,
-                        easing: 'ease-out'
-                    });
-                }
-                
-                setTimeout(() => burst.remove(), 800);
-            },
-
-            gameLoop() {
-                // Use standard SVG layer for elastic bands draw
-                const svg = document.getElementById('overlay-svg');
-                
-                const loop = () => {
-                    requestAnimationFrame(loop);
-                    
-                    // Draw Sling rubber bands if dragging
-                    svg.innerHTML = '';
-                    if (this.sling.bodyB && !gameState.launched) {
-                        const birdPos = this.sling.bodyB.position;
-                        
-                        // Create thick stylized rubber bands
-                        const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line1.setAttribute('x1', this.anchor.x - 10);
-                        line1.setAttribute('y1', this.anchor.y);
-                        line1.setAttribute('x2', birdPos.x);
-                        line1.setAttribute('y2', birdPos.y);
-                        line1.setAttribute('stroke', '#5d4037');
-                        line1.setAttribute('stroke-width', '12');
-                        line1.setAttribute('stroke-linecap', 'round');
-                        svg.appendChild(line1);
-
-                        // Create Vector Dotted Prediction line
-                        const dx = this.anchor.x - birdPos.x;
-                        const dy = this.anchor.y - birdPos.y;
-                        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            // Calculate simplified parabolic path
-                            let d = `M ${birdPos.x} ${birdPos.y}`;
-                            const iterations = 30;
-                            const timeStep = 0.6;
-                            // Standard gravity estimate
-                            const gravity = this.engine.gravity.y * this.engine.gravity.scale * 1000;
-                            
-                            for (let i = 1; i <= iterations; i++) {
-                                const t = i * timeStep;
-                                const px = birdPos.x + (dx * 0.12) * t * 20; // scaled force
-                                const py = birdPos.y + (dy * 0.12) * t * 20 + 0.5 * gravity * t * t * 1500;
-                                if (py > config.height - 40) break;
-                                d += ` L ${px} ${py}`;
-                            }
-                            path.setAttribute('d', d);
-                            path.setAttribute('fill', 'none');
-                            path.setAttribute('stroke', 'rgba(255,255,255,0.5)');
-                            path.setAttribute('stroke-width', '4');
-                            path.setAttribute('stroke-dasharray', '8, 12');
-                            svg.appendChild(path);
-                        }
-
-                        const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line2.setAttribute('x1', this.anchor.x + 10);
-                        line2.setAttribute('y1', this.anchor.y);
-                        line2.setAttribute('x2', birdPos.x);
-                        line2.setAttribute('y2', birdPos.y);
-                        line2.setAttribute('stroke', '#795548');
-                        line2.setAttribute('stroke-width', '12');
-                        line2.setAttribute('stroke-linecap', 'round');
-                        svg.appendChild(line2);
-                    }
-                    
-                    // Draw Static Sling Posts
-                    const post = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    post.setAttribute('d', `M ${this.anchor.x} ${config.height - config.groundHeight} L ${this.anchor.x} ${this.anchor.y} M ${this.anchor.x-15} ${this.anchor.y-15} L ${this.anchor.x} ${this.anchor.y} L ${this.anchor.x+15} ${this.anchor.y-15}`);
-                    post.setAttribute('stroke', '#5d4037');
-                    post.setAttribute('stroke-width', '18');
-                    post.setAttribute('stroke-linecap', 'round');
-                    post.setAttribute('fill', 'none');
-                    svg.appendChild(post);
-                };
-                loop();
+        // --- UI CONTROLS ---
+        function updateUI() {
+            const div = document.getElementById('birds-container');
+            div.innerHTML = '';
+            for(let i=0; i<state.ammo; i++) {
+                const d = document.createElement('div');
+                d.className = 'bird-dot';
+                div.appendChild(d);
             }
+            const t = langPack[state.lang];
+            document.getElementById('level-name').innerText = t['lvl' + (state.lvl + 1)] || "BONUS LAB";
+        }
+
+        function updateScore() {
+            document.getElementById('score-text').innerText = state.score.toString().padStart(4, '0');
+        }
+
+        document.getElementById('btn-next-level').onclick = () => loadLevel(state.lvl + 1);
+        document.getElementById('btn-retry-level').onclick = () => loadLevel(state.lvl);
+        document.getElementById('btn-restart-game').onclick = () => loadLevel(state.lvl);
+        
+        const langBtn = document.getElementById('lang-switcher');
+        langBtn.onclick = () => {
+            state.lang = state.lang === 'en' ? 'es' : 'en';
+            const t = langPack[state.lang];
+            document.getElementById('txt-lang-flag').innerText = state.lang === 'en' ? '🇪🇸' : '🇺🇸';
+            document.getElementById('txt-lang-code').innerText = state.lang === 'en' ? 'ES' : 'EN';
+            document.getElementById('txt-back').innerText = t.back;
+            document.getElementById('txt-score-lbl').innerText = t.score;
+            document.getElementById('txt-win-h').innerText = t.winH;
+            document.getElementById('btn-next-level').innerText = t.winBtn;
+            document.getElementById('txt-lose-h').innerText = t.loseH;
+            document.getElementById('btn-retry-level').innerText = t.loseBtn;
+            document.getElementById('txt-fin-h').innerText = t.finH;
+            document.getElementById('txt-tut').innerText = t.tut;
+            updateUI();
         };
 
-        // Start on window load
-        window.onload = () => {
-            game.init();
-        };
+        // --- MAIN LOOP ---
+        const timeStep = 1 / 60;
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Step Physics
+            world.step(timeStep);
+
+            // Sync visual meshes to physical bodies
+            for (let i = bodiesToUpdate.length - 1; i >= 0; i--) {
+                const entry = bodiesToUpdate[i];
+                if (entry.dead) {
+                     bodiesToUpdate.splice(i, 1);
+                     continue;
+                }
+                if (entry.body) {
+                    entry.mesh.position.copy(entry.body.position);
+                    entry.mesh.quaternion.copy(entry.body.quaternion);
+                    
+                    // Optional: Out of bounds detection
+                    if (entry.body.position.y < -5) {
+                        if (entry.isTarget) {
+                            killTarget(entry.body);
+                        } else {
+                            scene.remove(entry.mesh);
+                            world.removeBody(entry.body);
+                            bodiesToUpdate.splice(i, 1);
+                        }
+                    }
+                }
+            }
+
+            // Render
+            renderer.render(scene, camera);
+        }
+
+        // --- INITIALIZATION ---
+        async function init() {
+            // Preload & Extrude SVGs
+            svgCache.bird = await loadAndExtrudeSVG('static/imgs/mge-bird.svg', 0.01, 15);
+            svgCache.enemy = await loadAndExtrudeSVG('static/imgs/mge-enemy.svg', 0.01, 15);
+            
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            
+            loadLevel(0);
+            animate();
+        }
+
+        init();
 
     </script>
 </body>
