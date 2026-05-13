@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Vibe Master - Beat Maker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050510;
+            --panel-bg: rgba(15, 15, 35, 0.8);
+            --accent1: #ff007f; /* Neon Pink */
+            --accent2: #00f2fe; /* Neon Cyan */
+            --accent3: #4facfe; /* Blue */
+            --accent4: #f9d423; /* Golden */
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px;
+        }
+
+        #ui-layer > * {
+            pointer-events: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .brand {
+            text-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
+        }
+
+        .brand h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .brand p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: -5px;
+            letter-spacing: 1px;
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 15px;
+            background: var(--panel-bg);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            align-items: center;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, var(--accent1), #9c27b0);
+            border: none;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+        }
+
+        .btn.primary:hover {
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.7);
+        }
+
+        .btn.active {
+            background: var(--accent2);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+        }
+
+        .tempo-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--accent2);
+        }
+
+        .tempo-control input {
+            width: 100px;
+            accent-color: var(--accent2);
+        }
+
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .track-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .track-btn {
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .track-btn .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .track-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .track-btn.selected {
+            background: rgba(255,255,255,0.12);
+            border-color: var(--accent2);
+            transform: scale(1.05);
+        }
+
+        .track-info h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .track-info p {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .control-panel {
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group label {
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 5px;
+            display: block;
+            letter-spacing: 1px;
+        }
+
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px 5px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .action-btn:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .hint-box {
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            opacity: 0.8;
+        }
+
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a1a3a 0%, #050510 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        }
+
+        #splash-screen h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--accent1), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            font-family: 'Space Grotesk', sans-serif;
+            text-shadow: 0 0 50px rgba(255, 0, 127, 0.3);
+        }
+
+        .loader-btn {
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            background: white;
+            color: #000;
+            border-radius: 50px;
+            font-weight: 900;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+            transition: 0.3s;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .loader-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.5);
+        }
+
+        .exit-link {
+            background: #000;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            border: 1px solid #333;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .exit-link:hover {
+            border-color: var(--accent1);
+            box-shadow: 0 0 15px var(--accent1);
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <h1>VIBE MASTER 3D</h1>
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 40px; text-align: center; max-width: 500px; line-height: 1.6;">
+            Welcome to the 3D Sound Lab. Build beats, craft melodies, and shape the vibes. Click the big cubes to turn sounds ON and OFF.
+        </p>
+        <button class="loader-btn" onclick="startApp()">ENTER STUDIO</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <header>
+            <div class="brand">
+                <h1>VIBE MASTER</h1>
+                <p>MGE SPATIAL AUDIO LAB</p>
+            </div>
+            
+            <div class="top-controls">
+                <button class="btn primary" id="playBtn">
+                    <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    <span id="playText">PLAY</span>
+                </button>
+                
+                <div class="tempo-control">
+                    <span>BPM</span>
+                    <input type="range" id="bpmSlider" min="60" max="160" value="120">
+                    <span id="bpmVal">120</span>
+                </div>
+
+                <button class="btn" id="clearBtn">CLEAR GRID</button>
+            </div>
+        </header>
+
+        <div class="sidebar">
+            <div class="track-selector">
+                <div class="track-btn selected" onclick="selectTrack(0)" style="color: var(--accent2)">
+                    <div class="dot" style="background-color: var(--accent2)"></div>
+                    <div class="track-info">
+                        <h3>DRUM KIT</h3>
+                        <p>Kick, Snare, Hi-Hat, Clap</p>
+                    </div>
+                </div>
+                
+                <div class="track-btn" onclick="selectTrack(1)" style="color: var(--accent1)">
+                    <div class="dot" style="background-color: var(--accent1)"></div>
+                    <div class="track-info">
+                        <h3>BASS LINE</h3>
+                        <p>Sub, Funk, Deep Chords</p>
+                    </div>
+                </div>
+
+                <div class="track-btn" onclick="selectTrack(2)" style="color: var(--accent4)">
+                    <div class="dot" style="background-color: var(--accent4)"></div>
+                    <div class="track-info">
+                        <h3>SYNTH MELODY</h3>
+                        <p>Leads, Plucks, Dreamy</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="control-group">
+                    <label>Vibe Magic ✨ (Auto-Chords)</label>
+                    <div class="quick-action-grid">
+                        <button class="action-btn" onclick="generateGroove('chill')">LO-FI CHILL</button>
+                        <button class="action-btn" onclick="generateGroove('techno')">TECHNO</button>
+                        <button class="action-btn" onclick="generateGroove('summer')">SUMMER</button>
+                        <button class="action-btn" onclick="generateGroove('random')">SURPRISE ME</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Environment</label>
+                    <div class="quick-action-grid">
+                        <button class="action-btn" id="toggleRotate">AUTO-SPIN: ON</button>
+                        <button class="action-btn" id="resetCam">FRONT VIEW</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="hint-box">
+                💡 <strong>HINT:</strong> Left Click cubes to activate them. Drag mouse to rotate camera. Scroll to Zoom.
+            </div>
+            <a href="mge.html" class="exit-link">EXIT TO HUB</a>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration
+        const GRID_WIDTH = 16; // Steps (X)
+        const GRID_HEIGHT = 4; // Notes/Samples per track (Y)
+        const GRID_TRACKS = 3; // Drum, Bass, Synth (Z)
+        const CUBE_SIZE = 0.8;
+        const SPACING = 1.2;
+
+        // Colors mapped to tracks
+        const TRACK_COLORS = [0x00f2fe, 0xff007f, 0xf9d423];
+        const OFF_COLORS = [0x002f33, 0x330019, 0x332c07];
+
+        let activeTrackIndex = 0;
+        let isPlaying = false;
+        let autoRotate = true;
+
+        // Data Structure
+        // 3D Array: [track][step][note] = boolean
+        const sequencer = Array.from({ length: GRID_TRACKS }, () =>
+            Array.from({ length: GRID_WIDTH }, () =>
+                Array.from({ length: GRID_HEIGHT }, () => false)
+            )
+        );
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+        scene.fog = new THREE.FogExp2(0x050510, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 8, 25);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.PointLight(0xffffff, 1);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        // Container for the visual grid
+        const gridGroup = new THREE.Group();
+        scene.add(gridGroup);
+
+        // Keep reference to meshes
+        // Flattened Map or 3D array of meshes
+        const cubeMeshes = []; // {mesh, track, x, y}
+
+        const geo = new THREE.BoxGeometry(CUBE_SIZE, CUBE_SIZE, CUBE_SIZE);
+
+        // Build visual grid
+        function buildGrid() {
+            gridGroup.clear();
+            cubeMeshes.length = 0;
+
+            const totalWidth = (GRID_WIDTH - 1) * SPACING;
+            const totalHeight = (GRID_HEIGHT - 1) * SPACING;
+            const totalDepth = (GRID_TRACKS - 1) * 4; // space out tracks more in Z
+
+            for (let t = 0; t < GRID_TRACKS; t++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        const mat = new THREE.MeshStandardMaterial({
+                            color: OFF_COLORS[t],
+                            emissive: OFF_COLORS[t],
+                            emissiveIntensity: 0.2,
+                            roughness: 0.2,
+                            metalness: 0.8,
+                            transparent: true,
+                            opacity: 0.8
+                        });
+
+                        const mesh = new THREE.Mesh(geo, mat);
+                        
+                        // Center the grid
+                        const posX = x * SPACING - totalWidth / 2;
+                        const posY = y * SPACING - totalHeight / 2;
+                        const posZ = t * 4 - totalDepth / 2;
+
+                        mesh.position.set(posX, posY, posZ);
+                        mesh.userData = { track: t, x: x, y: y, basePos: mesh.position.clone() };
+
+                        // Wireframe for inner look
+                        const wireGeo = new THREE.EdgesGeometry(geo);
+                        const wireMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2 });
+                        const wire = new THREE.LineSegments(wireGeo, wireMat);
+                        mesh.add(wire);
+
+                        gridGroup.add(mesh);
+                        cubeMeshes.push(mesh);
+                    }
+                }
+            }
+
+            // Create Playhead Bar
+            const barGeo = new THREE.BoxGeometry(0.2, totalHeight + SPACING, totalDepth + 2);
+            const barMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+            playheadMesh = new THREE.Mesh(barGeo, barMat);
+            playheadMesh.position.y = 0;
+            playheadMesh.position.z = 0;
+            gridGroup.add(playheadMesh);
+            updatePlayheadPos(0);
+        }
+
+        let playheadMesh;
+        function updatePlayheadPos(step) {
+            if (!playheadMesh) return;
+            const totalWidth = (GRID_WIDTH - 1) * SPACING;
+            const startX = -totalWidth / 2;
+            playheadMesh.position.x = startX + step * SPACING;
+        }
+
+        // Particles / Visualizer Background
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+        const pCount = 100;
+        const pGeo = new THREE.SphereGeometry(0.1, 4, 4);
+        for (let i = 0; i < pCount; i++) {
+            const pMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x00f2fe : 0xff007f });
+            const pm = new THREE.Mesh(pGeo, pMat);
+            pm.position.set((Math.random()-0.5)*50, (Math.random()-0.5)*30, (Math.random()-0.5)*30);
+            pm.userData = { speed: Math.random() * 0.05 + 0.02, axis: Math.random() > 0.5 ? 'x' : 'y' };
+            particleGroup.add(pm);
+        }
+
+        buildGrid();
+
+        // ------------------------------------------------
+        // AUDIO ENGINE (Tone.js)
+        // ------------------------------------------------
+        const masterCompressor = new Tone.Compressor(-20, 3).toDestination();
+        const masterReverb = new Tone.Reverb(1.5).connect(masterCompressor);
+        masterReverb.wet.value = 0.3;
+
+        // 1. Drums
+        const drumVol = new Tone.Volume(-6).connect(masterCompressor);
+        const kick = new Tone.MembraneSynth().connect(drumVol);
+        const snare = new Tone.NoiseSynth({ volume: -10, envelope: { decay: 0.2, sustain: 0 } }).connect(drumVol);
+        const hihat = new Tone.MetalSynth({ volume: -18, envelope: { decay: 0.1 }, resonance: 4000 }).connect(drumVol);
+        const clap = new Tone.PolySynth(Tone.Synth, { volume: -12, oscillator: {type: "triangle"} }).connect(drumVol);
+        
+        const drumSounds = [
+            () => clap.triggerAttackRelease("C4", "32n"),
+            () => hihat.triggerAttackRelease("32n"),
+            () => snare.triggerAttackRelease("16n"),
+            () => kick.triggerAttackRelease("C1", "8n")
+        ];
+
+        // 2. Bass
+        const bassSynth = new Tone.MonoSynth({
+            volume: -8,
+            oscillator: { type: "sawtooth" },
+            envelope: { attack: 0.02, decay: 0.1, sustain: 0.5, release: 0.5 },
+            filterEnvelope: { attack: 0.01, decay: 0.2, baseFrequency: 200, octaves: 3 }
+        }).connect(masterCompressor);
+
+        // Bass notes mapping (y from 0 to 3: highest to lowest)
+        // Let's map them in a nice scale like C Minor Pentatonic
+        const bassScale = ["G1", "F1", "Eb1", "C1"];
+
+        // 3. Synth / Lead
+        const synthDelay = new Tone.FeedbackDelay("8n", 0.4).connect(masterReverb);
+        const leadSynth = new Tone.PolySynth(Tone.Synth, {
+            volume: -15,
+            oscillator: { type: "fatsawtooth", count: 3, spread: 20 },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 0.8 }
+        }).connect(synthDelay);
+        leadSynth.connect(masterCompressor);
+
+        const leadScale = ["C5", "G4", "Eb4", "C4"]; // High to Low visual representation.
+
+        let currentStep = 0;
+
+        function initAudioLoop() {
+            Tone.Transport.scheduleRepeat((time) => {
+                // Loop Logic
+                
+                // 1. Trigger Audio based on sequence
+                for (let t = 0; t < GRID_TRACKS; t++) {
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        if (sequencer[t][currentStep][y]) {
+                            triggerVisualPulse(t, currentStep, y);
+                            
+                            if (t === 0) {
+                                // Trigger Drum at visual row y
+                                // Visual index 3 is bottom -> Kick
+                                const drumIndex = 3 - y;
+                                if(drumSounds[drumIndex]) drumSounds[drumIndex]();
+                            } else if (t === 1) {
+                                // Trigger Bass
+                                const note = bassScale[3-y];
+                                bassSynth.triggerAttackRelease(note, "8n", time);
+                            } else if (t === 2) {
+                                // Trigger Synth
+                                const note = leadScale[3-y];
+                                leadSynth.triggerAttackRelease(note, "8n", time);
+                            }
+                        }
+                    }
+                }
+
+                // Visual updates inside animation loop scheduled via requestAnimationFrame, 
+                // but we pass current step.
+                Tone.Draw.schedule(() => {
+                    updatePlayheadPos(currentStep);
+                }, time);
+
+                currentStep = (currentStep + 1) % GRID_WIDTH;
+            }, "16n");
+        }
+
+        // Trigger a visual scale-pop animation on the mesh when played
+        function triggerVisualPulse(t, x, y) {
+            // Find the mesh
+            const mesh = cubeMeshes.find(m => m.userData.track === t && m.userData.x === x && m.userData.y === y);
+            if (mesh) {
+                mesh.scale.set(1.5, 1.5, 1.5);
+                new TWEEN.Tween(mesh.scale)
+                    .to({ x: 1, y: 1, z: 1 }, 300)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                
+                // Flash emissive intensity
+                const initialInt = mesh.material.emissiveIntensity;
+                mesh.material.emissiveIntensity = 2.0;
+                new TWEEN.Tween(mesh.material)
+                    .to({ emissiveIntensity: 1.0 }, 300)
+                    .start();
+            }
+        }
+
+        // ------------------------------------------------
+        // Interaction / Input logic
+        // ------------------------------------------------
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let isMouseDown = false;
+        let dragThreshold = false;
+        let mouseDownPos = {x:0, y:0};
+
+        window.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            mouseDownPos = {x: e.clientX, y: e.clientY};
+            dragThreshold = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isMouseDown) {
+                const dist = Math.hypot(e.clientX - mouseDownPos.x, e.clientY - mouseDownPos.y);
+                if (dist > 5) {
+                    dragThreshold = true;
+                    // Orbit camera rotation
+                    const deltaX = e.clientX - mouseDownPos.x;
+                    gridGroup.rotation.y += deltaX * 0.005;
+                    mouseDownPos = {x: e.clientX, y: e.clientY};
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            isMouseDown = false;
+            
+            // If click was quick and didn't drag, interpret as block click.
+            if (!dragThreshold) {
+                // Normalize mouse position
+                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(gridGroup.children);
+
+                if (intersects.length > 0) {
+                    // Closest intersected object
+                    let target = intersects[0].object;
+                    
+                    // Skip playhead
+                    if(target === playheadMesh) {
+                         if(intersects.length > 1) target = intersects[1].object;
+                         else return;
+                    }
+
+                    if (target.userData && typeof target.userData.track !== 'undefined') {
+                        toggleBlock(target);
+                    }
+                }
+            }
+        });
+
+        // Track Scroll Zoom
+        window.addEventListener('wheel', (e) => {
+             camera.position.z += e.deltaY * 0.02;
+             camera.position.z = Math.max(10, Math.min(camera.position.z, 60));
+        });
+
+        function toggleBlock(mesh) {
+            const {track, x, y} = mesh.userData;
+            
+            // Toggle data state
+            const newState = !sequencer[track][x][y];
+            sequencer[track][x][y] = newState;
+
+            // Update UI Track Focus
+            if (track !== activeTrackIndex) {
+                selectTrack(track);
+            }
+
+            // Update Visual
+            updateMeshAppearance(mesh, newState);
+
+            // Preview Sound when placed
+            if (newState) {
+                 if (track === 0) drumSounds[3-y]();
+                 else if (track === 1) bassSynth.triggerAttackRelease(bassScale[3-y], "8n");
+                 else if (track === 2) leadSynth.triggerAttackRelease(leadScale[3-y], "8n");
+                 
+                 // Pop animation
+                 mesh.scale.set(1.3, 1.3, 1.3);
+                 new TWEEN.Tween(mesh.scale).to({x:1,y:1,z:1}, 200).start();
+            }
+        }
+
+        function updateMeshAppearance(mesh, isOn) {
+            const track = mesh.userData.track;
+            if (isOn) {
+                mesh.material.color.setHex(TRACK_COLORS[track]);
+                mesh.material.emissive.setHex(TRACK_COLORS[track]);
+                mesh.material.emissiveIntensity = 1.0;
+                mesh.material.opacity = 1.0;
+            } else {
+                mesh.material.color.setHex(OFF_COLORS[track]);
+                mesh.material.emissive.setHex(OFF_COLORS[track]);
+                mesh.material.emissiveIntensity = 0.2;
+                mesh.material.opacity = 0.8;
+            }
+        }
+
+        function selectTrack(idx) {
+            activeTrackIndex = idx;
+            
+            // Update UI Side Panel selection
+            const buttons = document.querySelectorAll('.track-btn');
+            buttons.forEach((btn, i) => {
+                if (i === idx) btn.classList.add('selected');
+                else btn.classList.remove('selected');
+            });
+
+            // Smoothly orbit camera to focus on that track plane
+            // Bring the selected Z level to front visually or tilt?
+            // We can just set a light color or animate grid rotation.
+            
+            // Subtle highlighting of the active track's blocks
+            cubeMeshes.forEach(m => {
+                if(m.userData.track === idx) {
+                    m.material.opacity = 1.0;
+                    // pop scale slightly to indicate selection
+                } else {
+                    m.material.opacity = 0.3;
+                }
+            });
+        }
+
+        // Start Application entry point
+        async function startApp() {
+            await Tone.start();
+            document.getElementById('splash-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+                initAudioLoop();
+                selectTrack(0); // Start with track 0 highlights
+            }, 500);
+        }
+
+        // UI Event listeners
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const playText = document.getElementById('playText');
+        
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                Tone.Transport.start();
+                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
+                playText.innerText = "PAUSE";
+                playBtn.classList.add('active');
+            } else {
+                Tone.Transport.pause();
+                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+                playText.innerText = "PLAY";
+                playBtn.classList.remove('active');
+            }
+            isPlaying = !isPlaying;
+        });
+
+        document.getElementById('bpmSlider').addEventListener('input', (e) => {
+            const bpm = e.target.value;
+            Tone.Transport.bpm.value = bpm;
+            document.getElementById('bpmVal').innerText = bpm;
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            for (let t = 0; t < GRID_TRACKS; t++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        sequencer[t][x][y] = false;
+                    }
+                }
+            }
+            cubeMeshes.forEach(m => updateMeshAppearance(m, false));
+        });
+
+        document.getElementById('toggleRotate').addEventListener('click', (e) => {
+            autoRotate = !autoRotate;
+            e.target.innerText = autoRotate ? "AUTO-SPIN: ON" : "AUTO-SPIN: OFF";
+        });
+
+        document.getElementById('resetCam').addEventListener('click', () => {
+            new TWEEN.Tween(gridGroup.rotation)
+                .to({ y: 0 }, 1000)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .start();
+        });
+
+        // Procedural Generator "Magic Chords"
+        function generateGroove(type) {
+            // First clear current track or all tracks? Let's just clear all for a complete "preset"
+            document.getElementById('clearBtn').click();
+            
+            if (type === 'chill') {
+                Tone.Transport.bpm.value = 85;
+                document.getElementById('bpmSlider').value = 85;
+                document.getElementById('bpmVal').innerText = "85";
+                
+                // Classic slow 4 on the floor variant
+                // Kick (y=3)
+                [0, 8].forEach(x => sequencer[0][x][3] = true);
+                // Snare (y=2)
+                [4, 12].forEach(x => sequencer[0][x][2] = true);
+                // Hats (y=1)
+                [0, 2, 4, 6, 8, 10, 12, 14].forEach(x => sequencer[0][x][1] = true);
+
+                // Bass chill bounce
+                sequencer[1][0][3] = true; // C
+                sequencer[1][6][1] = true; // F
+                sequencer[1][8][3] = true; 
+                sequencer[1][14][2] = true;
+
+                // Simple Chords Synth
+                sequencer[2][2][0] = true;
+                sequencer[2][2][2] = true;
+                sequencer[2][10][1] = true;
+                sequencer[2][10][3] = true;
+
+            } else if (type === 'techno') {
+                Tone.Transport.bpm.value = 128;
+                document.getElementById('bpmSlider').value = 128;
+                document.getElementById('bpmVal').innerText = "128";
+                
+                // Hard Kicks
+                [0, 4, 8, 12].forEach(x => sequencer[0][x][3] = true);
+                // Hats on the offbeats
+                [2, 6, 10, 14].forEach(x => sequencer[0][x][1] = true);
+                // Claps
+                [4, 12].forEach(x => sequencer[0][x][0] = true);
+
+                // Rolling bass
+                for(let x=0; x<GRID_WIDTH; x++) {
+                    if(x%4 != 0) sequencer[1][x][3] = true;
+                }
+
+                // Acid Pattern Synth
+                [3, 6, 11, 14].forEach(x => sequencer[2][x][Math.floor(Math.random()*4)] = true);
+
+            } else if (type === 'summer') {
+                 Tone.Transport.bpm.value = 115;
+                 document.getElementById('bpmSlider').value = 115;
+                 document.getElementById('bpmVal').innerText = "115";
+
+                 // Dembow-ish
+                 [0, 3, 6, 8, 11, 14].forEach(x => sequencer[0][x][3] = true);
+                 [4, 12].forEach(x => sequencer[0][x][2] = true);
+                 for(let x=0; x<16; x++) if(x%2==0) sequencer[0][x][1] = true;
+
+                 // Bass Root melody
+                 sequencer[1][0][3] = true;
+                 sequencer[1][4][1] = true;
+                 sequencer[1][8][0] = true;
+                 sequencer[1][12][2] = true;
+
+                 // Rhythmic Synth Plucks
+                 [0, 3, 6, 8, 11, 14].forEach(x => {
+                     sequencer[2][x][1] = true;
+                     sequencer[2][x][3] = true;
+                 });
+            } else {
+                // Totally Random algorithmic generator
+                for(let x=0; x<GRID_WIDTH; x++) {
+                    if(Math.random()>0.5) sequencer[0][x][Math.floor(Math.random()*4)] = true;
+                    if(Math.random()>0.7) sequencer[1][x][Math.floor(Math.random()*4)] = true;
+                    if(Math.random()>0.8) sequencer[2][x][Math.floor(Math.random()*4)] = true;
+                }
+            }
+
+            // Reflect to UI
+            cubeMeshes.forEach(m => {
+                const isO = sequencer[m.userData.track][m.userData.x][m.userData.y];
+                updateMeshAppearance(m, isO);
+            });
+            
+            // If not playing, trigger play
+            if(!isPlaying) {
+                playBtn.click();
+            }
+        }
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Auto rotation
+            if (autoRotate && !isMouseDown) {
+                gridGroup.rotation.y += 0.002;
+            }
+
+            // Floating effect for grid
+            gridGroup.position.y = Math.sin(elapsedTime * 0.5) * 0.2;
+
+            // Animate particle background
+            particleGroup.children.forEach((p, i) => {
+                if(p.userData.axis === 'x') {
+                    p.position.x += p.userData.speed;
+                    if(p.position.x > 25) p.position.x = -25;
+                } else {
+                    p.position.y += p.userData.speed;
+                    if(p.position.y > 15) p.position.y = -15;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start rendering loop
+        animate();
+
+    </script>
+</body>
+</html>
