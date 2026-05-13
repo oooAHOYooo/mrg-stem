@@ -355,6 +355,80 @@
             background: rgba(255,255,255,0.2);
             border-radius: 2px;
         }
+
+        .academy-panel {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .academy-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            color: var(--accent4);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .academy-desc {
+            font-size: 0.7rem;
+            line-height: 1.4;
+            opacity: 0.9;
+            color: #e0e0ff;
+        }
+
+        .active-chord-display {
+            font-size: 0.8rem;
+            font-weight: 900;
+            background: rgba(0,0,0,0.3);
+            padding: 6px;
+            border-radius: 6px;
+            text-align: center;
+            color: var(--accent2);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .scale-select-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .scale-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 6px 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .scale-btn.active {
+            background: var(--accent1);
+            border-color: transparent;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -431,6 +505,25 @@
                 </div>
 
                 <div class="control-group">
+                    <label>🎵 Music Academy (Scale / Mood)</label>
+                    <div class="scale-select-row">
+                        <button class="scale-btn active" data-scale="minor" onclick="setScale('minor')">MYSTICAL</button>
+                        <button class="scale-btn" data-scale="major" onclick="setScale('major')">HAPPY</button>
+                        <button class="scale-btn" data-scale="blues" onclick="setScale('blues')">JAZZY</button>
+                    </div>
+                    
+                    <div class="academy-panel">
+                        <div class="academy-title">
+                            🎓 <span id="academy-scale-name">C Minor (Mystical)</span>
+                        </div>
+                        <p class="academy-desc" id="academy-desc">A magical, deep sound. Great for chill, spacey, or serious vibes!</p>
+                        
+                        <div class="active-chord-display" id="active-chord-display">NO NOTES DETECTED</div>
+                        <p class="academy-desc" id="academy-theory-fact" style="font-size: 0.68rem; font-style: italic; opacity: 0.8;">Click "Play" to analyze your musical harmony!</p>
+                    </div>
+                </div>
+
+                <div class="control-group">
                     <label>Environment</label>
                     <div class="quick-action-grid">
                         <button class="action-btn" id="toggleRotate">AUTO-SPIN: ON</button>
@@ -463,6 +556,46 @@
         let activeTrackIndex = 0;
         let isPlaying = false;
         let autoRotate = true;
+
+        // Educational State Variables
+        let rowLabelSprites = [];
+        let currentScaleKey = 'minor';
+
+        const SCALES = {
+            minor: {
+                name: "C Minor (Mystical)",
+                bass: ["G1", "F1", "Eb1", "C1"],
+                synth: ["C5", "G4", "Eb4", "C4"],
+                labels: {
+                    bass: ["G1 (Perf 5th)", "F1 (Perf 4th)", "Eb1 (Minor 3rd)", "C1 (Root)"],
+                    synth: ["C5 (Octave Do)", "G4 (Dominant So)", "Eb4 (Minor Me)", "C4 (Root Do)"]
+                },
+                desc: "A magical, deep sound. Great for chill, spacey, or serious vibes!"
+            },
+            major: {
+                name: "C Major (Happy)",
+                bass: ["A1", "G1", "E1", "C1"],
+                synth: ["C5", "A4", "G4", "E4"],
+                labels: {
+                    bass: ["A1 (Major 6th)", "G1 (Perf 5th)", "E1 (Major 3rd)", "C1 (Root)"],
+                    synth: ["C5 (Octave Do)", "A4 (Major La)", "G4 (Dominant So)", "E4 (Major Mi)"]
+                },
+                desc: "Bright, joyful, and triumphant! Ideal for uplifting summer melodies."
+            },
+            blues: {
+                name: "C Blues (Jazzy)",
+                bass: ["Gb1", "F1", "Eb1", "C1"],
+                synth: ["C5", "Gb4", "F4", "Eb4"],
+                labels: {
+                    bass: ["Gb1 (Dim 5th/Blue)", "F1 (Perf 4th)", "Eb1 (Minor 3rd)", "C1 (Root)"],
+                    synth: ["C5 (Octave)", "Gb4 (Blue Note)", "F4 (Perf 4th)", "Eb4 (Minor 3rd)"]
+                },
+                desc: "Cool, edgy, and expressive. Contains the famous flat-5th 'Blue Note'!"
+            }
+        };
+
+        let bassScale = [...SCALES.minor.bass];
+        let leadScale = [...SCALES.minor.synth];
 
         // Data Structure
         // 3D Array: [track][step][note] = boolean
@@ -582,6 +715,151 @@
         buildGrid();
 
         // ------------------------------------------------
+        // EDUCATIONAL MUSIC ACADEMY ENGINE
+        // ------------------------------------------------
+        function build3DLabels() {
+            rowLabelSprites.forEach(sprite => gridGroup.remove(sprite));
+            rowLabelSprites = [];
+
+            const totalWidth = (GRID_WIDTH - 1) * SPACING;
+            const totalDepth = (GRID_TRACKS - 1) * 4; 
+            const posX = -totalWidth / 2 - 3.2; 
+
+            const scale = SCALES[currentScaleKey];
+            
+            let activeLabels = [];
+            if (activeTrackIndex === 0) activeLabels = ["Clap", "Hi-Hat", "Snare", "Kick Drum"];
+            else if (activeTrackIndex === 1) activeLabels = scale.labels.bass;
+            else activeLabels = scale.labels.synth;
+
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 320; canvas.height = 80;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.fillStyle = 'rgba(10, 10, 30, 0.85)';
+                
+                ctx.beginPath();
+                ctx.roundRect ? ctx.roundRect(0, 0, 320, 80, 12) : ctx.rect(0,0,320,80);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#' + TRACK_COLORS[activeTrackIndex].toString(16).padStart(6, '0');
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 28px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText(activeLabels[3 - y], 160, 50);
+
+                const tex = new THREE.CanvasTexture(canvas);
+                const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+                const sprite = new THREE.Sprite(mat);
+
+                const posY = y * SPACING - ((GRID_HEIGHT - 1) * SPACING) / 2;
+                const posZ = activeTrackIndex * 4 - totalDepth / 2;
+
+                sprite.position.set(posX, posY, posZ);
+                sprite.scale.set(2.8, 0.7, 1);
+                
+                gridGroup.add(sprite);
+                rowLabelSprites.push(sprite);
+            }
+        }
+
+        function setScale(scaleKey) {
+            currentScaleKey = scaleKey;
+            const scale = SCALES[scaleKey];
+            bassScale = [...scale.bass];
+            leadScale = [...scale.synth];
+
+            document.querySelectorAll('.scale-btn').forEach(btn => {
+                if (btn.dataset.scale === scaleKey) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            document.getElementById('academy-scale-name').innerText = scale.name;
+            document.getElementById('academy-desc').innerText = scale.desc;
+
+            build3DLabels();
+        }
+
+        function updateAcademyAnalysis(bassNotes, synthNotes) {
+            const display = document.getElementById('active-chord-display');
+            const factText = document.getElementById('academy-theory-fact');
+
+            if (bassNotes.length === 0 && synthNotes.length === 0) {
+                display.innerText = "NO NOTES PLAYING";
+                display.style.color = "rgba(255,255,255,0.4)";
+                return;
+            }
+
+            display.style.color = "var(--accent2)";
+            let noteNames = [...bassNotes, ...synthNotes].map(n => n.replace(/\d+/, '')); 
+            let uniqueNotes = [...new Set(noteNames)];
+
+            let chordName = uniqueNotes.join(" + ");
+            
+            if (uniqueNotes.length === 1) {
+                chordName = `${uniqueNotes[0]} Octave Match`;
+                factText.innerHTML = `💡 <strong>Theory:</strong> Play <strong>${uniqueNotes[0]}</strong> together to reinforce the power of the note!`;
+            } else if (uniqueNotes.length === 2) {
+                chordName = `${uniqueNotes[0]} & ${uniqueNotes[1]} Interval`;
+                factText.innerHTML = `💡 <strong>Theory:</strong> A 2-note stack is a <strong>Musical Interval</strong>. It sets the harmonic mood!`;
+            } else if (uniqueNotes.length >= 3) {
+                chordName = `${uniqueNotes.join("-")} Accord`;
+                factText.innerHTML = `💡 <strong>Theory:</strong> 3+ unique notes form a <strong>CHORD</strong>! Multi-layer harmony is rich and full.`;
+            }
+
+            if (uniqueNotes.includes('C') && uniqueNotes.includes('Eb') && uniqueNotes.includes('G')) {
+                 chordName = "⚡ C Minor Chord ⚡";
+                 factText.innerHTML = `🎓 <strong>Chord Master!</strong> You built a <strong>C Minor Chord</strong> (Root, 3rd, 5th)! Emotional and dreamy!`;
+            } else if (uniqueNotes.includes('C') && uniqueNotes.includes('E') && uniqueNotes.includes('G')) {
+                 chordName = "☀️ C Major Chord ☀️";
+                 factText.innerHTML = `🎓 <strong>Chord Master!</strong> You built a <strong>C Major Chord</strong>! Warm, triumphant, and incredibly happy!`;
+            }
+
+            display.innerText = chordName;
+        }
+
+        function spawnMusicNoteParticle(pos, text) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+            ctx.font = 'bold 34px Outfit';
+            
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 4;
+            ctx.strokeText(text, 64, 40);
+            
+            ctx.fillStyle = '#' + TRACK_COLORS[activeTrackIndex].toString(16).padStart(6, '0');
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 64, 40);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 1, depthTest: false });
+            const sprite = new THREE.Sprite(mat);
+            
+            sprite.position.copy(pos);
+            sprite.position.y += 0.8;
+            sprite.scale.set(1.3, 0.65, 1);
+            gridGroup.add(sprite);
+
+            new TWEEN.Tween(sprite.position)
+                .to({ y: sprite.position.y + 3.0 }, 900)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .start();
+
+            new TWEEN.Tween(mat)
+                .to({ opacity: 0 }, 900)
+                .onComplete(() => gridGroup.remove(sprite))
+                .start();
+        }
+
+        build3DLabels();
+
+        // ------------------------------------------------
         // AUDIO ENGINE (Tone.js)
         // ------------------------------------------------
         const masterCompressor = new Tone.Compressor(-20, 3).toDestination();
@@ -611,8 +889,6 @@
         }).connect(masterCompressor);
 
         // Bass notes mapping (y from 0 to 3: highest to lowest)
-        // Let's map them in a nice scale like C Minor Pentatonic
-        const bassScale = ["G1", "F1", "Eb1", "C1"];
 
         // 3. Synth / Lead
         const synthDelay = new Tone.FeedbackDelay("8n", 0.4).connect(masterReverb);
@@ -623,7 +899,7 @@
         }).connect(synthDelay);
         leadSynth.connect(masterCompressor);
 
-        const leadScale = ["C5", "G4", "Eb4", "C4"]; // High to Low visual representation.
+        // Lead scale is dynamically derived from active educational scale
 
         let currentStep = 0;
 
@@ -655,10 +931,19 @@
                     }
                 }
 
+                // 2. Collect currently playing notes for the educational analyzer
+                let activeBassNotes = [];
+                let activeSynthNotes = [];
+                for (let y = 0; y < GRID_HEIGHT; y++) {
+                    if (sequencer[1][currentStep][y]) activeBassNotes.push(bassScale[3-y]);
+                    if (sequencer[2][currentStep][y]) activeSynthNotes.push(leadScale[3-y]);
+                }
+
                 // Visual updates inside animation loop scheduled via requestAnimationFrame, 
                 // but we pass current step.
                 Tone.Draw.schedule(() => {
                     updatePlayheadPos(currentStep);
+                    updateAcademyAnalysis(activeBassNotes, activeSynthNotes);
                 }, time);
 
                 currentStep = (currentStep + 1) % GRID_WIDTH;
@@ -670,6 +955,13 @@
             // Find the mesh
             const mesh = cubeMeshes.find(m => m.userData.track === t && m.userData.x === x && m.userData.y === y);
             if (mesh) {
+                // Educational: Float music note text out of block!
+                let noteText = "";
+                if (t === 0) noteText = ["Clap", "Hat", "Snare", "Kick"][3-y];
+                else if (t === 1) noteText = bassScale[3-y];
+                else noteText = leadScale[3-y];
+                spawnMusicNoteParticle(mesh.position.clone(), noteText);
+
                 mesh.scale.set(1.5, 1.5, 1.5);
                 new TWEEN.Tween(mesh.scale)
                     .to({ x: 1, y: 1, z: 1 }, 300)
@@ -813,6 +1105,9 @@
                     m.material.opacity = 0.3;
                 }
             });
+
+            // Educational Update: Sync labels to track focus
+            if (typeof build3DLabels === "function") build3DLabels();
         }
 
         // Start Application entry point
