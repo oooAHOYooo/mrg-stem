@@ -10,6 +10,36 @@
 
 const mgeChangelog = [
     {
+        date: '2026-05-13',
+        title: 'Major Release: 3D Vibe Master - Music Academy!',
+        gameId: '3d-beat-maker',
+        icon: '🎹',
+        description: 'Compose interactive music grids with the power of STEM and Music Theory!',
+        updates: [
+            'New Music Academy Sidebar: Real-time academic harmony analysis',
+            'Dynamic Educational Labels: 3D Interval, Solfege, and Pitch billboarding',
+            'Custom Scales system: Mystical Minor Pentatonic, Happy Major, and Blues presets',
+            'Harmonic Step Tracker: Analyzes concurrent notes to identify musical chords',
+            'Floating Particle Notation: Triggered notes visually eject up as 3D pitch tags'
+        ],
+        category: 'major'
+    },
+    {
+        date: '2026-05-13',
+        title: 'Major Release: STEM Kart Racing!',
+        gameId: 'stem-kart',
+        icon: '🏎️',
+        description: 'Put vector math skills to the test in this neon-drenched 3D arcade racer!',
+        updates: [
+            'Dynamic Math Arches: Cross the correct arch to trigger hyper-boosts',
+            'Smart AI Competitors: Battle responsive racers dynamic spacing',
+            'Interactive Mini-Map: 2D canvas rendering projected from 3D Spline track',
+            'Web Audio synthesis for boosts, clicks, and penalty notifications',
+            'Resilient legacy rendering fallbacks for absolute reliability'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-05-12',
         title: 'New Release: Neon Space Runner!',
         gameId: 'neon-runner',
