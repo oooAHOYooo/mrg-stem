@@ -841,8 +841,8 @@
             const p = trackSpline.getPointAt(t === 1 ? 0.9999 : t);
             const tan = trackSpline.getTangentAt(t === 1 ? 0.9999 : t);
             const right = new THREE.Vector3().crossVectors(tan, new THREE.Vector3(0,1,0)).normalize();
-            leftRailPts.push(p.clone().addScaledVector(right, -trackWidth/2).add({y: 0.3}));
-            rightRailPts.push(p.clone().addScaledVector(right, trackWidth/2).add({y: 0.3}));
+            leftRailPts.push(p.clone().addScaledVector(right, -trackWidth/2).add(new THREE.Vector3(0, 0.3, 0)));
+            rightRailPts.push(p.clone().addScaledVector(right, trackWidth/2).add(new THREE.Vector3(0, 0.3, 0)));
         }
         const leftRailCurve = new THREE.CatmullRomCurve3(leftRailPts, true);
         const rightRailCurve = new THREE.CatmullRomCurve3(rightRailPts, true);
@@ -912,7 +912,7 @@
             const ctx = canv.getContext('2d');
             ctx.fillStyle = 'rgba(10, 10, 25, 0.9)';
             ctx.beginPath();
-            ctx.roundRect(0, 0, 256, 128, 20);
+            ctx.roundRect ? ctx.roundRect(0, 0, 256, 128, 20) : ctx.rect(0, 0, 256, 128);
             ctx.fill();
             ctx.strokeStyle = colorHex;
             ctx.lineWidth = 4;
@@ -1120,11 +1120,11 @@
             mesh.position.copy(pos);
             
             const force = 0.2 + Math.random()*0.2;
-            const vel = dir.clone().add({
-                x: (Math.random()-0.5)*0.2,
-                y: (Math.random()-0.5)*0.2,
-                z: (Math.random()-0.5)*0.2
-            }).normalize().multiplyScalar(-force); // Backwards
+            const vel = dir.clone().add(new THREE.Vector3(
+                (Math.random()-0.5)*0.2,
+                (Math.random()-0.5)*0.2,
+                (Math.random()-0.5)*0.2
+            )).normalize().multiplyScalar(-force); // Backwards
             
             scene.add(mesh);
             particles.push({
@@ -1517,7 +1517,7 @@
                     
                     // AI sways laterally a bit to avoid looking too rigid
                     const aiSideOff = ai.offset + Math.sin(now * 0.002 + ai.offset) * 1.5;
-                    ai.mesh.position.copy(aiSplinePos).addScaledVector(aiRight, aiSideOff).add({y: 0.3});
+                    ai.mesh.position.copy(aiSplinePos).addScaledVector(aiRight, aiSideOff).add(new THREE.Vector3(0, 0.3, 0));
                     
                     // Face movement vector
                     ai.mesh.lookAt(ai.mesh.position.clone().add(aiTan));
@@ -1559,7 +1559,7 @@
                 camera.position.lerp(targetCamPos, 0.1);
                 
                 // Point at spot ahead of player
-                const lookSpot = playerKart.mesh.position.clone().add({y: 1.0});
+                const lookSpot = playerKart.mesh.position.clone().add(new THREE.Vector3(0, 1.0, 0));
                 camera.lookAt(lookSpot);
             } else {
                 // Idle rotating camera around spawn/menu
@@ -1570,7 +1570,7 @@
                     Math.cos(angle)*5 + 10, 
                     Math.cos(angle) * radius + spawnStartPt.z
                 );
-                camera.lookAt(spawnStartPt.clone().add({y: 2}));
+                camera.lookAt(spawnStartPt.clone().add(new THREE.Vector3(0, 2, 0)));
             }
 
             renderer.render(scene, camera);
