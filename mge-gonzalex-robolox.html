@@ -888,6 +888,12 @@
         let eggCount = 0;
         let isSillyMode = false;
 
+        // --- BLUEPRINT BUILD CHALLENGES ---
+        let blueprintBlocks = [];
+        let houseLabels = [];
+        let houseProgress = { ghost: 0, shadow: 0 };
+        let houseCompleted = { ghost: false, shadow: false };
+
         // Persistent World Environmental Pointers
         let sunLight = null;
         let ambientLight = null;
@@ -1387,6 +1393,9 @@
             // Build Bilingual Spanish Mentor NPC
             createSpanishNPC();
 
+            // Create Blueprint Build Challenges
+            createBlueprints();
+
             // Setup starter blocks
             addBlock(0, gridSize / 2, 0, 0x118ab2);
             addBlock(1, gridSize / 2, 0, 0xef476f);
@@ -1604,7 +1613,9 @@
 
         function triggerEasterEgg() {
             if (eggCount >= 2) {
-                addChatMessage('<span class="server">[Console]: Chaos tokens spent. Limits enforced.</span>');
+                addChatMessage('<span class="server" style="color: #ff4655; font-weight: 800;">⚠️ [System]: 67 CHAOS LOCK ACTIVE! ⚠️</span>');
+                addChatMessage('<span class="server" style="color: #ffd60a; font-weight: 600;">💡 Build the GHOST HOUSE (Cyan) and SHADOW HOUSE (Purple) to unlock CODE 67 again!</span>');
+                playSound('oof');
                 return;
             }
             eggCount++;
@@ -1687,6 +1698,172 @@
             addChatMessage(`<span class="name" style="color:#ff4655;">🇲🇽 Maestro:</span> ${p.s}`);
             setTimeout(() => addChatMessage(`<span class="name" style="color:#ff4655;">🇲🇽 Maestro (English):</span> "${p.e}" ✨`), 2800);
             playSound('paint');
+        }
+
+        // --- BLUEPRINT HOUSE CHALLENGES LOGIC ---
+        function createBlueprints() {
+            const bp = [
+                {x:-1, y:0.5, z:-1}, {x:0, y:0.5, z:-1}, {x:1, y:0.5, z:-1},
+                {x:-1, y:0.5, z:0},  {x:0, y:0.5, z:0},  {x:1, y:0.5, z:0},
+                {x:-1, y:0.5, z:1},  {x:0, y:0.5, z:1},  {x:1, y:0.5, z:1},
+                {x:0,  y:1.5, z:0}
+            ];
+
+            const ghostMat = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.28,
+                roughness: 0.1,
+                metalness: 0.4,
+                depthWrite: false
+            });
+
+            const shadowMat = new THREE.MeshStandardMaterial({
+                color: 0x300050,
+                transparent: true,
+                opacity: 0.42,
+                roughness: 0.1,
+                metalness: 0.4,
+                depthWrite: false
+            });
+
+            const centers = [
+                { cx: 12, cz: 8, type: 'ghost', mat: ghostMat, label: "👻 Ghost House" },
+                { cx: -12, cz: 8, type: 'shadow', mat: shadowMat, label: "🌑 Shadow House" }
+            ];
+
+            const geo = new THREE.BoxGeometry(gridSize * 0.95, gridSize * 0.95, gridSize * 0.95);
+
+            centers.forEach(c => {
+                // House floating title tag
+                const canvas = document.createElement('canvas');
+                canvas.width = 256; canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = c.type === 'ghost' ? 'rgba(0, 180, 216, 0.85)' : 'rgba(48, 0, 80, 0.85)';
+                ctx.fillRect(0, 0, 256, 64);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 22px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(c.label, 128, 40);
+                
+                const tex = new THREE.CanvasTexture(canvas);
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+                sprite.position.set(c.cx, 3.0, c.cz);
+                sprite.scale.set(2.4, 0.6, 1);
+                scene.add(sprite);
+                houseLabels.push(sprite);
+
+                bp.forEach(b => {
+                    const mesh = new THREE.Mesh(geo, c.mat);
+                    mesh.position.set(c.cx + b.x, b.y, c.cz + b.z);
+                    scene.add(mesh);
+                    blueprintBlocks.push({
+                        mesh: mesh,
+                        x: c.cx + b.x,
+                        y: b.y,
+                        z: c.cz + b.z,
+                        type: c.type,
+                        covered: false
+                    });
+                });
+            });
+        }
+
+        function checkBlueprints() {
+            houseProgress.ghost = 0;
+            houseProgress.shadow = 0;
+
+            blueprintBlocks.forEach(bp => {
+                const isCovered = world.some(b => 
+                    Math.abs(b.position.x - bp.x) < 0.1 &&
+                    Math.abs(b.position.y - bp.y) < 0.1 &&
+                    Math.abs(b.position.z - bp.z) < 0.1
+                );
+
+                if (isCovered) {
+                    bp.covered = true;
+                    bp.mesh.visible = false;
+                    if (bp.type === 'ghost') houseProgress.ghost++;
+                    else houseProgress.shadow++;
+                } else {
+                    bp.covered = false;
+                    bp.mesh.visible = true;
+                }
+            });
+
+            const totalRequired = 10;
+
+            if (houseProgress.ghost === totalRequired) {
+                if (!houseCompleted.ghost) {
+                    houseCompleted.ghost = true;
+                    addChatMessage('<span class="server" style="color:#00ffff; font-weight:bold;">👻 [System]: The GHOST HOUSE has been fully built! Beautiful structure!</span>');
+                    playSound('jump');
+                    checkAllBlueprintsComplete();
+                }
+            } else {
+                houseCompleted.ghost = false;
+            }
+
+            if (houseProgress.shadow === totalRequired) {
+                if (!houseCompleted.shadow) {
+                    houseCompleted.shadow = true;
+                    addChatMessage('<span class="server" style="color:#b800ff; font-weight:bold;">🌑 [System]: The SHADOW HOUSE is complete! Spectacular engineering!</span>');
+                    playSound('jump');
+                    checkAllBlueprintsComplete();
+                }
+            } else {
+                houseCompleted.shadow = false;
+            }
+        }
+
+        function checkAllBlueprintsComplete() {
+            if (houseCompleted.ghost && houseCompleted.shadow) {
+                addChatMessage('<span class="server" style="color:#ffd60a; font-weight:900; font-size:1.1rem;">⚡ [SYSTEM RESTORE]: COSMIC ENERGY HARNESSED! CODE 67 IS NOW UNLOCKED! ⚡</span>');
+                playSound('oof');
+                setTimeout(() => playSound('jump'), 250);
+                setTimeout(() => playSound('place'), 500);
+
+                consumeHouses();
+
+                eggCount = 0; // Reset easter egg count limitation!
+                houseCompleted.ghost = false;
+                houseCompleted.shadow = false;
+            }
+        }
+
+        function consumeHouses() {
+            blueprintBlocks.forEach(bp => {
+                const matchingBlock = world.find(b => 
+                    Math.abs(b.position.x - bp.x) < 0.1 &&
+                    Math.abs(b.position.y - bp.y) < 0.1 &&
+                    Math.abs(b.position.z - bp.z) < 0.1
+                );
+                if (matchingBlock) {
+                    // Massive colorful explosion!
+                    spawnParticles(matchingBlock.position.clone(), bp.type === 'ghost' ? 0x00ffff : 0x7209b7, 14);
+                    scene.remove(matchingBlock);
+                    world = world.filter(b => b !== matchingBlock);
+                    blockCount--;
+                }
+            });
+
+            document.getElementById('block-count').innerText = blockCount;
+            document.getElementById('list-stat').innerText = blockCount;
+
+            if (isMultiplayer && isHost) {
+                 const mapData = world.map(b => ({
+                    x: b.position.x, y: b.position.y, z: b.position.z, color: b.userData.color
+                }));
+                setTimeout(() => {
+                     sendData('init_sync', { world: mapData });
+                }, 800);
+            }
+
+            // Reset guides to be visible
+            blueprintBlocks.forEach(bp => {
+                bp.mesh.visible = true;
+                bp.covered = false;
+            });
         }
 
         function createRemoteAvatar() {
@@ -1810,6 +1987,8 @@
                  sendData('block_add', { x, y, z, color: hexColor });
             }
 
+            checkBlueprints();
+
             return block;
         }
 
@@ -1823,6 +2002,8 @@
             blockCount--;
             document.getElementById('block-count').innerText = blockCount;
             document.getElementById('list-stat').innerText = blockCount;
+
+            checkBlueprints();
         }
 
         let keys = {};
@@ -2033,6 +2214,8 @@
 
                 if (lower.includes("hi") || lower.includes("hello") || lower.includes("hey")) {
                     r = "Hi there, fellow creator! 👋 Are you ready to build something absolutely EPIC today?";
+                } else if (lower.includes("house") || lower.includes("ghost") || lower.includes("shadow")) {
+                    r = "Ooh! The Ghost and Shadow houses are sacred building challenges! Fill in their holograms to unlock ultimate cosmic chaos! 👻🌑";
                 } else if (lower.includes("build") || lower.includes("make")) {
                     r = "YESSS!! Building stuff is the best part! Let's make a giant dinosaur that shoots lasers! 🦖💥";
                 } else if (lower.includes("cool") || lower.includes("awesome") || lower.includes("great")) {
@@ -2292,6 +2475,11 @@
                     spoutSpanishLesson();
                 }
             }
+
+            // --- HOUSE LABELS LOGIC ---
+            houseLabels.forEach(lbl => {
+                lbl.position.y = 3.2 + Math.sin(Date.now() * 0.0018 + lbl.position.x) * 0.12;
+            });
 
             // Follow Camera Positioning
             camera.position.x = playerPos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
