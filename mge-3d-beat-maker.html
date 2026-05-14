@@ -669,6 +669,11 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
                     PERFORM SONG
                 </button>
+
+                <button class="btn" id="downloadSongBtn" style="justify-content: center; width: 100%; font-weight: 900; margin-top: 5px; background: linear-gradient(45deg, #4facfe, #00f2fe); border: none; color: #000; box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg>
+                    DOWNLOAD SONG (MP3)
+                </button>
             </div>
         </div>
 
@@ -1476,6 +1481,17 @@
             modulationEnvelope: { attack: 0.01, decay: 0.15, sustain: 0.2, release: 0.1 }
         }).connect(vocalVolume);
 
+        // High fidelity Direct Vocal Engine (Pitch shifter + player)
+        const vocalPitchShift = new Tone.PitchShift(0).connect(vocalVolume);
+        const vocalPlayer = new Tone.Player().connect(vocalPitchShift);
+        
+        // Global Song Recorder
+        const songRecorder = new Tone.Recorder();
+        Tone.Destination.connect(songRecorder);
+
+        let activeVocalBuffers = {};
+        let isRecording = false;
+
         function playHeeHee() {
             const now = Tone.now();
             adlibSynth.triggerAttackRelease("E5", "16n", now);
@@ -1515,29 +1531,34 @@
         });
 
         // ------------------------------------------------
+        // ASYNC CLOUD VOCAL LOADER (CORS BYPASS)
+        // ------------------------------------------------
+        async function loadVocalBuffer(text) {
+            if (activeVocalBuffers[text]) return activeVocalBuffers[text];
+            
+            const cleanText = encodeURIComponent(text.trim());
+            // High fidelity, stable engine proxy
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${cleanText}`;
+            const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(ttsUrl)}`;
+            
+            const res = await fetch(proxyUrl);
+            if (!res.ok) throw new Error("Load Failed");
+            const arrayBuf = await res.arrayBuffer();
+            const audioBuf = await Tone.getContext().decodeAudioData(arrayBuf);
+            activeVocalBuffers[text] = audioBuf;
+            return audioBuf;
+        }
+
+        // ------------------------------------------------
         // LYRIC STUDIO & TEXT-TO-SPEECH ENGINE
         // ------------------------------------------------
         let isSpeaking = false;
 
-        function speakLyrics() {
-            if (!window.speechSynthesis) {
-                alert("Text-to-speech not supported in your browser!");
-                return;
-            }
-
+        async function speakLyrics(doRecord = false) {
             if (isSpeaking) {
-                window.speechSynthesis.cancel();
-                isSpeaking = false;
-                // Silence synths immediately
-                harmonizerSynth.releaseAll();
-                robotHarmonizer.releaseAll();
-                const btn = document.getElementById('speakLyricsBtn');
-                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PERFORM SONG';
-                btn.classList.remove('active');
+                stopEverything();
                 return;
             }
-
-            window.speechSynthesis.cancel(); 
 
             const style = document.getElementById('vocalStyleSelect').value;
             const sections = ['v', 'c', 'b'];
@@ -1560,23 +1581,72 @@
 
             isSpeaking = true;
             const btn = document.getElementById('speakLyricsBtn');
-            btn.innerHTML = '⏹️ STOP PERFORMANCE';
-            btn.classList.add('active');
+            const dBtn = document.getElementById('downloadSongBtn');
 
-            let index = 0;
+            // Update visuals to loading
+            btn.innerHTML = "⏳ RENDERING VOCALS...";
+            btn.style.pointerEvents = "none";
+            dBtn.style.pointerEvents = "none";
+            if (doRecord) dBtn.innerHTML = "⏳ RENDERING (0%)...";
+
+            let useNetworkEngine = true;
+
+            // Bulk pre-fetch cloud vocals for seamless high fidelity playback!
+            try {
+                for (let i = 0; i < lines.length; i++) {
+                    btn.innerHTML = `⏳ RENDERING (${i+1}/${lines.length})...`;
+                    if (doRecord) dBtn.innerHTML = `⏳ LOADING (${Math.round(((i+1)/lines.length)*100)}%)...`;
+                    await loadVocalBuffer(lines[i].text);
+                }
+            } catch (e) {
+                console.warn("Falling back to built-in system engine", e);
+                useNetworkEngine = false;
+                if (doRecord) {
+                    alert("⚠️ Exporting requires high-fidelity streaming. Reverting to standard backup record.");
+                }
+            }
+
+            btn.style.pointerEvents = "auto";
+            dBtn.style.pointerEvents = "auto";
+
+            // Style-specific Pitch Shifts
+            if (style === 'mj') vocalPitchShift.pitch = 4.8;
+            else if (style === 'robot') vocalPitchShift.pitch = -5.5;
+            else if (style === 'space') vocalPitchShift.pitch = 8.0;
+            else vocalPitchShift.pitch = 0;
+
+            // Begin Recording
+            if (doRecord) {
+                isRecording = true;
+                dBtn.innerHTML = "🔴 RECORDING (DO NOT CLOSE)...";
+                dBtn.classList.add('active');
+                btn.innerHTML = "⏹️ STOP RECORD";
+                
+                // Sync up beats
+                currentStep = 0;
+                songRecorder.start();
+            } else {
+                btn.innerHTML = '⏹️ STOP PERFORMANCE';
+                btn.classList.add('active');
+            }
+
+            // Auto start beats if stopped
+            if (!isPlaying) {
+                playBtn.click();
+            }
+
+            let lineIndex = 0;
             const voices = window.speechSynthesis.getVoices();
 
-            function speakNext() {
+            async function playNextLine() {
                 if (!isSpeaking) return;
-                if (index >= lines.length) {
-                    isSpeaking = false;
-                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PERFORM SONG';
-                    btn.classList.remove('active');
+                
+                if (lineIndex >= lines.length) {
+                    stopEverything();
                     return;
                 }
 
-                const current = lines[index];
-                let textToSpeak = current.text;
+                const current = lines[lineIndex];
                 const inputEl = document.getElementById(current.id);
 
                 // Highlight line
@@ -1585,98 +1655,140 @@
                 inputEl.style.background = "rgba(0, 242, 254, 0.15)";
                 inputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-                const utterance = new SpeechSynthesisUtterance();
-                
-                // Get chord based on scale for harmonizing
                 const chord = getScaleChord();
 
-                if (style === 'mj') {
-                    utterance.pitch = 1.5;
-                    utterance.rate = 1.15;
-                    const possibleMJVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Female')));
-                    if (possibleMJVoices.length > 0) utterance.voice = possibleMJVoices[0];
-                    
-                    const adlibs = [" Hee-hee!", " Ow!", " Shamone!", " Dah!"];
-                    if (Math.random() > 0.3) {
-                        textToSpeak += adlibs[Math.floor(Math.random() * adlibs.length)];
-                    }
-                    
-                    // Trigger background vocal pop pad
-                    harmonizerSynth.triggerAttack(chord);
+                if (useNetworkEngine) {
+                    // High-Fidelity Node Engine
+                    const buffer = activeVocalBuffers[current.text];
+                    vocalPlayer.buffer = buffer;
 
-                } else if (style === 'robot') {
-                    utterance.pitch = 0.4;
-                    utterance.rate = 0.75;
-                    const deepVoices = voices.filter(v => v.lang.includes('en') && (v.name.includes('David') || v.name.includes('Google US English') || v.name.includes('Hazel')));
-                    if (deepVoices.length > 0) utterance.voice = deepVoices[0];
-
-                    // Trigger deep grit root pad
-                    robotHarmonizer.triggerAttack(["C2", "G2"]);
-                } else if (style === 'space') {
-                    utterance.pitch = 1.9;
-                    utterance.rate = 0.9;
-                }
-
-                utterance.text = textToSpeak;
-
-                // Rhythmic word-following harmonization!
-                utterance.onboundary = (event) => {
-                    if (!isSpeaking) return;
-                    if (event.name === 'word') {
-                        const now = Tone.now();
-                        if (style === 'mj') {
-                            // Play synchronized rhythmic pop chord plucks!
-                            const note = chord[Math.floor(Math.random() * chord.length)];
-                            harmonizerSynth.triggerAttackRelease(note, "16n", now);
-                            
-                            // Tiny random chance for micro-synth-adlib
-                            if (Math.random() > 0.85) {
-                                Math.random() > 0.5 ? playHeeHee() : playOw();
-                            }
-                        } else if (style === 'robot') {
-                            // Rhythmic robotic formant buzz blips!
-                            robotHarmonizer.triggerAttackRelease(Math.random() > 0.5 ? "C3" : "G3", "16n", now);
-                        }
-                    }
-                };
-
-                utterance.onend = () => {
-                    // Release all synthetic harmonies
-                    harmonizerSynth.releaseAll();
-                    robotHarmonizer.releaseAll();
-
-                    // Unhighlight
-                    inputEl.style.boxShadow = "";
-                    inputEl.style.borderColor = "";
-                    inputEl.style.background = "";
-                    
-                    // Play concluding synthesized MJ adlib!
                     if (style === 'mj') {
-                        Math.random() > 0.5 ? playHeeHee() : playOw();
+                        harmonizerSynth.triggerAttack(chord);
+                    } else if (style === 'robot') {
+                        robotHarmonizer.triggerAttack(["C2", "G2"]);
                     }
 
-                    index++;
-                    setTimeout(speakNext, 350);
-                };
+                    vocalPlayer.start();
+                    const dur = buffer.duration;
 
-                utterance.onerror = () => {
-                    harmonizerSynth.releaseAll();
-                    robotHarmonizer.releaseAll();
-                    inputEl.style.boxShadow = "";
-                    inputEl.style.borderColor = "";
-                    inputEl.style.background = "";
-                    isSpeaking = false;
-                    btn.classList.remove('active');
-                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PERFORM SONG';
-                };
+                    // Syncopated backing rhythms during line
+                    const now = Tone.now();
+                    if (style === 'mj') {
+                        harmonizerSynth.triggerAttackRelease(chord[1], "16n", now + (dur * 0.3));
+                        harmonizerSynth.triggerAttackRelease(chord[2], "16n", now + (dur * 0.65));
+                        if(Math.random() > 0.7) {
+                            setTimeout(() => { if(isSpeaking) Math.random()>0.5?playHeeHee():playOw(); }, dur*1000*0.5);
+                        }
+                    } else if (style === 'robot') {
+                        robotHarmonizer.triggerAttackRelease("G2", "8n", now + (dur * 0.5));
+                    }
 
-                window.speechSynthesis.speak(utterance);
+                    setTimeout(() => {
+                        if (!isSpeaking) return;
+                        harmonizerSynth.releaseAll();
+                        robotHarmonizer.releaseAll();
+                        vocalPlayer.stop();
+                        
+                        inputEl.style.boxShadow = ""; inputEl.style.borderColor = ""; inputEl.style.background = "";
+                        if (style === 'mj') Math.random() > 0.5 ? playHeeHee() : playOw();
+
+                        lineIndex++;
+                        setTimeout(playNextLine, 600);
+                    }, dur * 1000);
+
+                } else {
+                    // Standard System Fallback
+                    const utterance = new SpeechSynthesisUtterance();
+                    let textToSpeak = current.text;
+
+                    if (style === 'mj') {
+                        utterance.pitch = 1.5; utterance.rate = 1.15;
+                        const mjV = voices.filter(v => v.lang.includes('en'));
+                        if (mjV.length > 0) utterance.voice = mjV[0];
+                        
+                        const adlibs = [" Hee-hee!", " Ow!", " Shamone!"];
+                        if (Math.random() > 0.3) textToSpeak += adlibs[Math.floor(Math.random() * adlibs.length)];
+                        harmonizerSynth.triggerAttack(chord);
+                    } else if (style === 'robot') {
+                        utterance.pitch = 0.4; utterance.rate = 0.75;
+                        const deepV = voices.filter(v => v.lang.includes('en'));
+                        if (deepV.length > 0) utterance.voice = deepV[0];
+                        robotHarmonizer.triggerAttack(["C2", "G2"]);
+                    } else if (style === 'space') {
+                        utterance.pitch = 1.9; utterance.rate = 0.9;
+                    }
+
+                    utterance.text = textToSpeak;
+
+                    utterance.onboundary = (event) => {
+                        if (event.name === 'word') {
+                            const now = Tone.now();
+                            if (style === 'mj') {
+                                harmonizerSynth.triggerAttackRelease(chord[Math.floor(Math.random() * chord.length)], "16n", now);
+                            } else if (style === 'robot') {
+                                robotHarmonizer.triggerAttackRelease(Math.random() > 0.5 ? "C3" : "G3", "16n", now);
+                            }
+                        }
+                    };
+
+                    utterance.onend = () => {
+                        harmonizerSynth.releaseAll();
+                        robotHarmonizer.releaseAll();
+                        inputEl.style.boxShadow = ""; inputEl.style.borderColor = ""; inputEl.style.background = "";
+                        if (style === 'mj') Math.random() > 0.5 ? playHeeHee() : playOw();
+                        lineIndex++;
+                        setTimeout(playNextLine, 450);
+                    };
+
+                    utterance.onerror = () => { stopEverything(); };
+                    window.speechSynthesis.speak(utterance);
+                }
             }
 
-            speakNext();
+            async function stopEverything() {
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                vocalPlayer.stop();
+                harmonizerSynth.releaseAll();
+                robotHarmonizer.releaseAll();
+
+                if (doRecord && isRecording) {
+                    isRecording = false;
+                    dBtn.innerHTML = "⏳ ENCODING TRACK...";
+                    
+                    // Short delay to catch reverbs
+                    setTimeout(async () => {
+                        const recording = await songRecorder.stop();
+                        dBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg> DOWNLOAD SONG (MP3)';
+                        dBtn.classList.remove('active');
+
+                        const url = URL.createObjectURL(recording);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "VibeMaster3D_Jam.webm";
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        if(isPlaying) playBtn.click(); // stop transport visually
+                        alert("🎉 High-fidelity song exported successfully!");
+                    }, 1200);
+                }
+
+                lines.forEach(l => {
+                    const el = document.getElementById(l.id);
+                    el.style.boxShadow = ""; el.style.borderColor = ""; el.style.background = "";
+                });
+
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PERFORM SONG';
+                btn.classList.remove('active');
+            }
+
+            playNextLine();
         }
 
-        document.getElementById('speakLyricsBtn').addEventListener('click', speakLyrics);
+        document.getElementById('speakLyricsBtn').addEventListener('click', () => speakLyrics(false));
+        document.getElementById('downloadSongBtn').addEventListener('click', () => speakLyrics(true));
 
         // Pre-load voices
         window.speechSynthesis.getVoices();
