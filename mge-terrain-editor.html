@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MGE - The Terrain Editor | Mr. Gonzalez STEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>MGE - Bob Ross Happy Terrain Paintbrush | Mr. Gonzalez STEM Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,800&family=Pacifico&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mge-primary: #ff4757;
-            --mge-secondary: #2f3542;
-            --mge-accent: #7bed9f;
-            --mge-gold: #ffa502;
-            --mge-blue: #1e90ff;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-dark: rgba(0, 0, 0, 0.7);
-            --neon-glow: 0 0 15px var(--mge-primary);
+            --wood-dark: #1b0e07;
+            --wood-medium: #3b1e0f;
+            --wood-light: #5d351e;
+            --brass: #c5a059;
+            --canvas-cream: #faf6ee;
+            --sap-green: #2d5a27;
+            --phthalo-blue: #1b4d8d;
+            --alizarin-crimson: #a22030;
+            --titanium-white: #f5f6f8;
+            --van-dyke-brown: #5c3a21;
+            --gold-accent: #d4af37;
+            --glass-dark: rgba(27, 14, 7, 0.85);
+            --neon-glow: 0 0 15px var(--gold-accent);
         }
 
         body, html {
@@ -23,9 +28,9 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #0c0c14;
+            background-color: #0c0705;
             font-family: 'Outfit', sans-serif;
-            color: white;
+            color: #faf6ee;
         }
 
         #canvas-container {
@@ -34,6 +39,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
         }
 
         /* --- UI OVERLAY --- */
@@ -60,74 +66,152 @@
         }
 
         .mge-badge {
-            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
-            padding: 8px 16px;
-            border-radius: 12px;
+            background: linear-gradient(135deg, var(--wood-medium), var(--wood-dark));
+            padding: 10px 22px;
+            border-radius: 14px;
+            border: 2px solid var(--brass);
+            font-family: 'Playfair Display', serif;
             font-weight: 800;
-            font-size: 1.2rem;
-            box-shadow: var(--neon-glow);
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            font-style: italic;
+            font-size: 1.4rem;
+            color: var(--canvas-cream);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .mode-selector {
             background: var(--glass-dark);
-            backdrop-filter: blur(10px);
-            padding: 5px;
-            border-radius: 15px;
+            backdrop-filter: blur(12px);
+            padding: 6px;
+            border-radius: 18px;
             display: flex;
-            gap: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 6px;
+            border: 2px solid var(--wood-light);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
         }
 
         .mode-btn {
-            padding: 8px 20px;
-            border-radius: 10px;
+            padding: 10px 22px;
+            border-radius: 12px;
             border: none;
             background: transparent;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 600;
+            color: rgba(250, 246, 238, 0.6);
+            font-weight: 800;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .mode-btn:hover {
+            color: var(--canvas-cream);
+            background: rgba(255,255,255,0.05);
         }
 
         .mode-btn.active {
-            background: var(--mge-blue);
-            color: white;
-            box-shadow: 0 0 10px var(--mge-blue);
+            background: linear-gradient(135deg, var(--brass), #e2bc77);
+            color: var(--wood-dark);
+            box-shadow: 0 4px 12px rgba(197, 160, 89, 0.4);
+            transform: scale(1.05);
         }
 
-        /* --- SIDEBARS --- */
+        /* --- BOB ROSS BANNER --- */
+        .bob-portrait-container {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            pointer-events: auto;
+            max-width: 320px;
+            z-index: 101;
+            transition: all 0.4s ease;
+        }
+
+        .bob-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid var(--brass);
+            background: #2b170c;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            flex-shrink: 0;
+            animation: avatar-float 4s ease-in-out infinite;
+        }
+
+        @keyframes avatar-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .bob-bubble {
+            background: var(--glass-dark);
+            border: 1px solid var(--brass);
+            border-radius: 18px;
+            padding: 12px 16px;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 0.95rem;
+            color: var(--canvas-cream);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            position: relative;
+            line-height: 1.4;
+            backdrop-filter: blur(10px);
+        }
+
+        .bob-bubble::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 25px;
+            border-width: 8px 10px 8px 0;
+            border-style: solid;
+            border-color: transparent var(--brass) transparent transparent;
+        }
+
+        /* --- SIDEBAR --- */
         .workspace {
             display: flex;
             justify-content: space-between;
-            height: 70%;
+            height: 65%;
             margin: 20px 0;
         }
 
         .sidebar {
-            width: 300px;
+            width: 320px;
             background: var(--glass-dark);
             backdrop-filter: blur(15px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
+            border-radius: 28px;
+            border: 2px solid var(--wood-light);
+            padding: 22px;
             pointer-events: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
             overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
         .sidebar h2 {
             margin: 0;
-            font-size: 1.1rem;
-            color: var(--mge-gold);
+            font-size: 1.15rem;
+            color: var(--brass);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(197, 160, 89, 0.2);
+            padding-bottom: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
         }
 
         .tool-grid {
@@ -137,33 +221,38 @@
         }
 
         .tool-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 14px 10px;
             border-radius: 16px;
-            color: white;
+            color: var(--canvas-cream);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
         }
 
         .tool-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+            border-color: var(--brass);
         }
 
         .tool-btn.active {
-            background: linear-gradient(135deg, var(--mge-primary), #ff6b81);
-            border-color: var(--mge-primary);
-            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
+            background: linear-gradient(135deg, var(--wood-light), var(--wood-dark));
+            border: 2px solid var(--brass);
+            box-shadow: 0 8px 20px rgba(197, 160, 89, 0.25);
+            transform: scale(1.03);
         }
 
         .tool-btn span:first-child {
-            font-size: 1.8rem;
+            font-size: 2.1rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
         }
 
         .control-group {
@@ -176,73 +265,16 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
-            color: #aaa;
+            color: rgba(250, 246, 238, 0.7);
+            font-weight: 600;
         }
 
         input[type=range] {
             width: 100%;
-            accent-color: var(--mge-primary);
+            accent-color: var(--brass);
             cursor: pointer;
-        }
-
-        /* --- CODING PANEL --- */
-        .block-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .block {
-            background: #1e222d;
-            padding: 12px;
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: 0.2s;
-            width: 100%;
-            text-align: left;
-            color: white;
-        }
-
-        .block:hover { background: #2a303d; transform: scale(1.02); }
-
-        .block.move { border-left: 5px solid #4a90e2; }
-        .block.turn { border-left: 5px solid #f5a623; }
-        .block.action { border-left: 5px solid #7ed321; }
-
-        .script-area {
-            flex-grow: 1;
-            background: rgba(0,0,0,0.3);
-            border: 2px dashed rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-height: 200px;
-            overflow-y: auto;
-        }
-
-        .script-block {
-            background: #252a34;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            height: 6px;
+            border-radius: 3px;
         }
 
         /* --- FOOTER --- */
@@ -251,45 +283,77 @@
             justify-content: center;
             gap: 20px;
             pointer-events: auto;
+            margin-bottom: 10px;
         }
 
         .big-btn {
-            padding: 18px 45px;
-            border-radius: 24px;
-            font-size: 1.4rem;
-            font-weight: 800;
-            border: none;
+            padding: 16px 40px;
+            border-radius: 22px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            border: 2px solid var(--brass);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             align-items: center;
             gap: 15px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-family: 'Outfit', sans-serif;
         }
 
-        .run-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
-        .run-btn:hover { background: linear-gradient(135deg, #27ae60, #2ecc71); transform: translateY(-5px) scale(1.05); }
+        .run-btn { 
+            background: linear-gradient(135deg, #27ae60, #1e8449); 
+            color: white; 
+            border-color: #2ecc71;
+        }
+        .run-btn:hover { 
+            transform: translateY(-5px) scale(1.03); 
+            box-shadow: 0 20px 45px rgba(46, 204, 113, 0.4);
+        }
 
-        .stop-btn { background: linear-gradient(135deg, #ff4757, #c0392b); color: white; display: none; }
-        .stop-btn:hover { transform: translateY(-5px) scale(1.05); }
+        .stop-btn { 
+            background: linear-gradient(135deg, var(--alizarin-crimson), #801824); 
+            color: white; 
+            border-color: var(--alizarin-crimson);
+            display: none; 
+        }
+        .stop-btn:hover { 
+            transform: translateY(-5px) scale(1.03); 
+            box-shadow: 0 20px 45px rgba(162, 32, 48, 0.4);
+        }
 
-        /* --- GAME NOTIF --- */
+        .ambient-btn {
+            background: linear-gradient(135deg, var(--wood-medium), var(--wood-dark));
+            color: var(--canvas-cream);
+        }
+        .ambient-btn:hover {
+            transform: translateY(-5px);
+            border-color: #faf6ee;
+        }
+
+        /* --- NOTIFICATIONS --- */
         #notification {
             position: absolute;
             top: 100px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--glass-dark);
-            padding: 12px 35px;
+            padding: 14px 38px;
             border-radius: 40px;
-            border: 2px solid var(--mge-primary);
+            border: 2px solid var(--brass);
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            z-index: 999;
+            color: var(--canvas-cream);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
         }
 
         #crosshair {
@@ -298,34 +362,39 @@
             left: 50%;
             width: 24px;
             height: 24px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(250, 246, 238, 0.6);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
             display: none;
             mix-blend-mode: difference;
+            z-index: 10;
         }
 
+        /* --- HUD --- */
         .car-hud {
             position: absolute;
             bottom: 40px;
             right: 40px;
             background: var(--glass-dark);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             padding: 24px;
             border-radius: 24px;
             display: none;
             flex-direction: column;
             align-items: center;
             pointer-events: none;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 2px solid var(--wood-light);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            z-index: 100;
         }
 
         .speedometer {
             font-size: 2.8rem;
             font-weight: 900;
-            color: var(--mge-accent);
-            text-shadow: 0 0 15px var(--mge-accent);
+            color: var(--brass);
+            text-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .controls-hint {
@@ -333,25 +402,30 @@
             bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
+            font-size: 0.82rem;
+            color: rgba(250,246,238,0.55);
             text-align: center;
-            background: rgba(0,0,0,0.4);
-            padding: 5px 20px;
+            background: rgba(27, 14, 7, 0.7);
+            padding: 8px 24px;
             border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.05);
+            z-index: 10;
+            pointer-events: none;
+            font-weight: 600;
         }
 
-        /* Premium Escape Overlay */
+        /* Escape Overlay */
         #esc-overlay {
             position: fixed;
             top: 40px;
             left: 50%;
             transform: translateX(-50%) translateY(-150px);
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 14px 28px;
-            border-radius: 20px;
-            border: 2px solid var(--mge-primary);
+            background: rgba(27, 14, 7, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 16px 32px;
+            border-radius: 24px;
+            border: 2px solid var(--brass);
             display: flex;
             align-items: center;
             gap: 18px;
@@ -359,7 +433,7 @@
             transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
             pointer-events: none;
             opacity: 0;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 71, 87, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
         }
 
         #esc-overlay.visible {
@@ -367,40 +441,18 @@
             opacity: 1;
         }
 
-        .keycap-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .keycap {
-            background: linear-gradient(135deg, #3d4452, #242933);
-            border: 2px solid #57606f;
-            border-bottom: 6px solid #161a21;
+            background: linear-gradient(135deg, var(--wood-light), var(--wood-dark));
+            border: 2px solid var(--brass);
+            border-bottom: 6px solid #110804;
             padding: 10px 16px;
             border-radius: 12px;
             font-family: 'JetBrains Mono', monospace;
-            font-weight: 850;
-            font-size: 1.2rem;
-            color: white;
+            font-weight: 900;
+            font-size: 1.25rem;
+            color: var(--canvas-cream);
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             display: inline-block;
-            text-shadow: 0 0 10px rgba(255,255,255,0.3);
-        }
-
-        .keycap-pulse {
-            position: absolute;
-            inset: -4px;
-            border: 2px solid var(--mge-primary);
-            border-radius: 14px;
-            opacity: 0;
-            animation: key-pulse-anim 2s infinite;
-        }
-
-        @keyframes key-pulse-anim {
-            0% { transform: scale(0.9); opacity: 0.8; }
-            100% { transform: scale(1.4); opacity: 0; }
         }
 
         .esc-text-container {
@@ -409,23 +461,298 @@
         }
 
         .esc-main-text {
-            font-weight: 800;
-            font-size: 1rem;
-            color: white;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: var(--canvas-cream);
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .esc-sub-text {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.5);
-            font-weight: 500;
+            font-size: 0.8rem;
+            color: rgba(250,246,238,0.55);
+            font-weight: 600;
+        }
+
+        /* --- SHOP & SELECTION --- */
+        #shop-overlay, #playtest-choice {
+            position: absolute;
+            inset: 0;
+            background: rgba(12, 7, 5, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 500;
+            pointer-events: auto;
+        }
+
+        .shop-container, .choice-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            width: min(720px, 92vw);
+            max-height: min(580px, 80vh);
+            overflow: auto;
+            background: #2b170c;
+            border: 3px solid var(--brass);
+            border-radius: 28px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.8);
+            padding: 24px;
+        }
+
+        /* --- POLAROID GALLERY SYSTEM --- */
+        #gallery-drawer {
+            position: absolute;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(850px, 90vw);
+            background: var(--glass-dark);
+            backdrop-filter: blur(15px);
+            border: 2px solid var(--brass);
+            border-radius: 24px;
+            padding: 12px 18px;
+            z-index: 105;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        #gallery-drawer.collapsed {
+            transform: translateX(-50%) translateY(140px);
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--brass);
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+
+        .gallery-slider {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 8px 4px;
+            min-height: 95px;
+        }
+
+        .gallery-polaroid {
+            width: 105px;
+            height: 110px;
+            background: var(--canvas-cream);
+            padding: 6px;
+            border-radius: 4px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            transform: rotate(-1.5deg);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .gallery-polaroid:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        .gallery-polaroid:hover {
+            transform: scale(1.15) translateY(-5px) rotate(0deg);
+            z-index: 10;
+        }
+
+        .gallery-polaroid img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+        }
+
+        .gallery-polaroid .polaroid-caption {
+            font-family: 'Pacifico', cursive;
+            font-size: 0.55rem;
+            color: #333;
+            text-align: center;
+            margin-top: 4px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .polaroid-delete {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--alizarin-crimson);
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid white;
+        }
+
+        /* --- SCREENSHOT CANVAS MODAL --- */
+        #easel-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(12, 7, 5, 0.9);
+            backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            pointer-events: auto;
+        }
+
+        .easel-frame {
+            background: #2b170c;
+            border: 18px solid #3c1f0f;
+            border-image: linear-gradient(to right, #3c1f0f, #1b0e07, #3c1f0f) 20;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            max-width: 900px;
+            position: relative;
+        }
+
+        .easel-frame::before {
+            /* Easel top block */
+            content: '';
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: #1b0e07;
+            border-radius: 4px;
+            border: 2px solid var(--brass);
+        }
+
+        .easel-workspace {
+            display: flex;
+            gap: 20px;
+            flex-direction: row;
+        }
+
+        @media (max-width: 800px) {
+            .easel-workspace {
+                flex-direction: column;
+            }
+        }
+
+        .easel-canvas-container {
+            background: var(--canvas-cream);
+            border: 4px solid #111;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .easel-canvas-container canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            max-height: 60vh;
+        }
+
+        .easel-controls {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            justify-content: space-between;
+        }
+
+        .easel-section {
+            background: rgba(0,0,0,0.2);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .easel-title {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.15rem;
+            color: var(--brass);
+            margin: 0;
+        }
+
+        .signature-type-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--brass);
+            background: transparent;
+            color: var(--brass);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 800;
+        }
+
+        .signature-type-btn.active {
+            background: var(--brass);
+            color: var(--wood-dark);
+        }
+
+        .btn-easel {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 2px solid var(--brass);
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-easel-save {
+            background: linear-gradient(135deg, var(--brass), #e2bc77);
+            color: var(--wood-dark);
+        }
+
+        .btn-easel-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3);
+        }
+
+        .btn-easel-download {
+            background: transparent;
+            color: var(--canvas-cream);
+        }
+
+        .btn-easel-download:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-2px);
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(197, 160, 89, 0.25); border-radius: 10px; border: 2px solid var(--wood-dark); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(197, 160, 89, 0.5); }
     </style>
 </head>
 <body>
@@ -433,66 +760,65 @@
     <div id="canvas-container"></div>
     <div id="crosshair"></div>
 
-    <!-- Premium Escape Overlay -->
+    <!-- Esc Warning -->
     <div id="esc-overlay">
-        <div class="keycap-container">
-            <div class="keycap">ESC</div>
-            <div class="keycap-pulse"></div>
-        </div>
+        <div class="keycap">ESC</div>
         <div class="esc-text-container">
-            <div class="esc-main-text">Press Escape to Exit</div>
-            <div class="esc-sub-text">Unlock mouse to return to BUILD mode</div>
+            <div class="esc-main-text">Press Escape to Un-stroll</div>
+            <div class="esc-sub-text">Unlock mouse to return to Studio Easel</div>
         </div>
     </div>
 
+    <!-- UI Overlay Root -->
     <div id="ui-root">
         <div class="header">
-            <div class="mge-badge">TERRAIN EDITOR</div>
+            <div class="mge-badge">🌲 Happy Canvas Studio</div>
             <div class="mode-selector">
-                <button class="mode-btn active" id="btn-mode-build">BUILD</button>
-                <button class="mode-btn" id="btn-mode-play">PLAY</button>
+                <button class="mode-btn active" id="btn-mode-build">👨‍🎨 PAINT</button>
+                <button class="mode-btn" id="btn-mode-play">🚶‍♂️ STROLL</button>
             </div>
-            <div style="width: 150px; display: flex; justify-content: flex-end;">
-                 <a href="mge.html" style="color:white; text-decoration:none; background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:10px; font-size:0.8rem">🏠 HUB</a>
+            <div style="width: 200px; display: flex; justify-content: flex-end; gap:10px;">
+                 <button class="mode-btn" id="btn-sound-toggle" style="background:rgba(255,255,255,0.08); border: 1px solid var(--brass); padding: 8px 12px; border-radius:10px; font-size:0.75rem; color:var(--brass);">🎸 MUSIC: OFF</button>
+                 <a href="mge.html" style="color:var(--wood-dark); text-decoration:none; background:var(--brass); font-weight:800; padding:8px 15px; border-radius:10px; font-size:0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🏠 HUB</a>
             </div>
         </div>
 
         <div class="workspace">
-            <!-- Left Sidebar: Tools -->
+            <!-- Left Sidebar: Brush Palettes -->
             <div class="sidebar" id="build-sidebar">
-                <h2>Landscape Tools</h2>
+                <h2>Bob's Brushes</h2>
                 <div class="tool-grid">
-                    <div class="tool-btn active" data-tool="raise">
+                    <div class="tool-btn active" data-tool="mountains">
                         <span>🏔️</span>
-                        <span>Raise</span>
+                        <span>Majestic Peak</span>
                     </div>
-                    <div class="tool-btn" data-tool="lower">
+                    <div class="tool-btn" data-tool="valley">
                         <span>🕳️</span>
-                        <span>Lower</span>
+                        <span>Cozy Valley</span>
                     </div>
-                    <div class="tool-btn" data-tool="mountains">
-                        <span>⛰️</span>
-                        <span>Mtns</span>
+                    <div class="tool-btn" data-tool="pine">
+                        <span>🌲</span>
+                        <span>Happy Pine</span>
+                    </div>
+                    <div class="tool-btn" data-tool="cabin">
+                        <span>🏡</span>
+                        <span>Cozy Cabin</span>
+                    </div>
+                    <div class="tool-btn" data-tool="flowers">
+                        <span>🌸</span>
+                        <span>Wildflowers</span>
+                    </div>
+                    <div class="tool-btn" data-tool="snow">
+                        <span>❄️</span>
+                        <span>Snowy Cap</span>
+                    </div>
+                    <div class="tool-btn" data-tool="grass-base">
+                        <span>🌿</span>
+                        <span>Sap Grass</span>
                     </div>
                     <div class="tool-btn" data-tool="smooth">
                         <span>✨</span>
-                        <span>Smooth</span>
-                    </div>
-                    <div class="tool-btn" data-tool="grass">
-                        <span>🌿</span>
-                        <span>Grass</span>
-                    </div>
-                    <div class="tool-btn" data-tool="paint">
-                        <span>🎨</span>
-                        <span>Layer</span>
-                    </div>
-                    <div class="tool-btn" data-tool="flatten">
-                        <span>📏</span>
-                        <span>Flatten</span>
-                    </div>
-                    <div class="tool-btn" data-tool="ramp">
-                        <span>🧱</span>
-                        <span>Ramp</span>
+                        <span>Gentle Breeze</span>
                     </div>
                 </div>
 
@@ -501,134 +827,198 @@
                         <span>Brush Size</span>
                         <span id="brush-size-label">20</span>
                     </div>
-                    <input type="range" id="brush-size" min="5" max="50" value="20">
+                    <input type="range" id="brush-size" min="6" max="50" value="20">
                 </div>
 
                 <div class="control-group">
                     <div class="control-label">
-                        <span>Brush Intensity</span>
+                        <span>Brush Weight</span>
                         <span id="brush-intensity-label">1.8</span>
                     </div>
-                    <input type="range" id="brush-intensity" min="0.5" max="10.0" step="0.5" value="1.8">
+                    <input type="range" id="brush-intensity" min="0.5" max="6.0" step="0.1" value="1.8">
                 </div>
 
-                <div style="margin-top:10px; font-size: 0.75rem; color: #888; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                    <strong style="color:var(--mge-gold)">CHALLENGE:</strong><br>
-                    Build a smooth <b>RAMP</b> or a <b>STUNT JUMP</b>! 🏎️💨<br>
-                    <span style="font-size:0.65rem; color:#666">Tip: Hold SHIFT to invert Raise/Lower.</span>
-                </div>
-
-                <div style="margin-top:auto">
-                    <button class="mode-btn" id="reset-world" style="width:100%; border:1px solid var(--mge-primary); color: var(--mge-primary);">Reset World</button>
+                <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+                    <button class="mode-btn" id="btn-brush-slap" style="width:100%; border:2px solid var(--brass); background: linear-gradient(135deg, var(--wood-medium), var(--wood-dark)); color: var(--brass); font-weight:800;">🧹 Beat the Brush</button>
+                    <button class="mode-btn" id="reset-world" style="width:100%; border:1px solid rgba(255,255,255,0.15); font-size:0.75rem; color: rgba(255,255,255,0.4);">Wash Canvas (Reset)</button>
                 </div>
             </div>
 
-            <!-- Right Sidebar removed: RC Car Program (no longer used) -->
-            <div class="sidebar" id="code-sidebar" style="display:none;"></div>
+            <!-- Spacer for central canvas view -->
+            <div></div>
+        </div>
+
+        <!-- Polaroid Gallery Drawer -->
+        <div id="gallery-drawer" class="collapsed">
+            <div class="gallery-header" id="btn-toggle-gallery">
+                <span>🖼️ Your Happy Masterpiece Gallery</span>
+                <span id="gallery-count">📂 Show Snaps (0)</span>
+            </div>
+            <div class="gallery-slider" id="gallery-slider-list">
+                <!-- polaroids inserted here -->
+            </div>
         </div>
 
         <div class="footer">
             <button class="big-btn run-btn" id="start-game">
-                <span>▶</span> TEST WORLD
+                <span>▶</span> Explore Masterpiece
             </button>
             <button class="big-btn stop-btn" id="stop-game">
-                <span>⏹</span> EXIT TEST
+                <span>⏹</span> End Stroll
             </button>
+            <button class="big-btn ambient-btn" id="btn-take-snap" style="border-color: var(--brass);">
+                <span>📸</span> Snapshot Painting
+            </button>
+        </div>
+    </div>
+
+    <!-- Bob Ross Quote Box overlay -->
+    <div class="bob-portrait-container" id="bob-box">
+        <div class="bob-avatar">🎨</div>
+        <div class="bob-bubble" id="bob-quote-text">
+            "We don't make mistakes, just happy little accidents."
         </div>
     </div>
 
     <div id="notification"></div>
 
+    <!-- Stroll velocity HUD -->
     <div class="car-hud" id="car-hud">
-        <div style="font-size: 0.8rem; color: #aaa;">RC VELOCITY</div>
+        <div style="font-size: 0.8rem; color: rgba(250,246,238,0.7); font-weight:800; text-transform:uppercase;">Stroll Velocity</div>
         <div class="speedometer" id="speed-display">00</div>
-        <div style="font-size: 0.8rem; color: #aaa;">UNITS / SEC</div>
+        <div style="font-size: 0.8rem; color: rgba(250,246,238,0.5); font-weight:600;">Happy Units / Sec</div>
     </div>
 
-    <!-- Challenge HUD -->
+    <!-- Stroll Airtime Challenge HUD -->
     <div class="car-hud" id="challenge-hud" style="left: 40px; right: auto; bottom: 40px; padding: 16px 18px; display:none; gap:10px; width: min(320px, 40vw);">
-        <div style="font-size:0.8rem; color:#aaa;">⚡ 60s Airtime Challenge</div>
+        <div style="font-size:0.8rem; color:#aaa; font-weight:800;">⚡ 60s Stunt Stroll Challenge</div>
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
-            <div style="font-weight:900; color: var(--mge-accent); text-shadow: 0 0 14px rgba(123,237,159,0.5);">
-                Air: <span id="challenge-air">0.0</span>s / <span id="challenge-target">4.0</span>s
+            <div style="font-weight:900; color: var(--gold-accent); text-shadow: 0 0 14px rgba(212,175,87,0.5);">
+                Airtime: <span id="challenge-air">0.0</span>s / <span id="challenge-target">4.0</span>s
             </div>
             <div style="font-weight:900; color: rgba(255,255,255,0.7);">
                 ⏱ <span id="challenge-time">60</span>s
             </div>
         </div>
         <div style="height:10px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow:hidden; border: 1px solid rgba(255,255,255,0.12);">
-            <div id="challenge-bar" style="height:100%; width:0%; background: linear-gradient(90deg, rgba(123,237,159,0.9), rgba(30,144,255,0.9));"></div>
+            <div id="challenge-bar" style="height:100%; width:0%; background: linear-gradient(90deg, var(--gold-accent), var(--brass));"></div>
         </div>
-        <div id="challenge-done" style="display:none; font-size:0.75rem; color: var(--mge-gold); font-weight:900;">BONUS CLAIMED ✅</div>
+        <div id="challenge-done" style="display:none; font-size:0.75rem; color: var(--gold-accent); font-weight:900;">COINS SECURED ✅</div>
     </div>
 
     <!-- Wallet + Shop -->
     <div class="car-hud" id="wallet-hud" style="right: 40px; bottom: 200px; padding: 16px 18px; display:none; gap:8px;">
-        <div style="font-size: 0.8rem; color: #aaa;">CURRENCY</div>
-        <div style="font-size: 1.4rem; font-weight: 900; color: var(--mge-gold); text-shadow: 0 0 12px rgba(255,165,2,0.6);">
+        <div style="font-size: 0.8rem; color: #aaa; font-weight:800;">COZY COINS</div>
+        <div style="font-size: 1.4rem; font-weight: 900; color: var(--gold-accent); text-shadow: var(--neon-glow);">
             🪙 <span id="currency-display">0</span>
         </div>
-        <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15); pointer-events:auto;">SHOP</button>
-        <button class="mode-btn" id="respawn" style="background: rgba(255,165,2,0.12); color: white; border:1px solid rgba(255,165,2,0.35); pointer-events:auto;">RESPAWN</button>
-        <button class="mode-btn" id="toggle-player" style="background: rgba(30,144,255,0.15); color: white; border:1px solid rgba(30,144,255,0.4);">PLAYER: CAR</button>
+        <button class="mode-btn" id="open-shop" style="margin-top:6px; background: rgba(255,255,255,0.08); color: white; border:1px solid rgba(255,255,255,0.15); pointer-events:auto; font-weight:800;">GARAGE SHOP</button>
+        <button class="mode-btn" id="respawn" style="background: rgba(197, 160, 89, 0.12); color: white; border:1px solid rgba(197, 160, 89, 0.35); pointer-events:auto; font-weight:800;">RESPAWN</button>
+        <button class="mode-btn" id="toggle-player" style="background: rgba(30,144,255,0.15); color: white; border:1px solid rgba(30,144,255,0.4); pointer-events:auto; font-weight:800;">VEHICLE: CAR</button>
         <div style="font-size:0.7rem; color: rgba(255,255,255,0.45); text-align:center;">
-            Earn 🪙 from airtime + speed
+            Earn 🪙 by sculpting or stunt rolling!
         </div>
     </div>
 
-    <div id="shop-overlay" style="position:absolute; inset:0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); display:none; z-index: 250; pointer-events:auto;">
-        <div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width: min(720px, 92vw); max-height: min(560px, 80vh); overflow:auto; background: rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 25px 70px rgba(0,0,0,0.6); padding: 18px;">
+    <!-- Stroll vehicle shop -->
+    <div id="shop-overlay">
+        <div class="shop-container">
             <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
                 <div>
-            <div style="font-weight:900; letter-spacing:1px; color: var(--mge-gold);">🏁 CAR SHOP (GARAGE)</div>
-                    <div style="font-size:0.85rem; color: rgba(255,255,255,0.55);">Buy cars with airtime+speed currency. Equip any owned car.</div>
+                    <div style="font-weight:950; letter-spacing:1px; color: var(--brass); font-size:1.3rem; font-family:'Playfair Display',serif; font-style:italic;">🏁 Studio Stroller Garage</div>
+                    <div style="font-size:0.85rem; color: rgba(250,246,238,0.65);">Equip rustic strollers using cozy coins earned from painting and exploring.</div>
                 </div>
-                <button class="mode-btn" id="close-shop" style="background: rgba(255,71,87,0.18); color: white; border: 1px solid rgba(255,71,87,0.45);">CLOSE</button>
+                <button class="mode-btn" id="close-shop" style="background: rgba(162, 32, 48, 0.18); color: white; border: 1px solid rgba(162, 32, 48, 0.45);">CLOSE</button>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-bottom:12px;">
                 <div style="font-weight:800;">Balance: 🪙 <span id="shop-balance">0</span></div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:0.8rem; color:rgba(255,255,255,0.6);">PLATE:</span>
-                    <input type="text" id="plate-input" maxlength="8" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2); color:white; padding:4px 8px; border-radius:6px; font-family:monospace; text-transform:uppercase; width:100px;">
+                    <span style="font-size:0.8rem; color:rgba(255,255,255,0.6);">CUSTOM PLATE:</span>
+                    <input type="text" id="plate-input" maxlength="8" style="background:rgba(0,0,0,0.4); border:1px solid var(--brass); color:white; padding:4px 8px; border-radius:6px; font-family:monospace; text-transform:uppercase; width:100px;">
                 </div>
-                <div style="font-size:0.8rem; color: rgba(255,255,255,0.6);">Tip: build ramps in BUILD mode, then test in PLAY mode.</div>
             </div>
-            <div id="shop-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;"></div>
+            <div id="shop-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;"></div>
         </div>
     </div>
 
-    <!-- Playtest Player Choice -->
-    <div id="playtest-choice" style="position:absolute; inset:0; background: rgba(0,0,0,0.70); backdrop-filter: blur(10px); display:none; z-index: 260; pointer-events:auto;">
-        <div style="position:absolute; left:50%; top:50%; transform: translate(-50%,-50%); width: min(680px, 92vw); background: rgba(0,0,0,0.78); border:1px solid rgba(255,255,255,0.14); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,0.65); padding: 18px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom: 10px;">
+    <!-- Playtest stroller select -->
+    <div id="playtest-choice">
+        <div class="choice-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom: 12px;">
                 <div>
-                    <div style="font-weight: 950; letter-spacing: 1px; color: var(--mge-gold);">▶ PLAYTEST: CHOOSE PLAYER</div>
-                    <div style="font-size:0.9rem; color: rgba(255,255,255,0.65);">Car = ramps + speed · Skater = tricks (E/R/F) + airtime</div>
+                    <div style="font-weight: 950; letter-spacing: 1px; color: var(--brass); font-size:1.3rem; font-family:'Playfair Display',serif; font-style:italic;">🚶‍♂️ Choose Exploration Stroller</div>
+                    <div style="font-size:0.9rem; color: rgba(250,246,238,0.65);">Wagon = physics + high speed · Longboard = air stunts + trick spins</div>
                 </div>
-                <button class="mode-btn" id="choice-cancel" style="background: rgba(255,71,87,0.18); color: white; border: 1px solid rgba(255,71,87,0.45);">CANCEL</button>
+                <button class="mode-btn" id="choice-cancel" style="background: rgba(162,32,48,0.18); color: white; border: 1px solid rgba(162,32,48,0.45);">CANCEL</button>
             </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                <button class="tool-btn" id="choice-car" style="pointer-events:auto; text-align:left;">
-                    <span style="font-size:2rem;">🏎️</span>
-                    <span style="font-weight:900; font-size:1.05rem;">Car</span>
-                    <span style="font-size:0.85rem; color: rgba(255,255,255,0.65);">WASD drive · SPACE jump · SHIFT boost</span>
+                <button class="tool-btn" id="choice-car" style="pointer-events:auto; text-align:left; border: 1px solid rgba(255,255,255,0.1);">
+                    <span style="font-size:2.2rem;">🏎️</span>
+                    <span style="font-weight:900; font-size:1.05rem; color:var(--brass);">Woody Wagon Buggy</span>
+                    <span style="font-size:0.85rem; color: rgba(250, 246, 238, 0.65);">WASD drive · SPACE hop · SHIFT boost</span>
                 </button>
-                <button class="tool-btn" id="choice-skate" style="pointer-events:auto; text-align:left;">
-                    <span style="font-size:2rem;">🛹</span>
-                    <span style="font-weight:900; font-size:1.05rem;">Skater</span>
-                    <span style="font-size:0.85rem; color: rgba(255,255,255,0.65);">WASD ride · SPACE ollie · E/R/F tricks</span>
+                <button class="tool-btn" id="choice-skate" style="pointer-events:auto; text-align:left; border: 1px solid rgba(255,255,255,0.1);">
+                    <span style="font-size:2.2rem;">🛹</span>
+                    <span style="font-weight:900; font-size:1.05rem; color:var(--brass);">Redwood Longboard</span>
+                    <span style="font-size:0.85rem; color: rgba(250, 246, 238, 0.65);">WASD ride · SPACE ollie · E/R/F stunt tricks</span>
                 </button>
-            </div>
-            <div style="margin-top: 12px; font-size:0.8rem; color: rgba(255,255,255,0.5);">
-                You can switch later with the <b>PLAYER</b> button during playtest.
             </div>
         </div>
     </div>
 
-        <div class="controls-hint">
-        BUILD: LMB Raise | Shift+LMB Lower | Flatten | R-Drag Rotate | Wheel Zoom<br>
-        PLAY: WASD Move | SPACE Jump/Ollie | ESC Unlock Pointer
+    <!-- Scenic controls hint overlay -->
+    <div class="controls-hint" id="scenic-hint">
+        👨‍🎨 PAINT: Left Click Draw | Shift+Left Click Depress/Wash | Right-Click Rotate Camera | Scroll Zoom<br>
+        🚶‍♂️ STROLL: WASD Stroll | SPACE Jump/Ollie | E/R/F Spins | ESC Un-lock
+    </div>
+
+    <!-- EASEL SNAPSHOT MODAL OVERLAY -->
+    <div id="easel-modal">
+        <div class="easel-frame">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(197,160,89,0.3); padding-bottom:10px;">
+                <span style="font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:800; color:var(--brass); font-style:italic;">🎨 Your Happy Masterpiece Canvas</span>
+                <button class="mode-btn" id="btn-close-easel" style="background:transparent; color:#faf6ee; padding:4px 8px; border:none; font-size:1.2rem; cursor:pointer;">✕</button>
+            </div>
+            
+            <div class="easel-workspace">
+                <!-- Left: Canvas showing painting with frame -->
+                <div class="easel-canvas-container">
+                    <canvas id="easel-canvas" width="800" height="600"></canvas>
+                </div>
+                
+                <!-- Right: Signature Controls & Actions -->
+                <div class="easel-controls">
+                    <div class="easel-section">
+                        <h4 class="easel-title">🖌️ Sign Your Painting</h4>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <input type="text" id="signature-input" placeholder="Type name..." maxlength="20" style="background:#1b0e07; border:1px solid var(--brass); border-radius:8px; padding:8px; color:white; font-family:'Pacifico', cursive; font-size:1rem; outline:none; text-align:center;">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:rgba(250,246,238,0.7); margin-top:4px;">
+                            <span>Ink Color:</span>
+                            <div style="display:flex; gap:6px;">
+                                <div class="sig-color-dot active" data-color="#a22030" style="width:18px; height:18px; border-radius:50%; background:var(--alizarin-crimson); cursor:pointer; border:2px solid transparent;"></div>
+                                <div class="sig-color-dot" data-color="#1b4d8d" style="width:18px; height:18px; border-radius:50%; background:var(--phthalo-blue); cursor:pointer; border:2px solid transparent;"></div>
+                                <div class="sig-color-dot" data-color="#2d5a27" style="width:18px; height:18px; border-radius:50%; background:var(--sap-green); cursor:pointer; border:2px solid transparent;"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:0.7rem; color:rgba(255,255,255,0.4); text-align:center; line-height:1.2;">
+                            (Draw with mouse directly on the painting if you prefer a handwritten signature!)
+                        </div>
+                    </div>
+                    
+                    <div class="easel-section">
+                        <h4 class="easel-title">🖼️ Gallery Title</h4>
+                        <input type="text" id="painting-title-input" placeholder="Name your landscape..." maxlength="28" style="background:#1b0e07; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:6px; color:white; font-size:0.8rem; outline:none;">
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button class="btn-easel btn-easel-save" id="btn-save-to-gallery">💾 Save to Gallery</button>
+                        <button class="btn-easel btn-easel-download" id="btn-download-painting">📥 Download Image</button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -636,71 +1026,220 @@
 
     <script>
         /**
-         * MGE Terrain Editor - Three.js Engine
+         * Bob Ross Scenic Studio - Custom Web Audio Synthesizer
          */
+        class CozySynth {
+            constructor() {
+                this.ctx = null;
+                this.isPlaying = false;
+                // G Major Pentatonic: G3, A3, B3, D4, E4, G4, A4, B4, D5, E5
+                this.notes = [196.00, 220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33, 659.25];
+                this.timer = null;
+            }
+            
+            init() {
+                if (this.ctx) return;
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            toggle(on) {
+                this.init();
+                if (on) {
+                    if (this.isPlaying) return;
+                    this.isPlaying = true;
+                    
+                    // Simple G major pentatonic lullaby sequence
+                    let step = 0;
+                    const playStep = () => {
+                        if (!this.isPlaying) return;
+                        
+                        // Fingerstyle lute patterns
+                        const pattern = [0, 4, 2, 5, 3, 6, 4, 7];
+                        const noteVal = pattern[step % pattern.length];
+                        const freq = this.notes[noteVal];
+                        
+                        // Acoustic pluck sound
+                        this.pluck(freq, 1.2, 'sine', 0.12);
+                        
+                        // Random high bell melody
+                        if (step % 2 === 1 && Math.random() < 0.6) {
+                            const highNote = this.notes[6 + Math.floor(Math.random() * 4)];
+                            this.pluck(highNote, 0.8, 'sine', 0.04);
+                        }
+                        
+                        // Soft warm bass string
+                        if (step % 4 === 0) {
+                            const bassNotes = [98.00, 73.42, 110.00, 82.41]; // G2, D2, A2, E2
+                            const bassFreq = bassNotes[Math.floor(step / 4) % bassNotes.length];
+                            this.pluck(bassFreq, 2.0, 'triangle', 0.20);
+                        }
+                        
+                        step++;
+                        this.timer = setTimeout(playStep, 600); // Gentle 100 bpm arpeggio
+                    };
+                    playStep();
+                } else {
+                    this.isPlaying = false;
+                    if (this.timer) clearTimeout(this.timer);
+                }
+            }
+            
+            pluck(freq, duration = 0.5, type = 'sine', volume = 0.1) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.value = freq;
+                
+                // Exponential plucking envelope
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(volume, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+                
+                // Low-pass warm filter
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(type === 'triangle' ? 300 : 900, now);
+                filter.frequency.exponentialRampToValueAtTime(150, now + duration);
+                
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(now);
+                osc.stop(now + duration);
+            }
+            
+            beatBrushSound() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                
+                // Wooden brush canvas tap
+                const bufferSize = this.ctx.sampleRate * 0.08;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 520;
+                filter.Q.value = 2.5;
+                
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                noise.start(now);
+                noise.stop(now + 0.08);
+                
+                // Thump sound
+                const osc = this.ctx.createOscillator();
+                const oscGain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.04);
+                
+                oscGain.gain.setValueAtTime(0.25, now);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                
+                osc.connect(oscGain);
+                oscGain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        const synth = new CozySynth();
+
+        // Bob Ross quotes list
+        const bobRossQuotes = [
+            "We don't make mistakes, just happy little accidents.",
+            "Let's build a happy little cloud that floats around the sky.",
+            "There's nothing wrong with having a tree as a friend.",
+            "Just let go and fall in love with the canvas.",
+            "All you need is the desire to make beautiful things happen.",
+            "I like to beat the brush, just tap it, knock the water out.",
+            "Believe that you can do it cause you can do it, my friend.",
+            "Just beat the devil out of it! That's the fun part.",
+            "Maybe in our world there lives a happy little tree over here.",
+            "Shading is what gives depth to your paintings.",
+            "I think there's an artist hidden at the bottom of all of us."
+        ];
 
         // State Manager
         const state = {
             mode: 'build',
-            tool: 'raise',
-            brushSize: 15,
-            brushIntensity: 1.8,  // Less powerful by default for better control
+            tool: 'mountains',
+            brushSize: 18,
+            brushIntensity: 1.8,
             isMouseDown: false,
             mouseButton: -1,
             isPlaying: false,
             lastPoint: new THREE.Vector3(),
 
-            // Player + economy
-            playerType: 'car', // 'car' | 'skate'
+            // Stroll vehicle state
+            playerType: 'car',
             currency: 0,
             ownedCars: new Set(),
             equippedCarId: 'starter',
 
-            // Airtime + speed earnings
+            // Airtime & Stunts
             isAirborne: false,
             airTimeSec: 0,
-            lastGroundY: 0,
             lastEarnAt: 0,
-
-            // Skate trick state
+            
+            // Skate flips
             skateFlipSpin: 0,
             skateBackflip: 0,
             skateYawSpin: 0,
             lastTrickAt: 0,
             trickTextUntil: 0,
 
-            // 60s airtime bonus challenge
+            // Air Challenge
             minuteTimer: 0,
             minuteAirAccum: 0,
             minuteBonusGiven: false,
-
-            // combo + cosmetics
             landingCombo: 0,
             lastLandingAt: 0,
-            equippedTrail: 'none',
-            equippedHorn: 'none',
-            equippedGlow: 'none',
-            trailPoints: [],
-            lastTrailAt: 0,
-
-            // License plate
-            licensePlate: "GONZALEZ",
-            
-            // Air Rotation
-            carPitch: 0, // for flips
-            carRoll: 0,
             accumPitch: 0,
             accumRoll: 0,
-            accumYaw: 0
+            licensePlate: "BOB-ROSS",
+            carYaw: 0,
+
+            // Cabin / Forest tracking
+            cabins: [],
+            trees: [],
+            sigColor: '#a22030',
+            sigMode: 'type' // 'type' | 'draw'
         };
 
         // --- THREE.JS INITIALIZATION ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0c0c14);
-        scene.fog = new THREE.FogExp2(0x0c0c14, 0.0015);
+        // Warm rose-golden landscape fog
+        scene.background = new THREE.Color(0x1a0d07);
+        scene.fog = new THREE.FogExp2(0x1a0d07, 0.0018);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 4000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 4000);
+        
+        // Preserve drawing buffer so canvas.toDataURL() captures rendering
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true, 
+            powerPreference: "high-performance",
+            preserveDrawingBuffer: true 
+        });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
@@ -708,49 +1247,53 @@
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
         // Lighting
-        const ambient = new THREE.AmbientLight(0x5050ff, 0.4);
+        const ambient = new THREE.AmbientLight(0x765c48, 0.6); // Warm clay ambient
         scene.add(ambient);
 
-        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-        sun.position.set(150, 250, 100);
+        const sun = new THREE.DirectionalLight(0xffecd2, 1.4); // Golden hour sun
+        sun.position.set(200, 150, 100);
         sun.castShadow = true;
-        sun.shadow.camera.left = -300;
-        sun.shadow.camera.right = 300;
-        sun.shadow.camera.top = 300;
-        sun.shadow.camera.bottom = -300;
+        sun.shadow.camera.left = -250;
+        sun.shadow.camera.right = 250;
+        sun.shadow.camera.top = 250;
+        sun.shadow.camera.bottom = -250;
         sun.shadow.mapSize.set(2048, 2048);
         scene.add(sun);
 
-        const neonPoint = new THREE.PointLight(0xff007f, 0.8, 500);
-        neonPoint.position.set(-100, 100, -100);
-        scene.add(neonPoint);
+        // Sunset Horizon Glow
+        const sunsetPoint = new THREE.PointLight(0xff5533, 1.2, 800);
+        sunsetPoint.position.set(0, 80, -250);
+        scene.add(sunsetPoint);
 
         // --- TERRAIN GENERATION ---
-        // Build geometry manually in XZ space so Y is always world height.
-        // This avoids the rotateX-bake confusion that broke brush coordinate mapping.
         const terrainSize = 400;
-        const RES = 80; // Slightly lower res for better performance
+        const RES = 80;
         const vCount = (RES + 1) * (RES + 1);
 
         const posArr = new Float32Array(vCount * 3);
         const colArr = new Float32Array(vCount * 3);
         const uvArr  = new Float32Array(vCount * 2);
 
+        // Warm cozy grass color base
+        const grassBase = [0.18, 0.35, 0.15]; 
+
         for (let j = 0; j <= RES; j++) {
             for (let i = 0; i <= RES; i++) {
                 const vi = j * (RES + 1) + i;
                 posArr[vi * 3 + 0] = (i / RES - 0.5) * terrainSize; // X
-                posArr[vi * 3 + 1] = 0;                               // Y (height)
+                posArr[vi * 3 + 1] = 0;                               // Y (Height)
                 posArr[vi * 3 + 2] = (j / RES - 0.5) * terrainSize; // Z
-                colArr[vi * 3 + 0] = 0.2;
-                colArr[vi * 3 + 1] = 0.6;
-                colArr[vi * 3 + 2] = 0.3;
+                
+                // Color base
+                colArr[vi * 3 + 0] = grassBase[0] + (Math.random() - 0.5) * 0.02;
+                colArr[vi * 3 + 1] = grassBase[1] + (Math.random() - 0.5) * 0.02;
+                colArr[vi * 3 + 2] = grassBase[2] + (Math.random() - 0.5) * 0.02;
+                
                 uvArr[vi * 2 + 0] = i / RES;
                 uvArr[vi * 2 + 1] = j / RES;
             }
         }
 
-        // Build triangle index list
         const idxArr = new Uint32Array(RES * RES * 6);
         let ii = 0;
         for (let j = 0; j < RES; j++) {
@@ -775,8 +1318,8 @@
 
         const terrainMat = new THREE.MeshStandardMaterial({
             vertexColors: true,
-            roughness: 0.85,
-            metalness: 0.05,
+            roughness: 0.9,
+            metalness: 0.02,
             flatShading: true,
             side: THREE.FrontSide
         });
@@ -785,25 +1328,236 @@
         terrain.receiveShadow = true;
         scene.add(terrain);
 
-        // Grid
-        const grid = new THREE.GridHelper(terrainSize, 40, 0x4444ff, 0x222244);
+        // Cozy Studio Grid Layer (Grid Helper)
+        const grid = new THREE.GridHelper(terrainSize, 40, 0xc5a059, 0x3b1e0f);
         grid.position.y = 0.1;
-        grid.material.opacity = 0.2;
+        grid.material.opacity = 0.15;
         grid.material.transparent = true;
         scene.add(grid);
 
-        // Brush Ring
-        const ringGeom = new THREE.RingBufferGeometry(0.98, 1.0, 64);
+        // Brush Painter Ring
+        const ringGeom = new THREE.RingGeometry(0.98, 1.0, 64);
         ringGeom.rotateX(-Math.PI / 2);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f2ff, side: THREE.DoubleSide, transparent:true, opacity:0.8 });
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xc5a059, side: THREE.DoubleSide, transparent:true, opacity:0.8 });
         const brushRing = new THREE.Mesh(ringGeom, ringMat);
         scene.add(brushRing);
 
-        // --- INSTANCED GRASS ---
-        const grassCount = 15000;
-        const gGeom = new THREE.PlaneBufferGeometry(0.3, 0.7);
-        gGeom.translate(0, 0.35, 0);
-        const gMat = new THREE.MeshStandardMaterial({ color: 0x44ee66, side: THREE.DoubleSide, alphaTest: 0.5 });
+        // --- INSTANCED FLUFFY CLOUDS SYSTEM ---
+        const clouds = [];
+        const cloudCount = 6;
+        const cloudMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            roughness: 0.95,
+            metalness: 0.05,
+            transparent: true,
+            opacity: 0.85
+        });
+
+        for (let c = 0; c < cloudCount; c++) {
+            const group = new THREE.Group();
+            
+            // Build fluffy low-poly shape using layered spheres
+            const sphereCount = 4 + Math.floor(Math.random() * 3);
+            for (let s = 0; s < sphereCount; s++) {
+                const geom = new THREE.SphereGeometry(14 + Math.random() * 8, 8, 8);
+                const mesh = new THREE.Mesh(geom, cloudMat);
+                mesh.position.set(
+                    (Math.random() - 0.5) * 20,
+                    (Math.random() - 0.5) * 5,
+                    (Math.random() - 0.5) * 12
+                );
+                group.add(mesh);
+            }
+            
+            group.position.set(
+                (Math.random() - 0.5) * 500,
+                110 + Math.random() * 40,
+                (Math.random() - 0.5) * 500
+            );
+            
+            scene.add(group);
+            clouds.push({
+                group: group,
+                speed: 3 + Math.random() * 4
+            });
+        }
+
+        // --- PROCEDURAL NATURE SHAPES (Cabins, Trees) ---
+        
+        // Stacked low-poly pine tree
+        function buildPineTreeGeometry() {
+            const trunkGeom = new THREE.CylinderGeometry(0.2, 0.35, 1.5, 5);
+            trunkGeom.translate(0, 0.75, 0);
+            
+            // Cone layers
+            const cone1 = new THREE.ConeGeometry(0.85, 1.6, 5);
+            cone1.translate(0, 2.0, 0);
+            const cone2 = new THREE.ConeGeometry(0.65, 1.2, 5);
+            cone2.translate(0, 2.8, 0);
+            const cone3 = new THREE.ConeGeometry(0.45, 0.9, 5);
+            cone3.translate(0, 3.4, 0);
+            
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.9 });
+            const pineMat = new THREE.MeshStandardMaterial({ color: 0x1f3d1a, roughness: 0.85, flatShading: true });
+            
+            const treeGroup = new THREE.Group();
+            const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+            const c1 = new THREE.Mesh(cone1, pineMat);
+            const c2 = new THREE.Mesh(cone2, pineMat);
+            const c3 = new THREE.Mesh(cone3, pineMat);
+            
+            trunk.castShadow = true;
+            c1.castShadow = true;
+            c2.castShadow = true;
+            c3.castShadow = true;
+            
+            treeGroup.add(trunk, c1, c2, c3);
+            return treeGroup;
+        }
+
+        // Low-poly Cozy log cabin
+        function buildCabinMesh() {
+            const cabin = new THREE.Group();
+            
+            // Log walls
+            const logs = new THREE.Mesh(
+                new THREE.BoxGeometry(4.5, 2.6, 6.0),
+                new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.9 })
+            );
+            logs.position.y = 1.3;
+            logs.castShadow = true;
+            logs.receiveShadow = true;
+            cabin.add(logs);
+            
+            // Sloped Gable Roof panels
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x56230f, roughness: 0.85, flatShading: true });
+            const roofL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6.4), roofMat);
+            roofL.position.set(-1.4, 2.8, 0);
+            roofL.rotation.z = -Math.PI / 6;
+            roofL.castShadow = true;
+            cabin.add(roofL);
+            
+            const roofR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 6.4), roofMat);
+            roofR.position.set(1.4, 2.8, 0);
+            roofR.rotation.z = Math.PI / 6;
+            roofR.castShadow = true;
+            cabin.add(roofR);
+            
+            // Door
+            const door = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 1.6, 1.0),
+                new THREE.MeshStandardMaterial({ color: 0x110804 })
+            );
+            door.position.set(0, 0.8, 3.01);
+            cabin.add(door);
+            
+            // Glowing amber Window on sides
+            const windowGlowMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            const winL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.7), windowGlowMat);
+            winL.position.set(-2.26, 1.6, 0);
+            cabin.add(winL);
+            
+            const winR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.7, 0.7), windowGlowMat);
+            winR.position.set(2.26, 1.6, 0);
+            cabin.add(winR);
+            
+            // Point light radiating fireplace warmth
+            const hearthLight = new THREE.PointLight(0xffa500, 1.8, 18);
+            hearthLight.position.set(0, 1.5, 0);
+            cabin.add(hearthLight);
+            
+            // Chimney
+            const chimney = new THREE.Mesh(
+                new THREE.BoxGeometry(0.6, 2.0, 0.6),
+                new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 })
+            );
+            chimney.position.set(1.1, 2.8, -1.8);
+            chimney.castShadow = true;
+            cabin.add(chimney);
+            
+            // Emitting smoke list
+            cabin.userData = {
+                smokeTimer: 0,
+                smokeOrigin: new THREE.Vector3(1.1, 3.8, -1.8)
+            };
+            
+            return cabin;
+        }
+
+        // Particle system for cabin chimney smoke
+        const smokeCount = 120;
+        const smokeGeom = new THREE.BufferGeometry();
+        const smokePositions = new Float32Array(smokeCount * 3);
+        const smokeSizes = new Float32Array(smokeCount);
+        smokeGeom.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+        
+        const smokeMat = new THREE.PointsMaterial({
+            color: 0xaaaaaa,
+            size: 1.2,
+            transparent: true,
+            opacity: 0.35
+        });
+        const smokeSystem = new THREE.Points(smokeGeom, smokeMat);
+        smokeSystem.frustumCulled = false;
+        scene.add(smokeSystem);
+        
+        const activeSmokeParticles = [];
+        function emitSmokeParticle(originWorldPos) {
+            if (activeSmokeParticles.length >= smokeCount) {
+                activeSmokeParticles.shift();
+            }
+            activeSmokeParticles.push({
+                x: originWorldPos.x + (Math.random() - 0.5) * 0.2,
+                y: originWorldPos.y,
+                z: originWorldPos.z + (Math.random() - 0.5) * 0.2,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: 2.2 + Math.random() * 1.5,
+                vz: (Math.random() - 0.5) * 0.6,
+                age: 0,
+                maxAge: 3.0 + Math.random() * 2.0
+            });
+        }
+        
+        function updateSmoke(delta) {
+            // Emit from placed cabins
+            state.cabins.forEach(cabin => {
+                cabin.userData.smokeTimer += delta;
+                if (cabin.userData.smokeTimer > 0.15) {
+                    cabin.userData.smokeTimer = 0;
+                    const origin = cabin.userData.smokeOrigin.clone().applyMatrix4(cabin.matrixWorld);
+                    emitSmokeParticle(origin);
+                }
+            });
+            
+            // Update physical particle positions
+            const pos = smokeGeom.attributes.position.array;
+            pos.fill(0);
+            
+            for (let i = activeSmokeParticles.length - 1; i >= 0; i--) {
+                const p = activeSmokeParticles[i];
+                p.age += delta;
+                if (p.age > p.maxAge) {
+                    activeSmokeParticles.splice(i, 1);
+                    continue;
+                }
+                
+                // Drift with gentle wind
+                p.x += p.vx * delta + Math.sin(p.age * 2) * 0.2 * delta;
+                p.y += p.vy * delta;
+                p.z += p.vz * delta;
+                
+                pos[i * 3 + 0] = p.x;
+                pos[i * 3 + 1] = p.y;
+                pos[i * 3 + 2] = p.z;
+            }
+            smokeGeom.attributes.position.needsUpdate = true;
+        }
+
+        // --- INSTANCED GRASS / VEGETATION ---
+        const grassCount = 10000;
+        const gGeom = new THREE.PlaneGeometry(0.24, 0.65);
+        gGeom.translate(0, 0.32, 0);
+        const gMat = new THREE.MeshStandardMaterial({ color: 0x2e6627, side: THREE.DoubleSide, alphaTest: 0.5, flatShading: true });
         const grassSys = new THREE.InstancedMesh(gGeom, gMat, grassCount);
         grassSys.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         scene.add(grassSys);
@@ -812,51 +1566,62 @@
         const dummy = new THREE.Object3D();
         function placeGrassAt(pos) {
             if (grassIdx >= grassCount) grassIdx = 0;
-            const spread = 2;
+            const spread = 2.5;
             dummy.position.set(
                 pos.x + (Math.random()-0.5)*spread,
                 pos.y,
                 pos.z + (Math.random()-0.5)*spread
             );
             dummy.rotation.y = Math.random() * Math.PI;
-            dummy.scale.setScalar(0.5 + Math.random());
+            dummy.scale.setScalar(0.4 + Math.random() * 0.8);
             dummy.updateMatrix();
             grassSys.setMatrixAt(grassIdx++, dummy.matrix);
             grassSys.instanceMatrix.needsUpdate = true;
         }
 
-        // --- RC CAR MODEL ---
+        // --- STROLL buggy (WOODY BUGGY LOOK) ---
         const car = new THREE.Group();
-        // Body
+        // Wooden chassis base
         const bodyMesh = new THREE.Mesh(
-            new THREE.BoxBufferGeometry(1.2, 0.6, 2),
-            new THREE.MeshStandardMaterial({ color: 0xff4757, metalness: 0.6, roughness: 0.1 })
+            new THREE.BoxGeometry(1.2, 0.6, 2),
+            new THREE.MeshStandardMaterial({ color: 0x5c3a21, metalness: 0.1, roughness: 0.9 })
         );
         bodyMesh.castShadow = true;
         car.add(bodyMesh);
-        // Cockpit
+        
+        // Brass trim panels
+        const panelTrim = new THREE.Mesh(
+            new THREE.BoxGeometry(1.24, 0.2, 1.4),
+            new THREE.MeshStandardMaterial({ color: 0xc5a059, metalness: 0.8, roughness: 0.2 })
+        );
+        panelTrim.position.y = 0.2;
+        car.add(panelTrim);
+        
+        // Glass windscreen
         const cockpit = new THREE.Mesh(
-            new THREE.BoxBufferGeometry(0.8, 0.4, 0.9),
-            new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.8 })
+            new THREE.BoxGeometry(0.85, 0.42, 0.8),
+            new THREE.MeshStandardMaterial({ color: 0x765c48, transparent: true, opacity: 0.7 })
         );
         cockpit.position.set(0, 0.5, -0.1);
         car.add(cockpit);
-        // Wheels
-        const wGeom = new THREE.CylinderBufferGeometry(0.35, 0.35, 0.3, 16);
+        
+        // Classic wood-spoke wheels
+        const wGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.28, 12);
         wGeom.rotateZ(Math.PI/2);
-        const wMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+        const wMat = new THREE.MeshStandardMaterial({ color: 0x1b0e07, roughness: 0.9 });
         const wheels = [];
-        const wOffsets = [[0.7, -0.2, 0.7], [-0.7, -0.2, 0.7], [0.7, -0.2, -0.7], [-0.7, -0.2, -0.7]];
+        const wOffsets = [[0.72, -0.22, 0.7], [-0.72, -0.22, 0.7], [0.72, -0.22, -0.7], [-0.72, -0.22, -0.7]];
         wOffsets.forEach(ofs => {
             const w = new THREE.Mesh(wGeom, wMat);
             w.position.set(...ofs);
+            w.castShadow = true;
             car.add(w);
             wheels.push(w);
         });
         car.visible = false;
         scene.add(car);
 
-        // License Plate Sprite
+        // Canvas plate sprite
         const plateCanvas = document.createElement('canvas');
         plateCanvas.width = 128;
         plateCanvas.height = 64;
@@ -869,75 +1634,75 @@
 
         function updateLicensePlate() {
             const ctx = plateCanvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#faf6ee';
             ctx.fillRect(0, 0, 128, 64);
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(2, 2, 124, 60);
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 30px Arial';
+            ctx.strokeStyle = '#c5a059';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(3, 3, 122, 58);
+            ctx.fillStyle = '#3b1e0f';
+            ctx.font = 'bold 26px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(state.licensePlate || "MGE", 64, 32);
+            ctx.fillText(state.licensePlate || "BOB", 64, 32);
             plateTex.needsUpdate = true;
         }
 
-        // --- SKATEBOARDER MODEL (simple) ---
+        // --- SKATEBOARDER RIDER ---
         const skater = new THREE.Group();
-        const boardGroup = new THREE.Group(); // rotates for tricks
+        const boardGroup = new THREE.Group();
         const deck = new THREE.Mesh(
-            new THREE.BoxBufferGeometry(1.0, 0.12, 2.6),
-            new THREE.MeshStandardMaterial({ color: 0x1e90ff, metalness: 0.2, roughness: 0.35 })
+            new THREE.BoxGeometry(0.9, 0.1, 2.5),
+            new THREE.MeshStandardMaterial({ color: 0x8b5a2b, metalness: 0.1, roughness: 0.85 })
         );
         deck.castShadow = true;
         deck.position.y = 0.18;
         boardGroup.add(deck);
-        const sWheelGeom = new THREE.CylinderBufferGeometry(0.14, 0.14, 0.55, 12);
+        const sWheelGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.52, 10);
         sWheelGeom.rotateZ(Math.PI / 2);
-        const sWheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
-        const sw1 = new THREE.Mesh(sWheelGeom, sWheelMat); sw1.position.set(0, 0.12, 0.9); boardGroup.add(sw1);
-        const sw2 = new THREE.Mesh(sWheelGeom, sWheelMat); sw2.position.set(0, 0.12, -0.9); boardGroup.add(sw2);
+        const sw1 = new THREE.Mesh(sWheelGeom, wMat); sw1.position.set(0, 0.1, 0.85); boardGroup.add(sw1);
+        const sw2 = new THREE.Mesh(sWheelGeom, wMat); sw2.position.set(0, 0.1, -0.85); boardGroup.add(sw2);
         skater.add(boardGroup);
-        // NOTE: Three r128 doesn't ship `THREE.CapsuleGeometry` in core, so build a simple rider from primitives.
-        const riderMat = new THREE.MeshStandardMaterial({ color: 0xffa502, roughness: 0.4 });
+        
+        // Clay-brown mannequin stroller
+        const riderMat = new THREE.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.6 });
         const riderGroup = new THREE.Group();
-        const torso = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.26, 0.30, 0.9, 12), riderMat);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.85, 10), riderMat);
         torso.castShadow = true;
-        torso.position.y = 0.85;
+        torso.position.y = 0.82;
         riderGroup.add(torso);
-        const head = new THREE.Mesh(new THREE.SphereBufferGeometry(0.22, 14, 14), riderMat);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), riderMat);
         head.castShadow = true;
-        head.position.y = 1.45;
+        head.position.y = 1.38;
         riderGroup.add(head);
-        riderGroup.position.y = 0.0;
         skater.add(riderGroup);
         skater.visible = false;
         scene.add(skater);
 
-        // --- CAMERA CONTROLS ---
+        // --- CAMERA & ORBIT CONTROLS ---
         const orbit = new THREE.OrbitControls(camera, renderer.domElement);
         orbit.enableDamping = true;
         orbit.dampingFactor = 0.05;
+        orbit.maxPolarAngle = Math.PI / 2 - 0.05; // Lock camera from going below canvas
         orbit.mouseButtons = {
             LEFT: null,
             MIDDLE: THREE.MOUSE.PAN,
             RIGHT: THREE.MOUSE.ROTATE
         };
-        camera.position.set(120, 120, 120);
+        camera.position.set(130, 110, 140);
+        orbit.target.set(0, 0, 0);
         orbit.update();
 
         const raycaster = new THREE.Raycaster();
         const pointer = new THREE.Vector2();
 
-        // --- CORE FUNCTIONS ---
-
+        // --- BRUSHES PAINT ENGINE ---
         function updateBrush() {
             raycaster.setFromCamera(pointer, camera);
             const hits = raycaster.intersectObject(terrain);
             if(hits.length > 0) {
                 brushRing.visible = true;
                 brushRing.position.copy(hits[0].point);
-                brushRing.position.y += 0.5; // Slight lift
+                brushRing.position.y += 0.3; // Floating offset
                 brushRing.scale.setScalar(state.brushSize);
                 state.lastPoint.copy(hits[0].point);
             } else {
@@ -945,35 +1710,84 @@
             }
         }
 
+        // Place physical decorative elements
+        function sproutTreeAt(pos) {
+            const tree = buildPineTreeGeometry();
+            tree.position.copy(pos);
+            // Height offset snap
+            tree.position.y = findGround(pos.x, pos.z);
+            
+            // Cute sprout micro-animation
+            tree.scale.setScalar(0.01);
+            scene.add(tree);
+            state.trees.push(tree);
+            
+            let scaleVal = 0.01;
+            const targetScale = 0.8 + Math.random() * 0.45;
+            const anim = () => {
+                if (scaleVal >= targetScale) return;
+                scaleVal += 0.08;
+                tree.scale.setScalar(scaleVal);
+                requestAnimationFrame(anim);
+            };
+            anim();
+            
+            // Soft wood placing audio pop
+            synth.pluck(293.66, 0.4, 'sine', 0.08);
+        }
+
+        function erectCabinAt(pos) {
+            const cab = buildCabinMesh();
+            cab.position.copy(pos);
+            cab.position.y = findGround(pos.x, pos.z);
+            cab.rotation.y = Math.random() * Math.PI * 2;
+            
+            cab.scale.setScalar(0.01);
+            scene.add(cab);
+            state.cabins.push(cab);
+            
+            let scaleVal = 0.01;
+            const anim = () => {
+                if (scaleVal >= 1.0) return;
+                scaleVal += 0.06;
+                cab.scale.setScalar(scaleVal);
+                requestAnimationFrame(anim);
+            };
+            anim();
+            
+            // Warm cabin placing bass tone
+            synth.pluck(196.00, 0.8, 'triangle', 0.18);
+        }
 
         function runTool() {
-            // One-click ramp stamp tool (places a premade ramp at the brush point)
-            if (state.tool === 'ramp') {
-                stampRampAt(state.lastPoint);
+            // Click-based decorators
+            if (state.tool === 'pine') {
+                sproutTreeAt(state.lastPoint);
+                state.isMouseDown = false; // Single stamp per click
+                return;
+            }
+            if (state.tool === 'cabin') {
+                erectCabinAt(state.lastPoint);
+                state.isMouseDown = false;
                 return;
             }
 
             const pos = terrainGeom.attributes.position.array;
             const cols = terrainGeom.attributes.color.array;
             const center = state.lastPoint;
-            
-            // UE5 Style: Shift inverts or triggers alternate tools
             const isShift = keys['ShiftLeft'] || keys['ShiftRight'];
             
             let mod = state.brushIntensity;
             let currentTool = state.tool;
 
-            if (state.tool === 'raise') {
-                if (isShift) currentTool = 'lower';
-            } else if (state.tool === 'lower') {
-                if (isShift) currentTool = 'raise';
+            if (state.tool === 'mountains') {
+                if (isShift) currentTool = 'valley';
+            } else if (state.tool === 'valley') {
+                if (isShift) currentTool = 'mountains';
             }
 
-            if (currentTool === 'lower') mod = -state.brushIntensity;
-            if (currentTool === 'raise') mod = state.brushIntensity;
-
-            // Map world coords to grid indices
-            // posArr[vi*3+0] = (i/RES - 0.5)*terrainSize  =>  i = (x/terrainSize + 0.5)*RES
+            if (currentTool === 'valley') mod = -state.brushIntensity;
+            
             const step = terrainSize / RES;
             const gridX = Math.round((center.x / terrainSize + 0.5) * RES);
             const gridZ = Math.round((center.z / terrainSize + 0.5) * RES);
@@ -982,7 +1796,6 @@
             let changed = false;
             let changedVerts = 0;
             let paintedVerts = 0;
-            let grassPlaced = 0;
 
             const startX = Math.max(0, gridX - radiusInCells);
             const endX   = Math.min(RES, gridX + radiusInCells);
@@ -993,9 +1806,9 @@
                 for (let i = startX; i <= endX; i++) {
                     const vi  = j * (RES + 1) + i;
                     const idx = vi * 3;
-                    const vx = pos[idx];     // world X
-                    const vy = pos[idx + 1]; // world Y (height)
-                    const vz = pos[idx + 2]; // world Z
+                    const vx = pos[idx];     
+                    const vy = pos[idx + 1]; 
+                    const vz = pos[idx + 2]; 
 
                     const dx = vx - center.x;
                     const dz = vz - center.z;
@@ -1005,23 +1818,37 @@
                     if (dSquared < rSquared) {
                         const dist = Math.sqrt(dSquared);
                         const falloff = 1 - (dist / state.brushSize);
-                        const effort = Math.pow(falloff, 2); // Quadratic falloff for UE5 look
+                        const effort = Math.pow(falloff, 2); // Quadratic falloff
 
-                        if (currentTool === 'raise' || currentTool === 'lower') {
-                            pos[idx+1] += mod * effort * 1.5; // Back to moderate speed
+                        // 🏔️ Majestic Peak Brush
+                        if (currentTool === 'mountains') {
+                            const craggyNoise = (Math.sin(vx * 0.15) * Math.cos(vz * 0.15)) * 2.8;
+                            pos[idx+1] += (mod * 2.5 + craggyNoise) * effort * 0.35;
+                            
+                            // Color dynamic high peak brown-stone
+                            const colorRatio = Math.min(1, pos[idx+1] / 30);
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], 0.36, effort * 0.2 * colorRatio);     // R
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], 0.23, effort * 0.2 * colorRatio); // G
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], 0.13, effort * 0.2 * colorRatio); // B
+                            
                             changed = true;
                             changedVerts++;
                         } 
-                        else if (currentTool === 'mountains') {
-                            const noise = (Math.sin(vx * 0.2) * Math.cos(vz * 0.2)) * 2;
-                            pos[idx+1] += (mod * 5 + noise) * effort * 0.5;
+                        // 🕳️ Peaceful Stream / Valley
+                        else if (currentTool === 'valley') {
+                            pos[idx+1] += mod * effort * 0.38;
+                            if (pos[idx+1] < -0.1) {
+                                // Deep stream phthalo blue color
+                                cols[idx] = THREE.MathUtils.lerp(cols[idx], 0.1, effort * 0.2);
+                                cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], 0.3, effort * 0.2);
+                                cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], 0.55, effort * 0.2);
+                            }
                             changed = true;
                             changedVerts++;
                         }
+                        // ✨ Smooth Canvas
                         else if (currentTool === 'smooth') {
-                            // Real Laplacian smooth: average Neighbors
-                            let sum = 0;
-                            let count = 0;
+                            let sum = 0, count = 0;
                             for (let nj = -1; nj <= 1; nj++) {
                                 for (let ni = -1; ni <= 1; ni++) {
                                     if (i+ni >= 0 && i+ni <= RES && j+nj >= 0 && j+nj <= RES) {
@@ -1031,30 +1858,36 @@
                                 }
                             }
                             const avg = sum / count;
-                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], avg, 0.2 * falloff);
+                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], avg, 0.18 * falloff);
                             changed = true;
                             changedVerts++;
                         }
-                        else if (currentTool === 'grass' && Math.random() < 0.2) {
-                            placeGrassAt(new THREE.Vector3(vx, vy, vz));
-                            grassPlaced++;
-                        }
-                        else if (currentTool === 'paint') {
-                            // Multi-layer painting feel
-                            const rockCol = [0.5, 0.45, 0.4];
-                            const grassCol = [0.2, 0.6, 0.3];
-                            const lerpVal = effort * 0.2;
-                            
-                            cols[idx] = THREE.MathUtils.lerp(cols[idx], rockCol[0], lerpVal);
-                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], rockCol[1], lerpVal);
-                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], rockCol[2], lerpVal);
-                            terrainGeom.attributes.color.needsUpdate = true;
+                        // 🌿 Base Sap Grass Painting
+                        else if (currentTool === 'grass-base') {
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], 0.18, effort * 0.25);
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], 0.35, effort * 0.25);
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], 0.15, effort * 0.25);
                             paintedVerts++;
                         }
-                        else if (currentTool === 'flatten') {
-                            pos[idx+1] = THREE.MathUtils.lerp(pos[idx+1], center.y, effort * (state.brushIntensity * 0.5));
-                            changed = true;
-                            changedVerts++;
+                        // 🌸 Alpine Wildflowers Splatters
+                        else if (currentTool === 'flowers') {
+                            // Flowery pink/red mixed color splatters
+                            const isYellow = Math.random() > 0.5;
+                            const r = isYellow ? 0.83 : 0.63;
+                            const g = isYellow ? 0.68 : 0.12;
+                            const b = isYellow ? 0.21 : 0.18;
+                            
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], r, effort * 0.7);
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], g, effort * 0.7);
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], b, effort * 0.7);
+                            paintedVerts++;
+                        }
+                        // ❄️ Snowy Summit peak color
+                        else if (currentTool === 'snow') {
+                            cols[idx] = THREE.MathUtils.lerp(cols[idx], 0.95, effort * 0.3);
+                            cols[idx+1] = THREE.MathUtils.lerp(cols[idx+1], 0.95, effort * 0.3);
+                            cols[idx+2] = THREE.MathUtils.lerp(cols[idx+2], 0.98, effort * 0.3);
+                            paintedVerts++;
                         }
                     }
                 }
@@ -1062,116 +1895,31 @@
 
             if(changed) {
                 terrainGeom.attributes.position.needsUpdate = true;
-                if (terrainGeom.attributes.color) terrainGeom.attributes.color.needsUpdate = true;
-                
-                terrainGeom.computeVertexNormals();
-                terrainGeom.computeBoundingSphere(); // CRITICAL for raycasting update
-                terrainGeom.computeBoundingBox();    // CRITICAL for raycasting update
-            }
-
-            // Rewards for building/editing (so students earn currency even while sculpting)
-            // Anti-spam: cap earnings per call.
-            const earnCap = 3.0;
-            let earn = 0;
-            if (changedVerts > 0) {
-                // reward sculpting/smoothing/flattening/mountains
-                earn += Math.min(earnCap, changedVerts * 0.002);
-            }
-            if (paintedVerts > 0) {
-                earn += Math.min(earnCap, paintedVerts * 0.0012);
-            }
-            if (grassPlaced > 0) {
-                earn += Math.min(earnCap, grassPlaced * 0.03);
-            }
-            if (earn > 0) addCurrency(earn);
-        }
-
-        function stampRampAt(center) {
-            const pos = terrainGeom.attributes.position.array;
-            const step = terrainSize / RES;
-            const gridX = Math.round((center.x / terrainSize + 0.5) * RES);
-            const gridZ = Math.round((center.z / terrainSize + 0.5) * RES);
-
-            // Ramp dimensions in world units
-            const rampWidth = Math.max(10, state.brushSize * 1.2);
-            const rampLength = Math.max(18, state.brushSize * 2.2);
-            const rampHeight = Math.max(6, state.brushIntensity * 6);
-
-            const halfW = rampWidth / 2;
-            const halfL = rampLength / 2;
-
-            const radiusInCellsX = Math.ceil(halfW / step) + 2;
-            const radiusInCellsZ = Math.ceil(halfL / step) + 2;
-
-            const startX = Math.max(0, gridX - radiusInCellsX);
-            const endX   = Math.min(RES, gridX + radiusInCellsX);
-            const startZ = Math.max(0, gridZ - radiusInCellsZ);
-            const endZ   = Math.min(RES, gridZ + radiusInCellsZ);
-
-            let changed = false;
-            let changedVerts = 0;
-
-            // Ramp faces forward (+Z) as a simple linear slope from back to front.
-            for (let j = startZ; j <= endZ; j++) {
-                for (let i = startX; i <= endX; i++) {
-                    const vi = j * (RES + 1) + i;
-                    const idx = vi * 3;
-                    const vx = pos[idx];
-                    const vz = pos[idx + 2];
-
-                    const dx = vx - center.x;
-                    const dz = vz - center.z;
-                    if (Math.abs(dx) > halfW || Math.abs(dz) > halfL) continue;
-
-                    // normalized along length: back (-halfL) -> front (+halfL)
-                    const t = (dz + halfL) / (rampLength);
-                    const targetY = center.y + THREE.MathUtils.clamp(t, 0, 1) * rampHeight;
-
-                    // soften edges
-                    const edgeFalloff = 1 - Math.max(Math.abs(dx) / halfW, Math.abs(dz) / halfL);
-                    const alpha = THREE.MathUtils.clamp(edgeFalloff, 0, 1) * 0.55;
-
-                    pos[idx + 1] = THREE.MathUtils.lerp(pos[idx + 1], targetY, alpha);
-                    changed = true;
-                    changedVerts++;
-                }
-            }
-
-            if (changed) {
-                terrainGeom.attributes.position.needsUpdate = true;
                 terrainGeom.computeVertexNormals();
                 terrainGeom.computeBoundingSphere();
                 terrainGeom.computeBoundingBox();
-                // reward stamps a little (build-mode grind)
-                addCurrency(Math.min(8, changedVerts * 0.003));
             }
+            if (paintedVerts > 0 || changedVerts > 0) {
+                terrainGeom.attributes.color.needsUpdate = true;
+            }
+
+            // Reward dynamic currency for painting
+            let earn = 0;
+            if (changedVerts > 0) earn += Math.min(3, changedVerts * 0.0035);
+            if (paintedVerts > 0) earn += Math.min(3, paintedVerts * 0.0022);
+            if (earn > 0) addCurrency(earn);
         }
 
-        // --- CAR ENGINE ---
+        // --- VEHICLES GARAGE ENGINE ---
         let carVel = new THREE.Vector3();
-        let carYaw = 0;
         const keys = {};
 
-        // --- ECONOMY + SHOP ---
-        const STORAGE_KEY = 'mge_terrain_editor_save_v2';
-        const DAILY_KEY = 'mge_terrain_editor_daily_v1';
+        const STORAGE_KEY = 'mge_happy_ross_save_v1';
         const carCatalog = [
-            { id: 'starter', name: 'Starter Buggy', price: 0, color: 0xff4757, accel: 6.0, boostAccel: 15.0, turn: 1.8, grip: 0.98 },
-            { id: 'rocket',  name: 'Rocket RC',      price: 250, color: 0x7bed9f, accel: 7.8, boostAccel: 19.0, turn: 1.6, grip: 0.985 },
-            { id: 'drifter', name: 'Neon Drifter',   price: 400, color: 0x1e90ff, accel: 6.8, boostAccel: 16.5, turn: 2.35, grip: 0.965 },
-            { id: 'tank',    name: 'Mini Tank',      price: 600, color: 0x888888, accel: 5.6, boostAccel: 14.0, turn: 1.35, grip: 0.99 },
-            { id: 'ufo',     name: 'UFO Rover',      price: 1200, color: 0x00ffff, accel: 9.0, boostAccel: 22.0, turn: 2.0, grip: 1.0, crazy: 'ufo' },
-            { id: 'monster', name: 'Monster Truck',  price: 1500, color: 0x00ff00, accel: 7.0, boostAccel: 18.0, turn: 1.5, grip: 0.99, crazy: 'monster' },
-            { id: 'dragon',  name: 'Dragon Car',     price: 2000, color: 0xff00ff, accel: 10.0, boostAccel: 25.0, turn: 2.5, grip: 0.98, crazy: 'dragon' }
-        ];
-
-        const cosmeticCatalog = [
-            { id: 'trail_neon', type: 'trail', name: 'Neon Trail', price: 120 },
-            { id: 'trail_fire', type: 'trail', name: 'Fire Trail', price: 220 },
-            { id: 'horn_beep', type: 'horn', name: 'Beep Horn', price: 60 },
-            { id: 'horn_air', type: 'horn', name: 'Air Horn', price: 180 },
-            { id: 'glow_blue', type: 'glow', name: 'Blue Underglow', price: 140 },
-            { id: 'glow_green', type: 'glow', name: 'Green Underglow', price: 140 }
+            { id: 'starter', name: 'Woody Buggy', price: 0, color: 0x5c3a21, accel: 6.5, boostAccel: 15.0, turn: 2.0, grip: 0.98 },
+            { id: 'lute',    name: 'Cadmium Cruiser', price: 180, color: 0xcc8e35, accel: 7.8, boostAccel: 18.0, turn: 1.8, grip: 0.985 },
+            { id: 'alizarin',name: 'Crimson Roadster', price: 320, color: 0xa22030, accel: 8.8, boostAccel: 21.0, turn: 2.4, grip: 0.965 },
+            { id: 'phthalo', name: 'Prussian Clipper', price: 500, color: 0x1b4d8d, accel: 10.0, boostAccel: 24.0, turn: 2.2, grip: 0.99 }
         ];
 
         function loadSave() {
@@ -1179,278 +1927,87 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return;
                 const data = JSON.parse(raw);
-                if (typeof data.currency === 'number') state.currency = Math.max(0, Math.floor(data.currency));
+                if (typeof data.currency === 'number') state.currency = Math.floor(data.currency);
                 if (Array.isArray(data.ownedCars)) state.ownedCars = new Set(data.ownedCars);
                 if (typeof data.equippedCarId === 'string') state.equippedCarId = data.equippedCarId;
-                if (Array.isArray(data.ownedCosmetics)) state.ownedCosmetics = new Set(data.ownedCosmetics);
-                if (typeof data.equippedTrail === 'string') state.equippedTrail = data.equippedTrail;
-                if (typeof data.equippedHorn === 'string') state.equippedHorn = data.equippedHorn;
-                if (typeof data.equippedGlow === 'string') state.equippedGlow = data.equippedGlow;
                 if (typeof data.licensePlate === 'string') state.licensePlate = data.licensePlate;
                 if (!state.ownedCars.has('starter')) state.ownedCars.add('starter');
-                if (!carCatalog.some(c => c.id === state.equippedCarId)) state.equippedCarId = 'starter';
-            } catch (_) {
-                // ignore corrupted saves
-            }
+            } catch (_) {}
         }
+
         function saveNow() {
             const data = {
-                currency: Math.max(0, Math.floor(state.currency)),
+                currency: state.currency,
                 ownedCars: Array.from(state.ownedCars),
                 equippedCarId: state.equippedCarId,
-                ownedCosmetics: Array.from(state.ownedCosmetics || []),
-                equippedTrail: state.equippedTrail,
-                equippedHorn: state.equippedHorn,
-                equippedGlow: state.equippedGlow,
                 licensePlate: state.licensePlate
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
+
         function addCurrency(amount) {
-            if (!Number.isFinite(amount) || amount <= 0) return;
             state.currency = Math.floor(state.currency + amount);
             updateWalletUI();
         }
+
         function updateWalletUI() {
-            const el = document.getElementById('currency-display');
-            const sb = document.getElementById('shop-balance');
-            if (el) el.innerText = String(Math.floor(state.currency));
-            if (sb) sb.innerText = String(Math.floor(state.currency));
+            document.getElementById('currency-display').innerText = String(state.currency);
+            document.getElementById('shop-balance').innerText = String(state.currency);
         }
+
         function getEquippedCar() {
             return carCatalog.find(c => c.id === state.equippedCarId) || carCatalog[0];
         }
+
         function applyCarAppearance() {
             const cfg = getEquippedCar();
             bodyMesh.material.color.setHex(cfg.color);
-            
-            // Special overrides for "crazy" cars
-            if (cfg.crazy === 'ufo') {
-                bodyMesh.scale.set(1.5, 0.2, 1.5);
-                cockpit.scale.set(0.8, 1.5, 0.8);
-                cockpit.position.y = 0.2;
-                wheels.forEach(w => w.visible = false);
-            } else if (cfg.crazy === 'monster') {
-                bodyMesh.scale.set(1.0, 1.2, 1.5);
-                bodyMesh.position.y = 0.6;
-                cockpit.position.y = 1.6;
-                wheels.forEach((w, i) => {
-                    w.visible = true;
-                    w.scale.set(2.5, 2.5, 2.5);
-                    // Adjust positions for larger wheels
-                    const ofs = wOffsets[i];
-                    w.position.set(ofs[0] * 1.5, ofs[1] - 0.5, ofs[2]);
-                });
-            } else if (cfg.crazy === 'dragon') {
-                bodyMesh.scale.set(0.8, 0.5, 2.2);
-                bodyMesh.material.color.setHex(0xaa00aa);
-                cockpit.visible = false;
-                wheels.forEach(w => {
-                    w.visible = true;
-                    w.scale.set(0.8, 0.8, 0.8);
-                });
-                // Add a "tail" if not exists
-                if (!car.getObjectByName('dragon_tail')) {
-                    const tail = new THREE.Mesh(new THREE.BoxBufferGeometry(0.4, 0.4, 1), new THREE.MeshStandardMaterial({color: 0xaa00aa}));
-                    tail.name = 'dragon_tail';
-                    tail.position.set(0, 0.2, -1.5);
-                    car.add(tail);
-                }
-            } else {
-                // reset to default
-                bodyMesh.scale.set(1.2, 0.6, 2);
-                bodyMesh.position.y = 0;
-                cockpit.scale.set(1, 1, 1);
-                cockpit.position.set(0, 0.5, -0.1);
-                cockpit.visible = true;
-                wheels.forEach((w, i) => {
-                    w.visible = true;
-                    w.scale.set(1, 1, 1);
-                    w.position.set(...wOffsets[i]);
-                });
-                const tail = car.getObjectByName('dragon_tail');
-                if (tail) car.remove(tail);
-            }
-
             updateLicensePlate();
-        }
-
-        function ensureCosmetics() {
-            if (!state.ownedCosmetics) state.ownedCosmetics = new Set();
-            if (!state.equippedTrail) state.equippedTrail = 'none';
-            if (!state.equippedHorn) state.equippedHorn = 'none';
-            if (!state.equippedGlow) state.equippedGlow = 'none';
-        }
-
-        function todayKey() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        function getDailyState() {
-            try {
-                const raw = localStorage.getItem(DAILY_KEY);
-                if (!raw) return { day: todayKey(), firstLanding: false };
-                const data = JSON.parse(raw);
-                if (!data || data.day !== todayKey()) return { day: todayKey(), firstLanding: false };
-                return { day: data.day, firstLanding: !!data.firstLanding };
-            } catch (_) {
-                return { day: todayKey(), firstLanding: false };
-            }
-        }
-
-        function setDailyState(next) {
-            localStorage.setItem(DAILY_KEY, JSON.stringify(next));
-        }
-
-        function maybeDailyFirstLandingBonus() {
-            const ds = getDailyState();
-            if (ds.firstLanding) return;
-            addCurrency(75);
-            ds.firstLanding = true;
-            setDailyState(ds);
-            showTrickText('DAILY BONUS! +75 🪙');
-            saveNow();
-        }
-
-        function maybeFirstPurchaseBonus() {
-            // Session bonus: first purchase only (not persisted beyond refresh)
-            if (state._firstPurchaseBonusGiven) return;
-            state._firstPurchaseBonusGiven = true;
-            addCurrency(40);
-            showTrickText('FIRST BUY BONUS! +40 🪙');
-        }
-
-        function playHorn() {
-            if (!state.equippedHorn || state.equippedHorn === 'none') return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const o = ctx.createOscillator();
-                const g = ctx.createGain();
-                o.type = 'square';
-                const freq = (state.equippedHorn === 'horn_air') ? 180 : 520;
-                o.frequency.value = freq;
-                g.gain.value = 0.06;
-                o.connect(g); g.connect(ctx.destination);
-                o.start();
-                setTimeout(() => { o.stop(); ctx.close(); }, (state.equippedHorn === 'horn_air') ? 220 : 120);
-            } catch (_) {}
-        }
-
-        // Underglow lights
-        const underglowCar = new THREE.PointLight(0x1e90ff, 0, 18);
-        const underglowSkater = new THREE.PointLight(0x1e90ff, 0, 16);
-        scene.add(underglowCar);
-        scene.add(underglowSkater);
-
-        function updateUnderglow() {
-            const glow = state.equippedGlow || 'none';
-            const color =
-                glow === 'glow_green' ? 0x7bed9f :
-                glow === 'glow_blue' ? 0x1e90ff :
-                0x1e90ff;
-            const intensity = (glow === 'none') ? 0 : 1.25;
-
-            underglowCar.color.setHex(color);
-            underglowSkater.color.setHex(color);
-            underglowCar.intensity = intensity;
-            underglowSkater.intensity = intensity;
-        }
-
-        // Trail renderer (simple points)
-        const trailMax = 220;
-        const trailGeom = new THREE.BufferGeometry();
-        const trailPos = new Float32Array(trailMax * 3);
-        trailGeom.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
-        const trailMat = new THREE.PointsMaterial({ size: 0.35, color: 0x7bed9f, transparent: true, opacity: 0.7 });
-        const trailPoints = new THREE.Points(trailGeom, trailMat);
-        trailPoints.frustumCulled = false;
-        trailPoints.visible = false;
-        scene.add(trailPoints);
-
-        function updateTrail(delta) {
-            const trail = state.equippedTrail || 'none';
-            const enabled = trail !== 'none' && state.isPlaying;
-            trailPoints.visible = enabled;
-            if (!enabled) return;
-
-            // color by type
-            const col = (trail === 'trail_fire') ? 0xff6b2d : 0x7bed9f;
-            trailMat.color.setHex(col);
-            trailMat.opacity = (trail === 'trail_fire') ? 0.85 : 0.70;
-
-            const now = performance.now();
-            const rateMs = 55;
-            if (now - state.lastTrailAt < rateMs) return;
-            state.lastTrailAt = now;
-
-            const p = (state.playerType === 'car') ? car.position : skater.position;
-            state.trailPoints.push(p.x, p.y + 0.15, p.z);
-            while (state.trailPoints.length > trailMax * 3) state.trailPoints.splice(0, 3);
-
-            // write into buffer
-            trailPos.fill(0);
-            const start = Math.max(0, state.trailPoints.length - trailMax * 3);
-            const slice = state.trailPoints.slice(start);
-            for (let i = 0; i < slice.length; i++) trailPos[i] = slice[i];
-            trailGeom.attributes.position.needsUpdate = true;
         }
 
         function renderShop() {
             const list = document.getElementById('shop-list');
             if (!list) return;
             list.innerHTML = '';
-            const bal = Math.floor(state.currency);
-            ensureCosmetics();
+            const bal = state.currency;
+            
             carCatalog.forEach(cfg => {
                 const owned = state.ownedCars.has(cfg.id);
                 const equipped = state.equippedCarId === cfg.id;
                 const canBuy = !owned && bal >= cfg.price;
                 const card = document.createElement('div');
-                card.style.background = 'rgba(255,255,255,0.06)';
-                card.style.border = '1px solid rgba(255,255,255,0.10)';
+                card.style.background = 'rgba(27, 14, 7, 0.4)';
+                card.style.border = '2px solid rgba(197, 160, 89, 0.2)';
                 card.style.borderRadius = '16px';
                 card.style.padding = '12px';
                 card.style.display = 'flex';
                 card.style.flexDirection = 'column';
                 card.style.gap = '10px';
 
-                const badge = document.createElement('div');
-                badge.style.display = 'flex';
-                badge.style.alignItems = 'center';
-                badge.style.justifyContent = 'space-between';
-                badge.innerHTML = `<div style="font-weight:900;">${cfg.name}</div><div style="font-weight:800; color: var(--mge-gold);">🪙 ${cfg.price}</div>`;
-                card.appendChild(badge);
-
-                const preview = document.createElement('div');
-                preview.style.height = '38px';
-                preview.style.borderRadius = '12px';
-                preview.style.background = `linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)), #${cfg.color.toString(16).padStart(6,'0')}`;
-                preview.style.border = '1px solid rgba(0,0,0,0.25)';
-                card.appendChild(preview);
-
-                const stats = document.createElement('div');
-                stats.style.fontSize = '0.8rem';
-                stats.style.color = 'rgba(255,255,255,0.65)';
-                stats.innerHTML =
-                    `Accel: <b>${cfg.accel.toFixed(1)}</b> · Boost: <b>${cfg.boostAccel.toFixed(1)}</b><br>` +
-                    `Turn: <b>${cfg.turn.toFixed(2)}</b> · Grip: <b>${cfg.grip.toFixed(3)}</b>`;
-                card.appendChild(stats);
-
-                const actions = document.createElement('div');
-                actions.style.display = 'flex';
-                actions.style.gap = '8px';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:900; font-family:'Playfair Display',serif; font-style:italic;">${cfg.name}</div>
+                        <div style="font-weight:800; color: var(--gold-accent);">🪙 ${cfg.price}</div>
+                    </div>
+                    <div style="height:25px; border-radius:8px; background:#${cfg.color.toString(16).padStart(6,'0')}; border:1px solid rgba(255,255,255,0.1)"></div>
+                    <div style="font-size:0.75rem; color:rgba(250,246,238,0.7); line-height:1.3;">
+                        Accel: <b>${cfg.accel}</b> · Boost: <b>${cfg.boostAccel}</b><br>
+                        Steer: <b>${cfg.turn}</b>
+                    </div>
+                `;
 
                 const btn = document.createElement('button');
                 btn.className = 'mode-btn';
-                btn.style.flex = '1';
-                btn.style.background = owned ? (equipped ? 'rgba(123,237,159,0.20)' : 'rgba(30,144,255,0.18)') : (canBuy ? 'rgba(123,237,159,0.20)' : 'rgba(255,255,255,0.06)');
-                btn.style.border = owned ? '1px solid rgba(255,255,255,0.18)' : (canBuy ? '1px solid rgba(123,237,159,0.40)' : '1px solid rgba(255,255,255,0.10)');
-                btn.style.color = 'white';
-
+                btn.style.width = '100%';
+                btn.style.marginTop = '6px';
+                btn.style.padding = '6px';
+                btn.style.border = '1px solid var(--brass)';
+                btn.style.background = owned ? (equipped ? 'var(--brass)' : 'rgba(255,255,255,0.06)') : (canBuy ? 'rgba(46, 204, 113, 0.2)' : 'rgba(255,255,255,0.02)');
+                btn.style.color = equipped ? 'var(--wood-dark)' : 'white';
+                
                 if (equipped) btn.innerText = 'EQUIPPED';
                 else if (owned) btn.innerText = 'EQUIP';
-                else btn.innerText = canBuy ? 'BUY' : 'NEED MORE 🪙';
+                else btn.innerText = canBuy ? 'BUY VEHICLE' : 'NEED COINS';
 
                 btn.onclick = () => {
                     if (equipped) return;
@@ -1469,240 +2026,116 @@
                         saveNow();
                         updateWalletUI();
                         renderShop();
+                        triggerNotification("Acquired a happy little vehicle! 🏎️");
                     }
-                };
-                actions.appendChild(btn);
-                card.appendChild(actions);
-
-                list.appendChild(card);
-            });
-
-            // Cosmetics section
-            const header = document.createElement('div');
-            header.style.gridColumn = '1 / -1';
-            header.style.marginTop = '8px';
-            header.style.paddingTop = '10px';
-            header.style.borderTop = '1px solid rgba(255,255,255,0.10)';
-            header.innerHTML = `<div style="font-weight:900; color: rgba(255,255,255,0.85);">✨ COSMETICS</div><div style="font-size:0.85rem; color: rgba(255,255,255,0.55);">Earn 🪙 and customize your ride.</div>`;
-            list.appendChild(header);
-
-            cosmeticCatalog.forEach(item => {
-                const owned = state.ownedCosmetics.has(item.id);
-                const equipped =
-                    (item.type === 'trail' && state.equippedTrail === item.id) ||
-                    (item.type === 'horn' && state.equippedHorn === item.id) ||
-                    (item.type === 'glow' && state.equippedGlow === item.id);
-                const canBuy = !owned && bal >= item.price;
-
-                const card = document.createElement('div');
-                card.style.background = 'rgba(255,255,255,0.06)';
-                card.style.border = '1px solid rgba(255,255,255,0.10)';
-                card.style.borderRadius = '16px';
-                card.style.padding = '12px';
-                card.style.display = 'flex';
-                card.style.flexDirection = 'column';
-                card.style.gap = '10px';
-
-                const badge = document.createElement('div');
-                badge.style.display = 'flex';
-                badge.style.alignItems = 'center';
-                badge.style.justifyContent = 'space-between';
-                badge.innerHTML = `<div style="font-weight:900;">${item.name}</div><div style="font-weight:800; color: var(--mge-gold);">🪙 ${item.price}</div>`;
-                card.appendChild(badge);
-
-                const stats = document.createElement('div');
-                stats.style.fontSize = '0.8rem';
-                stats.style.color = 'rgba(255,255,255,0.65)';
-                stats.innerHTML = `Type: <b>${item.type.toUpperCase()}</b>`;
-                card.appendChild(stats);
-
-                const btn = document.createElement('button');
-                btn.className = 'mode-btn';
-                btn.style.background = owned ? (equipped ? 'rgba(123,237,159,0.20)' : 'rgba(30,144,255,0.18)') : (canBuy ? 'rgba(123,237,159,0.20)' : 'rgba(255,255,255,0.06)');
-                btn.style.border = owned ? '1px solid rgba(255,255,255,0.18)' : (canBuy ? '1px solid rgba(123,237,159,0.40)' : '1px solid rgba(255,255,255,0.10)');
-                btn.style.color = 'white';
-                btn.innerText = equipped ? 'EQUIPPED' : (owned ? 'EQUIP' : (canBuy ? 'BUY' : 'NEED MORE 🪙'));
-                btn.onclick = () => {
-                    if (equipped) return;
-                    if (!owned) {
-                        if (state.currency < item.price) return;
-                        state.currency -= item.price;
-                        state.ownedCosmetics.add(item.id);
-                        // session bonus: first purchase
-                        maybeFirstPurchaseBonus();
-                    }
-                    if (item.type === 'trail') state.equippedTrail = item.id;
-                    if (item.type === 'horn') state.equippedHorn = item.id;
-                    if (item.type === 'glow') state.equippedGlow = item.id;
-                    saveNow();
-                    updateWalletUI();
-                    renderShop();
                 };
                 card.appendChild(btn);
                 list.appendChild(card);
             });
-
-            // Update plate input
-            const plateInput = document.getElementById('plate-input');
-            if (plateInput) {
-                plateInput.value = state.licensePlate;
-                plateInput.oninput = (e) => {
-                    state.licensePlate = e.target.value.toUpperCase();
-                    updateLicensePlate();
-                    saveNow();
-                };
-            }
         }
 
         function showShop(open) {
-            const overlay = document.getElementById('shop-overlay');
-            if (!overlay) return;
-            overlay.style.display = open ? 'block' : 'none';
-            updateWalletUI();
+            document.getElementById('shop-overlay').style.display = open ? 'block' : 'none';
             if (open) renderShop();
         }
 
         function setPlayerType(t) {
-            state.playerType = (t === 'skate') ? 'skate' : 'car';
+            state.playerType = t;
             const btn = document.getElementById('toggle-player');
-            if (btn) btn.innerText = `PLAYER: ${state.playerType === 'car' ? 'CAR' : 'SKATER'}`;
-            // visibility
-            car.visible = state.isPlaying && state.playerType === 'car';
-            skater.visible = state.isPlaying && state.playerType === 'skate';
+            if (btn) btn.innerText = `VEHICLE: ${t === 'car' ? 'BUGGY' : 'LONGBOARD'}`;
+            car.visible = state.isPlaying && t === 'car';
+            skater.visible = state.isPlaying && t === 'skate';
         }
 
-        function showTrickText(text) {
-            const notif = document.getElementById('notification');
-            if (!notif) return;
-            notif.innerText = text;
-            notif.style.opacity = 1;
-            state.trickTextUntil = performance.now() + 900;
-        }
-
-        function updateChallengeHUD() {
-            const airEl = document.getElementById('challenge-air');
-            const timeEl = document.getElementById('challenge-time');
-            const bar = document.getElementById('challenge-bar');
-            const done = document.getElementById('challenge-done');
-            if (!airEl || !timeEl || !bar || !done) return;
-
-            const targetAir = 4.0;
-            airEl.innerText = state.minuteAirAccum.toFixed(1);
-            timeEl.innerText = String(Math.ceil(state.minuteTimer));
-            const pct = Math.min(100, (state.minuteAirAccum / targetAir) * 100);
-            bar.style.width = `${pct}%`;
-            done.style.display = state.minuteBonusGiven ? 'block' : 'none';
+        function triggerNotification(text) {
+            const el = document.getElementById('notification');
+            el.innerText = text;
+            el.style.opacity = 1;
+            setTimeout(() => el.style.opacity = 0, 1500);
         }
 
         function moveCar(delta) {
             if(!state.isPlaying) return;
-
             const cfg = getEquippedCar();
             const accel = (keys['ShiftLeft'] || keys['ShiftRight']) ? cfg.boostAccel : cfg.accel;
             const friction = cfg.grip;
             const turnSpeed = cfg.turn;
-            const grav = 50;
+            const grav = 48;
 
-            if(keys['KeyA']) carYaw += turnSpeed * delta;
-            if(keys['KeyD']) carYaw -= turnSpeed * delta;
+            if(keys['KeyA']) state.carYaw += turnSpeed * delta;
+            if(keys['KeyD']) state.carYaw -= turnSpeed * delta;
 
-            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw);
+            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), state.carYaw);
             if(keys['KeyW']) carVel.add(fwd.clone().multiplyScalar(accel * delta));
             if(keys['KeyS']) carVel.sub(fwd.clone().multiplyScalar(accel * delta * 0.5));
 
             carVel.x *= friction;
             carVel.z *= friction;
 
-            car.position.x += carVel.x * delta * 8; // Much slower
+            car.position.x += carVel.x * delta * 8;
             car.position.z += carVel.z * delta * 8;
             
-            // Boundary Check
+            // Bounds clamp
             const bound = terrainSize / 2 - 5;
             if (car.position.x > bound) { car.position.x = bound; carVel.x = 0; }
             if (car.position.x < -bound) { car.position.x = -bound; carVel.x = 0; }
             if (car.position.z > bound) { car.position.z = bound; carVel.z = 0; }
             if (car.position.z < -bound) { car.position.z = -bound; carVel.z = 0; }
+            
             car.position.y += carVel.y * delta;
-
             const groundY = findGround(car.position.x, car.position.z);
             const onGround = car.position.y < groundY + 0.55;
 
             if (onGround) {
                 car.position.y = groundY + 0.4;
                 if(carVel.y < 0) carVel.y = 0;
-                
-                // Snap rotations back to ground
-                car.rotation.x = THREE.MathUtils.lerp(car.rotation.x, 0, 0.1);
-                car.rotation.z = THREE.MathUtils.lerp(car.rotation.z, 0, 0.1);
-                
-                if (keys['KeyA']) carYaw += turnSpeed * delta;
-                if (keys['KeyD']) carYaw -= turnSpeed * delta;
+                car.rotation.x = THREE.MathUtils.lerp(car.rotation.x, 0, 0.12);
+                car.rotation.z = THREE.MathUtils.lerp(car.rotation.z, 0, 0.12);
             } else {
                 carVel.y -= grav * delta;
                 
-                // AIR FLIGHT CONTROLS
-                const airRotSpeed = 5.0 * delta;
-                if (keys['KeyW']) {
-                    car.rotation.x -= airRotSpeed;
-                    state.accumPitch += airRotSpeed;
-                }
-                if (keys['KeyS']) {
-                    car.rotation.x += airRotSpeed;
-                    state.accumPitch -= airRotSpeed;
-                }
-                if (keys['KeyA']) {
-                    car.rotation.z += airRotSpeed;
-                    state.accumRoll += airRotSpeed;
-                }
-                if (keys['KeyD']) {
-                    car.rotation.z -= airRotSpeed;
-                    state.accumRoll -= airRotSpeed;
-                }
+                // Air flight rotation flips
+                const airRot = 4.8 * delta;
+                if (keys['KeyW']) { car.rotation.x -= airRot; state.accumPitch += airRot; }
+                if (keys['KeyS']) { car.rotation.x += airRot; state.accumPitch -= airRot; }
+                if (keys['KeyA']) { car.rotation.z += airRot; state.accumRoll += airRot; }
+                if (keys['KeyD']) { car.rotation.z -= airRot; state.accumRoll -= airRot; }
             }
 
             if(keys['Space'] && onGround) {
-                carVel.y = 20;
+                carVel.y = 19;
             }
 
-            car.rotation.y = carYaw;
-            underglowCar.position.copy(car.position).add(new THREE.Vector3(0, -0.1, 0));
-            underglowSkater.position.set(0, -9999, 0);
+            car.rotation.y = state.carYaw;
             
             // Speed UI
             const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
             document.getElementById('speed-display').innerText = spd.toString().padStart(2, '0');
 
-            // Currency earning: speed + airtime
-            earnCurrencyFromMotion(delta, spd, car.position.y, groundY);
+            earnCoinsFromMotion(delta, spd, car.position.y, groundY);
 
-            // Chase Cam
-            const camTarget = car.position.clone().add(new THREE.Vector3(0, 8, -18).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw));
+            // Stroll camera chase
+            const camTarget = car.position.clone().add(new THREE.Vector3(0, 7.5, -17).applyAxisAngle(new THREE.Vector3(0,1,0), state.carYaw));
             camera.position.lerp(camTarget, 0.1);
             camera.lookAt(car.position.clone().add(new THREE.Vector3(0,1,0)));
-            
-            // Wheel Spin
             wheels.forEach(w => w.rotation.x += spd * delta);
         }
 
         function moveSkater(delta) {
             if(!state.isPlaying) return;
-
-            // Skate "feel" (simple, similar to skaterGame but adapted to terrain ground)
-            const pushAccel = 7.5;
+            const pushAccel = 8.0;
             const maxSpeed = 22;
             const friction = 0.94;
             const turnSpeed = 2.4;
-            const grav = 50;
+            const grav = 48;
 
-            // yaw control
-            if(keys['KeyA']) carYaw += turnSpeed * delta;
-            if(keys['KeyD']) carYaw -= turnSpeed * delta;
+            if(keys['KeyA']) state.carYaw += turnSpeed * delta;
+            if(keys['KeyD']) state.carYaw -= turnSpeed * delta;
 
-            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw);
+            const fwd = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), state.carYaw);
             if(keys['KeyW']) carVel.add(fwd.clone().multiplyScalar(pushAccel * delta));
             if(keys['KeyS']) carVel.sub(fwd.clone().multiplyScalar(pushAccel * delta * 0.55));
 
-            // cap speed
             const planar = new THREE.Vector2(carVel.x, carVel.z);
             if (planar.length() > maxSpeed) {
                 planar.setLength(maxSpeed);
@@ -1716,7 +2149,6 @@
             skater.position.x += carVel.x * delta * 8;
             skater.position.z += carVel.z * delta * 8;
 
-            // boundaries
             const bound = terrainSize / 2 - 5;
             if (skater.position.x > bound) { skater.position.x = bound; carVel.x = 0; }
             if (skater.position.x < -bound) { skater.position.x = -bound; carVel.x = 0; }
@@ -1724,9 +2156,9 @@
             if (skater.position.z < -bound) { skater.position.z = -bound; carVel.z = 0; }
 
             skater.position.y += carVel.y * delta;
-
             const groundY = findGround(skater.position.x, skater.position.z);
             const onGround = skater.position.y < groundY + 0.45;
+            
             if(onGround) {
                 skater.position.y = groundY + 0.45;
                 if(carVel.y < 0) carVel.y = 0;
@@ -1734,32 +2166,33 @@
                 carVel.y -= grav * delta;
             }
 
-            // Jump (ollie)
             if(keys['Space'] && onGround) {
-                carVel.y = 20;
+                carVel.y = 19;
             }
 
-            // Tricks (only in air; small cooldown)
+            // Air tricks
             const now = performance.now();
-            const canTrick = !onGround && (now - state.lastTrickAt) > 220;
+            const canTrick = !onGround && (now - state.lastTrickAt) > 250;
             if (canTrick) {
-                if (keys['KeyE']) { // kickflip
+                if (keys['KeyE']) {
                     state.skateFlipSpin += Math.PI * 2;
                     state.lastTrickAt = now;
-                    showTrickText('KICKFLIP!');
-                } else if (keys['KeyR']) { // backflip
+                    triggerNotification("Kickflip stunt! 🛹");
+                    synth.pluck(587.33, 0.4, 'sine', 0.12);
+                } else if (keys['KeyR']) {
                     state.skateBackflip += Math.PI * 2;
                     state.lastTrickAt = now;
-                    showTrickText('BACKFLIP!');
-                } else if (keys['KeyF']) { // 360 flip
+                    triggerNotification("Backflip stunt! 🔄");
+                    synth.pluck(659.25, 0.5, 'sine', 0.12);
+                } else if (keys['KeyF']) {
                     state.skateFlipSpin += Math.PI * 2;
                     state.skateYawSpin += Math.PI * 2;
                     state.lastTrickAt = now;
-                    showTrickText('360 FLIP!');
+                    triggerNotification("360 Flip stunt! 🌪️");
+                    synth.pluck(493.88, 0.6, 'sine', 0.12);
                 }
             }
 
-            // Apply trick rotations smoothly
             const spinRate = Math.PI * 7 * delta;
             if (state.skateFlipSpin !== 0) {
                 const step = THREE.MathUtils.clamp(state.skateFlipSpin, -spinRate, spinRate);
@@ -1781,73 +2214,42 @@
                 boardGroup.rotation.y = THREE.MathUtils.lerp(boardGroup.rotation.y, 0, 0.12);
             }
 
-            skater.rotation.y = carYaw;
-            underglowSkater.position.copy(skater.position).add(new THREE.Vector3(0, -0.05, 0));
-            underglowCar.position.set(0, -9999, 0);
-
-            // Speed UI
+            skater.rotation.y = state.carYaw;
+            
             const spd = Math.floor(new THREE.Vector2(carVel.x, carVel.z).length() * 5);
             document.getElementById('speed-display').innerText = spd.toString().padStart(2, '0');
 
-            earnCurrencyFromMotion(delta, spd, skater.position.y, groundY);
+            earnCoinsFromMotion(delta, spd, skater.position.y, groundY);
 
             // Chase cam
-            const camTarget = skater.position.clone().add(new THREE.Vector3(0, 10, -20).applyAxisAngle(new THREE.Vector3(0,1,0), carYaw));
+            const camTarget = skater.position.clone().add(new THREE.Vector3(0, 9.5, -19).applyAxisAngle(new THREE.Vector3(0,1,0), state.carYaw));
             camera.position.lerp(camTarget, 0.1);
-            camera.lookAt(skater.position.clone().add(new THREE.Vector3(0,1.2,0)));
+            camera.lookAt(skater.position.clone().add(new THREE.Vector3(0, 1.2, 0)));
         }
 
-        function earnCurrencyFromMotion(delta, speedUi, y, groundY) {
-            // Speed currency: pay per second when moving fast (ramps help keep speed)
-            const speed = speedUi; // already scaled for UI
-            const speedThreshold = 14;
-            const speedRate = 0.18; // coins/sec at threshold; scales with speed
-            if (speed > speedThreshold) {
-                addCurrency((speed - speedThreshold) * speedRate * delta);
+        function earnCoinsFromMotion(delta, speed, y, groundY) {
+            // Speed payout
+            if (speed > 13) {
+                addCurrency((speed - 13) * 0.15 * delta);
             }
 
-            // Airtime: count when above ground by a small margin, payout on landing
+            // Airtime payout on landing
             const airborne = y > groundY + 0.75;
             if (airborne) {
                 state.airTimeSec += delta;
-                // 60s challenge: accumulate airtime while timer active
                 if (state.minuteTimer > 0) state.minuteAirAccum += delta;
             }
+            
             if (state.isAirborne && !airborne) {
-                // landed: payout
                 const air = state.airTimeSec;
-                if (air > 0.18) {
-                    // FLIP CALCULATION
-                    const pitchFlips = Math.floor(Math.abs(state.accumPitch) / (Math.PI * 1.8));
-                    const rollFlips = Math.floor(Math.abs(state.accumRoll) / (Math.PI * 1.8));
-                    const totalFlips = pitchFlips + rollFlips;
-
-                    // landing combo: reward consecutive clean landings
-                    const now = performance.now();
-                    const comboWindowMs = 3200;
-                    const isCombo = state.lastLandingAt && (now - state.lastLandingAt) < comboWindowMs;
-                    state.landingCombo = isCombo ? Math.min(10, state.landingCombo + 1) : 0;
-                    state.lastLandingAt = now;
-
-                    let bonusText = "";
-                    let flipPay = 0;
-                    if (totalFlips > 0) {
-                        flipPay = totalFlips * 50;
-                        bonusText = ` ${totalFlips}x FLIP! +${flipPay}`;
-                    }
-
-                    const basePay = Math.min(80, air * 14); // cap per jump
-                    const mult = 1 + state.landingCombo * 0.12;
-                    const totalPay = (basePay + flipPay) * mult;
+                if (air > 0.2) {
+                    const flips = Math.floor(Math.abs(state.accumPitch) / (Math.PI * 1.8)) + Math.floor(Math.abs(state.accumRoll) / (Math.PI * 1.8));
+                    const flipBonus = flips * 45;
+                    const basePay = Math.min(80, air * 16);
                     
-                    addCurrency(totalPay);
-                    
-                    if (totalFlips > 0 || state.landingCombo >= 1) {
-                        showTrickText(`STUNT!${bonusText}${state.landingCombo > 0 ? ' COMBO x' + (state.landingCombo + 1) : ''}`);
-                    }
-
-                    // daily bonus check
-                    maybeDailyFirstLandingBonus();
+                    const pay = basePay + flipBonus;
+                    addCurrency(pay);
+                    triggerNotification(`Landed! Cozy Coins +${Math.floor(pay)} 🪙`);
                 }
                 state.airTimeSec = 0;
                 state.accumPitch = 0;
@@ -1855,13 +2257,6 @@
                 saveNow();
             }
             state.isAirborne = airborne;
-
-            // occasionally persist during play
-            state.lastEarnAt += delta;
-            if (state.lastEarnAt > 3.0) {
-                state.lastEarnAt = 0;
-                saveNow();
-            }
         }
 
         function findGround(x, z) {
@@ -1870,8 +2265,7 @@
             return intersect.length > 0 ? intersect[0].point.y : 0;
         }
 
-        // --- INTERACTION ---
-        // Attach events to the CANVAS directly so OrbitControls doesn't swallow them.
+        // --- INTERACTION & EVENTS ---
         const canvas = renderer.domElement;
 
         function getPointer(e) {
@@ -1880,20 +2274,16 @@
             pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
         }
 
-        function isOverUI(e) {
-            return !!e.target.closest('.sidebar, .header, .footer, .mode-selector');
-        }
-
         canvas.addEventListener('pointerdown', e => {
-            if (isOverUI(e) || state.mode !== 'build') return;
-            if (e.button !== 0) return; // Only left-click sculpts
+            if (state.mode !== 'build') return;
+            if (e.target.closest('.sidebar, .header, .footer, .bob-portrait-container, #gallery-drawer')) return;
+            if (e.button !== 0) return; // Left click sculpts
             e.preventDefault();
             getPointer(e);
             state.isMouseDown = true;
-            // Force orbit NOT to handle this left-click
             orbit.enabled = false;
             updateBrush();
-            if (state.lastPoint.lengthSq() > 0 || true) runTool();
+            runTool();
         });
 
         canvas.addEventListener('pointermove', e => {
@@ -1907,27 +2297,31 @@
             }
         });
 
-        // Right-click: let OrbitControls handle rotation
-        canvas.addEventListener('pointerdown', e => {
-            if (e.button === 2 && state.mode === 'build') {
-                orbit.enabled = true;
-            }
-        });
-
         window.addEventListener('keydown', e => { 
             keys[e.code] = true; 
             if(e.code === 'Escape') cancelPlay();
-            if (e.code === 'KeyH') playHorn();
         });
-
         window.addEventListener('keyup', e => keys[e.code] = false);
 
-        // Prevent context menu on right click to allow smooth camera rotation
-        window.addEventListener('contextmenu', e => {
-            if (state.mode === 'build') e.preventDefault();
-        });
+        // Brush Slapping sound beat
+        document.getElementById('btn-brush-slap').onclick = () => {
+            synth.beatBrushSound();
+            
+            // Screen brush shake micro-animation
+            const container = document.getElementById('canvas-container');
+            container.style.transform = 'translate(6px, -4px)';
+            setTimeout(() => container.style.transform = 'translate(-4px, 4px)', 50);
+            setTimeout(() => container.style.transform = 'translate(0px, 0px)', 100);
+            
+            // Random quote speech bubble pop
+            const quote = bobRossQuotes[Math.floor(Math.random() * bobRossQuotes.length)];
+            document.getElementById('bob-quote-text').innerText = `"${quote}"`;
+            
+            // Visual feedback
+            triggerNotification("Brush slapped devilishly! 🧹💨");
+        };
 
-        // UI Events
+        // Brush controls
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -1947,62 +2341,64 @@
         };
 
         document.getElementById('reset-world').onclick = () => {
-            const p = terrainGeom.attributes.position.array;
-            for(let i=0; i<p.length; i+=3) p[i+1] = 0;
-            terrainGeom.attributes.position.needsUpdate = true;
-            terrainGeom.computeVertexNormals();
-            grassIdx = 0;
-            grassSys.count = 0;
-            grassSys.count = grassCount;
-            for(let i=0; i<grassCount; i++) grassSys.setMatrixAt(i, new THREE.Matrix4().makeScale(0,0,0));
-            grassSys.instanceMatrix.needsUpdate = true;
+            if (confirm("Are you sure you want to wash the canvas clear?")) {
+                const p = terrainGeom.attributes.position.array;
+                for(let i=0; i<p.length; i+=3) p[i+1] = 0;
+                terrainGeom.attributes.position.needsUpdate = true;
+                
+                // Color back to lush green base
+                const cols = terrainGeom.attributes.color.array;
+                for(let i=0; i<cols.length; i+=3) {
+                    cols[i] = grassBase[0] + (Math.random() - 0.5) * 0.02;
+                    cols[i+1] = grassBase[1] + (Math.random() - 0.5) * 0.02;
+                    cols[i+2] = grassBase[2] + (Math.random() - 0.5) * 0.02;
+                }
+                terrainGeom.attributes.color.needsUpdate = true;
+                terrainGeom.computeVertexNormals();
+
+                // Clear cabins and trees
+                state.trees.forEach(t => scene.remove(t));
+                state.trees = [];
+                state.cabins.forEach(c => scene.remove(c));
+                state.cabins = [];
+                triggerNotification("Canvas washed clear! 🧼");
+            }
         };
 
+        // --- STROLL MODES ---
         let pendingStart = false;
-        function showPlaytestChoice(open) {
-            const overlay = document.getElementById('playtest-choice');
-            if (!overlay) return;
-            overlay.style.display = open ? 'block' : 'none';
-        }
-
         function startPlay() {
-            // Ask every time you playtest (unless already in the middle of choice flow)
             if (!pendingStart) {
                 pendingStart = true;
-                showPlaytestChoice(true);
+                document.getElementById('playtest-choice').style.display = 'block';
                 return;
             }
 
             state.isPlaying = true;
             state.mode = 'play';
             document.getElementById('build-sidebar').style.display = 'none';
-            document.getElementById('code-sidebar').style.display = 'none';
             document.getElementById('start-game').style.display = 'none';
             document.getElementById('stop-game').style.display = 'flex';
             document.getElementById('car-hud').style.display = 'flex';
             document.getElementById('wallet-hud').style.display = 'flex';
             document.getElementById('challenge-hud').style.display = 'flex';
             document.getElementById('crosshair').style.display = 'block';
-            car.position.set(0, 10, 0);
-            skater.position.set(0, 10, 0);
+            
+            car.position.set(0, 15, 0);
+            skater.position.set(0, 15, 0);
             carVel.set(0, 0, 0);
-            carYaw = 0;
+            state.carYaw = 0;
             state.airTimeSec = 0;
             state.isAirborne = false;
-            state.lastEarnAt = 0;
+            
             state.minuteTimer = 60;
             state.minuteAirAccum = 0;
             state.minuteBonusGiven = false;
-            state.landingCombo = 0;
-            state.lastLandingAt = 0;
-            state.accumPitch = 0;
-            state.accumRoll = 0;
+
             setPlayerType(state.playerType);
-            if (state.playerType === 'car') car.position.set(0, 10, 0);
-            else skater.position.set(0, 10, 0);
             orbit.enabled = false;
             brushRing.visible = false;
-            showPlaytestChoice(false);
+            document.getElementById('playtest-choice').style.display = 'none';
             pendingStart = false;
             document.body.requestPointerLock();
         }
@@ -2012,19 +2408,20 @@
             state.mode = 'build';
             state.isMouseDown = false;
             document.getElementById('build-sidebar').style.display = 'flex';
-            document.getElementById('code-sidebar').style.display = 'flex';
             document.getElementById('start-game').style.display = 'flex';
             document.getElementById('stop-game').style.display = 'none';
             document.getElementById('car-hud').style.display = 'none';
             document.getElementById('wallet-hud').style.display = 'none';
             document.getElementById('challenge-hud').style.display = 'none';
             document.getElementById('crosshair').style.display = 'none';
+            
             car.visible = false;
             skater.visible = false;
             orbit.enabled = true;
+            
             document.exitPointerLock();
             showShop(false);
-            showPlaytestChoice(false);
+            document.getElementById('playtest-choice').style.display = 'none';
             pendingStart = false;
             saveNow();
         }
@@ -2034,144 +2431,351 @@
         document.getElementById('btn-mode-play').onclick = startPlay;
         document.getElementById('btn-mode-build').onclick = cancelPlay;
 
-        // Pointer Lock Interface Logic
         document.addEventListener('pointerlockchange', () => {
             const overlay = document.getElementById('esc-overlay');
             if (document.pointerLockElement === document.body) {
                 overlay.classList.add('visible');
-                // Hide after 4 seconds so it's not always in the way, but long enough to see
                 setTimeout(() => {
                     if (document.pointerLockElement === document.body) {
                         overlay.classList.remove('visible');
                     }
-                }, 4000);
+                }, 3500);
             } else {
                 overlay.classList.remove('visible');
             }
         });
 
-        function respawnPlayer() {
+        document.getElementById('respawn').onclick = () => {
             if (!state.isPlaying) return;
-            if (state.playerType === 'car') {
-                car.position.set(0, 10, 0);
-                car.rotation.set(0, 0, 0);
-            } else {
-                skater.position.set(0, 10, 0);
-                skater.rotation.set(0, 0, 0);
-                boardGroup.rotation.set(0, 0, 0);
+            const p = state.playerType === 'car' ? car : skater;
+            p.position.set(0, 15, 0);
+            p.rotation.set(0,0,0);
+            carVel.set(0,0,0);
+            state.carYaw = 0;
+            triggerNotification("Respawned! 💫");
+        };
+
+        document.getElementById('toggle-player').onclick = () => {
+            setPlayerType(state.playerType === 'car' ? 'skate' : 'car');
+        };
+
+        document.getElementById('open-shop').onclick = () => showShop(true);
+        document.getElementById('close-shop').onclick = () => showShop(false);
+        document.getElementById('choice-cancel').onclick = () => cancelPlay();
+        document.getElementById('choice-car').onclick = () => { setPlayerType('car'); startPlay(); };
+        document.getElementById('choice-skate').onclick = () => { setPlayerType('skate'); startPlay(); };
+
+        // Music synthesizer trigger
+        let musicActive = false;
+        document.getElementById('btn-sound-toggle').onclick = () => {
+            musicActive = !musicActive;
+            synth.toggle(musicActive);
+            document.getElementById('btn-sound-toggle').innerText = `MUSIC: ${musicActive ? 'ON 🔊' : 'OFF 🔇'}`;
+            document.getElementById('btn-sound-toggle').style.background = musicActive ? 'var(--brass)' : 'rgba(255,255,255,0.08)';
+            document.getElementById('btn-sound-toggle').style.color = musicActive ? 'var(--wood-dark)' : 'var(--brass)';
+            triggerNotification(musicActive ? "Serene Acoustic Melodies playing! 🎸" : "Music muted");
+        };
+
+        // --- EASLE SNAPSHOT & GALLERY MANAGEMENT ---
+        const easelModal = document.getElementById('easel-modal');
+        const easelCanvas = document.getElementById('easel-canvas');
+        const easelCtx = easelCanvas.getContext('2d');
+        let currentSnapshotData = null;
+
+        // Signature scribble state
+        let isDrawingSignature = false;
+        let lastSigX = 0;
+        let lastSigY = 0;
+
+        document.getElementById('btn-take-snap').onclick = () => {
+            // Hide brush ring before screenshot
+            brushRing.visible = false;
+            renderer.render(scene, camera);
+            
+            // Get WebGL image data
+            const snapshotUrl = renderer.domElement.toDataURL('image/png');
+            currentSnapshotData = snapshotUrl;
+            
+            // Open Easel frame modal
+            easelModal.style.display = 'flex';
+            
+            // Reset input values
+            document.getElementById('signature-input').value = "Bob Ross";
+            document.getElementById('painting-title-input').value = "Happy Accidents in Forest";
+            
+            drawMergedCanvas();
+        };
+
+        // Cursive styled typed signature generator on canvas
+        function drawMergedCanvas() {
+            const img = new Image();
+            img.onload = () => {
+                easelCtx.clearRect(0, 0, easelCanvas.width, easelCanvas.height);
+                easelCtx.drawImage(img, 0, 0, easelCanvas.width, easelCanvas.height);
+                
+                // Draw Cursive red/crimson signature in bottom right corner
+                const name = document.getElementById('signature-input').value.trim();
+                if (name) {
+                    easelCtx.fillStyle = state.sigColor;
+                    easelCtx.font = 'italic 34px "Pacifico", cursive';
+                    easelCtx.textAlign = 'right';
+                    easelCtx.textBaseline = 'bottom';
+                    easelCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                    easelCtx.shadowBlur = 4;
+                    easelCtx.fillText(name, easelCanvas.width - 35, easelCanvas.height - 30);
+                    // Reset shadow
+                    easelCtx.shadowBlur = 0;
+                }
+            };
+            img.src = currentSnapshotData;
+        }
+
+        // Draw signatures manually with mouse/touch scribbles on the easel canvas
+        easelCanvas.addEventListener('mousedown', startSigDraw);
+        easelCanvas.addEventListener('mousemove', drawSig);
+        window.addEventListener('mouseup', stopSigDraw);
+
+        easelCanvas.addEventListener('touchstart', e => {
+            const t = e.touches[0];
+            const mouseEvent = new MouseEvent("mousedown", { clientX: t.clientX, clientY: t.clientY });
+            easelCanvas.dispatchEvent(mouseEvent);
+        }, { passive: true });
+        easelCanvas.addEventListener('touchmove', e => {
+            const t = e.touches[0];
+            const mouseEvent = new MouseEvent("mousemove", { clientX: t.clientX, clientY: t.clientY });
+            easelCanvas.dispatchEvent(mouseEvent);
+        }, { passive: true });
+
+        function startSigDraw(e) {
+            isDrawingSignature = true;
+            const rect = easelCanvas.getBoundingClientRect();
+            // Scale points based on real canvas resolution vs displayed size
+            lastSigX = (e.clientX - rect.left) * (easelCanvas.width / rect.width);
+            lastSigY = (e.clientY - rect.top) * (easelCanvas.height / rect.height);
+        }
+
+        function drawSig(e) {
+            if (!isDrawingSignature) return;
+            const rect = easelCanvas.getBoundingClientRect();
+            const currX = (e.clientX - rect.left) * (easelCanvas.width / rect.width);
+            const currY = (e.clientY - rect.top) * (easelCanvas.height / rect.height);
+
+            easelCtx.strokeStyle = state.sigColor;
+            easelCtx.lineWidth = 4;
+            easelCtx.lineCap = 'round';
+            easelCtx.lineJoin = 'round';
+            
+            easelCtx.beginPath();
+            easelCtx.moveTo(lastSigX, lastSigY);
+            easelCtx.lineTo(currX, currY);
+            easelCtx.stroke();
+            
+            lastSigX = currX;
+            lastSigY = currY;
+        }
+
+        function stopSigDraw() {
+            isDrawingSignature = false;
+        }
+
+        // Signature controls change updates canvas redrawing
+        document.getElementById('signature-input').oninput = drawMergedCanvas;
+        document.querySelectorAll('.sig-color-dot').forEach(dot => {
+            dot.onclick = () => {
+                document.querySelectorAll('.sig-color-dot').forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                state.sigColor = dot.dataset.color;
+                drawMergedCanvas();
+            };
+        });
+
+        // Save picture polaroid to Local Gallery list
+        document.getElementById('btn-save-to-gallery').onclick = () => {
+            const finalImage = easelCanvas.toDataURL('image/jpeg', 0.9);
+            const title = document.getElementById('painting-title-input').value.trim() || "Happy Little Stroll";
+            
+            let gallery = [];
+            try {
+                gallery = JSON.parse(localStorage.getItem('mge_bob_ross_gallery') || '[]');
+            } catch (_) {}
+            
+            gallery.push({
+                image: finalImage,
+                title: title,
+                date: new Date().toLocaleDateString()
+            });
+            
+            localStorage.setItem('mge_bob_ross_gallery', JSON.stringify(gallery));
+            
+            easelModal.style.display = 'none';
+            triggerNotification("Masterpiece saved to Polaroid Gallery! 💾🖼️");
+            loadGallery();
+            
+            // Expand drawer
+            document.getElementById('gallery-drawer').classList.remove('collapsed');
+        };
+
+        // Download PNG file directly
+        document.getElementById('btn-download-painting').onclick = () => {
+            const link = document.createElement('a');
+            link.download = `${document.getElementById('painting-title-input').value.trim() || 'happy_landscape'}.png`;
+            link.href = easelCanvas.toDataURL('image/png');
+            link.click();
+            triggerNotification("Downloaded masterpiece! 📥");
+        };
+
+        document.getElementById('btn-close-easel').onclick = () => {
+            easelModal.style.display = 'none';
+        };
+
+        // Polaroid Gallery loading
+        function loadGallery() {
+            const slider = document.getElementById('gallery-slider-list');
+            const countEl = document.getElementById('gallery-count');
+            slider.innerHTML = '';
+            
+            let gallery = [];
+            try {
+                gallery = JSON.parse(localStorage.getItem('mge_bob_ross_gallery') || '[]');
+            } catch (_) {}
+            
+            countEl.innerText = `📂 Show Snaps (${gallery.length})`;
+            
+            if (gallery.length === 0) {
+                slider.innerHTML = `<div style="font-size:0.8rem; color:rgba(250,246,238,0.4); margin:auto;">Your wooden gallery is currently empty. Snap a scenic masterpiece!</div>`;
+                return;
             }
-            carVel.set(0, 0, 0);
-            carYaw = 0;
-            state.airTimeSec = 0;
-            state.isAirborne = false;
-            state.accumPitch = 0;
-            state.accumRoll = 0;
-            state.trailPoints.length = 0;
-            showTrickText('RESPAWNED');
+
+            gallery.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-polaroid';
+                card.innerHTML = `
+                    <img src="${item.image}">
+                    <div class="polaroid-caption">${item.title}</div>
+                    <div class="polaroid-delete" data-index="${index}">✕</div>
+                `;
+                
+                // Clicking image zooms it in easel framing modal for download
+                card.querySelector('img').onclick = () => {
+                    easelModal.style.display = 'flex';
+                    currentSnapshotData = item.image;
+                    const img = new Image();
+                    img.onload = () => {
+                        easelCtx.clearRect(0,0,easelCanvas.width,easelCanvas.height);
+                        easelCtx.drawImage(img, 0, 0, easelCanvas.width, easelCanvas.height);
+                    };
+                    img.src = item.image;
+                    
+                    document.getElementById('painting-title-input').value = item.title;
+                    triggerNotification("Opened saved snapshot! 🖼️");
+                };
+
+                // Delete polaroid
+                card.querySelector('.polaroid-delete').onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm("Throw away this polaroid?")) {
+                        gallery.splice(index, 1);
+                        localStorage.setItem('mge_bob_ross_gallery', JSON.stringify(gallery));
+                        loadGallery();
+                        triggerNotification("Polaroid deleted");
+                    }
+                };
+
+                slider.appendChild(card);
+            });
         }
 
-        // Scripting
-        function addToScript(t) {
-            state.carScript.push(t);
-            const titles = {forward:'Fwd', backward:'Bwd', left:'Left', right:'Right', nitro:'Nitro', jump:'Jump'};
-            const div = document.createElement('div');
-            div.className = 'script-block';
-            div.innerHTML = `<span><b>${titles[t]}</b> (Auto)</span> <span style="color:#ff4757; cursor:pointer" onclick="removeItem('${t}', this)">✕</span>`;
-            document.getElementById('script-container').appendChild(div);
-        }
+        // Toggle Expand gallery tray drawer
+        document.getElementById('btn-toggle-gallery').onclick = () => {
+            const dr = document.getElementById('gallery-drawer');
+            dr.classList.toggle('collapsed');
+        };
 
-        function removeItem(t, el) {
-            const idx = state.carScript.indexOf(t);
-            if(idx > -1) state.carScript.splice(idx, 1);
-            el.parentElement.remove();
-        }
-
-        function clearScript() {
-            state.carScript = [];
-            document.getElementById('script-container').innerHTML = '';
-        }
-
-        async function executeScript() {
-            for(const cmd of state.carScript) {
-                if(!state.isPlaying) break;
-                if(cmd === 'forward') { keys['KeyW'] = true; await wait(800); keys['KeyW'] = false; }
-                if(cmd === 'backward') { keys['KeyS'] = true; await wait(800); keys['KeyS'] = false; }
-                if(cmd === 'left') { keys['KeyA'] = true; await wait(400); keys['KeyA'] = false; }
-                if(cmd === 'right') { keys['KeyD'] = true; await wait(400); keys['KeyD'] = false; }
-                if(cmd === 'nitro') { keys['ShiftLeft'] = true; keys['KeyW'] = true; await wait(1500); keys['ShiftLeft'] = false; keys['KeyW'] = false; }
-                if(cmd === 'jump') { keys['Space'] = true; await wait(100); keys['Space'] = false; }
-                await wait(200);
-            }
-        }
-        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-        // Loop
+        // --- GAME LOOP ---
         const clock = new THREE.Clock();
         function loop() {
             requestAnimationFrame(loop);
-            const delta = clock.getDelta();
+            const delta = Math.min(0.1, clock.getDelta()); // Cap delta to prevent massive leaps
+
+            // Drift clouds
+            clouds.forEach(cloud => {
+                cloud.group.position.x += cloud.speed * delta;
+                // Wrapping bounds
+                if (cloud.group.position.x > 320) cloud.group.position.x = -320;
+            });
+
+            // Update particle smoke
+            updateSmoke(delta);
+
             if(state.mode === 'play') {
                 if (state.playerType === 'car') moveCar(delta);
                 else moveSkater(delta);
-                // 60s challenge timer
+                
+                // 60s Stunt Stroll Challenge
                 if (state.minuteTimer > 0) {
                     state.minuteTimer = Math.max(0, state.minuteTimer - delta);
-                    const targetAir = 4.0; // seconds of airtime under 1 minute
+                    const targetAir = 4.0;
                     if (!state.minuteBonusGiven && state.minuteAirAccum >= targetAir && state.minuteTimer > 0) {
                         addCurrency(200);
-                        const n = document.getElementById('notification');
-                        if (n) { n.innerText = `Airtime Challenge! +200`; n.style.opacity = 1; setTimeout(()=>{ n.style.opacity = 0; }, 1200); }
+                        triggerNotification("Airtime Stunt Master! Cozy Coins +200 🪙");
                         state.minuteBonusGiven = true;
                         saveNow();
                     }
                 }
-                // Challenge HUD update
-                updateChallengeHUD();
-                updateUnderglow();
-                updateTrail(delta);
-                if (state.trickTextUntil && performance.now() > state.trickTextUntil) {
-                    const notif = document.getElementById('notification');
-                    if (notif) notif.style.opacity = 0;
-                    state.trickTextUntil = 0;
-                }
+                
+                // Challenge progress bars
+                const airEl = document.getElementById('challenge-air');
+                const timeEl = document.getElementById('challenge-time');
+                const bar = document.getElementById('challenge-bar');
+                const done = document.getElementById('challenge-done');
+                if (airEl) airEl.innerText = state.minuteAirAccum.toFixed(1);
+                if (timeEl) timeEl.innerText = String(Math.ceil(state.minuteTimer));
+                if (bar) bar.style.width = `${Math.min(100, (state.minuteAirAccum / 4.0) * 100)}%`;
+                if (done) done.style.display = state.minuteBonusGiven ? 'block' : 'none';
             }
             else {
                 updateBrush();
                 if(state.isMouseDown) runTool();
                 orbit.update();
             }
+
             renderer.render(scene, camera);
         }
-        loop();
 
-        // Init save + UI hooks
+        // Bob Ross rotating quote pop interval
+        setInterval(() => {
+            if (document.getElementById('bob-box').style.display === 'none') return;
+            const quote = bobRossQuotes[Math.floor(Math.random() * bobRossQuotes.length)];
+            const textEl = document.getElementById('bob-quote-text');
+            textEl.style.opacity = 0;
+            setTimeout(() => {
+                textEl.innerText = `"${quote}"`;
+                textEl.style.opacity = 1;
+            }, 300);
+        }, 14000);
+
+        // Init saves
         loadSave();
-        ensureCosmetics();
         applyCarAppearance();
         updateWalletUI();
-        document.getElementById('open-shop').onclick = () => showShop(true);
-        document.getElementById('close-shop').onclick = () => showShop(false);
-        document.getElementById('shop-overlay').addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'shop-overlay') showShop(false);
-        });
-        document.getElementById('toggle-player').onclick = () => {
-            setPlayerType(state.playerType === 'car' ? 'skate' : 'car');
-        };
-        document.getElementById('respawn').onclick = respawnPlayer;
+        loadGallery();
 
-        // Playtest choice hooks
-        document.getElementById('choice-cancel').onclick = () => cancelPlay();
-        document.getElementById('playtest-choice').addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'playtest-choice') cancelPlay();
-        });
-        document.getElementById('choice-car').onclick = () => { setPlayerType('car'); startPlay(); };
-        document.getElementById('choice-skate').onclick = () => { setPlayerType('skate'); startPlay(); };
+        // License plate input listener
+        document.getElementById('plate-input').value = state.licensePlate;
+        document.getElementById('plate-input').oninput = (e) => {
+            state.licensePlate = e.target.value.toUpperCase();
+            updateLicensePlate();
+            saveNow();
+        };
 
         window.onresize = () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         };
+
+        // Start the engine
+        loop();
 
     </script>
 </body>
