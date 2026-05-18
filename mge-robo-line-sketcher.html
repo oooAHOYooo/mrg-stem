@@ -847,33 +847,19 @@
         class SoundEngine {
             constructor() {
                 this.ctx = null;
-                this.enabled = true;
+                this.enabled = false; // Sound removed per request
                 this.engineOsc = null;
                 this.engineGain = null;
                 this.engineFilter = null;
             }
 
             init() {
-                if (this.ctx) return;
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
-                    this.startEngineHum();
-                } catch (e) {
-                    console.warn("Web Audio API not supported.", e);
-                }
+                // Sound disabled
+                return;
             }
 
             toggle() {
-                this.enabled = !this.enabled;
-                if (this.ctx) {
-                    if (this.enabled) {
-                        this.ctx.resume();
-                    } else {
-                        this.ctx.suspend();
-                    }
-                }
-                return this.enabled;
+                return false;
             }
 
             playBeep(freq = 600, duration = 0.08, type = 'sine', volume = 0.12) {
