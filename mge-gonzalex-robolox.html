@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gonzalex Robolox | MGE STEM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             --mge-primary: #ff4655;
@@ -416,6 +415,23 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* Split Screen HUD Alignment */
+        body.split-active #p1-hotbar {
+            left: 25% !important;
+        }
+        body.split-active #p2-hotbar {
+            display: flex !important;
+            left: 75% !important;
+        }
+        body.split-active #p1-controls {
+            right: auto !important;
+            left: 30px !important;
+        }
+        body.split-active #p2-controls {
+            display: block !important;
+            right: 30px !important;
+        }
+
         /* Avatar Customizer Modal */
         .customizer-modal {
             position: fixed;
@@ -684,18 +700,12 @@
             <a href="mge.html" class="start-btn" style="background: rgba(255, 255, 255, 0.15); color: #fff; text-decoration: none;">← MGE Hub</a>
         </div>
 
-        <div class="multiplayer-ui">
-            <h3 style="color: #ffd60a; font-weight: 800; font-size: 1.2rem; text-transform: uppercase;">⚡ 2-Player Multiplayer</h3>
-            <div class="multi-row">
-                <button class="mp-btn" style="background: #06d6a0;" onclick="hostGame()">Host Server</button>
-                <span style="align-self: center; font-weight: 800; opacity: 0.6;">OR</span>
-                <input type="text" id="join-code-input" class="mp-input" placeholder="Enter Code...">
-                <button class="mp-btn" onclick="joinGame()">Join</button>
-            </div>
-            <div id="host-info" style="margin-top: 5px; font-size: 0.9rem; display: none; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px;">
-                Give this code to friend: <strong id="my-peer-id" style="color: #00b4d8; font-size: 1.1rem; letter-spacing: 1px;">Loading...</strong>
-            </div>
-            <div id="connection-msg" style="font-size: 0.85rem; color: #ffd60a; margin-top: 5px;"></div>
+        <div class="multiplayer-ui" style="border-color: var(--mge-secondary); background: rgba(0, 180, 216, 0.15);">
+            <h3 style="color: #00b4d8; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; margin-bottom: 12px;">👥 Local Split-Screen</h3>
+            <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-bottom: 15px; max-width: 400px;">
+                Play together on the same keyboard! Screen divides vertically into Player 1 (left) and Player 2 (right).
+            </p>
+            <button class="start-btn" style="background: linear-gradient(135deg, var(--mge-secondary), #0077b6); color: white; margin: 0; padding: 15px 40px; font-size: 1.2rem;" onclick="startGame('split')">PLAY 2 PLAYER (SPLIT-SCREEN)</button>
         </div>
         <div class="info-board">
             🎮 <strong>Roblox Vibe Mode Enabled:</strong> 3rd person orbiting camera! Spawns fully controllable blocky avatar. Right click to rotate camera, wasd keys to walk, 1-5 keys for tools.
@@ -765,8 +775,8 @@
             </div>
         </div>
 
-        <!-- Toolbar (Roblox-like Hotbar) -->
-        <div class="hotbar-container">
+        <!-- Toolbar (Roblox-like Hotbars) -->
+        <div class="hotbar-container" id="p1-hotbar">
             <div class="hotbar-slot active" id="slot-1" onclick="selectSlot(1)" title="Place Blocks">
                 <span class="slot-key">1</span>
                 <span class="slot-icon">🧱</span>
@@ -794,14 +804,42 @@
             </div>
         </div>
 
-        <!-- Sidebar / Details Controls Panel -->
-        <div class="controls-panel">
+        <div class="hotbar-container" id="p2-hotbar" style="display: none;">
+            <div class="hotbar-slot active" id="p2-slot-1" onclick="selectP2Slot(1)" title="Place Blocks">
+                <span class="slot-key">7</span>
+                <span class="slot-icon">🧱</span>
+                <span class="slot-label">Build</span>
+            </div>
+            <div class="hotbar-slot" id="p2-slot-2" onclick="selectP2Slot(2)" title="Delete Blocks">
+                <span class="slot-key">8</span>
+                <span class="slot-icon">🗑️</span>
+                <span class="slot-label">Delete</span>
+            </div>
+            <div class="hotbar-slot" id="p2-slot-3" onclick="selectP2Slot(3)" title="Change Colors">
+                <span class="slot-key">9</span>
+                <span class="slot-icon">🎨</span>
+                <span class="slot-label">Paint</span>
+            </div>
+            <div class="hotbar-slot" id="p2-slot-4" onclick="selectP2Slot(4)" title="Free Cam / Orbit">
+                <span class="slot-key">0</span>
+                <span class="slot-icon">📷</span>
+                <span class="slot-label">Camera</span>
+            </div>
+            <div class="hotbar-slot" id="p2-slot-5" onclick="selectP2Slot(5)" title="Reset Camera View">
+                <span class="slot-key">-</span>
+                <span class="slot-icon">🔄</span>
+                <span class="slot-label">Reset View</span>
+            </div>
+        </div>
+
+        <!-- Sidebar / Details Controls Panels -->
+        <div class="controls-panel" id="p1-controls">
             <div class="controls-title">
-                <span>CONTROLS & SHORTCUTS</span>
+                <span>P1 CONTROLS</span>
             </div>
             <div class="control-row">
                 <span>Walk / Move</span>
-                <span class="key">WASD / ARROWS</span>
+                <span class="key">WASD</span>
             </div>
             <div class="control-row">
                 <span>Jump</span>
@@ -818,6 +856,28 @@
             <div class="control-row">
                 <span>Select Tools</span>
                 <span class="key">1 - 5</span>
+            </div>
+        </div>
+
+        <div class="controls-panel" id="p2-controls" style="display: none;">
+            <div class="controls-title">
+                <span>P2 CONTROLS</span>
+            </div>
+            <div class="control-row">
+                <span>Walk / Move</span>
+                <span class="key">ARROWS</span>
+            </div>
+            <div class="control-row">
+                <span>Jump</span>
+                <span class="key">R-SHIFT</span>
+            </div>
+            <div class="control-row">
+                <span>Tool Use / Action</span>
+                <span class="key">/ (SLASH)</span>
+            </div>
+            <div class="control-row">
+                <span>Select Tools</span>
+                <span class="key">7 - 0</span>
             </div>
         </div>
     </div>
@@ -845,28 +905,21 @@
         let blockCount = 0;
         const gridSize = 1;
 
-        // --- NETWORKING VARIABLES ---
-        let peer = null;
-        let conn = null;
-        let isMultiplayer = false;
-        let isHost = false;
-        let remotePlayer = null; // To support 2 players, keeping it simple.
-        let lastPosSent = {x:0, y:0, z:0, ry:0};
-        let networkTick = 0;
-        let connectedPeerId = null;
+        // --- MULTIPLAYER & SPLIT STATE VARIABLES ---
+        let isSplitScreen = false;
+        let player2Group = null;
+        let p2HeadMesh, p2TorsoMesh, p2LeftArmMesh, p2RightArmMesh, p2LeftLegMesh, p2RightLegMesh;
+        let p2WalkTime = 0;
+        const player2Pos = new THREE.Vector3(3, 0, 0);
+        const player2Velocity = new THREE.Vector3(0, 0, 0);
+        let p2OnGround = true;
+        let p2JumpsLeft = 1;
+        let player2Tool = 'build';
+        let p2ColorIndex = 3; // start with green (0x06d6a0)
+        let player2Colors = { shirt: 0xef476f, pants: 0xffd60a }; // Pink shirt, yellow pants
+        let camera2 = null;
+
         let localPlayerColors = { shirt: 0x118ab2, pants: 0x06d6a0 };
-        let remotePlayerColors = { shirt: 0x118ab2, pants: 0x06d6a0 };
-        // Animations state for network sync
-        let remoteState = {
-            pos: {x:0,y:0,z:0},
-            rotY: 0,
-            moving: false,
-            onGround: true,
-            isDancing: false,
-            isWaving: false,
-            walkTime: 0,
-            waveTime: 0
-        };
         
         // --- NEW: Riddle NPC Variables ---
         let riddleNPC = null;
@@ -1065,182 +1118,23 @@
         }
 
 
-        // --- NETWORKING CORE LOGIC ---
-        function initPeer(callback) {
-            // Generate a short numeric ID for convenience if needed, or just random
-            const shortId = 'GONZ-' + Math.random().toString(36).substr(2, 5).toUpperCase();
-            peer = new Peer(shortId, { debug: 2 });
-            
-            document.getElementById('connection-msg').innerText = 'Initializing connection...';
-            
-            peer.on('open', (id) => {
-                console.log('My peer ID is: ' + id);
-                document.getElementById('my-peer-id').innerText = id;
-                document.getElementById('connection-msg').innerText = 'Ready to connect!';
-                if(callback) callback();
-            });
-            
-            peer.on('error', (err) => {
-                console.error(err);
-                alert('Networking Error: ' + err.type + ". " + err.message);
-                document.getElementById('connection-msg').innerText = 'Connection Failed.';
-            });
-
-            peer.on('connection', (incomingConn) => {
-                if (conn) {
-                    // Limit to 2 player as requested
-                    incomingConn.close();
-                    return;
-                }
-                conn = incomingConn;
-                isMultiplayer = true;
-                isHost = true;
-                setupConnection();
-            });
-        }
-
-        function hostGame() {
-            if (!peer) {
-                document.getElementById('host-info').style.display = 'block';
-                initPeer();
-            }
-        }
-
-        function joinGame() {
-            const idToJoin = document.getElementById('join-code-input').value.trim().toUpperCase();
-            if (!idToJoin) {
-                alert("Please enter a friend's Code!");
-                return;
-            }
-            
-            if (!peer) {
-                initPeer(() => {
-                    connectToPeer(idToJoin);
-                });
-            } else {
-                connectToPeer(idToJoin);
-            }
-        }
-
-        function connectToPeer(id) {
-            document.getElementById('connection-msg').innerText = 'Connecting to ' + id + '...';
-            conn = peer.connect(id, { reliable: true });
-            isMultiplayer = true;
-            isHost = false;
-            setupConnection();
-        }
-
-        function setupConnection() {
-            conn.on('open', () => {
-                document.getElementById('connection-msg').innerText = 'Connected Successfully!';
-                document.getElementById('connection-msg').style.color = '#06d6a0';
-                
-                // Wait 0.5s then start game automatically
-                setTimeout(() => {
-                    startGame('multi');
-                }, 800);
-            });
-            
-            conn.on('data', (data) => {
-                handleNetworkData(data);
-            });
-            
-            conn.on('close', () => {
-                addChatMessage('<span class="server">[Network]: Other player disconnected.</span>');
-                if (remotePlayer) {
-                    scene.remove(remotePlayer.group);
-                    remotePlayer = null;
-                }
-                document.getElementById('network-status').style.display = 'none';
-            });
-        }
-
-        function sendData(type, payload) {
-            if (conn && conn.open) {
-                conn.send({ type, payload });
-            }
-        }
-
-        function handleNetworkData(msg) {
-            const { type, payload } = msg;
-            
-            if (type === 'init_sync') {
-                // Host sends existing world to client
-                // clear current and load host's world
-                while(world.length > 0) removeBlock(world[0]);
-                payload.world.forEach(b => {
-                    addBlock(b.x, b.y, b.z, b.color, true); // true avoids broadcasting back
-                });
-                addChatMessage('<span class="server">[Network] World synced from Host!</span>');
-                
-                // Send my colors back to host
-                sendData('update_colors', localPlayerColors);
-            } 
-            else if (type === 'pos') {
-                // Update remote state for interpolation/rendering
-                remoteState = { ...remoteState, ...payload };
-                if (remotePlayer) {
-                    remotePlayer.group.position.set(payload.pos.x, payload.pos.y, payload.pos.z);
-                    remotePlayer.group.rotation.y = payload.rotY;
-                }
-            }
-            else if (type === 'block_add') {
-                addBlock(payload.x, payload.y, payload.z, payload.color, true);
-                playSound('place');
-            }
-            else if (type === 'block_remove') {
-                // Find block near target position
-                const block = world.find(b => Math.abs(b.position.x - payload.x) < 0.1 && Math.abs(b.position.y - payload.y) < 0.1 && Math.abs(b.position.z - payload.z) < 0.1);
-                if (block) {
-                    removeBlock(block, true);
-                    playSound('delete');
-                }
-            }
-            else if (type === 'block_paint') {
-                 const block = world.find(b => Math.abs(b.position.x - payload.x) < 0.1 && Math.abs(b.position.y - payload.y) < 0.1 && Math.abs(b.position.z - payload.z) < 0.1);
-                 if (block) {
-                     if (Array.isArray(block.material)) {
-                        block.material.forEach(m => m.color.setHex(payload.color));
-                    } else {
-                        block.material.color.setHex(payload.color);
-                    }
-                    playSound('paint');
-                 }
-            }
-            else if (type === 'chat') {
-                const log = document.getElementById('chat-log');
-                const msgEl = document.createElement('div');
-                msgEl.className = 'chat-msg';
-                msgEl.innerHTML = `<span class="name" style="color:#ff4655">Friend:</span> ${payload.msg}`;
-                log.appendChild(msgEl);
-                log.scrollTop = log.scrollHeight;
-            }
-            else if (type === 'update_colors') {
-                remotePlayerColors = payload;
-                if (remotePlayer) {
-                    remotePlayer.torso.material.color.setHex(remotePlayerColors.shirt);
-                    remotePlayer.leftLeg.material.color.setHex(remotePlayerColors.pants);
-                    remotePlayer.rightLeg.material.color.setHex(remotePlayerColors.pants);
-                }
-            }
-        }
-
+        // --- MULTIPLAYER & SPLIT CORE LOGIC ---
         function updatePlayerListUI() {
             const list = document.querySelector('.player-list');
-            // Clear other dummy entries, keep title and me
             list.innerHTML = `
                 <div class="player-list-title">Players</div>
                 <div class="player-entry me">
-                    <span class="player-name">You (Host)</span>
+                    <span class="player-name">Player 1</span>
                     <span class="player-stat" id="list-stat">${blockCount}</span>
                 </div>
             `;
             
-            if (isMultiplayer) {
+            if (isSplitScreen) {
                  const item = document.createElement('div');
                  item.className = 'player-entry';
+                 item.style.borderLeft = '3px solid #06d6a0';
                  item.innerHTML = `
-                    <span class="player-name" style="color:#ff4655">Friend</span>
+                    <span class="player-name" style="color:#06d6a0">Player 2</span>
                     <span class="player-stat">Live</span>
                  `;
                  list.appendChild(item);
@@ -1255,30 +1149,19 @@
                 document.getElementById('start-screen').style.display = 'none';
             }, 500);
             
-            if (mode === 'multi') {
-                const status = document.getElementById('network-status');
-                status.innerText = isHost ? '📡 MULTIPLAYER (HOST)' : '📡 MULTIPLAYER (GUEST)';
-                status.style.display = 'block';
-                document.getElementById('mode-display').innerText = "MULTIPLAYER";
+            if (mode === 'split') {
+                isSplitScreen = true;
+                document.body.classList.add('split-active');
+                document.getElementById('mode-display').innerText = "2 PLAYER";
                 updatePlayerListUI();
             } else {
-                 // Clean dummies to default mock list
+                isSplitScreen = false;
+                document.body.classList.remove('split-active');
+                document.getElementById('mode-display').innerText = "SOLO";
+                updatePlayerListUI();
             }
             
             initGame();
-
-            // If host, send existing map to guest immediately
-            if (isMultiplayer && isHost) {
-                const mapData = world.map(b => ({
-                    x: b.position.x, y: b.position.y, z: b.position.z, color: b.userData.color
-                }));
-                setTimeout(() => {
-                     sendData('init_sync', { world: mapData });
-                     sendData('update_colors', localPlayerColors);
-                }, 1000);
-            } else if (isMultiplayer && !isHost) {
-                // guest asks to sync or just waits
-            }
         }
 
         function goBack() {
@@ -1309,7 +1192,12 @@
             scene.fog = new THREE.FogExp2(0x87ceeb, 0.015);
 
             // Camera setup
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            if (isSplitScreen) {
+                camera = new THREE.PerspectiveCamera(60, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+                camera2 = new THREE.PerspectiveCamera(60, (window.innerWidth / 2) / window.innerHeight, 0.1, 1000);
+            } else {
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            }
 
             // Renderer setup
             renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
@@ -1383,6 +1271,10 @@
 
             // Build Player Avatar (Blocky Roblox Guy)
             createAvatar();
+
+            if (isSplitScreen) {
+                createPlayer2();
+            }
 
             // Build Riddle Teacher NPC
             createRiddleNPC();
@@ -1866,76 +1758,138 @@
             });
         }
 
-        function createRemoteAvatar() {
-            const remoteGroup = new THREE.Group();
-            scene.add(remoteGroup);
+        function createPlayer2() {
+            player2Group = new THREE.Group();
+            scene.add(player2Group);
 
             const skinColor = 0xffd166;
             const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+            
             const headMats = [
                 headMat, headMat, headMat, headMat,
-                new THREE.MeshStandardMaterial({ color: skinColor, map: textures.face, transparent: true }),
+                new THREE.MeshStandardMaterial({ color: skinColor, map: textures.face, transparent: true }), // front
                 headMat
             ];
             
-            const rHead = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMats);
-            rHead.position.y = 1.15;
-            rHead.castShadow = true;
-            remoteGroup.add(rHead);
+            p2HeadMesh = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), headMats);
+            p2HeadMesh.position.y = 1.15;
+            p2HeadMesh.castShadow = true;
+            player2Group.add(p2HeadMesh);
 
-            const rTorso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), new THREE.MeshStandardMaterial({ color: remotePlayerColors.shirt, roughness: 0.8 }));
-            rTorso.position.y = 0.55;
-            rTorso.castShadow = true;
-            remoteGroup.add(rTorso);
+            const shirtMat = new THREE.MeshStandardMaterial({ color: player2Colors.shirt, roughness: 0.8 });
+            p2TorsoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.8, 0.36), shirtMat);
+            p2TorsoMesh.position.y = 0.55;
+            p2TorsoMesh.castShadow = true;
+            player2Group.add(p2TorsoMesh);
 
-            const rLeftArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
-            rLeftArm.position.set(-0.52, 0.55, 0);
-            rLeftArm.castShadow = true;
-            remoteGroup.add(rLeftArm);
+            p2LeftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            p2LeftArmMesh.position.set(-0.52, 0.55, 0);
+            p2LeftArmMesh.castShadow = true;
+            player2Group.add(p2LeftArmMesh);
 
-            const rRightArm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
-            rRightArm.position.set(0.52, 0.55, 0);
-            rRightArm.castShadow = true;
-            remoteGroup.add(rRightArm);
+            p2RightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.76, 0.28), headMat);
+            p2RightArmMesh.position.set(0.52, 0.55, 0);
+            p2RightArmMesh.castShadow = true;
+            player2Group.add(p2RightArmMesh);
 
-            const rLeftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: remotePlayerColors.pants, roughness: 0.8 }));
-            rLeftLeg.position.set(-0.19, -0.22, 0);
-            rLeftLeg.castShadow = true;
-            remoteGroup.add(rLeftLeg);
+            const pantsMat = new THREE.MeshStandardMaterial({ color: player2Colors.pants, roughness: 0.8 });
+            p2LeftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), pantsMat);
+            p2LeftLegMesh.position.set(-0.19, -0.22, 0);
+            p2LeftLegMesh.castShadow = true;
+            player2Group.add(p2LeftLegMesh);
 
-            const rRightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), new THREE.MeshStandardMaterial({ color: remotePlayerColors.pants, roughness: 0.8 }));
-            rRightLeg.position.set(0.19, -0.22, 0);
-            rRightLeg.castShadow = true;
-            remoteGroup.add(rRightLeg);
+            p2RightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.76, 0.32), pantsMat);
+            p2RightLegMesh.position.set(0.19, -0.22, 0);
+            p2RightLegMesh.castShadow = true;
+            player2Group.add(p2RightLegMesh);
 
-            remoteGroup.scale.set(1.15, 1.15, 1.15);
+            player2Group.scale.set(1.15, 1.15, 1.15);
+            player2Pos.set(3, 1.25, 0);
+            player2Group.position.copy(player2Pos);
             
-            // Setup name tag
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 256; canvas.height = 64;
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(0,0,256,64);
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#06d6a0';
             ctx.font = 'bold 28px Inter';
             ctx.textAlign = 'center';
-            ctx.fillText("Guest Player", 128, 40);
+            ctx.fillText("Player 2", 128, 40);
             const tex = new THREE.CanvasTexture(canvas);
-            const spriteMat = new THREE.SpriteMaterial({map: tex});
-            const sprite = new THREE.Sprite(spriteMat);
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: tex}));
             sprite.position.y = 1.6;
             sprite.scale.set(1.5, 0.4, 1);
-            remoteGroup.add(sprite);
+            player2Group.add(sprite);
+        }
 
-            remotePlayer = {
-                group: remoteGroup,
-                torso: rTorso,
-                leftArm: rLeftArm,
-                rightArm: rRightArm,
-                leftLeg: rLeftLeg,
-                rightLeg: rRightLeg,
-                walkTime: 0
-            };
+        function selectP2Slot(slotNum) {
+            const toolNames = { 1: 'build', 2: 'delete', 3: 'color', 4: 'camera' };
+            if (slotNum === 5) return;
+            player2Tool = toolNames[slotNum];
+            document.querySelectorAll('#p2-hotbar .hotbar-slot').forEach(slot => slot.classList.remove('active'));
+            document.getElementById('p2-slot-' + slotNum).classList.add('active');
+        }
+
+        function performPlayer2Action() {
+            if (!player2Group) return;
+
+            const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(player2Group.quaternion).normalize();
+            const origin = player2Pos.clone().add(new THREE.Vector3(0, 0.8, 0));
+            const ray = new THREE.Raycaster(origin, forwardDir, 0.1, 5);
+            const intersects = ray.intersectObjects([ground, ...world]);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                if (player2Tool === 'camera') return;
+
+                if (player2Tool === 'build') {
+                    const normal = hit.face.normal;
+                    const newPos = hit.object.position.clone().add(normal);
+
+                    if (hit.object === ground) {
+                        const snappedX = Math.round(hit.point.x);
+                        const snappedZ = Math.round(hit.point.z);
+                        const taken = world.some(b => Math.abs(b.position.x - snappedX) < 0.1 && Math.abs(b.position.z - snappedZ) < 0.1 && Math.abs(b.position.y - gridSize / 2) < 0.1);
+                        if (!taken) {
+                            addBlock(snappedX, gridSize / 2, snappedZ, GameConfig.colors[p2ColorIndex]);
+                            playSound('place');
+                        }
+                    } else {
+                        addBlock(newPos.x, newPos.y, newPos.z, GameConfig.colors[p2ColorIndex]);
+                        playSound('place');
+                    }
+                } else if (player2Tool === 'delete' && hit.object !== ground) {
+                    removeBlock(hit.object);
+                    playSound('delete');
+                } else if (player2Tool === 'color' && hit.object !== ground) {
+                    p2ColorIndex = (p2ColorIndex + 1) % GameConfig.colors.length;
+                    const newColor = GameConfig.colors[p2ColorIndex];
+                    if (Array.isArray(hit.object.material)) {
+                        hit.object.material.forEach(m => m.color.setHex(newColor));
+                    } else {
+                        hit.object.material.color.setHex(newColor);
+                    }
+                    playSound('paint');
+                }
+            } else {
+                if (player2Tool === 'build') {
+                    const snappedX = Math.round(player2Pos.x + forwardDir.x * 2);
+                    const snappedZ = Math.round(player2Pos.z + forwardDir.z * 2);
+                    
+                    const snaps = world.filter(b => Math.abs(b.position.x - snappedX) < 0.1 && Math.abs(b.position.z - snappedZ) < 0.1);
+                    let snappedY = gridSize / 2;
+                    if (snaps.length > 0) {
+                        const maxY = Math.max(...snaps.map(b => b.position.y));
+                        snappedY = maxY + gridSize;
+                    }
+                    
+                    if (snappedY < 15) {
+                        addBlock(snappedX, snappedY, snappedZ, GameConfig.colors[p2ColorIndex]);
+                        playSound('place');
+                    }
+                }
+            }
         }
 
         function resetCharacter() {
@@ -1943,7 +1897,14 @@
             playerPos.set(0, 5, 0);
             playerVelocity.set(0, 0, 0);
             playerGroup.position.copy(playerPos);
-            addChatMessage('[Server] Respawn player avatar safely.', true);
+            
+            if (isSplitScreen && player2Group) {
+                player2Pos.set(3, 5, 0);
+                player2Velocity.set(0, 0, 0);
+                player2Group.position.copy(player2Pos);
+            }
+            
+            addChatMessage('[Server] Respawned player avatars safely.', true);
         }
 
         function spawnParticles(pos, color, count = 8) {
@@ -2032,6 +1993,34 @@
                         jumpsLeft = 0;
                     }
                 }
+
+                // Player 2 keybinds
+                if (isSplitScreen) {
+                    if (e.code === 'ShiftRight' || e.code === 'Numpad0') {
+                        if (p2OnGround) {
+                            player2Velocity.y = GameConfig.jumpStrength;
+                            playSound('jump');
+                            p2OnGround = false;
+                            p2JumpsLeft = 1;
+                        } else if (p2JumpsLeft > 0) {
+                            player2Velocity.y = GameConfig.jumpStrength * 0.85;
+                            playSound('jump');
+                            spawnParticles(player2Group.position.clone(), 0xffffff, 5);
+                            p2JumpsLeft = 0;
+                        }
+                    }
+
+                    if (e.key === '/' || e.code === 'ControlRight') {
+                        e.preventDefault();
+                        performPlayer2Action();
+                    }
+
+                    if (e.key === '7') selectP2Slot(1);
+                    if (e.key === '8') selectP2Slot(2);
+                    if (e.key === '9') selectP2Slot(3);
+                    if (e.key === '0') selectP2Slot(4);
+                    if (e.key === '-') selectP2Slot(5);
+                }
             });
             window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
@@ -2115,8 +2104,15 @@
             });
 
             window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
+                if (isSplitScreen && camera2) {
+                    camera.aspect = (window.innerWidth / 2) / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    camera2.aspect = (window.innerWidth / 2) / window.innerHeight;
+                    camera2.updateProjectionMatrix();
+                } else {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                }
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
         }
@@ -2253,34 +2249,6 @@
             scene.background.copy(midNight).lerp(peakDay, currentLightValue);
             if(scene.fog) scene.fog.color.copy(scene.background);
 
-            // --- NETWORK SYNC TASK ---
-            if (isMultiplayer && conn && conn.open) {
-                if (!remotePlayer) {
-                    createRemoteAvatar();
-                }
-                
-                networkTick++;
-                // Send status every ~3 frames (~50ms approx at 60fps)
-                if (networkTick % 3 === 0) {
-                    // Only transmit if significant change happened to save BW
-                    const dPos = Math.abs(playerPos.x - lastPosSent.x) + Math.abs(playerPos.y - lastPosSent.y) + Math.abs(playerPos.z - lastPosSent.z);
-                    const dRot = Math.abs(playerGroup.rotation.y - lastPosSent.ry);
-                    
-                    // We still send occasionally just to ensure no lag desync
-                    if (dPos > 0.02 || dRot > 0.02 || networkTick % 30 === 0) {
-                         sendData('pos', {
-                             pos: { x: playerPos.x, y: playerPos.y, z: playerPos.z },
-                             rotY: playerGroup.rotation.y,
-                             moving: keys['w'] || keys['s'] || keys['a'] || keys['d'] || keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright'],
-                             onGround: onGround,
-                             isDancing: isDancing,
-                             isWaving: isWaving
-                         });
-                         lastPosSent = { x: playerPos.x, y: playerPos.y, z: playerPos.z, ry: playerGroup.rotation.y };
-                    }
-                }
-            }
-
             // Update timers
             if (isDancing) danceTime += 0.05;
             if (isWaving) {
@@ -2289,6 +2257,80 @@
                     isWaving = false;
                     rightArmMesh.rotation.z = 0;
                     rightArmMesh.rotation.x = 0;
+                }
+            }
+
+            // --- PLAYER 2 CONTROLS & PHYSICS ---
+            if (isSplitScreen && player2Group) {
+                const f2 = new THREE.Vector3(
+                    -Math.sin(GameConfig.camera.theta),
+                    0,
+                    -Math.cos(GameConfig.camera.theta)
+                ).normalize();
+                const s2 = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), f2).normalize();
+
+                let p2Moving = false;
+                const p2KeyUp = keys['arrowup'];
+                const p2KeyDown = keys['arrowdown'];
+                const p2KeyLeft = keys['arrowleft'];
+                const p2KeyRight = keys['arrowright'];
+
+                if (p2KeyUp) { player2Pos.addScaledVector(f2, GameConfig.walkSpeed); p2Moving = true; }
+                if (p2KeyDown) { player2Pos.addScaledVector(f2, -GameConfig.walkSpeed); p2Moving = true; }
+                if (p2KeyLeft) { player2Pos.addScaledVector(s2, GameConfig.walkSpeed); p2Moving = true; }
+                if (p2KeyRight) { player2Pos.addScaledVector(s2, -GameConfig.walkSpeed); p2Moving = true; }
+
+                if (p2Moving) {
+                    const angle2 = Math.atan2(f2.x, f2.z);
+                    if (p2KeyUp) player2Group.rotation.y = angle2 + Math.PI;
+                    if (p2KeyDown) player2Group.rotation.y = angle2;
+                    if (p2KeyLeft) player2Group.rotation.y = angle2 - Math.PI / 2;
+                    if (p2KeyRight) player2Group.rotation.y = angle2 + Math.PI / 2;
+                }
+
+                let p2GroundLevel = 0;
+                const p2DownRay = new THREE.Raycaster(new THREE.Vector3(player2Pos.x, player2Pos.y + 1, player2Pos.z), new THREE.Vector3(0, -1, 0));
+                const p2IntersectDown = p2DownRay.intersectObjects([ground, ...world]);
+                if (p2IntersectDown.length > 0) {
+                    p2GroundLevel = player2Pos.y + 1 - p2IntersectDown[0].distance;
+                }
+
+                if (player2Pos.y > p2GroundLevel) {
+                    player2Velocity.y -= GameConfig.gravity;
+                    p2OnGround = false;
+                } else {
+                    player2Pos.y = p2GroundLevel;
+                    player2Velocity.y = 0;
+                    p2OnGround = true;
+                    p2JumpsLeft = 1;
+                }
+
+                player2Pos.y += player2Velocity.y;
+                player2Group.position.copy(player2Pos);
+
+                if (player2Pos.y < -15) {
+                    player2Pos.set(3, 5, 0);
+                    player2Velocity.set(0, 0, 0);
+                    player2Group.position.copy(player2Pos);
+                    playSound('oof');
+                }
+
+                // Player 2 Animations
+                if (p2Moving && p2OnGround) {
+                    p2WalkTime += 0.2;
+                    p2LeftLegMesh.rotation.x = Math.sin(p2WalkTime) * 0.6;
+                    p2RightLegMesh.rotation.x = -Math.sin(p2WalkTime) * 0.6;
+                    p2LeftArmMesh.rotation.x = -Math.sin(p2WalkTime) * 0.5;
+                    p2RightArmMesh.rotation.x = Math.sin(p2WalkTime) * 0.5;
+                } else if (!p2OnGround) {
+                    p2LeftArmMesh.rotation.x = -0.3;
+                    p2RightArmMesh.rotation.x = -0.3;
+                    p2LeftLegMesh.rotation.x = 0.2;
+                    p2RightLegMesh.rotation.x = -0.2;
+                } else {
+                    p2LeftLegMesh.rotation.x = 0; p2RightLegMesh.rotation.x = 0;
+                    p2LeftArmMesh.rotation.x = 0; p2RightArmMesh.rotation.x = 0;
+                    p2LeftArmMesh.rotation.z = 0; p2RightArmMesh.rotation.z = 0;
                 }
             }
 
@@ -2405,71 +2447,41 @@
                 leftArmMesh.rotation.z = 0; rightArmMesh.rotation.z = 0;
             }
 
-            // --- REMOTE ANIMATIONS & RENDERING ---
-            if (remotePlayer) {
-                // We use remoteState properties for logic
-                if (remoteState.moving && remoteState.onGround) {
-                     remotePlayer.walkTime += 0.2;
-                     remotePlayer.leftLeg.rotation.x = Math.sin(remotePlayer.walkTime) * 0.6;
-                     remotePlayer.rightLeg.rotation.x = -Math.sin(remotePlayer.walkTime) * 0.6;
-                     remotePlayer.leftArm.rotation.x = -Math.sin(remotePlayer.walkTime) * 0.5;
-                     remotePlayer.rightArm.rotation.x = Math.sin(remotePlayer.walkTime) * 0.5;
-                     remotePlayer.leftArm.rotation.z = 0;
-                     remotePlayer.rightArm.rotation.z = 0;
-                } else if (remoteState.isDancing) {
-                     remotePlayer.walkTime += 0.15;
-                     remotePlayer.group.position.y = remoteState.pos.y + Math.abs(Math.sin(remotePlayer.walkTime * 2)) * 0.2;
-                     remotePlayer.group.rotation.y += 0.05;
-                     remotePlayer.leftArm.rotation.z = Math.sin(remotePlayer.walkTime * 4) * 0.8;
-                     remotePlayer.rightArm.rotation.z = -Math.sin(remotePlayer.walkTime * 4) * 0.8;
-                } else if (remoteState.isWaving) {
-                     remotePlayer.walkTime += 0.15;
-                     remotePlayer.rightArm.rotation.z = 1.2 + Math.sin(remotePlayer.walkTime * 8) * 0.4;
-                     remotePlayer.rightArm.rotation.x = -0.5;
-                } else if (!remoteState.onGround) {
-                     remotePlayer.leftArm.rotation.x = -0.3;
-                     remotePlayer.rightArm.rotation.x = -0.3;
-                     remotePlayer.leftLeg.rotation.x = 0.2;
-                     remotePlayer.rightLeg.rotation.x = -0.2;
-                     remotePlayer.leftArm.rotation.z = 0;
-                     remotePlayer.rightArm.rotation.z = 0;
-                } else {
-                     remotePlayer.leftLeg.rotation.x = 0; remotePlayer.rightLeg.rotation.x = 0;
-                     remotePlayer.leftArm.rotation.x = 0; remotePlayer.rightArm.rotation.x = 0;
-                     remotePlayer.leftArm.rotation.z = 0; remotePlayer.rightArm.rotation.z = 0;
+            // --- RIDDLE, WIZARD, & SPANISH NPC FLOATING & PROXIMITY LOGIC ---
+            const getMinDistTo = (pos) => {
+                let dist = playerPos.distanceTo(pos);
+                if (isSplitScreen && player2Group) {
+                    dist = Math.min(dist, player2Pos.distanceTo(pos));
                 }
-            }
+                return dist;
+            };
 
-            // --- RIDDLE NPC FLOATING & PROXIMITY LOGIC ---
             if (riddleNPC) {
                 const clock = Date.now() * 0.001;
                 riddleNPC.position.y = 0.5 + Math.sin(clock * 2) * 0.08;
                 riddleNPC.rotation.y = Math.sin(clock) * 0.1;
                 
-                const distance = playerPos.distanceTo(riddleNPC.position);
-                // Trigger if player gets close and 15 seconds cooldown passed
+                const distance = getMinDistTo(riddleNPC.position);
                 if (distance < 5 && (Date.now() - lastRiddleTime > 15000)) {
                     lastRiddleTime = Date.now();
                     spoutRiddle();
                 }
             }
 
-            // --- WIZARD NPC LOGIC ---
             if (wizardNPC) {
                 const wTime = Date.now() * 0.0012;
-                wizardNPC.position.y = 0.45 + Math.abs(Math.sin(wTime)) * 0.15; // Bouncing
+                wizardNPC.position.y = 0.45 + Math.abs(Math.sin(wTime)) * 0.15;
                 
-                const distToWiz = playerPos.distanceTo(wizardNPC.position);
+                const distToWiz = getMinDistTo(wizardNPC.position);
                 if (distToWiz < 5 && (Date.now() - lastWizardTime > 18000)) {
                     lastWizardTime = Date.now();
                     spoutWizardLesson();
                 }
             }
 
-            // --- SPANISH NPC LOGIC ---
             if (spanishNPC) {
-                spanishNPC.position.y = 0.5 + Math.sin(Date.now() * 0.0015) * 0.05; // Slight float animation
-                const distToMaestro = playerPos.distanceTo(spanishNPC.position);
+                spanishNPC.position.y = 0.5 + Math.sin(Date.now() * 0.0015) * 0.05;
+                const distToMaestro = getMinDistTo(spanishNPC.position);
                 if (distToMaestro < 5 && (Date.now() - lastSpanishTime > 18000)) {
                     lastSpanishTime = Date.now();
                     spoutSpanishLesson();
@@ -2482,12 +2494,42 @@
             });
 
             // Follow Camera Positioning
-            camera.position.x = playerPos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
-            camera.position.z = playerPos.z + GameConfig.camera.radius * Math.cos(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
-            camera.position.y = playerPos.y + GameConfig.camera.radius * Math.sin(GameConfig.camera.phi) + 1.35;
-            camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
+            if (isSplitScreen && camera2) {
+                camera.position.x = playerPos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera.position.z = playerPos.z + GameConfig.camera.radius * Math.cos(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera.position.y = playerPos.y + GameConfig.camera.radius * Math.sin(GameConfig.camera.phi) + 1.35;
+                camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
 
-            renderer.render(scene, camera);
+                camera2.position.x = player2Pos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera2.position.z = player2Pos.z + GameConfig.camera.radius * Math.cos(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera2.position.y = player2Pos.y + GameConfig.camera.radius * Math.sin(GameConfig.camera.phi) + 1.35;
+                camera2.lookAt(player2Pos.x, player2Pos.y + 1.25, player2Pos.z);
+
+                // Vertical Split Screen Rendering
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                renderer.setScissorTest(true);
+
+                // Left View: Player 1
+                renderer.setViewport(0, 0, width / 2, height);
+                renderer.setScissor(0, 0, width / 2, height);
+                renderer.render(scene, camera);
+
+                // Right View: Player 2
+                renderer.setViewport(width / 2, 0, width / 2, height);
+                renderer.setScissor(width / 2, 0, width / 2, height);
+                renderer.render(scene, camera2);
+            } else {
+                camera.position.x = playerPos.x + GameConfig.camera.radius * Math.sin(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera.position.z = playerPos.z + GameConfig.camera.radius * Math.cos(GameConfig.camera.theta) * Math.cos(GameConfig.camera.phi);
+                camera.position.y = playerPos.y + GameConfig.camera.radius * Math.sin(GameConfig.camera.phi) + 1.35;
+                camera.lookAt(playerPos.x, playerPos.y + 1.25, playerPos.z);
+
+                renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+                renderer.render(scene, camera);
+            }
         }
     </script>
 </body>

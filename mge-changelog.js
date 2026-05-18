@@ -10,6 +10,36 @@
 
 const mgeChangelog = [
     {
+        date: '2026-05-18',
+        title: 'Major Release: Dolphin Wave Battle 3D!',
+        gameId: 'dolphin-wave-battle',
+        icon: '🐬⚔️',
+        description: 'Command custom 3D neon dolphins, navigate huge rolling swells, and blast your rival with bubble torpedoes in local split-screen!',
+        updates: [
+            'Dynamic 3D Wave heights: The ocean surface rises and rolls dynamically using real-time height math synchronized with visual shaders',
+            'Procedural Dolphin Mesh: Custom 3D sleek body structure complete with dorsal, pectoral, and tail fluke fins plus glowing neon booster rings',
+            'Local Split-Screen Viewport: Play alone vs computer AI, or battle a partner in true vertical split-screen using WASD and Arrow Keys',
+            'Interactive On-Screen Keyboards: Real-time HUD panel overlays visually highlight pressed keys to guide new players',
+            'Acoustic Wave Web Audio Synthesizer: Immersive arcade sound effects synthesized live for jumping, splashing, shooting, and scoring'
+        ],
+        category: 'major'
+    },
+    {
+        date: '2026-05-18',
+        title: 'Major Release: Robo-Line Sketcher 3D!',
+        gameId: 'robo-line-sketcher',
+        icon: '🤖✏️',
+        description: 'Sketch beautiful glowing neon lines in a futuristic 3D space lab, and watch custom robots follow your paths with high-fidelity physics and sound!',
+        updates: [
+            'Dynamic Draw Engine: Click-and-drag to sketch neon line paths on a custom space platform, rendered as beautiful 3D glowing tubes using Catmull-Rom spline curves',
+            '3 Procedural Robots: Custom cyber drone (rotating halo), lunar buggy (spinning tires and dynamic headlights), and star cruiser (aerodynamic wings and thruster cone)',
+            'Pulsing Line Energy: Flowing light particles automatically travel along your tracks, creating a living fiber-optic circuit effect',
+            'Interactive Web Audio Synth: Generates spaceship motor hums pitch-scaled relative to velocity, along with star chimes, explosions, and triumph fanfares',
+            '5 Puzzle Challenges: Navigate around floating space mines to capture rotating stars and exit via the green stargate wormhole'
+        ],
+        category: 'major'
+    },
+    {
         date: '2026-05-13',
         title: 'Major Release: 3D Vibe Master - Music Academy!',
         gameId: '3d-beat-maker',

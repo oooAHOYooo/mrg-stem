@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Dolphin Wave Rider: Battle Arena - Mr. Gonzalez Experiments</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts for premium typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-pink: #f472b6;
+            --neon-yellow: #ffe66d;
+            --neon-purple: #a855f7;
+            --glass-bg: rgba(10, 15, 30, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: #04040a;
+            color: #fff;
+        }
+
+        #game-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Glassmorphism UI */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Back Button */
+        .back-button {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 100;
+            padding: 0.8rem 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.4));
+            border: 2px solid #ff6b6b;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Game Title Overlay */
+        .game-title {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink), var(--neon-yellow));
+            background-size: 300% 300%;
+            animation: gradientShift 6s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
+            pointer-events: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Mode Selection Lobby Overlay */
+        #lobby-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 200;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #lobby-overlay.hide {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
+        }
+
+        .lobby-content {
+            max-width: 900px;
+            width: 100%;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 25px 70px rgba(0, 242, 254, 0.15);
+        }
+
+        .lobby-logo {
+            font-size: 5rem;
+            margin-bottom: 0.5rem;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        .lobby-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .lobby-subtitle {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            font-weight: 500;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .mode-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            width: 100%;
+            margin-bottom: 3rem;
+        }
+
+        @media (max-width: 640px) {
+            .mode-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mode-card {
+            padding: 2.5rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-color: rgba(255, 255, 255, 0.1);
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            padding: 3px;
+            background: linear-gradient(135deg, transparent, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: all 0.4s;
+            pointer-events: none;
+        }
+
+        .mode-card.p1-selected::before {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-yellow));
+        }
+
+        .mode-card.p2-selected::before {
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-purple));
+        }
+
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .mode-card .icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .mode-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+        }
+
+        .mode-card.p1-selected h3 {
+            color: var(--neon-blue);
+        }
+
+        .mode-card.p2-selected h3 {
+            color: var(--neon-pink);
+        }
+
+        .mode-card p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+            padding: 1.25rem 4rem;
+            font-size: 1.3rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 242, 254, 0.6);
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+        }
+
+        /* Head-Up Display (HUD) */
+        .hud-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+        }
+
+        .hud-side {
+            flex: 1;
+            position: relative;
+            padding: 5rem 2rem 2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .split-divider {
+            width: 4px;
+            background: linear-gradient(180deg, 
+                rgba(0, 242, 254, 0.8) 0%, 
+                rgba(168, 85, 247, 0.8) 50%, 
+                rgba(244, 114, 182, 0.8) 100%);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+            z-index: 20;
+            height: 100%;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            position: absolute;
+            top: 5.5rem;
+            padding: 1.2rem;
+            width: 260px;
+            pointer-events: auto;
+        }
+
+        .hud-side-left .stats-panel {
+            left: 2rem;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        .hud-side-right .stats-panel {
+            right: 2rem;
+            border-right: 4px solid var(--neon-pink);
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .hud-side-left .player-header { color: var(--neon-blue); }
+        .hud-side-right .player-header { color: var(--neon-pink); }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        /* Bar meters */
+        .meter-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 100%;
+            border-radius: 4px;
+            transition: width 0.15s ease-out;
+        }
+
+        .hud-side-left .hp-fill { background: linear-gradient(90deg, #ff4757, var(--neon-blue)); }
+        .hud-side-left .boost-fill { background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); }
+
+        .hud-side-right .hp-fill { background: linear-gradient(90deg, #ff4757, var(--neon-pink)); }
+        .hud-side-right .boost-fill { background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink)); }
+
+        /* Keyboard Visualizers */
+        .controls-visualizer {
+            position: absolute;
+            bottom: 2rem;
+            pointer-events: auto;
+            padding: 1.2rem;
+            width: 250px;
+        }
+
+        .hud-side-left .controls-visualizer {
+            left: 2rem;
+            border-left: 4px solid var(--neon-blue);
+        }
+
+        .hud-side-right .controls-visualizer {
+            right: 2rem;
+            border-right: 4px solid var(--neon-pink);
+        }
+
+        .controls-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #94a3b8;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            justify-items: center;
+            max-width: 160px;
+            margin: 0 auto;
+        }
+
+        .key-btn {
+            width: 42px;
+            height: 42px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.1s ease;
+        }
+
+        .key-btn.active {
+            transform: scale(0.9) translateY(2px);
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        .hud-side-left .key-btn.active {
+            background: var(--neon-blue);
+            color: #0f172a;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .hud-side-right .key-btn.active {
+            background: var(--neon-pink);
+            color: #0f172a;
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .action-key-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-key {
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .hud-side-left .action-key.active {
+            background: var(--neon-purple);
+            color: white;
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 12px var(--neon-purple);
+        }
+
+        .hud-side-right .action-key.active {
+            background: var(--neon-purple);
+            color: white;
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 12px var(--neon-purple);
+        }
+
+        /* Announcement Banner */
+        .announcement-banner {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            z-index: 40;
+            padding: 2rem 4rem;
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 30px;
+            border-width: 3px;
+        }
+
+        .announcement-banner.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.0);
+            pointer-events: auto;
+        }
+
+        .announcement-banner h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .announcement-banner p {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .banner-blue {
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 45px rgba(0, 242, 254, 0.4);
+            background: rgba(10, 25, 45, 0.95);
+        }
+
+        .banner-blue h2 {
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+        }
+
+        .banner-pink {
+            border-color: var(--neon-pink);
+            box-shadow: 0 10px 45px rgba(244, 114, 182, 0.4);
+            background: rgba(25, 10, 25, 0.95);
+        }
+
+        .banner-pink h2 {
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+        }
+
+        /* Match Timer Display */
+        .timer-display {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 3rem;
+            z-index: 50;
+            padding: 0.6rem 1.8rem;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            border-color: rgba(255, 230, 109, 0.3);
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+
+        /* Game Over Screen Overlay */
+        #gameover-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 250;
+            background: rgba(2, 6, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #gameover-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .gameover-content {
+            max-width: 600px;
+            width: 100%;
+            padding: 3.5rem;
+            text-align: center;
+            border-color: var(--neon-yellow);
+            box-shadow: 0 25px 60px rgba(255, 230, 109, 0.15);
+        }
+
+        .gameover-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 25px rgba(255, 230, 109, 0.4);
+        }
+
+        .winner-announcement {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 2.5rem;
+            color: #fff;
+        }
+
+        .final-scores {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 3rem;
+            gap: 1.5rem;
+        }
+
+        .final-score-card {
+            padding: 1.5rem;
+            flex: 1;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.1);
+        }
+
+        .final-score-card.p1 { border-color: var(--neon-blue); }
+        .final-score-card.p2 { border-color: var(--neon-pink); }
+
+        .final-score-card h4 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+
+        .final-score-card .val {
+            font-size: 2.2rem;
+            font-weight: 900;
+        }
+
+        .final-score-card.p1 .val { color: var(--neon-blue); }
+        .final-score-card.p2 .val { color: var(--neon-pink); }
+
+        .lobby-btn {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
+        }
+
+        .lobby-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 242, 254, 0.5);
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+        }
+
+        /* Wave Height Indicator */
+        .wave-gauge {
+            position: absolute;
+            left: 50%;
+            bottom: 2rem;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wave-gauge-bar {
+            width: 8px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-gauge-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(0deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 4px;
+            transition: height 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <a href="mge.html" class="back-button">← Exit Game</a>
+
+    <div class="game-title">Dolphin Wave Battle 🐬💥</div>
+
+    <!-- MAIN LOBBY OVERLAY -->
+    <div id="lobby-overlay">
+        <div class="lobby-content glass-panel">
+            <div class="lobby-logo">🐬🌊</div>
+            <h1 class="lobby-title">Dolphin Wave Rider</h1>
+            <p class="lobby-subtitle">
+                Ride spatial 3D neon waves, leap through floating hoops, and blast your rival with bubble torpedoes! Play alone against the AI or battle a friend in local vertical split-screen.
+            </p>
+            
+            <div class="mode-cards">
+                <div class="mode-card glass-panel p1-selected" id="card-1p" onclick="selectMode('1p')">
+                    <span class="icon">🤖</span>
+                    <h3>1 Player (vs AI)</h3>
+                    <p>Race against a highly skilled computer-controlled Neon Dolphin. Perfect your stunt flips and sharpshooting!</p>
+                </div>
+                <div class="mode-card glass-panel" id="card-2p" onclick="selectMode('2p')">
+                    <span class="icon">👥</span>
+                    <h3>2 Players (Split Screen)</h3>
+                    <p>Grab a partner on the same keyboard! Vertical split-screen high-octane battle using WASD and Arrow Keys.</p>
+                </div>
+            </div>
+
+            <button class="start-btn" onclick="startGame()">Launch Match 🌊🚀</button>
+        </div>
+    </div>
+
+    <!-- HUD OVERLAY -->
+    <div class="hud-overlay" id="hud" style="display: none;">
+        <!-- Player 1 Side (Left) -->
+        <div class="hud-side hud-side-left">
+            <div class="stats-panel glass-panel">
+                <div class="player-header">
+                    <span>🐬</span> Player 1 (Blue)
+                </div>
+                <div class="stat-row">
+                    <span>Score:</span>
+                    <span class="stat-value" id="p1-score" style="color: var(--neon-blue);">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Energy / HP:</span>
+                    <span id="p1-hp-pct" style="font-size: 0.85rem; color: #cbd5e1;">100%</span>
+                </div>
+                <div class="meter-container">
+                    <div class="meter-fill hp-fill" id="p1-hp-bar" style="width: 100%;"></div>
+                </div>
+                <div class="stat-row" style="margin-top: 0.8rem;">
+                    <span>Boost Charge:</span>
+                    <span id="p1-boost-pct" style="font-size: 0.85rem; color: #cbd5e1;">100%</span>
+                </div>
+                <div class="meter-container">
+                    <div class="meter-fill boost-fill" id="p1-boost-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="controls-visualizer glass-panel">
+                <div class="controls-title">P1 Controls (WASD)</div>
+                <div class="keyboard-grid">
+                    <div></div>
+                    <div class="key-btn" id="key-w">W</div>
+                    <div></div>
+                    <div class="key-btn" id="key-a">A</div>
+                    <div class="key-btn" id="key-s">S</div>
+                    <div class="key-btn" id="key-d">D</div>
+                </div>
+                <div class="action-key-row">
+                    <div class="action-key" id="key-space">Space (Shoot)</div>
+                    <div class="action-key" id="key-shift">Shift (Boost)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vertical Split Screen Divider -->
+        <div class="split-divider" id="screen-divider"></div>
+
+        <!-- Player 2 Side (Right) -->
+        <div class="hud-side hud-side-right" id="hud-right-side">
+            <div class="stats-panel glass-panel">
+                <div class="player-header" id="p2-header-label">
+                    <span>🐬</span> Player 2 (Pink)
+                </div>
+                <div class="stat-row">
+                    <span>Score:</span>
+                    <span class="stat-value" id="p2-score" style="color: var(--neon-pink);">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Energy / HP:</span>
+                    <span id="p2-hp-pct" style="font-size: 0.85rem; color: #cbd5e1;">100%</span>
+                </div>
+                <div class="meter-container">
+                    <div class="meter-fill hp-fill" id="p2-hp-bar" style="width: 100%;"></div>
+                </div>
+                <div class="stat-row" style="margin-top: 0.8rem;">
+                    <span>Boost Charge:</span>
+                    <span id="p2-boost-pct" style="font-size: 0.85rem; color: #cbd5e1;">100%</span>
+                </div>
+                <div class="meter-container">
+                    <div class="meter-fill boost-fill" id="p2-boost-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Wave height gauge in center of split screen -->
+            <div class="wave-gauge" style="z-index: 30; pointer-events: none;">
+                <span style="font-size: 0.75rem; font-weight: 800; color: var(--neon-yellow);">SWELL</span>
+                <div class="wave-gauge-bar">
+                    <div class="wave-gauge-fill" id="wave-swell-bar"></div>
+                </div>
+            </div>
+
+            <div class="controls-visualizer glass-panel" id="p2-visualizer">
+                <div class="controls-title">P2 Controls (Arrows)</div>
+                <div class="keyboard-grid">
+                    <div></div>
+                    <div class="key-btn" id="key-arrowup">▲</div>
+                    <div></div>
+                    <div class="key-btn" id="key-arrowleft">◀</div>
+                    <div class="key-btn" id="key-arrowdown">▼</div>
+                    <div class="key-btn" id="key-arrowright">▶</div>
+                </div>
+                <div class="action-key-row">
+                    <div class="action-key" id="key-enter">Enter (Shoot)</div>
+                    <div class="action-key" id="key-slash">/ key (Boost)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENT BANNER -->
+    <div class="announcement-banner glass-panel banner-blue" id="banner">
+        <h2 id="banner-title">Player 1 Jump!</h2>
+        <p id="banner-sub">Perfect 360 Flip! +50 pts</p>
+    </div>
+
+    <!-- GAME TIMER -->
+    <div class="timer-display glass-panel" id="match-timer" style="display: none;">02:00</div>
+
+    <!-- GAME OVER OVERLAY -->
+    <div id="gameover-overlay">
+        <div class="gameover-content glass-panel">
+            <h1 class="gameover-title">Match Concluded! 🏆</h1>
+            <div class="winner-announcement" id="winner-text">Player 1 dominates the waves!</div>
+            
+            <div class="final-scores">
+                <div class="final-score-card p1">
+                    <h4>Player 1 (Blue)</h4>
+                    <div class="val" id="final-p1-score">0</div>
+                </div>
+                <div class="final-score-card p2">
+                    <h4 id="final-p2-label">Player 2 (Pink)</h4>
+                    <div class="val" id="final-p2-score">0</div>
+                </div>
+            </div>
+
+            <button class="lobby-btn" onclick="backToLobby()">Return to Lobby 🏠</button>
+        </div>
+    </div>
+
+    <script>
+        // SOUND ENGINE (Web Audio API Synthesizer)
+        class SynthEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playShoot() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.15);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playHit() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playJump() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.5);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.5);
+            }
+
+            playSplash() {
+                this.init();
+                if (!this.ctx) return;
+                // Generate white noise for water splash
+                const bufferSize = this.ctx.sampleRate * 0.25; // 0.25 seconds
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.25);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.25);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start();
+                noise.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playScore() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Play a cute pentatonic high arpeggio
+                const notes = [587.33, 659.25, 783.99, 880.00, 1046.50]; // D5, E5, G5, A5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+                    gain.gain.linearRampToValueAtTime(0, now + idx * 0.06 + 0.12);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.12);
+                });
+            }
+
+            playBoost() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.4);
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.4);
+            }
+        }
+
+        const sound = new SynthEngine();
+
+        // 3D GAME SETUP
+        let scene, renderer;
+        let camera1, camera2;
+        let oceanGeometry, oceanMaterial, ocean;
+        const lights = [];
+        let gameMode = '1p'; // '1p' or '2p'
+        let gameActive = false;
+        let matchTimerInterval;
+        let timeLeft = 120; // 2 minutes
+
+        // Game Objects lists
+        const dolphins = {};
+        const bubbleTorpedoes = [];
+        const collectibles = [];
+        const hoops = [];
+        const splashRings = [];
+        const particles = [];
+
+        // Dynamic wave formula
+        function getWaveHeight(x, z, time) {
+            let y = 0;
+            // Rolling big swell along Z
+            y += Math.sin(z * 0.06 + time * 1.8) * 1.8;
+            // Fast cross-chop along X
+            y += Math.cos(x * 0.1 + time * 2.2) * 0.6;
+            // Diagonal secondary swell
+            y += Math.sin((x + z) * 0.04 + time * 1.2) * 0.8;
+            return y;
+        }
+
+        // PROCEDURAL DOLPHIN GENERATOR
+        function createDolphin(colorHex, glowColorHex, isPlayer1) {
+            const group = new THREE.Group();
+
+            const bodyMat = new THREE.MeshPhongMaterial({
+                color: colorHex,
+                shininess: 90,
+                specular: 0xffffff,
+                flatShading: false
+            });
+
+            const glowMat = new THREE.MeshBasicMaterial({
+                color: glowColorHex
+            });
+
+            // Smooth body (stretched sphere)
+            const bodyGeom = new THREE.SphereGeometry(1, 32, 16);
+            bodyGeom.scale(0.8, 0.6, 2.2);
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            body.castShadow = true;
+            group.add(body);
+
+            // Sleek nose snout
+            const snoutGeom = new THREE.ConeGeometry(0.3, 1.2, 16);
+            snoutGeom.rotateX(Math.PI / 2);
+            snoutGeom.scale(1, 0.6, 1.2);
+            const snout = new THREE.Mesh(snoutGeom, bodyMat);
+            snout.position.set(0, -0.1, 1.9);
+            group.add(snout);
+
+            // Curved Dorsal fin on top
+            const dorsalGeom = new THREE.ConeGeometry(0.3, 0.9, 4);
+            dorsalGeom.rotateX(-Math.PI / 5);
+            dorsalGeom.scale(1, 1, 1.6);
+            const dorsal = new THREE.Mesh(dorsalGeom, bodyMat);
+            dorsal.position.set(0, 0.7, -0.2);
+            group.add(dorsal);
+
+            // Left Pectoral Fin
+            const pectoralLGeom = new THREE.ConeGeometry(0.2, 0.8, 4);
+            pectoralLGeom.rotateZ(Math.PI / 3.5);
+            pectoralLGeom.rotateY(-Math.PI / 5);
+            const pectoralL = new THREE.Mesh(pectoralLGeom, bodyMat);
+            pectoralL.position.set(-0.75, -0.2, 0.5);
+            group.add(pectoralL);
+
+            // Right Pectoral Fin
+            const pectoralRGeom = new THREE.ConeGeometry(0.2, 0.8, 4);
+            pectoralRGeom.rotateZ(-Math.PI / 3.5);
+            pectoralRGeom.rotateY(Math.PI / 5);
+            const pectoralR = new THREE.Mesh(pectoralRGeom, bodyMat);
+            pectoralR.position.set(0.75, -0.2, 0.5);
+            group.add(pectoralR);
+
+            // Articulated Tail Fin
+            const tailGroup = new THREE.Group();
+            tailGroup.position.set(0, 0, -1.9);
+
+            const tailStemGeom = new THREE.CylinderGeometry(0.35, 0.15, 1.3, 8);
+            tailStemGeom.rotateX(Math.PI / 2);
+            const tailStem = new THREE.Mesh(tailStemGeom, bodyMat);
+            tailStem.position.set(0, 0, -0.4);
+            tailGroup.add(tailStem);
+
+            const flukeLGeom = new THREE.ConeGeometry(0.18, 0.9, 4);
+            flukeLGeom.rotateX(Math.PI / 2);
+            flukeLGeom.rotateZ(Math.PI / 2.2);
+            const flukeL = new THREE.Mesh(flukeLGeom, bodyMat);
+            flukeL.position.set(-0.45, 0, -1.0);
+            tailGroup.add(flukeL);
+
+            const flukeRGeom = new THREE.ConeGeometry(0.18, 0.9, 4);
+            flukeRGeom.rotateX(Math.PI / 2);
+            flukeRGeom.rotateZ(-Math.PI / 2.2);
+            const flukeR = new THREE.Mesh(flukeRGeom, bodyMat);
+            flukeR.position.set(0.45, 0, -1.0);
+            tailGroup.add(flukeR);
+
+            group.add(tailGroup);
+            group.userData.tailGroup = tailGroup;
+
+            // Neon glowing eyes
+            const eyeGeom = new THREE.SphereGeometry(0.12, 16, 16);
+            const eyeL = new THREE.Mesh(eyeGeom, glowMat);
+            eyeL.position.set(-0.35, 0.18, 1.25);
+            group.add(eyeL);
+
+            const eyeR = new THREE.Mesh(eyeGeom, glowMat);
+            eyeR.position.set(0.35, 0.18, 1.25);
+            group.add(eyeR);
+
+            // Neon glowing exhaust thruster ring on tail
+            const ringGeom = new THREE.TorusGeometry(0.24, 0.06, 8, 24);
+            ringGeom.rotateX(Math.PI / 2);
+            const booster = new THREE.Mesh(ringGeom, glowMat);
+            booster.position.set(0, 0, -0.15);
+            tailGroup.add(booster);
+
+            group.scale.set(0.85, 0.85, 0.85);
+
+            // Physics and State Data
+            group.userData = {
+                isPlayer1: isPlayer1,
+                velocity: new THREE.Vector3(0, 0, 0),
+                score: 0,
+                hp: 100,
+                boostCharge: 100,
+                stunTimer: 0,
+                flipTimer: 0,
+                flipProgress: 0,
+                inAir: false,
+                isBoosting: false,
+                shootCooldown: 0,
+                waveSurfTime: 0,
+                lastSplashTime: 0
+            };
+
+            return group;
+        }
+
+        // PROCEDURAL NEON ENVIRONMENT CREATION
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x050510, 0.015);
+
+            // High premium canvas size
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // 2 Cameras for vertical split screen
+            camera1 = new THREE.PerspectiveCamera(65, (width / 2) / height, 0.1, 1000);
+            camera2 = new THREE.PerspectiveCamera(65, (width / 2) / height, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('game-container').appendChild(renderer.domElement);
+
+            // Light systems
+            const ambient = new THREE.AmbientLight(0x0a1530, 1.5);
+            scene.add(ambient);
+
+            const hemiLight = new THREE.HemisphereLight(0x00f2fe, 0xa855f7, 0.6);
+            scene.add(hemiLight);
+
+            const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+            sun.position.set(50, 100, -30);
+            sun.castShadow = true;
+            sun.shadow.mapSize.width = 2048;
+            sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.near = 0.5;
+            sun.shadow.camera.far = 500;
+            const d = 100;
+            sun.shadow.camera.left = -d;
+            sun.shadow.camera.right = d;
+            sun.shadow.camera.top = d;
+            sun.shadow.camera.bottom = -d;
+            scene.add(sun);
+
+            // Colored underwater point lights for gorgeous neon aesthetics
+            const lightBlue = new THREE.PointLight(varColor('--neon-blue'), 3, 80);
+            lightBlue.position.set(-30, -10, 0);
+            scene.add(lightBlue);
+
+            const lightPink = new THREE.PointLight(varColor('--neon-pink'), 3, 80);
+            lightPink.position.set(30, -10, 0);
+            scene.add(lightPink);
+
+            const lightPurple = new THREE.PointLight(varColor('--neon-purple'), 4, 100);
+            lightPurple.position.set(0, -15, 30);
+            scene.add(lightPurple);
+
+            // GORGEOUS 3D WAVE PLANE
+            // We use massive ocean plane size
+            oceanGeometry = new THREE.PlaneGeometry(160, 200, 60, 80);
+            oceanMaterial = new THREE.MeshStandardMaterial({
+                color: 0x053560,
+                roughness: 0.1,
+                metalness: 0.8,
+                transparent: true,
+                opacity: 0.85,
+                flatShading: true,
+                side: THREE.DoubleSide
+            });
+            ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
+            ocean.rotation.x = -Math.PI / 2;
+            ocean.receiveShadow = true;
+            scene.add(ocean);
+
+            // Ocean bed with sand and corals
+            const bedGeom = new THREE.PlaneGeometry(300, 300);
+            const bedMat = new THREE.MeshStandardMaterial({
+                color: 0x050f20,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const bed = new THREE.Mesh(bedGeom, bedMat);
+            bed.rotation.x = -Math.PI / 2;
+            bed.position.y = -22;
+            bed.receiveShadow = true;
+            scene.add(bed);
+
+            // Generate procedural neon underwater corals & columns
+            generateReef();
+        }
+
+        function varColor(cssVarName) {
+            const val = getComputedStyle(document.documentElement).getPropertyValue(cssVarName).trim();
+            return parseInt(val.replace('#', '0x'), 16);
+        }
+
+        // Procedural Reef Generation
+        function generateReef() {
+            // Neon columns / arches
+            for (let i = 0; i < 15; i++) {
+                const height = 12 + Math.random() * 12;
+                const columnGeom = new THREE.CylinderGeometry(1.5, 2.5, height, 6);
+                const colMat = new THREE.MeshStandardMaterial({
+                    color: Math.random() > 0.5 ? varColor('--neon-purple') : varColor('--neon-blue'),
+                    roughness: 0.4,
+                    metalness: 0.7,
+                    flatShading: true
+                });
+                const column = new THREE.Mesh(columnGeom, colMat);
+                column.position.set(
+                    (Math.random() - 0.5) * 140,
+                    -22 + height/2,
+                    (Math.random() - 0.5) * 160
+                );
+                column.castShadow = true;
+                column.receiveShadow = true;
+                scene.add(column);
+            }
+
+            // Submerged glowing ruins/arches
+            for (let i = 0; i < 8; i++) {
+                const archGroup = new THREE.Group();
+                const archMat = new THREE.MeshStandardMaterial({
+                    color: 0x111e38,
+                    roughness: 0.8,
+                    emissive: varColor('--neon-pink'),
+                    emissiveIntensity: 0.15
+                });
+
+                const postL = new THREE.Mesh(new THREE.BoxGeometry(2, 18, 2), archMat);
+                postL.position.set(-6, 9, 0);
+                archGroup.add(postL);
+
+                const postR = new THREE.Mesh(new THREE.BoxGeometry(2, 18, 2), archMat);
+                postR.position.set(6, 9, 0);
+                archGroup.add(postR);
+
+                const beam = new THREE.Mesh(new THREE.BoxGeometry(16, 2, 3), archMat);
+                beam.position.set(0, 18, 0);
+                archGroup.add(beam);
+
+                archGroup.position.set(
+                    (Math.random() - 0.5) * 100,
+                    -22,
+                    (Math.random() - 0.5) * 120
+                );
+                scene.add(archGroup);
+            }
+
+            // Colorful floating ambient lights/spores
+            for (let i = 0; i < 30; i++) {
+                const sporeGeom = new THREE.SphereGeometry(0.3 + Math.random() * 0.3, 8, 8);
+                const sporeMat = new THREE.MeshBasicMaterial({
+                    color: Math.random() > 0.5 ? varColor('--neon-yellow') : varColor('--neon-pink')
+                });
+                const spore = new THREE.Mesh(sporeGeom, sporeMat);
+                spore.position.set(
+                    (Math.random() - 0.5) * 150,
+                    -18 + Math.random() * 14,
+                    (Math.random() - 0.5) * 180
+                );
+                scene.add(spore);
+            }
+        }
+
+        // CREATE GAME COLLECTIBLES (Gold Herrings & Giant Glowing Hoops)
+        function generateCollectibles() {
+            // Giant Neon Wave hoops (Torus) positioned dynamically in wave sweetspots
+            for (let i = 0; i < 6; i++) {
+                createNeonHoop();
+            }
+
+            // Golden Herrings (Cylinders) floating above/below waves
+            for (let i = 0; i < 15; i++) {
+                createGoldenHerring();
+            }
+        }
+
+        function createNeonHoop() {
+            const hoopGroup = new THREE.Group();
+            const ringGeom = new THREE.TorusGeometry(3.0, 0.25, 8, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: varColor('--neon-yellow'),
+                side: THREE.DoubleSide
+            });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            hoopGroup.add(ring);
+
+            // Adding neon energy particles floating inside
+            const innerGeom = new THREE.SphereGeometry(0.5, 8, 8);
+            const innerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const inner = new THREE.Mesh(innerGeom, innerMat);
+            hoopGroup.add(inner);
+
+            hoopGroup.position.set(
+                (Math.random() - 0.5) * 120,
+                3.5 + Math.random() * 5.0,  // set high in the air for leap stunts!
+                (Math.random() - 0.5) * 140
+            );
+
+            // Align hoop facing Z direction
+            hoopGroup.rotation.y = Math.PI / 2;
+
+            scene.add(hoopGroup);
+            hoops.push(hoopGroup);
+        }
+
+        function createGoldenHerring() {
+            const herringGroup = new THREE.Group();
+            
+            const bodyGeom = new THREE.ConeGeometry(0.3, 1.0, 8);
+            bodyGeom.rotateX(Math.PI / 2);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0xffd700, // Gold
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xffa500,
+                emissiveIntensity: 0.4
+            });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            herringGroup.add(body);
+
+            // Little tail fluke
+            const tailGeom = new THREE.BoxGeometry(0.5, 0.3, 0.1);
+            const tail = new THREE.Mesh(tailGeom, bodyMat);
+            tail.position.set(0, 0, -0.6);
+            herringGroup.add(tail);
+
+            // Randomize position
+            const z = (Math.random() - 0.5) * 150;
+            const x = (Math.random() - 0.5) * 130;
+            const waveH = getWaveHeight(x, z, 0);
+            
+            // Randomly above water or below water
+            const isSubmerged = Math.random() > 0.4;
+            const y = isSubmerged ? (waveH - 2 - Math.random() * 8) : (waveH + 0.5 + Math.random() * 2);
+
+            herringGroup.position.set(x, y, z);
+            herringGroup.userData = {
+                startY: y,
+                bobFreq: 1 + Math.random() * 2,
+                bobAmp: 0.2 + Math.random() * 0.3,
+                isSubmerged: isSubmerged
+            };
+
+            scene.add(herringGroup);
+            collectibles.push(herringGroup);
+        }
+
+        // PARTICLE AND VISUAL EFFECTS (Splashes & Torpedo Bubbles)
+        function spawnSplash(position, size = 1.0) {
+            sound.playSplash();
+
+            // Splash torus ring that expands and fades
+            const ringGeom = new THREE.RingGeometry(0.1, 0.3, 16);
+            ringGeom.rotateX(-Math.PI / 2);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const ring = new THREE.Mesh(ringGeom, ringMat);
+            ring.position.copy(position);
+            // Lock splash strictly to surface height
+            ring.position.y = getWaveHeight(position.x, position.z, performance.now() * 0.001);
+            scene.add(ring);
+
+            splashRings.push({
+                mesh: ring,
+                scale: 1.0,
+                maxScale: 6.0 * size,
+                opacity: 0.8,
+                fadeSpeed: 0.05
+            });
+
+            // Burst of tiny splash point particles
+            for (let i = 0; i < 15; i++) {
+                const pGeom = new THREE.SphereGeometry(0.15, 6, 6);
+                const pMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.9 });
+                const p = new THREE.Mesh(pGeom, pMat);
+                p.position.copy(position);
+                p.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 5,
+                        4 + Math.random() * 6,
+                        (Math.random() - 0.5) * 5
+                    ),
+                    gravity: -15,
+                    life: 1.0,
+                    decay: 0.04
+                };
+                scene.add(p);
+                particles.push(p);
+            }
+        }
+
+        // SHOT SYSTEM (Bubble Torpedoes)
+        function shootBubble(dolphin) {
+            if (dolphin.userData.stunTimer > 0) return;
+            if (dolphin.userData.shootCooldown > 0) return;
+
+            sound.playShoot();
+            dolphin.userData.shootCooldown = 25; // frames cooldown
+
+            // Create beautiful spinning glowing torus bubble
+            const bubbleGeom = new THREE.TorusGeometry(0.4, 0.12, 8, 16);
+            const bubbleMat = new THREE.MeshBasicMaterial({
+                color: dolphin.userData.isPlayer1 ? varColor('--neon-blue') : varColor('--neon-pink'),
+                transparent: true,
+                opacity: 0.9,
+                wireframe: false
+            });
+            const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+
+            // Compute forward direction vector based on dolphin's orientation
+            const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(dolphin.quaternion).normalize();
+
+            // Spawn slightly in front of nose
+            bubble.position.copy(dolphin.position).addScaledVector(forward, 2.0);
+            bubble.quaternion.copy(dolphin.quaternion);
+
+            // Physics payload
+            bubble.userData = {
+                direction: forward,
+                speed: 1.3,
+                life: 60, // 1 second duration
+                owner: dolphin,
+                isPlayer1: dolphin.userData.isPlayer1
+            };
+
+            scene.add(bubble);
+            bubbleTorpedoes.push(bubble);
+
+            // Visual feedback - push key on UI
+            const actKeyId = dolphin.userData.isPlayer1 ? 'key-space' : 'key-enter';
+            const el = document.getElementById(actKeyId);
+            if (el) {
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 150);
+            }
+        }
+
+        // LOBBY CONTROL LOGIC
+        function selectMode(mode) {
+            gameMode = mode;
+            const c1 = document.getElementById('card-1p');
+            const c2 = document.getElementById('card-2p');
+            const p2Header = document.getElementById('p2-header-label');
+            const p2Vis = document.getElementById('p2-visualizer');
+            const finalP2Lbl = document.getElementById('final-p2-label');
+
+            if (mode === '1p') {
+                c1.classList.add('p1-selected');
+                c2.classList.remove('p2-selected');
+                p2Header.innerHTML = '<span>🤖</span> Rival AI Dolphin';
+                p2Vis.style.display = 'none'; // hide P2 keyboard visualizer
+                finalP2Lbl.textContent = 'AI Rival Dolphin';
+            } else {
+                c1.classList.remove('p1-selected');
+                c2.classList.add('p2-selected');
+                p2Header.innerHTML = '<span>🐬</span> Player 2 (Pink)';
+                p2Vis.style.display = 'block';
+                finalP2Lbl.textContent = 'Player 2 (Pink)';
+            }
+        }
+
+        // MAIN START TRIGGER
+        function startGame() {
+            document.getElementById('lobby-overlay').classList.add('hide');
+            document.getElementById('hud').style.display = 'flex';
+            document.getElementById('match-timer').style.display = 'block';
+
+            sound.init();
+
+            // Clear old game state
+            resetGameState();
+
+            // Spawn Player 1
+            dolphins.p1 = createDolphin(0x00a8ff, varColor('--neon-blue'), true);
+            dolphins.p1.position.set(-15, 0, 0);
+            scene.add(dolphins.p1);
+
+            // Spawn Player 2 or AI
+            dolphins.p2 = createDolphin(0xff007f, varColor('--neon-pink'), false);
+            dolphins.p2.position.set(15, 0, 0);
+            scene.add(dolphins.p2);
+
+            // Handle HUD right side size
+            const divider = document.getElementById('screen-divider');
+            if (gameMode === '1p') {
+                // If 1P, we do full-screen and don't need split-screen divider or right side visualizer
+                divider.style.display = 'none';
+                document.getElementById('hud-right-side').style.flex = '0';
+                document.getElementById('hud-right-side').style.display = 'none';
+            } else {
+                divider.style.display = 'block';
+                document.getElementById('hud-right-side').style.flex = '1';
+                document.getElementById('hud-right-side').style.display = 'flex';
+            }
+
+            // Generate coins / targets
+            generateCollectibles();
+
+            gameActive = true;
+            timeLeft = 120; // 2 minutes
+            updateTimerDisplay();
+
+            // Run countdown timer
+            clearInterval(matchTimerInterval);
+            matchTimerInterval = setInterval(() => {
+                if (gameActive) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        endMatch();
+                    }
+                }
+            }, 1000);
+        }
+
+        function resetGameState() {
+            // Remove previous scene meshes
+            if (dolphins.p1) scene.remove(dolphins.p1);
+            if (dolphins.p2) scene.remove(dolphins.p2);
+            dolphins.p1 = null;
+            dolphins.p2 = null;
+
+            bubbleTorpedoes.forEach(b => scene.remove(b));
+            bubbleTorpedoes.length = 0;
+
+            collectibles.forEach(c => scene.remove(c));
+            collectibles.length = 0;
+
+            hoops.forEach(h => scene.remove(h));
+            hoops.length = 0;
+
+            splashRings.forEach(s => scene.remove(s.mesh));
+            splashRings.length = 0;
+
+            particles.forEach(p => scene.remove(p));
+            particles.length = 0;
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('match-timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // BANNERS/ANNOUNCEMENTS HUD
+        function triggerAnnouncement(player1, title, sub) {
+            const banner = document.getElementById('banner');
+            const bTitle = document.getElementById('banner-title');
+            const bSub = document.getElementById('banner-sub');
+
+            banner.className = 'announcement-banner glass-panel ' + (player1 ? 'banner-blue' : 'banner-pink');
+            bTitle.textContent = title;
+            bSub.textContent = sub;
+
+            banner.classList.add('show');
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 2000);
+        }
+
+        // KEYBOARD SYSTEM
+        const keys = {};
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            keys[e.key] = true;
+
+            // Trigger UI key active states
+            const keyElement = document.getElementById('key-' + e.key.toLowerCase());
+            if (keyElement) keyElement.classList.add('active');
+
+            // Handle instantaneous single press actions
+            if (e.key === ' ') {
+                shootBubble(dolphins.p1);
+            }
+            if (e.key === 'Enter') {
+                if (gameMode === '2p') shootBubble(dolphins.p2);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            keys[e.key] = false;
+
+            const keyElement = document.getElementById('key-' + e.key.toLowerCase());
+            if (keyElement) keyElement.classList.remove('active');
+        });
+
+        // PHYSICS AND SIMULATION ANIMATION LOOP
+        let frameCount = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!gameActive) return;
+
+            frameCount++;
+            const time = performance.now() * 0.001;
+
+            // Wave swelling UI updates
+            const maxSwell = 2.4;
+            const currentSwell = getWaveHeight(0, 0, time);
+            const swellPct = Math.min(100, Math.max(0, ((currentSwell + maxSwell) / (maxSwell * 2)) * 100));
+            document.getElementById('wave-swell-bar').style.height = `${swellPct}%`;
+
+            // 1. UPDATE GORGEOUS DYNAMIC 3D WAVE GEOMETRY
+            const posAttr = oceanGeometry.attributes.position;
+            for (let i = 0; i < posAttr.count; i++) {
+                // Plane is constructed on XY mesh grid
+                const vx = posAttr.getX(i);
+                const vz = posAttr.getY(i); // prior to X rotation
+                const height = getWaveHeight(vx, vz, time);
+                posAttr.setZ(i, height);
+            }
+            posAttr.needsUpdate = true;
+            oceanGeometry.computeVertexNormals();
+
+            // 2. SIMULATE PLAYER 1 (Blue Dolphin)
+            updateDolphinPhysics(dolphins.p1, 'w', 's', 'a', 'd', 'shift', time);
+
+            // 3. SIMULATE PLAYER 2 OR AI (Pink Dolphin)
+            if (gameMode === '2p') {
+                updateDolphinPhysics(dolphins.p2, 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', '/', time);
+            } else {
+                simulateAIDolphin(dolphins.p2, time);
+            }
+
+            // 4. RESOLVE BATTLE BUMP COLLISIONS BETWEEN BOTH DOLPHINS
+            resolveDolphinBumps();
+
+            // 5. UPDATE WEAPONS SYSTEM (Bubble Torpedoes)
+            updateBubbleTorpedoes();
+
+            // 6. UPDATE GOLD HERRINGS AND HOOPS
+            updateCollectibles(time);
+
+            // 7. SIMULATE VISUAL EFFECT PARTICLES
+            updateParticles();
+
+            // 8. UPDATE CAMERAS AND SCISSOR VIEWPORTS
+            updateCameras();
+
+            // 9. REFRESH HUD SCORING AND ENERGY
+            updateHUD();
+        }
+
+        // INDIVIDUAL DOLPHIN CONTROLLERS AND PHYSICS
+        function updateDolphinPhysics(d, keyUp, keyDown, keyLeft, keyRight, keyBoost, time) {
+            const ud = d.userData;
+
+            // Cool down shooting frames
+            if (ud.shootCooldown > 0) ud.shootCooldown--;
+
+            // Stun status handling
+            if (ud.stunTimer > 0) {
+                ud.stunTimer--;
+                d.rotation.y += 0.15; // spin out!
+                d.userData.velocity.multiplyScalar(0.92); // rapid braking
+                applyWaveLock(d, time);
+                return;
+            }
+
+            // Keyboard controls decoding
+            const isUp = keys[keyUp] || keys[keyUp.toUpperCase()];
+            const isDown = keys[keyDown] || keys[keyDown.toUpperCase()];
+            const isLeft = keys[keyLeft] || keys[keyLeft.toUpperCase()];
+            const isRight = keys[keyRight] || keys[keyRight.toUpperCase()];
+            const wantsBoost = keys[keyBoost] || keys[keyBoost.toUpperCase()];
+
+            // Trigger UI boost active visual state
+            const boostKeyElement = document.getElementById('key-' + keyBoost);
+            if (boostKeyElement) {
+                if (wantsBoost) boostKeyElement.classList.add('active');
+                else boostKeyElement.classList.remove('active');
+            }
+
+            // Physics constants
+            const accel = 0.025;
+            const friction = 0.94;
+            const maxSpeed = ud.isBoosting ? 0.9 : 0.48;
+
+            // Handle boosting charge depletion / activation
+            if (wantsBoost && ud.boostCharge > 10 && !ud.isBoosting) {
+                ud.isBoosting = true;
+                sound.playBoost();
+            }
+
+            if (ud.isBoosting) {
+                ud.boostCharge -= 0.8;
+                if (ud.boostCharge <= 0) {
+                    ud.boostCharge = 0;
+                    ud.isBoosting = false;
+                }
+            } else {
+                if (ud.boostCharge < 100) ud.boostCharge += 0.25;
+            }
+
+            // Compute target steering heading angles
+            let steerAngle = 0;
+            if (isLeft) steerAngle = 0.048;
+            if (isRight) steerAngle = -0.048;
+
+            // Steer rotation on Y axis
+            d.rotation.y += steerAngle;
+
+            // Move dolphin relative to its face direction
+            const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(d.quaternion).normalize();
+
+            if (isUp) {
+                ud.velocity.addScaledVector(forward, accel * (ud.isBoosting ? 1.8 : 1.0));
+            } else if (isDown) {
+                // Reverse swimming
+                ud.velocity.addScaledVector(forward, -accel * 0.5);
+            }
+
+            // Apply water viscosity friction
+            ud.velocity.multiplyScalar(friction);
+
+            // Cap absolute speed limits
+            const speed = ud.velocity.length();
+            if (speed > maxSpeed) {
+                ud.velocity.setLength(maxSpeed);
+            }
+
+            // Apply velocity translation
+            d.position.add(ud.velocity);
+
+            // Arena boundary soft constraints (dolphins bounce back)
+            const arenaX = 75;
+            const arenaZ = 95;
+            if (Math.abs(d.position.x) > arenaX) {
+                d.position.x = Math.sign(d.position.x) * arenaX;
+                ud.velocity.x *= -0.8;
+            }
+            if (Math.abs(d.position.z) > arenaZ) {
+                d.position.z = Math.sign(d.position.z) * arenaZ;
+                ud.velocity.z *= -0.8;
+            }
+
+            // Sync with wavy heights & trigger jumps
+            const waveY = getWaveHeight(d.position.x, d.position.z, time);
+
+            // Visual body banking (roll along Z) when turning
+            let targetRoll = -steerAngle * 8.0;
+            d.rotation.z = THREE.MathUtils.lerp(d.rotation.z, targetRoll, 0.1);
+
+            // JUMP MECHANIC: High velocity up wave crests launches you!
+            if (!ud.inAir) {
+                d.position.y = THREE.MathUtils.lerp(d.position.y, waveY, 0.25);
+                
+                // If velocity matches wave launch, enter jump state!
+                if (speed > 0.4 && waveY > 1.2 && Math.random() > 0.95 && time - ud.lastSplashTime > 1.0) {
+                    ud.inAir = true;
+                    ud.lastSplashTime = time;
+                    ud.velocity.y = 8.5 + speed * 6; // blast upward!
+                    ud.flipTimer = 40; // frames
+                    ud.flipProgress = 0;
+                    sound.playJump();
+                    spawnSplash(d.position, 1.2);
+                    triggerAnnouncement(ud.isPlayer1, ud.isPlayer1 ? "P1 Big Air! 🚀" : "P2 Big Air! 🚀", "Perform flips for bonus points!");
+                }
+            } else {
+                // Ballistic in-air physics
+                ud.velocity.y -= 0.35; // gravity pull
+                d.position.y += ud.velocity.y * 0.08;
+
+                // Visual stunt rotations! (Spin along X axis)
+                ud.flipProgress += 0.2;
+                d.rotation.x = ud.flipProgress;
+
+                // Hit water surface boundary check
+                if (d.position.y <= waveY) {
+                    ud.inAir = false;
+                    d.position.y = waveY;
+                    d.rotation.x = 0;
+                    ud.lastSplashTime = time;
+                    spawnSplash(d.position, 1.5);
+
+                    // Award jump points
+                    const points = 50;
+                    ud.score += points;
+                    sound.playScore();
+                    triggerAnnouncement(ud.isPlayer1, ud.isPlayer1 ? "P1 Perfect Landing! ✨" : "P2 Perfect Landing! ✨", `Awesome flips! +${points} pts`);
+                }
+            }
+
+            // Animate moving tail fin speed based on velocity
+            const tailSwing = Math.sin(frameCount * (speed * 0.8 + 0.1)) * (speed * 0.6 + 0.15);
+            d.userData.tailGroup.rotation.y = tailSwing;
+        }
+
+        // locks dolphin position strictly onto waves when incapacitated
+        function applyWaveLock(d, time) {
+            const waveY = getWaveHeight(d.position.x, d.position.z, time);
+            d.position.y = waveY;
+            d.rotation.x = THREE.MathUtils.lerp(d.rotation.x, 0, 0.1);
+            d.rotation.z = THREE.MathUtils.lerp(d.rotation.z, 0, 0.1);
+        }
+
+        // SMART COMPASS AI RIVAL DOLPHIN
+        function simulateAIDolphin(ai, time) {
+            const ud = ai.userData;
+
+            if (ud.shootCooldown > 0) ud.shootCooldown--;
+
+            // incapacitated stun state
+            if (ud.stunTimer > 0) {
+                ud.stunTimer--;
+                ai.rotation.y += 0.12;
+                ai.userData.velocity.multiplyScalar(0.94);
+                applyWaveLock(ai, time);
+                return;
+            }
+
+            // 1. Search for nearest golden herring or hoop target
+            let target = null;
+            let minDist = 9999;
+
+            // Target high value hoops first if in speed boost range
+            hoops.forEach(h => {
+                const d = ai.position.distanceTo(h.position);
+                if (d < minDist && d > 4) {
+                    minDist = d;
+                    target = h;
+                }
+            });
+
+            // Target standard golden herrings
+            if (!target) {
+                collectibles.forEach(c => {
+                    const d = ai.position.distanceTo(c.position);
+                    if (d < minDist) {
+                        minDist = d;
+                        target = c;
+                    }
+                });
+            }
+
+            // 2. Head steering angle computation to target
+            let steerAngle = 0;
+            let targetSpeedRatio = 0.7;
+
+            if (target) {
+                // Compute planar steering angle
+                const toTarget = new THREE.Vector3().subVectors(target.position, ai.position);
+                toTarget.y = 0; // ignore altitude
+                toTarget.normalize();
+
+                const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(ai.quaternion).normalize();
+                
+                // Cross product shows left/right steering direction
+                const cross = new THREE.Vector3().crossVectors(forward, toTarget);
+                const dot = forward.dot(toTarget);
+
+                // Steer left or right
+                if (cross.y > 0.05) steerAngle = 0.038;
+                else if (cross.y < -0.05) steerAngle = -0.038;
+
+                // Adjust speed based on target alignment
+                if (dot > 0.8) targetSpeedRatio = 1.0;
+            }
+
+            ai.rotation.y += steerAngle;
+
+            // Visual banking
+            ai.rotation.z = THREE.MathUtils.lerp(ai.rotation.z, -steerAngle * 8.0, 0.15);
+
+            // 3. Move forward
+            const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(ai.quaternion).normalize();
+            
+            const maxSpeed = ud.isBoosting ? 0.85 : 0.44;
+            const accel = 0.02;
+            
+            // Random smart speed bursts
+            if (Math.random() > 0.98 && ud.boostCharge > 30 && !ud.isBoosting) {
+                ud.isBoosting = true;
+                sound.playBoost();
+            }
+
+            if (ud.isBoosting) {
+                ud.boostCharge -= 0.8;
+                if (ud.boostCharge <= 0) ud.isBoosting = false;
+            } else {
+                if (ud.boostCharge < 100) ud.boostCharge += 0.2;
+            }
+
+            ud.velocity.addScaledVector(forward, accel * targetSpeedRatio * (ud.isBoosting ? 1.6 : 1.0));
+            ud.velocity.multiplyScalar(0.94); // friction
+
+            if (ud.velocity.length() > maxSpeed) {
+                ud.velocity.setLength(maxSpeed);
+            }
+
+            ai.position.add(ud.velocity);
+
+            // Arena limits
+            const arenaX = 75;
+            const arenaZ = 95;
+            if (Math.abs(ai.position.x) > arenaX) {
+                ai.position.x = Math.sign(ai.position.x) * arenaX;
+                ud.velocity.x *= -0.8;
+            }
+            if (Math.abs(ai.position.z) > arenaZ) {
+                ai.position.z = Math.sign(ai.position.z) * arenaZ;
+                ud.velocity.z *= -0.8;
+            }
+
+            // Wave height synchronization
+            const waveY = getWaveHeight(ai.position.x, ai.position.z, time);
+            if (!ud.inAir) {
+                ai.position.y = THREE.MathUtils.lerp(ai.position.y, waveY, 0.2);
+
+                // High speed jump crest launch
+                if (ud.velocity.length() > 0.38 && waveY > 1.3 && Math.random() > 0.97 && time - ud.lastSplashTime > 1.2) {
+                    ud.inAir = true;
+                    ud.lastSplashTime = time;
+                    ud.velocity.y = 8 + Math.random() * 4;
+                    ud.flipTimer = 40;
+                    ud.flipProgress = 0;
+                    sound.playJump();
+                    spawnSplash(ai.position, 1.2);
+                }
+            } else {
+                ud.velocity.y -= 0.35;
+                ai.position.y += ud.velocity.y * 0.08;
+                ud.flipProgress += 0.25;
+                ai.rotation.x = ud.flipProgress;
+
+                if (ai.position.y <= waveY) {
+                    ud.inAir = false;
+                    ai.position.y = waveY;
+                    ai.rotation.x = 0;
+                    ud.lastSplashTime = time;
+                    spawnSplash(ai.position, 1.4);
+                    ud.score += 50;
+                    sound.playScore();
+                }
+            }
+
+            // 4. Shoots bubble blast at P1 if in range
+            const distToP1 = ai.position.distanceTo(dolphins.p1.position);
+            if (distToP1 < 25 && ud.shootCooldown <= 0 && !ud.inAir) {
+                // Check if P1 is in forward visual cone
+                const toP1 = new THREE.Vector3().subVectors(dolphins.p1.position, ai.position).normalize();
+                const angle = forward.dot(toP1);
+                if (angle > 0.75) {
+                    shootBubble(ai);
+                }
+            }
+
+            // Tail fin wave wiggles
+            ai.userData.tailGroup.rotation.y = Math.sin(frameCount * 0.6) * 0.25;
+        }
+
+        // BUMP COLLISIONS AND PHYSICAL BOUNCES
+        function resolveDolphinBumps() {
+            const p1 = dolphins.p1;
+            const p2 = dolphins.p2;
+            if (!p1 || !p2) return;
+
+            const dist = p1.position.distanceTo(p2.position);
+            const radiusSum = 1.8; // dolphin boundaries
+
+            if (dist < radiusSum) {
+                sound.playHit();
+                
+                // Spawn impact sparks
+                const midPoint = new THREE.Vector3().addVectors(p1.position, p2.position).multiplyScalar(0.5);
+                spawnSplash(midPoint, 0.8);
+
+                // Compute push directions
+                const pushDir = new THREE.Vector3().subVectors(p2.position, p1.position).normalize();
+
+                // High-velocity dash bump mechanics
+                const p1Dash = p1.userData.isBoosting;
+                const p2Dash = p2.userData.isBoosting;
+
+                if (p1Dash && !p2Dash) {
+                    // P1 stuns P2!
+                    p2.userData.stunTimer = 65; // freeze opponent
+                    p2.userData.hp = Math.max(0, p2.userData.hp - 25);
+                    p1.userData.score += 100;
+                    triggerAnnouncement(true, "Player 1 RAM STUN! 💥", "Brutal shockwave crash! +100 pts");
+                    
+                    // Knockback push
+                    p2.userData.velocity.copy(pushDir).multiplyScalar(0.85);
+                    p1.userData.velocity.copy(pushDir).multiplyScalar(-0.4);
+                } 
+                else if (p2Dash && !p1Dash) {
+                    // P2 stuns P1!
+                    p1.userData.stunTimer = 65;
+                    p1.userData.hp = Math.max(0, p1.userData.hp - 25);
+                    p2.userData.score += 100;
+                    triggerAnnouncement(false, gameMode === '1p' ? "AI Rival RAM STUN! 💥" : "Player 2 RAM STUN! 💥", "Brutal shockwave crash! +100 pts");
+
+                    p1.userData.velocity.copy(pushDir).multiplyScalar(-0.85);
+                    p2.userData.velocity.copy(pushDir).multiplyScalar(0.4);
+                } 
+                else {
+                    // Standard bumper car bounce
+                    p1.userData.velocity.copy(pushDir).multiplyScalar(-0.45);
+                    p2.userData.velocity.copy(pushDir).multiplyScalar(0.45);
+                }
+
+                // Displace positions slightly to prevent clipping lock
+                const overlap = radiusSum - dist;
+                p1.position.addScaledVector(pushDir, -overlap * 0.5);
+                p2.position.addScaledVector(pushDir, overlap * 0.5);
+            }
+        }
+
+        // WEAPONS PROJECTILES SIMULATOR
+        function updateBubbleTorpedoes() {
+            for (let i = bubbleTorpedoes.length - 1; i >= 0; i--) {
+                const b = bubbleTorpedoes[i];
+                const ud = b.userData;
+
+                // Propel bubble torpedo forward
+                b.position.addScaledVector(ud.direction, ud.speed);
+                
+                // Add gentle orbital rotation
+                b.rotation.z += 0.12;
+
+                ud.life--;
+
+                // Hit target checking
+                let hitTarget = false;
+                
+                // If fired by P1, check P2 hit; and vice versa
+                const targetDolphin = ud.isPlayer1 ? dolphins.p2 : dolphins.p1;
+                
+                if (targetDolphin) {
+                    const dist = b.position.distanceTo(targetDolphin.position);
+                    if (dist < 1.8 && targetDolphin.userData.stunTimer <= 0) {
+                        hitTarget = true;
+                        sound.playHit();
+
+                        // Incapacitate stun, deplete HP, reward scoring
+                        targetDolphin.userData.stunTimer = 50; // 50 frames stun
+                        targetDolphin.userData.hp = Math.max(0, targetDolphin.userData.hp - 15);
+                        ud.owner.userData.score += 80;
+
+                        spawnSplash(b.position, 0.9);
+                        triggerAnnouncement(
+                            ud.isPlayer1,
+                            ud.isPlayer1 ? "P1 Bubble Blast Hit! 🎯" : "P2 Bubble Blast Hit! 🎯",
+                            `Stunned rival dolphin! +80 pts`
+                        );
+                    }
+                }
+
+                // Boundaries & life depletion removal
+                const isOutOfBound = Math.abs(b.position.x) > 85 || Math.abs(b.position.z) > 105;
+                if (ud.life <= 0 || hitTarget || isOutOfBound) {
+                    scene.remove(b);
+                    bubbleTorpedoes.splice(i, 1);
+                }
+            }
+        }
+
+        // TARGETS INTERSECTION DETECTOR
+        function updateCollectibles(time) {
+            // 1. Gold Herrings (Bobbing up & down, check collision)
+            collectibles.forEach((c, index) => {
+                c.rotation.y += 0.035;
+
+                // Dynamic sine floating wave bobbing
+                c.position.y = c.userData.startY + Math.sin(time * c.userData.bobFreq) * c.userData.bobAmp;
+
+                // Sync submerged herrings to wave height
+                if (c.userData.isSubmerged) {
+                    const waveH = getWaveHeight(c.position.x, c.position.z, time);
+                    c.position.y = Math.min(c.position.y, waveH - 1.5);
+                }
+
+                // Check collision with Player 1
+                if (dolphins.p1 && dolphins.p1.position.distanceTo(c.position) < 2.0) {
+                    sound.playScore();
+                    dolphins.p1.userData.score += 15;
+                    dolphins.p1.userData.hp = Math.min(100, dolphins.p1.userData.hp + 5);
+                    dolphins.p1.userData.boostCharge = Math.min(100, dolphins.p1.userData.boostCharge + 10);
+                    spawnCollectFX(c.position, varColor('--neon-blue'));
+                    respawnCollectible(c);
+                }
+
+                // Check collision with Player 2
+                if (dolphins.p2 && dolphins.p2.position.distanceTo(c.position) < 2.0) {
+                    sound.playScore();
+                    dolphins.p2.userData.score += 15;
+                    dolphins.p2.userData.hp = Math.min(100, dolphins.p2.userData.hp + 5);
+                    dolphins.p2.userData.boostCharge = Math.min(100, dolphins.p2.userData.boostCharge + 10);
+                    spawnCollectFX(c.position, varColor('--neon-pink'));
+                    respawnCollectible(c);
+                }
+            });
+
+            // 2. Neon Leap Hoops (Detect jumps through hoops)
+            hoops.forEach((h, index) => {
+                // Spin hoop
+                h.rotation.z += 0.015;
+
+                const checkDolphinHoop = (d) => {
+                    if (!d || !d.userData.inAir) return;
+                    
+                    // Simple distance check to center of hoop
+                    const dist = d.position.distanceTo(h.position);
+                    if (dist < 3.2) {
+                        sound.playScore();
+                        const points = 120;
+                        d.userData.score += points;
+                        d.userData.boostCharge = 100; // instant hypercharge!
+                        spawnCollectFX(h.position, varColor('--neon-yellow'));
+                        triggerAnnouncement(
+                            d.userData.isPlayer1,
+                            d.userData.isPlayer1 ? "P1 Ring Champion! 🏆" : "P2 Ring Champion! 🏆",
+                            `Stunt leap through neon ring! +${points} pts`
+                        );
+                        // Reposition hoop
+                        h.position.set(
+                            (Math.random() - 0.5) * 120,
+                            3.5 + Math.random() * 5.0,
+                            (Math.random() - 0.5) * 140
+                        );
+                    }
+                };
+
+                checkDolphinHoop(dolphins.p1);
+                checkDolphinHoop(dolphins.p2);
+            });
+        }
+
+        function respawnCollectible(c) {
+            const z = (Math.random() - 0.5) * 150;
+            const x = (Math.random() - 0.5) * 130;
+            const waveH = getWaveHeight(x, z, performance.now() * 0.001);
+            
+            const isSubmerged = Math.random() > 0.4;
+            const y = isSubmerged ? (waveH - 2 - Math.random() * 8) : (waveH + 0.5 + Math.random() * 2);
+
+            c.position.set(x, y, z);
+            c.userData.startY = y;
+            c.userData.isSubmerged = isSubmerged;
+        }
+
+        function spawnCollectFX(position, colorHex) {
+            for (let i = 0; i < 8; i++) {
+                const pGeom = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const pMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 });
+                const p = new THREE.Mesh(pGeom, pMat);
+                p.position.copy(position);
+                p.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 4
+                    ),
+                    gravity: 0,
+                    life: 1.0,
+                    decay: 0.06
+                };
+                scene.add(p);
+                particles.push(p);
+            }
+        }
+
+        // PARTICLES ENGINE
+        function updateParticles() {
+            // 1. Splash torus rings
+            for (let i = splashRings.length - 1; i >= 0; i--) {
+                const s = splashRings[i];
+                s.scale += 0.35;
+                s.mesh.scale.set(s.scale, s.scale, 1);
+                s.opacity -= s.fadeSpeed;
+                s.mesh.material.opacity = s.opacity;
+
+                if (s.opacity <= 0 || s.scale >= s.maxScale) {
+                    scene.remove(s.mesh);
+                    splashRings.splice(i, 1);
+                }
+            }
+
+            // 2. Tiny splash sparks
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                const ud = p.userData;
+
+                p.position.add(ud.velocity);
+                ud.velocity.y += ud.gravity * 0.016; // apply gravity deceleration
+                ud.life -= ud.decay;
+                p.material.opacity = ud.life;
+
+                if (ud.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // CAMERAS SPLIT SCREEN OR SINGLE VIEWPORT UPDATES
+        function updateCameras() {
+            const p1 = dolphins.p1;
+            const p2 = dolphins.p2;
+            if (!p1 || !p2) return;
+
+            // Player 1 camera rig (Follow from behind)
+            const p1Forward = new THREE.Vector3(0, 0, 1).applyQuaternion(p1.quaternion).normalize();
+            const p1CamPos = new THREE.Vector3()
+                .copy(p1.position)
+                .addScaledVector(p1Forward, -12) // behind
+                .add(new THREE.Vector3(0, 5, 0)); // above
+            
+            camera1.position.lerp(p1CamPos, 0.15);
+            camera1.lookAt(p1.position.x, p1.position.y + 1, p1.position.z + 2);
+
+            // Player 2 or AI camera rig
+            const p2Forward = new THREE.Vector3(0, 0, 1).applyQuaternion(p2.quaternion).normalize();
+            const p2CamPos = new THREE.Vector3()
+                .copy(p2.position)
+                .addScaledVector(p2Forward, -12)
+                .add(new THREE.Vector3(0, 5, 0));
+            
+            camera2.position.lerp(p2CamPos, 0.15);
+            camera2.lookAt(p2.position.x, p2.position.y + 1, p2.position.z + 2);
+        }
+
+        function updateCamerasRender() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            if (gameMode === '2p') {
+                renderer.setScissorTest(true);
+
+                // Render Left half (Player 1)
+                renderer.setViewport(0, 0, width / 2, height);
+                renderer.setScissor(0, 0, width / 2, height);
+                camera1.aspect = (width / 2) / height;
+                camera1.updateProjectionMatrix();
+                renderer.render(scene, camera1);
+
+                // Render Right half (Player 2)
+                renderer.setViewport(width / 2, 0, width / 2, height);
+                renderer.setScissor(width / 2, 0, width / 2, height);
+                camera2.aspect = (width / 2) / height;
+                camera2.updateProjectionMatrix();
+                renderer.render(scene, camera2);
+            } else {
+                // Full screen single view for 1 Player
+                renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, width, height);
+                camera1.aspect = width / height;
+                camera1.updateProjectionMatrix();
+                renderer.render(scene, camera1);
+            }
+        }
+
+        // HUD BARS AND TEXT REFRESH
+        function updateHUD() {
+            const p1 = dolphins.p1;
+            const p2 = dolphins.p2;
+            if (!p1 || !p2) return;
+
+            // Health self-regen / respawn mechanics
+            if (p1.userData.hp <= 0) {
+                p1.userData.hp = 100;
+                p1.position.set(-15, 0, 0); // respawn
+                p1.userData.score = Math.max(0, p1.userData.score - 50);
+                triggerAnnouncement(true, "Player 1 Crashed!", "Incapacitated! Penalty -50 pts");
+            }
+            if (p2.userData.hp <= 0) {
+                p2.userData.hp = 100;
+                p2.position.set(15, 0, 0);
+                p2.userData.score = Math.max(0, p2.userData.score - 50);
+                triggerAnnouncement(false, gameMode === '1p' ? "AI Rival Crashed!" : "Player 2 Crashed!", "Incapacitated! Penalty -50 pts");
+            }
+
+            // Refresh Player 1 HUD
+            document.getElementById('p1-score').textContent = p1.userData.score;
+            document.getElementById('p1-hp-pct').textContent = `${Math.round(p1.userData.hp)}%`;
+            document.getElementById('p1-hp-bar').style.width = `${p1.userData.hp}%`;
+            document.getElementById('p1-boost-pct').textContent = `${Math.round(p1.userData.boostCharge)}%`;
+            document.getElementById('p1-boost-bar').style.width = `${p1.userData.boostCharge}%`;
+
+            // Refresh Player 2 / AI HUD
+            document.getElementById('p2-score').textContent = p2.userData.score;
+            document.getElementById('p2-hp-pct').textContent = `${Math.round(p2.userData.hp)}%`;
+            document.getElementById('p2-hp-bar').style.width = `${p2.userData.hp}%`;
+            document.getElementById('p2-boost-pct').textContent = `${Math.round(p2.userData.boostCharge)}%`;
+            document.getElementById('p2-boost-bar').style.width = `${p2.userData.boostCharge}%`;
+        }
+
+        // END MATCH CONCLUDED
+        function endMatch() {
+            gameActive = false;
+            clearInterval(matchTimerInterval);
+
+            const p1 = dolphins.p1;
+            const p2 = dolphins.p2;
+            if (!p1 || !p2) return;
+
+            document.getElementById('gameover-overlay').classList.add('show');
+            document.getElementById('final-p1-score').textContent = p1.userData.score;
+            document.getElementById('final-p2-score').textContent = p2.userData.score;
+
+            const winEl = document.getElementById('winner-text');
+            if (p1.userData.score > p2.userData.score) {
+                winEl.textContent = "🏆 Player 1 Blue Dolphin Dominates the Waves! 🏆";
+                winEl.style.color = 'var(--neon-blue)';
+            } else if (p2.userData.score > p1.userData.score) {
+                winEl.textContent = gameMode === '1p' ? "🤖 The AI Rival Dolphin claims victory! 🤖" : "🏆 Player 2 Pink Dolphin Dominates the Waves! 🏆";
+                winEl.style.color = 'var(--neon-pink)';
+            } else {
+                winEl.textContent = "🤝 It's an Epic Waves Tie Match! 🤝";
+                winEl.style.color = 'var(--neon-yellow)';
+            }
+        }
+
+        function backToLobby() {
+            document.getElementById('gameover-overlay').classList.remove('show');
+            document.getElementById('lobby-overlay').classList.remove('hide');
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('match-timer').style.display = 'none';
+            resetGameState();
+        }
+
+        // WINDOW RESIZE ADAPTER
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            renderer.setSize(width, height);
+            
+            if (gameMode === '2p') {
+                camera1.aspect = (width / 2) / height;
+                camera2.aspect = (width / 2) / height;
+            } else {
+                camera1.aspect = width / height;
+            }
+            camera1.updateProjectionMatrix();
+            camera2.updateProjectionMatrix();
+        });
+
+        // INIT EXECUTION
+        initScene();
+
+        // Separate render call from physics calculation to avoid freeze jittering
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
+            if (gameActive) {
+                updateCamerasRender();
+            }
+        }
+        
+        // Start tickers
+        animate();
+        renderLoop();
+
+    </script>
+</body>
+</html>
