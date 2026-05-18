@@ -1541,6 +1541,64 @@
             }, 6000);
         }
 
+        function triggerStoryCode() {
+            // Stage 1 (t=0s)
+            playSound('paint');
+            addChatMessage('<span class="server" style="color:#00ffff; font-weight:900; font-size:1.15rem;">📖 [LEGEND OF CODE 32]: Chapter I - The Great Spacebar 🚀</span>');
+            addChatMessage('<span class="name" style="color:#00b4d8;">🧙 Wizard:</span> Long ago, in the ancient kingdom of BlockLand, there lived a legendary character known only as "32"!');
+            
+            // Stage 2 (t=3s)
+            setTimeout(() => {
+                playSound('jump');
+                document.body.classList.add('shaking');
+                setTimeout(() => document.body.classList.remove('shaking'), 500);
+                addChatMessage('<span class="name" style="color:#ffd60a;">🚀 SuperBuildBot:</span> Indeed! Code 32 is the ASCII signature of the mighty **SPACEBAR**!');
+                addChatMessage('<span class="name" style="color:#00b4d8;">🧙 Wizard:</span> Whenever the ancient builders hit Code 32, a cosmic impulse launched their avatars high into the blue heavens!');
+            }, 3000);
+
+            // Stage 3 (t=6s)
+            setTimeout(() => {
+                playSound('paint');
+                // Ambient light flash
+                let originalIntensity = 0.62;
+                let lights = scene.children.filter(o => o.isAmbientLight);
+                if (lights.length > 0) {
+                    lights[0].intensity = 4.0;
+                    setTimeout(() => lights[0].intensity = originalIntensity, 400);
+                }
+                addChatMessage('<span class="server" style="color:#ef476f; font-weight:bold; font-size:1.05rem;">📖 [LEGEND OF CODE 32]: Chapter II - The Infinite Blueprints 🏰</span>');
+                addChatMessage('<span class="name" style="color:#ff4655;">🇲🇽 Maestro:</span> ¡Sí! They didn\'t just fly; they created empty spaces between their blocky structures to build the worlds we live in today!');
+            }, 6000);
+
+            // Stage 4 (t=9s)
+            setTimeout(() => {
+                playSound('jump');
+                // Cosmic Leap for both players!
+                playerVelocity.y = GameConfig.jumpStrength * 1.65;
+                p1OnGround = false;
+                p1JumpsLeft = 0;
+                spawnParticles(playerGroup.position.clone(), 0x00ffff, 25);
+
+                if (isSplitScreen && player2Group) {
+                    player2Velocity.y = GameConfig.jumpStrength * 1.65;
+                    p2OnGround = false;
+                    p2JumpsLeft = 0;
+                    spawnParticles(player2Group.position.clone(), 0xffd60a, 25);
+                }
+
+                document.body.classList.add('shaking');
+                setTimeout(() => document.body.classList.remove('shaking'), 600);
+                addChatMessage('<span class="name" style="color:#00b4d8;">🧙 Wizard:</span> And now, the ancient blessing of Code 32 is upon you! FEEL THE COSMIC LEAP! ⚡⚡');
+            }, 9000);
+
+            // Stage 5 (t=13s)
+            setTimeout(() => {
+                playSound('paint');
+                addChatMessage('<span class="server" style="color:#06d6a0; font-weight:900; font-size:1.1rem;">✨ [LEGEND OF CODE 32]: Epilogue - The Space to Create ✨</span>');
+                addChatMessage('<span class="name" style="color:#ffd60a;">🚀 SuperBuildBot:</span> Remember, young creators: a simple spacebar key does not just separate your words—it gives you the room to tell your own stories and build your own dreams! 🌟');
+            }, 13000);
+        }
+
         function createSpanishNPC() {
             const group = new THREE.Group();
             scene.add(group);
@@ -2191,6 +2249,8 @@
                 resetCharacter();
             } else if (txt === '67') {
                 triggerEasterEgg();
+            } else if (txt === '32') {
+                triggerStoryCode();
             }
 
             inp.value = '';
