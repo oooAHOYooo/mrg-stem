@@ -292,7 +292,7 @@
         /* Level Grid Selector */
         .level-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
             gap: 6px;
             margin-top: 5px;
         }
@@ -697,12 +697,8 @@
             <!-- Challenges Section -->
             <div id="section-challenges" class="sidebar-section">
                 <h3 class="section-title">🏆 Choose Challenge</h3>
-                <div class="level-grid">
-                    <button class="level-btn active" onclick="loadChallenge(0)">C1</button>
-                    <button class="level-btn" onclick="loadChallenge(1)">C2</button>
-                    <button class="level-btn" onclick="loadChallenge(2)">C3</button>
-                    <button class="level-btn" onclick="loadChallenge(3)">C4</button>
-                    <button class="level-btn" onclick="loadChallenge(4)">C5</button>
+                <div class="level-grid" id="level-buttons-container">
+                    <!-- Loaded dynamically in JS -->
                 </div>
                 <div class="glass-card" style="margin-top: 12px;">
                     <p style="font-size: 0.82rem; line-height: 1.4;" id="challenge-desc">
@@ -1136,6 +1132,133 @@
                     new THREE.Vector3(2, 0, 2),
                     new THREE.Vector3(2, 0, -2),
                     new THREE.Vector3(-2, 0, -2)
+                ]
+            },
+            {
+                name: "The Spiked Gate",
+                desc: "<strong>Level 6: Keyhole Squeeze</strong><br>A barricade of spiked space mines surrounds the stargate exit! There is only a tiny keyhole gap at Z=0. Squeeze in and out carefully to survive!",
+                spawn: new THREE.Vector3(-8, 0, 0),
+                goal: new THREE.Vector3(8, 0, 0),
+                stars: [
+                    new THREE.Vector3(-4, 0.3, 3),
+                    new THREE.Vector3(0, 0.3, 0),
+                    new THREE.Vector3(4, 0.3, -3)
+                ],
+                mines: [
+                    new THREE.Vector3(2, 0, 1.8),
+                    new THREE.Vector3(2, 0, -1.8),
+                    new THREE.Vector3(0, 0, 3),
+                    new THREE.Vector3(0, 0, -3),
+                    new THREE.Vector3(-2, 0, 1.8),
+                    new THREE.Vector3(-2, 0, -1.8)
+                ]
+            },
+            {
+                name: "Double Slalom",
+                desc: "<strong>Level 7: S-Curve Gauntlet</strong><br>Time for heavy banking roll skills! Navigate a tight double-S obstacle course where mines and stars alternate in rapid succession.",
+                spawn: new THREE.Vector3(-9, 0, -4),
+                goal: new THREE.Vector3(9, 0, 4),
+                stars: [
+                    new THREE.Vector3(-5, 0.3, 0),
+                    new THREE.Vector3(0, 0.3, 0),
+                    new THREE.Vector3(5, 0.3, 0)
+                ],
+                mines: [
+                    new THREE.Vector3(-7, 0, 2),
+                    new THREE.Vector3(-3, 0, -2),
+                    new THREE.Vector3(2, 0, 2),
+                    new THREE.Vector3(7, 0, -2)
+                ]
+            },
+            {
+                name: "Clarity Cross",
+                desc: "<strong>Level 8: The Star Clover</strong><br>A highly compressed cluster of four space mines guards the center. Stars are tucked into the outer cross directions. Draw a cloverleaf shape!",
+                spawn: new THREE.Vector3(0, 0, -6),
+                goal: new THREE.Vector3(0, 0, 6),
+                stars: [
+                    new THREE.Vector3(-5, 0.3, 0),
+                    new THREE.Vector3(5, 0.3, 0),
+                    new THREE.Vector3(0, 0.3, -3),
+                    new THREE.Vector3(0, 0.3, 3)
+                ],
+                mines: [
+                    new THREE.Vector3(-2, 0, 0),
+                    new THREE.Vector3(2, 0, 0),
+                    new THREE.Vector3(0, 0, 1.5),
+                    new THREE.Vector3(0, 0, -1.5)
+                ]
+            },
+            {
+                name: "Precision Runway",
+                desc: "<strong>Level 9: The Narrow Trench</strong><br>A long straight wall of parallel mines forms an extremely tight canyon. Draw a flawless straight line exactly down the center line!",
+                spawn: new THREE.Vector3(-9, 0, 0),
+                goal: new THREE.Vector3(9, 0, 0),
+                stars: [
+                    new THREE.Vector3(-4, 0.3, 0),
+                    new THREE.Vector3(0, 0.3, 0),
+                    new THREE.Vector3(4, 0.3, 0)
+                ],
+                mines: [
+                    new THREE.Vector3(-6, 0, 1.2),  new THREE.Vector3(-6, 0, -1.2),
+                    new THREE.Vector3(-2, 0, 1.2),  new THREE.Vector3(-2, 0, -1.2),
+                    new THREE.Vector3(2, 0, 1.2),   new THREE.Vector3(2, 0, -1.2),
+                    new THREE.Vector3(6, 0, 1.2),   new THREE.Vector3(6, 0, -1.2)
+                ]
+            },
+            {
+                name: "Gravity Orbit",
+                desc: "<strong>Level 10: Cosmic Figure-Eight</strong><br>Two massive gravity mines occupy the center grid. Sketch a complete infinity-loop curve wrapping both mines to sweep the stars!",
+                spawn: new THREE.Vector3(-9, 0, 0),
+                goal: new THREE.Vector3(9, 0, 0),
+                stars: [
+                    new THREE.Vector3(-4, 0.3, 3),
+                    new THREE.Vector3(4, 0.3, -3),
+                    new THREE.Vector3(0, 0.3, 0)
+                ],
+                mines: [
+                    new THREE.Vector3(-4, 0, 0),
+                    new THREE.Vector3(4, 0, 0)
+                ]
+            },
+            {
+                name: "Asteroid Cage",
+                desc: "<strong>Level 11: Prison Escape</strong><br>You spawn inside a tight perimeter of high-voltage mines! Loop out from your cage, capture the nested stars, and fly out to safety.",
+                spawn: new THREE.Vector3(-8, 0, -6),
+                goal: new THREE.Vector3(8, 0, 6),
+                stars: [
+                    new THREE.Vector3(-4, 0.3, -2),
+                    new THREE.Vector3(0, 0.3, 2),
+                    new THREE.Vector3(4, 0.3, -2)
+                ],
+                mines: [
+                    new THREE.Vector3(-4, 0, 4),
+                    new THREE.Vector3(0, 0, -2),
+                    new THREE.Vector3(4, 0, 4),
+                    new THREE.Vector3(-8, 0, 2),
+                    new THREE.Vector3(8, 0, -2)
+                ]
+            },
+            {
+                name: "The Helix Labyrinth",
+                desc: "<strong>Level 12: Grand Finale</strong><br>The ultimate Spatial Engineering Exam! Symmetrical mines litter the board. Draw an intricate, large winding helix weaving in and out of the matrix to finish!",
+                spawn: new THREE.Vector3(-9, 0, -9),
+                goal: new THREE.Vector3(9, 0, 9),
+                stars: [
+                    new THREE.Vector3(-5, 0.3, -5),
+                    new THREE.Vector3(0, 0.3, 0),
+                    new THREE.Vector3(5, 0.3, 5),
+                    new THREE.Vector3(-5, 0.3, 5),
+                    new THREE.Vector3(5, 0.3, -5)
+                ],
+                mines: [
+                    new THREE.Vector3(-5, 0, 0),
+                    new THREE.Vector3(5, 0, 0),
+                    new THREE.Vector3(0, 0, -5),
+                    new THREE.Vector3(0, 0, 5),
+                    new THREE.Vector3(-2, 0, -2),
+                    new THREE.Vector3(2, 0, 2),
+                    new THREE.Vector3(-2, 0, 2),
+                    new THREE.Vector3(2, 0, -2)
                 ]
             }
         ];
@@ -2579,7 +2702,21 @@
             }, 3000);
         }
 
-        // Initialize First Level challenge
+        // Build dynamic level buttons UI
+        function buildLevelButtons() {
+            const container = document.getElementById('level-buttons-container');
+            if (container) {
+                container.innerHTML = CHALLENGES.map((lvl, idx) => `
+                    <button class="level-btn ${idx === ACTIVE_CHALLENGE_IDX ? 'active' : ''}" 
+                            onclick="loadChallenge(${idx})">
+                        L${idx + 1}
+                    </button>
+                `).join('');
+            }
+        }
+
+        // Initialize Level Buttons and First Challenge
+        buildLevelButtons();
         setDrawingMode(true);
         setTimeout(() => {
             loadChallenge(0);
