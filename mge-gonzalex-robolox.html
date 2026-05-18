@@ -907,6 +907,9 @@
 
         // --- MULTIPLAYER & SPLIT STATE VARIABLES ---
         let isSplitScreen = false;
+        let isMultiplayer = false;
+        let isHost = false;
+        let conn = null;
         let player2Group = null;
         let p2HeadMesh, p2TorsoMesh, p2LeftArmMesh, p2RightArmMesh, p2LeftLegMesh, p2RightLegMesh;
         let p2WalkTime = 0;
@@ -2235,7 +2238,7 @@
             
             // --- PASSIVE ENVIRONMENTAL DAY/NIGHT CYCLE ---
             const timeScalar = Date.now() * 0.00012; 
-            const currentLightValue = Math.max(0.15, 0.5 + Math.sin(timeScalar) * 0.5);
+            const currentLightValue = Math.max(0.55, 0.5 + Math.sin(timeScalar) * 0.5);
             if (ambientLight) ambientLight.intensity = 0.2 + currentLightValue * 0.42;
             if (sunLight) {
                 sunLight.intensity = currentLightValue * 0.75;
