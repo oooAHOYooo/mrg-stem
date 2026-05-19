@@ -621,14 +621,26 @@
             </div>
 
             <div class="control-panel">
-                <!-- PANEL: PISTAS DE BAD BUNNY -->
+                <!-- PANEL: RITMOS Y MODO CREATIVO -->
                 <div class="control-group">
                     <label>🐰 Pistas de Bad Bunny (Español)</label>
-                    <div class="quick-action-grid">
+                    <div class="quick-action-grid" style="grid-template-columns: repeat(3, 1fr);">
                         <button class="action-btn" onclick="loadSpanishTrack(0)" style="background: rgba(255, 0, 127, 0.15); border-color: var(--accent1);">DÁKITI 🌊</button>
                         <button class="action-btn" onclick="loadSpanishTrack(1)" style="background: rgba(155, 81, 224, 0.15); border-color: var(--accent2);">TITÍ PREGUNTÓ 🌴</button>
                         <button class="action-btn" onclick="loadSpanishTrack(2)" style="background: rgba(242, 153, 74, 0.15); border-color: var(--accent4);">MÓNACO 🏎️</button>
                     </div>
+                </div>
+
+                <div class="control-group" style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px; margin-top: 10px;">
+                    <label>✍️ Mi Estudio Creativo (Modo Estudiante)</label>
+                    <button class="action-btn" onclick="enableStudentCreativeMode()" style="background: rgba(0, 242, 254, 0.15); border-color: var(--accent3); width: 100%; font-weight: bold; margin-bottom: 8px;">
+                        📝 CREAR DESDE CERO
+                    </button>
+                    <div class="quick-action-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <button class="action-btn" onclick="saveStudentSong()" style="background: rgba(46, 204, 113, 0.15); border-color: #2ecc71;">💾 GUARDAR PISTA</button>
+                        <button class="action-btn" onclick="loadStudentSong()" style="background: rgba(155, 81, 224, 0.15); border-color: var(--accent2);">📂 CARGAR RITMO</button>
+                    </div>
+                    <div id="student-status-msg" style="font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 6px;"></div>
                 </div>
 
                 <div class="control-group">
@@ -2102,6 +2114,156 @@
             }
 
             playNextLine();
+        }
+
+        // ------------------------------------------------
+        // MODO CREATIVO DE ESTUDIANTE (SAVE/LOAD/EDIT)
+        // ------------------------------------------------
+        function enableStudentCreativeMode() {
+            // 1. Limpiar secuenciador completamente
+            document.getElementById('clearBtn').click();
+            
+            // 2. Limpiar todos los campos de texto para que escriba su propia letra
+            const sections = ['v', 'c', 'b'];
+            sections.forEach(sec => {
+                for (let i = 1; i <= 4; i++) {
+                    const inputEl = document.getElementById(sec + i);
+                    if (inputEl) {
+                        inputEl.value = "";
+                        inputEl.placeholder = `Escribe tu lírica ${sec.toUpperCase()}${i}...`;
+                    }
+                }
+            });
+
+            // 3. Reiniciar tempo a 120 por defecto
+            Tone.Transport.bpm.value = 120;
+            document.getElementById('bpmSlider').value = 120;
+            document.getElementById('bpmVal').innerText = "120";
+
+            // 4. Mostrar estado
+            const msgEl = document.getElementById('student-status-msg');
+            if (msgEl) {
+                msgEl.innerText = "✍️ ¡Modo Libre Activado! Escribe y diseña.";
+                msgEl.style.color = "var(--accent3)";
+                setTimeout(() => msgEl.innerText = "", 4000);
+            }
+        }
+
+        function saveStudentSong() {
+            // Exportar estado del secuenciador
+            const seqState = [];
+            for (let t = 0; t < GRID_TRACKS; t++) {
+                seqState[t] = [];
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    seqState[t][x] = [];
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        seqState[t][x][y] = sequencer[t][x][y];
+                    }
+                }
+            }
+
+            // Exportar líricas
+            const lyricState = {};
+            const sections = ['v', 'c', 'b'];
+            sections.forEach(sec => {
+                for (let i = 1; i <= 4; i++) {
+                    const inputEl = document.getElementById(sec + i);
+                    if (inputEl) {
+                        lyricState[sec + i] = inputEl.value;
+                    }
+                }
+            });
+
+            const songData = {
+                bpm: Tone.Transport.bpm.value,
+                scale: currentScaleKey,
+                vocalStyle: document.getElementById('vocalStyleSelect').value,
+                vocalEcho: document.getElementById('vocalEchoSlider').value,
+                vocalReverb: document.getElementById('vocalReverbSlider').value,
+                vocalChorus: document.getElementById('vocalChorusSlider').value,
+                lyrics: lyricState,
+                sequencer: seqState
+            };
+
+            localStorage.setItem('vibe_master_student_song', JSON.stringify(songData));
+
+            const msgEl = document.getElementById('student-status-msg');
+            if (msgEl) {
+                msgEl.innerText = "💾 ¡Tu canción se ha guardado en el navegador!";
+                msgEl.style.color = "#2ecc71";
+                setTimeout(() => msgEl.innerText = "", 4000);
+            }
+        }
+
+        function loadStudentSong() {
+            const dataStr = localStorage.getItem('vibe_master_student_song');
+            if (!dataStr) {
+                alert("¡No tienes ninguna canción guardada en este navegador!");
+                return;
+            }
+
+            const songData = JSON.parse(dataStr);
+
+            // 1. Cargar tempo y controles
+            Tone.Transport.bpm.value = songData.bpm;
+            document.getElementById('bpmSlider').value = songData.bpm;
+            document.getElementById('bpmVal').innerText = songData.bpm;
+
+            // 2. Cargar escala
+            setScale(songData.scale);
+
+            // 3. Cargar voz y sliders FX
+            document.getElementById('vocalStyleSelect').value = songData.vocalStyle;
+            
+            document.getElementById('vocalEchoSlider').value = songData.vocalEcho;
+            vocalDelay.feedback.value = songData.vocalEcho / 100;
+            document.getElementById('echoVal').innerText = Math.round(songData.vocalEcho) + "%";
+
+            document.getElementById('vocalReverbSlider').value = songData.vocalReverb;
+            vocalReverb.wet.value = songData.vocalReverb / 100;
+            document.getElementById('reverbVal').innerText = Math.round(songData.vocalReverb) + "%";
+
+            document.getElementById('vocalChorusSlider').value = songData.vocalChorus;
+            vocalChorus.wet.value = songData.vocalChorus / 100;
+            document.getElementById('chorusVal').innerText = Math.round(songData.vocalChorus) + "%";
+
+            // 4. Inyectar líricas
+            const sections = ['v', 'c', 'b'];
+            sections.forEach(sec => {
+                for (let i = 1; i <= 4; i++) {
+                    const inputEl = document.getElementById(sec + i);
+                    if (inputEl && typeof songData.lyrics[sec + i] !== 'undefined') {
+                        inputEl.value = songData.lyrics[sec + i];
+                    }
+                }
+            });
+
+            // 5. Cargar secuenciador
+            for (let t = 0; t < GRID_TRACKS; t++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        if (songData.sequencer && songData.sequencer[t] && songData.sequencer[t][x]) {
+                            sequencer[t][x][y] = !!songData.sequencer[t][x][y];
+                        } else {
+                            sequencer[t][x][y] = false;
+                        }
+                    }
+                }
+            }
+
+            // 6. Reflejar a la interfaz 3D
+            cubeMeshes.forEach(m => {
+                const isO = sequencer[m.userData.track][m.userData.x][m.userData.y];
+                updateMeshAppearance(m, isO);
+            });
+
+            // 7. Mostrar estado
+            const msgEl = document.getElementById('student-status-msg');
+            if (msgEl) {
+                msgEl.innerText = "📂 ¡Tu canción guardada se cargó correctamente!";
+                msgEl.style.color = "var(--accent3)";
+                setTimeout(() => msgEl.innerText = "", 4000);
+            }
         }
 
         document.getElementById('speakLyricsBtn').addEventListener('click', () => speakLyrics(false));
