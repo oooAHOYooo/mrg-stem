@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Vibe Master - Beat Maker</title>
+    <title>Vibe Master 3D - Creador de Beats 🐰</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050510;
-            --panel-bg: rgba(15, 15, 35, 0.8);
-            --accent1: #ff007f; /* Neon Pink */
-            --accent2: #00f2fe; /* Neon Cyan */
-            --accent3: #4facfe; /* Blue */
-            --accent4: #f9d423; /* Golden */
-            --border: rgba(255, 255, 255, 0.1);
+            --bg: #030008; /* Deep dark cosmic purple-black */
+            --panel-bg: rgba(22, 10, 35, 0.85); /* Dark violet translucent panel */
+            --accent1: #ff007f; /* Neon Hot Pink */
+            --accent2: #9b51e0; /* Bad Bunny Purple */
+            --accent3: #00f2fe; /* Neon Cyan */
+            --accent4: #f2994a; /* Sunset Orange */
+            --border: rgba(155, 81, 224, 0.25);
         }
 
         * {
@@ -501,16 +501,63 @@
             outline: none;
             cursor: pointer;
         }
+
+        /* Ajustes de tamaño para la barra lateral izquierda */
+        .sidebar {
+            max-height: 82vh;
+            overflow-y: auto;
+        }
+
+        /* Contenedor e interfaz para el botón superior central 'Perform' */
+        .top-center-perform-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .perform-btn-top {
+            font-size: 0.95rem !important;
+            padding: 12px 28px !important;
+            border-radius: 50px !important;
+            background: linear-gradient(45deg, var(--accent1), #7b2cbf) !important;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            animation: topPulse 2s infinite alternate;
+        }
+
+        .perform-btn-top:hover {
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.9) !important;
+            transform: scale(1.05) translateY(-2px);
+        }
+
+        .perform-btn-top.active {
+            background: #ff007f !important;
+            box-shadow: 0 0 35px #ff007f !important;
+        }
+
+        @keyframes topPulse {
+            0% {
+                box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(155, 81, 224, 0.8);
+            }
+        }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <h1>VIBE MASTER 3D</h1>
+        <h1>VIBE MASTER 3D 🐰</h1>
         <p style="color: rgba(255,255,255,0.6); margin-bottom: 40px; text-align: center; max-width: 500px; line-height: 1.6;">
-            Welcome to the 3D Sound Lab. Build beats, craft melodies, and shape the vibes. Click the big cubes to turn sounds ON and OFF.
+            Bienvenido al Laboratorio de Sonido 3D. Crea ritmos, diseña melodías y dale forma al vibe al estilo Conejo Malo. Haz clic en los cubos 3D para activar o desactivar los sonidos.
         </p>
-        <button class="loader-btn" onclick="startApp()">ENTER STUDIO</button>
+        <button class="loader-btn" onclick="startApp()">ENTRAR AL ESTUDIO 🌴</button>
     </div>
 
     <div id="canvas-container"></div>
@@ -519,13 +566,21 @@
         <header>
             <div class="brand">
                 <h1>VIBE MASTER</h1>
-                <p>MGE SPATIAL AUDIO LAB</p>
+                <p>LABORATORIO DE AUDIO ESPACIAL</p>
+            </div>
+            
+            <!-- Botón de Interpretación en el Centro Superior -->
+            <div class="top-center-perform-container">
+                <button class="btn primary perform-btn-top" id="speakLyricsBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+                    <span id="performText">INTERPRETAR CANCIÓN 🎤</span>
+                </button>
             </div>
             
             <div class="top-controls">
                 <button class="btn primary" id="playBtn">
                     <svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                    <span id="playText">PLAY</span>
+                    <span id="playText">REPRODUCIR</span>
                 </button>
                 
                 <div class="tempo-control">
@@ -534,156 +589,161 @@
                     <span id="bpmVal">120</span>
                 </div>
 
-                <button class="btn" id="clearBtn">CLEAR GRID</button>
+                <button class="btn" id="clearBtn">LIMPIAR</button>
             </div>
         </header>
 
         <div class="sidebar">
             <div class="track-selector">
-                <div class="track-btn selected" onclick="selectTrack(0)" style="color: var(--accent2)">
-                    <div class="dot" style="background-color: var(--accent2)"></div>
+                <div class="track-btn selected" onclick="selectTrack(0)" style="color: var(--accent3)">
+                    <div class="dot" style="background-color: var(--accent3)"></div>
                     <div class="track-info">
-                        <h3>DRUM KIT</h3>
-                        <p>Kick, Snare, Hi-Hat, Clap</p>
+                        <h3>BATERÍA / TRAP 🥁</h3>
+                        <p>Bombo, Caja, Charles, Aplauso</p>
                     </div>
                 </div>
                 
                 <div class="track-btn" onclick="selectTrack(1)" style="color: var(--accent1)">
                     <div class="dot" style="background-color: var(--accent1)"></div>
                     <div class="track-info">
-                        <h3>BASS LINE</h3>
-                        <p>Sub, Funk, Deep Chords</p>
+                        <h3>BAJO 808 🎸</h3>
+                        <p>Sub-bajo Profundo y Bounces</p>
                     </div>
                 </div>
 
                 <div class="track-btn" onclick="selectTrack(2)" style="color: var(--accent4)">
                     <div class="dot" style="background-color: var(--accent4)"></div>
                     <div class="track-info">
-                        <h3>SYNTH MELODY</h3>
-                        <p>Leads, Plucks, Dreamy</p>
+                        <h3>SINTETIZADOR 🎹</h3>
+                        <p>Melodías Plucks y Leads</p>
                     </div>
                 </div>
             </div>
 
             <div class="control-panel">
+                <!-- PANEL: PISTAS DE BAD BUNNY -->
                 <div class="control-group">
-                    <label>Vibe Magic ✨ (Auto-Chords)</label>
+                    <label>🐰 Pistas de Bad Bunny (Español)</label>
                     <div class="quick-action-grid">
-                        <button class="action-btn" onclick="generateGroove('chill')">LO-FI CHILL</button>
-                        <button class="action-btn" onclick="generateGroove('techno')">TECHNO</button>
-                        <button class="action-btn" onclick="generateGroove('summer')">SUMMER</button>
-                        <button class="action-btn" onclick="generateGroove('random')">SURPRISE ME</button>
+                        <button class="action-btn" onclick="loadSpanishTrack(0)" style="background: rgba(255, 0, 127, 0.15); border-color: var(--accent1);">DÁKITI 🌊</button>
+                        <button class="action-btn" onclick="loadSpanishTrack(1)" style="background: rgba(155, 81, 224, 0.15); border-color: var(--accent2);">TITÍ PREGUNTÓ 🌴</button>
+                        <button class="action-btn" onclick="loadSpanishTrack(2)" style="background: rgba(242, 153, 74, 0.15); border-color: var(--accent4);">MÓNACO 🏎️</button>
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>🎵 Music Academy (Scale / Mood)</label>
+                    <label>Magia del Vibe ✨ (Ritmos Rápidos)</label>
+                    <div class="quick-action-grid">
+                        <button class="action-btn" onclick="generateGroove('chill')">LO-FI RELAJADO</button>
+                        <button class="action-btn" onclick="generateGroove('techno')">TECHNO</button>
+                        <button class="action-btn" onclick="generateGroove('summer')">VERANO REGGAETÓN</button>
+                        <button class="action-btn" onclick="generateGroove('random')">SORPRÉNDEME 🎲</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>🎵 Academia Musical (Escala / Ánimo)</label>
                     <div class="scale-select-row">
-                        <button class="scale-btn active" data-scale="minor" onclick="setScale('minor')">MYSTICAL</button>
-                        <button class="scale-btn" data-scale="major" onclick="setScale('major')">HAPPY</button>
-                        <button class="scale-btn" data-scale="blues" onclick="setScale('blues')">JAZZY</button>
+                        <button class="scale-btn active" data-scale="minor" onclick="setScale('minor')">MÍSTICO</button>
+                        <button class="scale-btn" data-scale="major" onclick="setScale('major')">ALEGRE</button>
+                        <button class="scale-btn" data-scale="blues" onclick="setScale('blues')">BLUES</button>
                     </div>
                     
                     <div class="academy-panel">
                         <div class="academy-title">
-                            🎓 <span id="academy-scale-name">C Minor (Mystical)</span>
+                            🎓 <span id="academy-scale-name">Do Menor (Místico)</span>
                         </div>
-                        <p class="academy-desc" id="academy-desc">A magical, deep sound. Great for chill, spacey, or serious vibes!</p>
+                        <p class="academy-desc" id="academy-desc">Un sonido profundo y mágico. ¡Ideal para vibras espaciales, serias o relajadas!</p>
                         
-                        <div class="active-chord-display" id="active-chord-display">NO NOTES DETECTED</div>
-                        <p class="academy-desc" id="academy-theory-fact" style="font-size: 0.68rem; font-style: italic; opacity: 0.8;">Click "Play" to analyze your musical harmony!</p>
+                        <div class="active-chord-display" id="active-chord-display">NO SE DETECTAN NOTAS</div>
+                        <p class="academy-desc" id="academy-theory-fact" style="font-size: 0.68rem; font-style: italic; opacity: 0.8;">¡Haz clic en "REPRODUCIR" para analizar la armonía!</p>
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label>Environment</label>
+                    <label>Entorno 3D</label>
                     <div class="quick-action-grid">
-                        <button class="action-btn" id="toggleRotate">AUTO-SPIN: ON</button>
-                        <button class="action-btn" id="resetCam">FRONT VIEW</button>
+                        <button class="action-btn" id="toggleRotate">ROTACIÓN: SÍ</button>
+                        <button class="action-btn" id="resetCam">VISTA FRONTAL</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="right-sidebar">
-            <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; color: var(--accent2); margin-bottom: 5px; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);">📝 LYRIC STUDIO</h2>
-            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">Write 4 lines for each part to build your song structure!</p>
+            <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; color: var(--accent3); margin-bottom: 5px; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);">📝 ESTUDIO DE LETRAS</h2>
+            <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 10px;">¡Escribe 4 líneas para cada sección para armar tu canción!</p>
 
             <div class="lyric-section">
-                <label class="lyric-label" style="color: var(--accent1)">VERSE (4 Lines)</label>
-                <input type="text" class="lyric-input" placeholder="Line 1: Start your story..." id="v1">
-                <input type="text" class="lyric-input" placeholder="Line 2 of verse..." id="v2">
-                <input type="text" class="lyric-input" placeholder="Line 3 of verse..." id="v3">
-                <input type="text" class="lyric-input" placeholder="Line 4 of verse..." id="v4">
+                <label class="lyric-label" style="color: var(--accent1)">VERSO (4 Líneas)</label>
+                <input type="text" class="lyric-input" value="Baby, yo sé que no nos conocemos" id="v1">
+                <input type="text" class="lyric-input" value="Pero si tú quieres hoy nos vemos" id="v2">
+                <input type="text" class="lyric-input" value="La noche está fría, dime qué hacemos" id="v3">
+                <input type="text" class="lyric-input" value="Nos vamos en el coche y nos perdemos" id="v4">
             </div>
 
             <div class="lyric-section">
-                <label class="lyric-label" style="color: var(--accent2)">CHORUS (4 Lines)</label>
-                <input type="text" class="lyric-input" placeholder="Line 1: Catchy main hook..." id="c1">
-                <input type="text" class="lyric-input" placeholder="Line 2 of chorus..." id="c2">
-                <input type="text" class="lyric-input" placeholder="Line 3 of chorus..." id="c3">
-                <input type="text" class="lyric-input" placeholder="Line 4 of chorus..." id="c4">
+                <label class="lyric-label" style="color: var(--accent3)">CORO / ESTRIBILLO (4 Líneas)</label>
+                <input type="text" class="lyric-input" value="Tú me preguntas si yo tengo novia" id="c1">
+                <input type="text" class="lyric-input" value="Eso no importa, tú eres mi gloria" id="c2">
+                <input type="text" class="lyric-input" value="Bailando apretado, borrando la historia" id="c3">
+                <input type="text" class="lyric-input" value="Esta noche se queda en la memoria" id="c4">
             </div>
 
             <div class="lyric-section">
-                <label class="lyric-label" style="color: var(--accent4)">BRIDGE / OUTRO (4 Lines)</label>
-                <input type="text" class="lyric-input" placeholder="Line 1: Add a twist..." id="b1">
-                <input type="text" class="lyric-input" placeholder="Line 2 of bridge..." id="b2">
-                <input type="text" class="lyric-input" placeholder="Line 3 of bridge..." id="b3">
-                <input type="text" class="lyric-input" placeholder="Line 4 of bridge..." id="b4">
+                <label class="lyric-label" style="color: var(--accent4)">PUENTE / FINAL (4 Líneas)</label>
+                <input type="text" class="lyric-input" value="Ey, ey, bailando hasta que salga el sol" id="b1">
+                <input type="text" class="lyric-input" value="Con una copa llena de alcohol" id="b2">
+                <input type="text" class="lyric-input" value="Olvídate de todo el dolor" id="b3">
+                <input type="text" class="lyric-input" value="Que yo soy tu conejo de amor, ¡ey!" id="b4">
             </div>
 
             <div class="control-panel" style="border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 12px;">
                 <div class="control-group">
-                    <label style="opacity: 1; color: #fff;">Vocal Performer 🎤</label>
+                    <label style="opacity: 1; color: #fff;">Intérprete Vocal 🎤</label>
                     <select id="vocalStyleSelect" class="vocal-select" style="width: 100%;">
-                        <option value="mj">👑 Pop King (MJ Style)</option>
-                        <option value="robot">🤖 Deep Robot</option>
-                        <option value="space">🛸 Space Alien</option>
+                        <option value="badbunny">🐰 El Conejo Malo (Bad Bunny Style)</option>
+                        <option value="mj">👑 El Rey del Pop (Estilo MJ)</option>
+                        <option value="robot">🤖 Robot Profundo</option>
+                        <option value="space">🛸 Alien Espacial</option>
                     </select>
                 </div>
 
-                <!-- PREMIUM VOCAL FX SLIDERS -->
+                <!-- CONTROLES PREMIUM DE EFECTOS VOCALES -->
                 <div class="control-group">
-                    <label style="opacity: 1; color: var(--accent2); display: flex; justify-content: space-between; margin-bottom: 2px;">
-                        <span>🎚️ ECHO (DELAY)</span> <span id="echoVal">30%</span>
+                    <label style="opacity: 1; color: var(--accent3); display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <span>🎚️ ECO (DELAY)</span> <span id="echoVal">30%</span>
                     </label>
-                    <input type="range" id="vocalEchoSlider" min="0" max="85" value="30" style="width: 100%; accent-color: var(--accent2); cursor: pointer;">
+                    <input type="range" id="vocalEchoSlider" min="0" max="85" value="30" style="width: 100%; accent-color: var(--accent3); cursor: pointer;">
                 </div>
 
                 <div class="control-group">
                     <label style="opacity: 1; color: var(--accent1); display: flex; justify-content: space-between; margin-bottom: 2px;">
-                        <span>🌌 SPACE (REVERB)</span> <span id="reverbVal">40%</span>
+                        <span>🌌 ESPACIO (REVERB)</span> <span id="reverbVal">40%</span>
                     </label>
                     <input type="range" id="vocalReverbSlider" min="0" max="100" value="40" style="width: 100%; accent-color: var(--accent1); cursor: pointer;">
                 </div>
 
                 <div class="control-group">
                     <label style="opacity: 1; color: var(--accent4); display: flex; justify-content: space-between; margin-bottom: 2px;">
-                        <span>🎭 HARMONY (CHORUS)</span> <span id="chorusVal">50%</span>
+                        <span>🎭 ARMONÍA (CHORUS)</span> <span id="chorusVal">50%</span>
                     </label>
                     <input type="range" id="vocalChorusSlider" min="0" max="100" value="50" style="width: 100%; accent-color: var(--accent4); cursor: pointer;">
                 </div>
 
-                <button class="btn primary" id="speakLyricsBtn" style="justify-content: center; width: 100%; font-weight: 900; margin-top: 5px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-                    PERFORM SONG
-                </button>
-
                 <button class="btn" id="downloadSongBtn" style="justify-content: center; width: 100%; font-weight: 900; margin-top: 5px; background: linear-gradient(45deg, #4facfe, #00f2fe); border: none; color: #000; box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg>
-                    DOWNLOAD SONG (MP3)
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg>
+                    DESCARGAR CANCIÓN (MP3)
                 </button>
             </div>
         </div>
 
         <footer>
             <div class="hint-box">
-                💡 <strong>HINT:</strong> Left Click cubes to activate them. Drag mouse to rotate camera. Scroll to Zoom.
+                💡 <strong>CONSEJO:</strong> Clic izquierdo en los cubos para activarlos. Arrastra para rotar la cámara. Rueda para hacer zoom.
             </div>
-            <a href="mge.html" class="exit-link">EXIT TO HUB</a>
+            <a href="mge.html" class="exit-link">SALIR AL MENÚ</a>
         </footer>
-    </div>
 
     <script>
         // Configuration
@@ -707,34 +767,34 @@
 
         const SCALES = {
             minor: {
-                name: "C Minor (Mystical)",
+                name: "Do Menor (Mística)",
                 bass: ["G1", "F1", "Eb1", "C1"],
                 synth: ["C5", "G4", "Eb4", "C4"],
                 labels: {
-                    bass: ["G1 (Perf 5th)", "F1 (Perf 4th)", "Eb1 (Minor 3rd)", "C1 (Root)"],
-                    synth: ["C5 (Octave Do)", "G4 (Dominant So)", "Eb4 (Minor Me)", "C4 (Root Do)"]
+                    bass: ["G1 (5ta Justa)", "F1 (4ta Justa)", "Eb1 (3ra Menor)", "C1 (Tónica)"],
+                    synth: ["C5 (Do Octava)", "G4 (So Dominante)", "Eb4 (Me Menor)", "C4 (Do Tónica)"]
                 },
-                desc: "A magical, deep sound. Great for chill, spacey, or serious vibes!"
+                desc: "Un sonido mágico y profundo. ¡Ideal para vibras relajantes, espaciales o de suspenso!"
             },
             major: {
-                name: "C Major (Happy)",
+                name: "Do Mayor (Feliz)",
                 bass: ["A1", "G1", "E1", "C1"],
                 synth: ["C5", "A4", "G4", "E4"],
                 labels: {
-                    bass: ["A1 (Major 6th)", "G1 (Perf 5th)", "E1 (Major 3rd)", "C1 (Root)"],
-                    synth: ["C5 (Octave Do)", "A4 (Major La)", "G4 (Dominant So)", "E4 (Major Mi)"]
+                    bass: ["A1 (6ta Mayor)", "G1 (5ta Justa)", "E1 (3ra Mayor)", "C1 (Tónica)"],
+                    synth: ["C5 (Do Octava)", "A4 (La Mayor)", "G4 (So Dominante)", "E4 (Mi Mayor)"]
                 },
-                desc: "Bright, joyful, and triumphant! Ideal for uplifting summer melodies."
+                desc: "¡Brillante, alegre y triunfante! Ideal para melodías veraniegas e inspiradoras."
             },
             blues: {
-                name: "C Blues (Jazzy)",
+                name: "Do Blues (Jazz/Urbano)",
                 bass: ["Gb1", "F1", "Eb1", "C1"],
                 synth: ["C5", "Gb4", "F4", "Eb4"],
                 labels: {
-                    bass: ["Gb1 (Dim 5th/Blue)", "F1 (Perf 4th)", "Eb1 (Minor 3rd)", "C1 (Root)"],
-                    synth: ["C5 (Octave)", "Gb4 (Blue Note)", "F4 (Perf 4th)", "Eb4 (Minor 3rd)"]
+                    bass: ["Gb1 (5ta Dim/Blue)", "F1 (4ta Justa)", "Eb1 (3ra Menor)", "C1 (Tónica)"],
+                    synth: ["C5 (Octava)", "Gb4 (Nota Blue)", "F4 (4ta Justa)", "Eb4 (3ra Menor)"]
                 },
-                desc: "Cool, edgy, and expressive. Contains the famous flat-5th 'Blue Note'!"
+                desc: "Fresco, atrevido y súper expresivo. ¡Contiene la famosa nota 'Blue' de quinta disminuida!"
             }
         };
 
@@ -843,16 +903,44 @@
             playheadMesh.position.x = startX + step * SPACING;
         }
 
-        // Particles / Visualizer Background
+        // Partículas 3D Flotantes - Emojis del Estilo Bad Bunny 🐰🌴❤️🕶️☀️🌊
         const particleGroup = new THREE.Group();
         scene.add(particleGroup);
-        const pCount = 100;
-        const pGeo = new THREE.SphereGeometry(0.1, 4, 4);
+        const pCount = 60;
+        const emojis = ['🐰', '🌴', '❤️', '🕶️', '☀️', '🌊'];
+
+        function createEmojiTexture(emoji) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.clearRect(0, 0, 128, 128);
+            ctx.font = '72px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const emojiTextures = emojis.map(em => createEmojiTexture(em));
+
         for (let i = 0; i < pCount; i++) {
-            const pMat = new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0x00f2fe : 0xff007f });
-            const pm = new THREE.Mesh(pGeo, pMat);
-            pm.position.set((Math.random()-0.5)*50, (Math.random()-0.5)*30, (Math.random()-0.5)*30);
-            pm.userData = { speed: Math.random() * 0.05 + 0.02, axis: Math.random() > 0.5 ? 'x' : 'y' };
+            const tex = emojiTextures[Math.floor(Math.random() * emojiTextures.length)];
+            const pMat = new THREE.SpriteMaterial({
+                map: tex,
+                transparent: true,
+                opacity: 0.65,
+                depthTest: true
+            });
+            const pm = new THREE.Sprite(pMat);
+            pm.position.set((Math.random() - 0.5) * 55, (Math.random() - 0.5) * 35, (Math.random() - 0.5) * 35);
+            pm.userData = { speed: Math.random() * 0.04 + 0.015, axis: Math.random() > 0.5 ? 'x' : 'y' };
+            
+            // Randomize sizes of emojis for perspective depth
+            const sz = Math.random() * 1.0 + 1.0;
+            pm.scale.set(sz, sz, 1);
+            
             particleGroup.add(pm);
         }
 
@@ -933,7 +1021,7 @@
             const factText = document.getElementById('academy-theory-fact');
 
             if (bassNotes.length === 0 && synthNotes.length === 0) {
-                display.innerText = "NO NOTES PLAYING";
+                display.innerText = "SIN NOTAS ACTIVAS";
                 display.style.color = "rgba(255,255,255,0.4)";
                 return;
             }
@@ -945,22 +1033,22 @@
             let chordName = uniqueNotes.join(" + ");
             
             if (uniqueNotes.length === 1) {
-                chordName = `${uniqueNotes[0]} Octave Match`;
-                factText.innerHTML = `💡 <strong>Theory:</strong> Play <strong>${uniqueNotes[0]}</strong> together to reinforce the power of the note!`;
+                chordName = `Octava de ${uniqueNotes[0]}`;
+                factText.innerHTML = `💡 <strong>Teoría:</strong> Tocar la misma nota <strong>${uniqueNotes[0]}</strong> en diferentes octavas refuerza el poder del tono fundamental.`;
             } else if (uniqueNotes.length === 2) {
-                chordName = `${uniqueNotes[0]} & ${uniqueNotes[1]} Interval`;
-                factText.innerHTML = `💡 <strong>Theory:</strong> A 2-note stack is a <strong>Musical Interval</strong>. It sets the harmonic mood!`;
+                chordName = `Intervalo de ${uniqueNotes[0]} y ${uniqueNotes[1]}`;
+                factText.innerHTML = `💡 <strong>Teoría:</strong> Una combinación de 2 notas es un <strong>Intervalo Musical</strong>. ¡Establece la base de la armonía!`;
             } else if (uniqueNotes.length >= 3) {
-                chordName = `${uniqueNotes.join("-")} Accord`;
-                factText.innerHTML = `💡 <strong>Theory:</strong> 3+ unique notes form a <strong>CHORD</strong>! Multi-layer harmony is rich and full.`;
+                chordName = `Acorde de ${uniqueNotes.join("-")}`;
+                factText.innerHTML = `💡 <strong>Teoría:</strong> ¡Tres o más notas únicas forman un <strong>ACORDE</strong>! La armonía multicapa da un sonido lleno y rico.`;
             }
 
             if (uniqueNotes.includes('C') && uniqueNotes.includes('Eb') && uniqueNotes.includes('G')) {
-                 chordName = "⚡ C Minor Chord ⚡";
-                 factText.innerHTML = `🎓 <strong>Chord Master!</strong> You built a <strong>C Minor Chord</strong> (Root, 3rd, 5th)! Emotional and dreamy!`;
+                 chordName = "⚡ Acorde Do Menor (Cm) ⚡";
+                 factText.innerHTML = `🎓 <strong>¡Maestro Armónico!</strong> Has construido un <strong>Acorde de Do Menor</strong> (Tónica, 3ra menor, 5ta justa). ¡Profundo, misterioso y con toda la vibra de Bad Bunny!`;
             } else if (uniqueNotes.includes('C') && uniqueNotes.includes('E') && uniqueNotes.includes('G')) {
-                 chordName = "☀️ C Major Chord ☀️";
-                 factText.innerHTML = `🎓 <strong>Chord Master!</strong> You built a <strong>C Major Chord</strong>! Warm, triumphant, and incredibly happy!`;
+                 chordName = "☀️ Acorde Do Mayor (C) ☀️";
+                 factText.innerHTML = `🎓 <strong>¡Maestro Armónico!</strong> Has construido un <strong>Acorde de Do Mayor</strong> (Tónica, 3ra mayor, 5ta justa). ¡Sonido cálido, alegre y veraniego!`;
             }
 
             display.innerText = chordName;
@@ -1273,13 +1361,13 @@
         playBtn.addEventListener('click', () => {
             if (!isPlaying) {
                 Tone.Transport.start();
-                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
-                playText.innerText = "PAUSE";
+                playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Icono de Pausa
+                playText.innerText = "PAUSA";
                 playBtn.classList.add('active');
             } else {
                 Tone.Transport.pause();
-                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-                playText.innerText = "PLAY";
+                playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Icono de Reproducción
+                playText.innerText = "REPRODUCIR";
                 playBtn.classList.remove('active');
             }
             isPlaying = !isPlaying;
@@ -1402,6 +1490,183 @@
             
             // If not playing, trigger play
             if(!isPlaying) {
+                playBtn.click();
+            }
+        }
+
+        // Pistas Prestablecidas de Bad Bunny en Español
+        const SPANISH_TRACKS = [
+            {
+                name: "DÁKITI",
+                bpm: 110,
+                scale: "minor",
+                lyrics: {
+                    v1: "Ya yo me enteré, hace tiempo que no vives con él",
+                    v2: "Que la vida se te fue y no la volviste a ver",
+                    v3: "Dime si esta noche nos vemos en el hotel",
+                    v4: "Para darte todo lo que te mereces, bebé",
+                    c1: "Baby, yo sé que tú no me quieres olvidar",
+                    c2: "Tú me buscas por la noche para hacernos recordar",
+                    c3: "Bailando apretado bajo la luna y el mar",
+                    c4: "Que lo nuestro es de locos y nunca va a acabar",
+                    b1: "Ey, ey, tú estás bien rica y te quiero probar",
+                    b2: "Con ese traje negro me vas a matar",
+                    b3: "No te me vayas, quédate un poquito más",
+                    b4: "Que la noche es joven y vamos a celebrar, ¡ey!"
+                },
+                pattern: function() {
+                    // Ritmo Dembow Reggaetón en Track 0 (Batería)
+                    // Kick (fila 3)
+                    [0, 3, 6, 8, 11, 14].forEach(x => sequencer[0][x][3] = true);
+                    // Snare (fila 2)
+                    [4, 12].forEach(x => sequencer[0][x][2] = true);
+                    // Hi-hats en los contratiempos (fila 1)
+                    [0, 2, 4, 6, 8, 10, 12, 14].forEach(x => sequencer[0][x][1] = true);
+                    // Clap (fila 0) para relleno
+                    [4, 12].forEach(x => sequencer[0][x][0] = true);
+
+                    // Bass en Track 1
+                    sequencer[1][0][3] = true;
+                    sequencer[1][3][3] = true;
+                    sequencer[1][6][2] = true;
+                    sequencer[1][8][3] = true;
+                    sequencer[1][11][3] = true;
+                    sequencer[1][14][1] = true;
+
+                    // Synth Arpeggio en Track 2
+                    [0, 3, 6, 8, 11, 14].forEach(x => {
+                        sequencer[2][x][1] = true;
+                        sequencer[2][x][3] = true;
+                    });
+                }
+            },
+            {
+                name: "TITÍ PREGUNTÓ",
+                bpm: 120,
+                scale: "major",
+                lyrics: {
+                    v1: "Tití me preguntó si tengo muchas novias",
+                    v2: "Je, muchas novias, hoy tengo a una, mañana otra",
+                    v3: "Pero no hay boda, ella se enamora si me toca",
+                    v4: "Y yo le digo que tranquilo, que no se vuelva loca",
+                    c1: "Me gustan todas, me gusta la morena y la rubia",
+                    c2: "La que es tímida y la que baila bajo la lluvia",
+                    c3: "Déjame una noche, mami, que yo te resuelvo",
+                    c4: "Que si tú me pruebas, yo sé que de una vuelvo",
+                    b1: "¡Ey, ey! Mucho amor, pero yo no me amarro",
+                    b2: "Bailando en la disco, fumando en el carro",
+                    b3: "Dile a tu tía que no se preocupe por mí",
+                    b4: "Que yo soy el Conejo y siempre vivo feliz, ¡yeh!"
+                },
+                pattern: function() {
+                    // Dembow rápido y agresivo
+                    [0, 3, 6, 8, 11, 14].forEach(x => sequencer[0][x][3] = true); // Kick
+                    [4, 12, 15].forEach(x => sequencer[0][x][2] = true); // Snare / Redoble
+                    for(let x=0; x<16; x++) if(x%2===0) sequencer[0][x][1] = true; // Rápido Hats
+
+                    // Bass lineal rebotante
+                    for(let x=0; x<16; x++) {
+                        if (x % 4 === 0) sequencer[1][x][3] = true;
+                        if (x % 4 === 2) sequencer[1][x][1] = true;
+                    }
+
+                    // Synth Plucks alegres sincopados
+                    [2, 6, 10, 14].forEach(x => {
+                        sequencer[2][x][0] = true;
+                        sequencer[2][x][2] = true;
+                    });
+                }
+            },
+            {
+                name: "MÓNACO",
+                bpm: 139,
+                scale: "minor",
+                lyrics: {
+                    v1: "Dime qué se siente vivir bajo mi sombra",
+                    v2: "Dondequiera que yo piso la gente me nombra",
+                    v3: "Ustedes comprando y a mí todo me lo regalan",
+                    v4: "Tirando rimas que siempre les fallan",
+                    c1: "Bebiendo champaña en Mónaco, no hay comparación",
+                    c2: "El mejor de la historia, ya soy una leyenda de la nación",
+                    c3: "Haciendo millones, viajando en mi propio avión",
+                    c4: "Y ustedes sufriendo por mi bendición",
+                    b1: "¡Ey, ey! Cristiano y Messi son mis panas",
+                    b2: "Ganando trofeos todas las semanas",
+                    b3: "No me comparen con nadie en este juego",
+                    b4: "Que yo prendo la calle y la lleno de fuego, ¡brrr!"
+                },
+                pattern: function() {
+                    // Trap 808 pesado y hats rápidos
+                    [0, 4, 8, 11, 12].forEach(x => sequencer[0][x][3] = true); // Kick 808
+                    [4, 12].forEach(x => sequencer[0][x][2] = true); // Snare pesado
+                    for(let x=0; x<16; x++) sequencer[0][x][1] = true; // Hi-hats de Trap
+
+                    // Bass 808 deslizante
+                    sequencer[1][0][3] = true;
+                    sequencer[1][4][3] = true;
+                    sequencer[1][8][3] = true;
+                    sequencer[1][12][0] = true;
+                    sequencer[1][14][1] = true;
+
+                    // Melodía oscura de piano de fondo
+                    [0, 2, 8, 10].forEach(x => {
+                        sequencer[2][x][0] = true;
+                        sequencer[2][x][3] = true;
+                    });
+                }
+            }
+        ];
+
+        function loadSpanishTrack(idx) {
+            const track = SPANISH_TRACKS[idx];
+            if (!track) return;
+
+            // 1. Limpiar el secuenciador existente
+            for (let t = 0; t < GRID_TRACKS; t++) {
+                for (let x = 0; x < GRID_WIDTH; x++) {
+                    for (let y = 0; y < GRID_HEIGHT; y++) {
+                        sequencer[t][x][y] = false;
+                    }
+                }
+            }
+
+            // 2. Cargar tempo y actualizar slider
+            Tone.Transport.bpm.value = track.bpm;
+            document.getElementById('bpmSlider').value = track.bpm;
+            document.getElementById('bpmVal').innerText = track.bpm;
+
+            // 3. Cargar escala educativa
+            setScale(track.scale);
+
+            // 4. Inyectar letras al panel interactivo
+            const sections = ['v', 'c', 'b'];
+            sections.forEach(sec => {
+                for (let i = 1; i <= 4; i++) {
+                    const inputId = sec + i;
+                    const inputEl = document.getElementById(inputId);
+                    if (inputEl && track.lyrics[inputId]) {
+                        inputEl.value = track.lyrics[inputId];
+                    }
+                }
+            });
+
+            // 5. Cargar patrón rítmico/melódico
+            track.pattern();
+
+            // 6. Actualizar cubos 3D
+            cubeMeshes.forEach(m => {
+                const isO = sequencer[m.userData.track][m.userData.x][m.userData.y];
+                updateMeshAppearance(m, isO);
+            });
+
+            // 7. Cambiar la voz a Bad Bunny automáticamente
+            const selectVocal = document.getElementById('vocalStyleSelect');
+            if (selectVocal) {
+                selectVocal.value = "badbunny";
+            }
+
+            // 8. Activar reproducción
+            if (!isPlaying) {
                 playBtn.click();
             }
         }
@@ -1536,9 +1801,11 @@
         async function loadVocalBuffer(text) {
             if (activeVocalBuffers[text]) return activeVocalBuffers[text];
             
-            const cleanText = encodeURIComponent(text.trim());
-            // High fidelity, stable engine proxy
-            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${cleanText}`;
+            // Clean up special symbols/punctuation that might break queries or sound weird in TTS
+            const sanitized = text.replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim();
+            const cleanText = encodeURIComponent(sanitized);
+            // Transmisión con pronunciación nativa en Español tl=es
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=es&client=tw-ob&q=${cleanText}`;
             const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(ttsUrl)}`;
             
             const res = await fetch(proxyUrl);
@@ -1547,6 +1814,29 @@
             const audioBuf = await Tone.getContext().decodeAudioData(arrayBuf);
             activeVocalBuffers[text] = audioBuf;
             return audioBuf;
+        }
+
+        let lastAdlibTime = 0;
+        // Efectos y Vocales adicionales al estilo Bad Bunny (sin símbolos raros)
+        const bunnyAdlibTexts = ["Ey", "Yeh", "Brrr", "Mami", "La tormenta"];
+        async function playBadBunnyAdlib() {
+            const nowTime = Date.now();
+            // Evitar que los adlibs se reproduzcan demasiado rápido o se amontonen (mínimo 3.5 segundos de separación)
+            if (nowTime - lastAdlibTime < 3500) return;
+            lastAdlibTime = nowTime;
+
+            try {
+                const adlib = bunnyAdlibTexts[Math.floor(Math.random() * bunnyAdlibTexts.length)];
+                const buf = await loadVocalBuffer(adlib);
+                const source = new Tone.BufferSource(buf).connect(vocalVolume);
+                
+                // Pitch shifting down for signature deep voice
+                const pitchShift = new Tone.PitchShift(-4.2).connect(vocalVolume);
+                source.connect(pitchShift);
+                source.start();
+            } catch(e) {
+                console.warn("No se pudo cargar el adlib", e);
+            }
         }
 
         // ------------------------------------------------
@@ -1575,7 +1865,7 @@
             });
 
             if (lines.length === 0) {
-                alert("Write some lyrics in the inputs first!");
+                alert("¡Escribe algunas letras en las casillas primero!");
                 return;
             }
 
@@ -1583,54 +1873,61 @@
             const btn = document.getElementById('speakLyricsBtn');
             const dBtn = document.getElementById('downloadSongBtn');
 
-            // Update visuals to loading
-            btn.innerHTML = "⏳ RENDERING VOCALS...";
+            // Actualizar la interfaz a cargando
+            btn.innerHTML = "⏳ GENERANDO VOCALES...";
             btn.style.pointerEvents = "none";
             dBtn.style.pointerEvents = "none";
-            if (doRecord) dBtn.innerHTML = "⏳ RENDERING (0%)...";
+            if (doRecord) dBtn.innerHTML = "⏳ GENERANDO (0%)...";
 
             let useNetworkEngine = true;
 
-            // Bulk pre-fetch cloud vocals for seamless high fidelity playback!
+            // Pre-cargar adlibs del Conejo Malo si es necesario
+            if (style === 'badbunny') {
+                bunnyAdlibTexts.forEach(async (t) => {
+                    try { await loadVocalBuffer(t); } catch(e) {}
+                });
+            }
+
+            // Descargar vocales en ráfaga para reproducirlas fluidamente
             try {
                 for (let i = 0; i < lines.length; i++) {
-                    btn.innerHTML = `⏳ RENDERING (${i+1}/${lines.length})...`;
-                    if (doRecord) dBtn.innerHTML = `⏳ LOADING (${Math.round(((i+1)/lines.length)*100)}%)...`;
+                    btn.innerHTML = `⏳ GENERANDO (${i+1}/${lines.length})...`;
+                    if (doRecord) dBtn.innerHTML = `⏳ CARGANDO (${Math.round(((i+1)/lines.length)*100)}%)...`;
                     await loadVocalBuffer(lines[i].text);
                 }
             } catch (e) {
-                console.warn("Falling back to built-in system engine", e);
+                console.warn("Cargando motor de voz de respaldo", e);
                 useNetworkEngine = false;
                 if (doRecord) {
-                    alert("⚠️ Exporting requires high-fidelity streaming. Reverting to standard backup record.");
+                    alert("⚠️ La exportación requiere conexión estable de alta fidelidad. Se usará el grabador estándar.");
                 }
             }
 
             btn.style.pointerEvents = "auto";
             dBtn.style.pointerEvents = "auto";
 
-            // Style-specific Pitch Shifts
+            // Modificaciones de pitch por estilo vocal
             if (style === 'mj') vocalPitchShift.pitch = 4.8;
             else if (style === 'robot') vocalPitchShift.pitch = -5.5;
             else if (style === 'space') vocalPitchShift.pitch = 8.0;
+            else if (style === 'badbunny') vocalPitchShift.pitch = -4.2; // signature deep sound!
             else vocalPitchShift.pitch = 0;
 
-            // Begin Recording
+            // Comenzar Grabación
             if (doRecord) {
                 isRecording = true;
-                dBtn.innerHTML = "🔴 RECORDING (DO NOT CLOSE)...";
+                dBtn.innerHTML = "🔴 GRABANDO (NO CIERRES EL ESTUDIO)...";
                 dBtn.classList.add('active');
-                btn.innerHTML = "⏹️ STOP RECORD";
+                btn.innerHTML = "⏹️ DETENER GRABACIÓN";
                 
-                // Sync up beats
                 currentStep = 0;
                 songRecorder.start();
             } else {
-                btn.innerHTML = '⏹️ STOP PERFORMANCE';
+                btn.innerHTML = '⏹️ DETENER PRESENTACIÓN';
                 btn.classList.add('active');
             }
 
-            // Auto start beats if stopped
+            // Reproducir ritmo automáticamente
             if (!isPlaying) {
                 playBtn.click();
             }
@@ -1649,7 +1946,7 @@
                 const current = lines[lineIndex];
                 const inputEl = document.getElementById(current.id);
 
-                // Highlight line
+                // Destacar línea cantando
                 inputEl.style.boxShadow = "0 0 15px var(--accent2)";
                 inputEl.style.borderColor = "var(--accent2)";
                 inputEl.style.background = "rgba(0, 242, 254, 0.15)";
@@ -1658,7 +1955,7 @@
                 const chord = getScaleChord();
 
                 if (useNetworkEngine) {
-                    // High-Fidelity Node Engine
+                    // Motor en la nube de alta fidelidad
                     const buffer = activeVocalBuffers[current.text];
                     vocalPlayer.buffer = buffer;
 
@@ -1666,12 +1963,14 @@
                         harmonizerSynth.triggerAttack(chord);
                     } else if (style === 'robot') {
                         robotHarmonizer.triggerAttack(["C2", "G2"]);
+                    } else if (style === 'badbunny') {
+                        robotHarmonizer.triggerAttack(["C1", "G1"]);
                     }
 
                     vocalPlayer.start();
                     const dur = buffer.duration;
 
-                    // Syncopated backing rhythms during line
+                    // Acompañamientos armónicos en tiempo real
                     const now = Tone.now();
                     if (style === 'mj') {
                         harmonizerSynth.triggerAttackRelease(chord[1], "16n", now + (dur * 0.3));
@@ -1681,6 +1980,11 @@
                         }
                     } else if (style === 'robot') {
                         robotHarmonizer.triggerAttackRelease("G2", "8n", now + (dur * 0.5));
+                    } else if (style === 'badbunny') {
+                        robotHarmonizer.triggerAttackRelease("G1", "4n", now + (dur * 0.45));
+                        if (Math.random() > 0.45) {
+                            setTimeout(() => { if(isSpeaking) playBadBunnyAdlib(); }, dur * 1000 * 0.55);
+                        }
                     }
 
                     setTimeout(() => {
@@ -1697,25 +2001,36 @@
                     }, dur * 1000);
 
                 } else {
-                    // Standard System Fallback
+                    // Motor de voz fuera de línea (SpeechSynthesis de respaldo)
                     const utterance = new SpeechSynthesisUtterance();
                     let textToSpeak = current.text;
 
                     if (style === 'mj') {
                         utterance.pitch = 1.5; utterance.rate = 1.15;
-                        const mjV = voices.filter(v => v.lang.includes('en'));
+                        const mjV = voices.filter(v => v.lang.includes('es'));
                         if (mjV.length > 0) utterance.voice = mjV[0];
                         
-                        const adlibs = [" Hee-hee!", " Ow!", " Shamone!"];
+                        const adlibs = [" ¡Ay!", " ¡Epa!", " ¡Sabor!"];
                         if (Math.random() > 0.3) textToSpeak += adlibs[Math.floor(Math.random() * adlibs.length)];
                         harmonizerSynth.triggerAttack(chord);
                     } else if (style === 'robot') {
                         utterance.pitch = 0.4; utterance.rate = 0.75;
-                        const deepV = voices.filter(v => v.lang.includes('en'));
+                        const deepV = voices.filter(v => v.lang.includes('es'));
                         if (deepV.length > 0) utterance.voice = deepV[0];
                         robotHarmonizer.triggerAttack(["C2", "G2"]);
                     } else if (style === 'space') {
                         utterance.pitch = 1.9; utterance.rate = 0.9;
+                    } else if (style === 'badbunny') {
+                        utterance.pitch = 0.65; utterance.rate = 0.85;
+                        const bbV = voices.filter(v => v.lang.includes('es'));
+                        if (bbV.length > 0) utterance.voice = bbV[0];
+                        
+                        const adlibs = [" ¡Ey!", " ¡Yeh!", " ¡Brrr!"];
+                        if (Math.random() > 0.4) textToSpeak += adlibs[Math.floor(Math.random() * adlibs.length)];
+                        robotHarmonizer.triggerAttack(["C1", "G1"]);
+                    } else {
+                        const esV = voices.filter(v => v.lang.includes('es'));
+                        if (esV.length > 0) utterance.voice = esV[0];
                     }
 
                     utterance.text = textToSpeak;
@@ -1727,6 +2042,8 @@
                                 harmonizerSynth.triggerAttackRelease(chord[Math.floor(Math.random() * chord.length)], "16n", now);
                             } else if (style === 'robot') {
                                 robotHarmonizer.triggerAttackRelease(Math.random() > 0.5 ? "C3" : "G3", "16n", now);
+                            } else if (style === 'badbunny') {
+                                robotHarmonizer.triggerAttackRelease(Math.random() > 0.5 ? "C2" : "G2", "16n", now);
                             }
                         }
                     };
@@ -1754,24 +2071,24 @@
 
                 if (doRecord && isRecording) {
                     isRecording = false;
-                    dBtn.innerHTML = "⏳ ENCODING TRACK...";
+                    dBtn.innerHTML = "⏳ PROCESANDO RITMO...";
                     
-                    // Short delay to catch reverbs
+                    // Delay para atrapar reverbs finales
                     setTimeout(async () => {
                         const recording = await songRecorder.stop();
-                        dBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg> DOWNLOAD SONG (MP3)';
+                        dBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/></svg> DESCARGAR CANCIÓN (MP3)';
                         dBtn.classList.remove('active');
 
                         const url = URL.createObjectURL(recording);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = "VibeMaster3D_Jam.webm";
+                        a.download = "VibeMaster3D_BadBunny_Mix.webm";
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
 
-                        if(isPlaying) playBtn.click(); // stop transport visually
-                        alert("🎉 High-fidelity song exported successfully!");
+                        if(isPlaying) playBtn.click(); // detener ritmo
+                        alert("🎉 ¡Canción exportada con éxito en alta fidelidad!");
                     }, 1200);
                 }
 
@@ -1780,7 +2097,7 @@
                     el.style.boxShadow = ""; el.style.borderColor = ""; el.style.background = "";
                 });
 
-                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PERFORM SONG';
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg> PRESENTAR CANCIÓN';
                 btn.classList.remove('active');
             }
 
@@ -1790,13 +2107,13 @@
         document.getElementById('speakLyricsBtn').addEventListener('click', () => speakLyrics(false));
         document.getElementById('downloadSongBtn').addEventListener('click', () => speakLyrics(true));
 
-        // Pre-load voices
+        // Pre-cargar voces nativas
         window.speechSynthesis.getVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
         }
 
-        // Start rendering loop
+        // Iniciar loop de renderizado 3D
         animate();
 
     </script>
