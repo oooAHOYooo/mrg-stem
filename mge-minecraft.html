@@ -332,6 +332,276 @@
     
     <div id="homework-tracker">📚 Homework: 0 / 5</div>
     
+    <!-- Beautiful Glassmorphism Side UI Instructions & Moves Wrapper -->
+    <div id="sidebar-wrapper" style="position: fixed; top: 90px; right: 20px; width: 250px; height: calc(100vh - 120px); z-index: 1500; pointer-events: none; transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);">
+        <style>
+            .sidebar-toggle-btn {
+                position: absolute;
+                top: 15px;
+                right: 100%;
+                margin-right: 10px;
+                background: rgba(15, 23, 42, 0.85);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 800;
+                font-size: 11px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+                transition: all 0.2s ease;
+                pointer-events: auto;
+                white-space: nowrap;
+            }
+            .sidebar-toggle-btn:hover {
+                background: #4ecdc4;
+                color: black;
+                border-color: #4ecdc4;
+                transform: translateY(-1px);
+                box-shadow: 0 8px 25px rgba(78,205,196,0.4);
+            }
+            #instructions-sidebar {
+                width: 100%;
+                height: 100%;
+                overflow-y: auto;
+                background: rgba(15, 23, 42, 0.85);
+                backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 14px;
+                padding: 12px;
+                color: white;
+                font-family: 'Inter', sans-serif;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                pointer-events: auto;
+            }
+            #instructions-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
+            #instructions-sidebar::-webkit-scrollbar-track {
+                background: rgba(0,0,0,0.1);
+                border-radius: 10px;
+            }
+            #instructions-sidebar::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.2);
+                border-radius: 10px;
+            }
+            #instructions-sidebar::-webkit-scrollbar-thumb:hover {
+                background: rgba(255,255,255,0.4);
+            }
+            .sidebar-section-title {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #4ecdc4;
+                font-weight: 800;
+                border-bottom: 1px solid rgba(78, 205, 196, 0.2);
+                padding-bottom: 4px;
+                margin-top: 6px;
+                margin-bottom: 4px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .sidebar-move-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 11.5px;
+                padding: 3px 0;
+            }
+            .sidebar-key-badge {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 5px;
+                padding: 2px 6px;
+                font-weight: 800;
+                font-size: 9.5px;
+                font-family: 'Inter', monospace;
+                box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4);
+                min-width: 14px;
+                text-align: center;
+                transition: all 0.15s ease;
+                color: rgba(255,255,255,0.9);
+            }
+            .sidebar-key-badge.active {
+                background: #4ecdc4;
+                color: #0f172a;
+                border-color: #4ecdc4;
+                box-shadow: 0 0 10px rgba(78,205,196,0.8);
+                transform: scale(1.08) translateY(-0.5px);
+            }
+            .sidebar-desc {
+                color: rgba(255, 255, 255, 0.85);
+                font-weight: 500;
+                max-width: 160px;
+            }
+            #sidebar-wrapper.collapsed {
+                transform: translateX(285px); /* Fully hide the 250px sidebar (250px + 20px right margin + buffer) */
+            }
+        </style>
+
+        <button id="sidebar-toggle-btn" class="sidebar-toggle-btn">
+            <span>📕 Close (H)</span>
+        </button>
+
+        <div id="instructions-sidebar">
+            <!-- Sidebar Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+                <span style="font-size: 13px; font-weight: 900; letter-spacing: 0.5px; color: white; display: flex; align-items: center; gap: 6px;">
+                    🎮 CRAFT CONTROLS
+                </span>
+                <button id="close-sidebar-btn" style="background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 14px; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='#ff6b6b'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">✕</button>
+            </div>
+            
+            <!-- Toggle Control Info -->
+            <div class="sidebar-move-item" style="border-bottom: 1px dashed rgba(255,255,255,0.08); padding-bottom: 4px; margin-bottom: 2px;">
+                <span class="sidebar-desc" style="color: #60a5fa; font-weight: 600; font-size: 10px;">Press H to release mouse</span>
+                <span class="sidebar-key-badge" id="sidebar-key-KeyH" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.3);">H</span>
+            </div>
+
+            <!-- Movement Section -->
+            <div>
+                <div class="sidebar-section-title">🏃 Movement</div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Move Forward</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyW">W</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Move Backward</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyS">S</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Move Left</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyA">A</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Move Right</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyD">D</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Jump / Fly Up</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Space" style="font-size: 8px; min-width: 40px;">SPACE</span>
+                </div>
+            </div>
+            
+            <!-- Building & Combat Section -->
+            <div>
+                <div class="sidebar-section-title">🛠️ Build & Combat</div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Break / Shoot Fireball</span>
+                    <span class="sidebar-key-badge" style="font-size: 8px; min-width: 40px;">L-CLICK</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Place Block</span>
+                    <span class="sidebar-key-badge" style="font-size: 8px; min-width: 40px;">R-CLICK</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Place Block (Alt)</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyE">E</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Toggle Block Size</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyQ">Q</span>
+                </div>
+            </div>
+            
+            <!-- Magic & Mounts Section -->
+            <div>
+                <div class="sidebar-section-title">🐉 Magic & Mounts</div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Fly & Summon Mount</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyF">F</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Fly Down (Fly Mode)</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-ShiftLeft" style="font-size: 8px; min-width: 40px;">SHIFT</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Toggle Pokeball Tool</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-KeyC">C</span>
+                </div>
+                <div class="sidebar-move-item">
+                    <span class="sidebar-desc">Quick Select Pokeball</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit9">9</span>
+                </div>
+            </div>
+            
+            <!-- Palette Section -->
+            <div>
+                <div class="sidebar-section-title">🎨 Block Palette</div>
+                <div class="sidebar-move-item" style="justify-content: flex-start; gap: 4px; flex-wrap: wrap; margin-top: 3px;">
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit1">1</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit2">2</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit3">3</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit4">4</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit5">5</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit6">6</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit7">7</span>
+                    <span class="sidebar-key-badge" id="sidebar-key-Digit8">8</span>
+                </div>
+            </div>
+            
+            <!-- Game Objectives Section -->
+            <div style="background: rgba(248, 250, 252, 0.07); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); margin-top: 3px;">
+                <div style="font-size: 11px; font-weight: bold; color: #f59e0b; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">🏆 QUESTS</div>
+                <div style="font-size: 9.5px; color: rgba(255,255,255,0.75); line-height: 1.35; display: flex; flex-direction: column; gap: 3px;">
+                    <span>• 📚 Click mini-robots to do homework!</span>
+                    <span>• 🐉 Catch Slimes & Dragons with Pokeballs!</span>
+                    <span>• ⚡ Code beasts with Block Matrix!</span>
+                    <span>• ⚔️ Battle MR GONZALEZ waves!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const wrapper = document.getElementById('sidebar-wrapper');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const closeBtn = document.getElementById('close-sidebar-btn');
+            
+            if (wrapper && toggleBtn && closeBtn) {
+                // Keep it open initially so players see instructions immediately,
+                // but let them toggle it smoothly.
+                wrapper.classList.remove('collapsed');
+                toggleBtn.querySelector('span').textContent = '📕 Close (H)';
+
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    wrapper.classList.toggle('collapsed');
+                    const isCollapsed = wrapper.classList.contains('collapsed');
+                    toggleBtn.querySelector('span').textContent = isCollapsed ? '📖 Help (H)' : '📕 Close (H)';
+                    
+                    if (window.onSidebarToggle) {
+                        window.onSidebarToggle(isCollapsed);
+                    }
+                });
+                
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    wrapper.classList.add('collapsed');
+                    toggleBtn.querySelector('span').textContent = '📖 Help (H)';
+                    
+                    if (window.onSidebarToggle) {
+                        window.onSidebarToggle(true); // Treat as collapsed
+                    }
+                });
+                
+                // Stop mouse click propagation to avoid locking/breaking blocks on UI clicks
+                wrapper.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+                wrapper.addEventListener('click', (e) => { e.stopPropagation(); });
+                toggleBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+            }
+        });
+    </script>
+
     <div id="pokeball-status">🔴 POKEBALL MODE ACTIVE</div>
     <div id="fly-status">🦅 FLY MODE ACTIVE</div>
 
@@ -371,44 +641,6 @@
         </div>
     </div>
 
-    <!-- Premium Liquid Controls Overlay -->
-    <div id="controls-overlay-premium" style="position: fixed; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 200; font-family: 'Inter', sans-serif;">
-        <style>
-            .liquid-key {
-                width: 48px; height: 48px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
-                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 14px;
-                display: flex; justify-content: center; align-items: center;
-                font-weight: 900; font-size: 1rem; color: rgba(255, 255, 255, 0.4);
-                transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.05);
-                position: relative; overflow: hidden;
-            }
-            .liquid-key.active {
-                color: #fff; transform: scale(0.92) translateY(3px);
-                background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5);
-                box-shadow: 0 0 30px rgba(255, 255, 255, 0.15), inset 0 0 15px rgba(255, 255, 255, 0.1);
-            }
-            .control-row { display: flex; gap: 8px; }
-            .liquid-key.wide { width: 140px; font-size: 0.7rem; letter-spacing: 1px; }
-        </style>
-        <div class="control-row" style="justify-content: center;">
-            <div class="liquid-key" id="key-KeyW">W</div>
-        </div>
-        <div class="control-row">
-            <div class="liquid-key" id="key-KeyA">A</div>
-            <div class="liquid-key" id="key-KeyS">S</div>
-            <div class="liquid-key" id="key-KeyD">D</div>
-        </div>
-        <div class="control-row" style="margin-top: 5px;">
-            <div class="liquid-key wide" id="key-Space">SPACE: JUMP</div>
-        </div>
-        <div class="control-row">
-            <div class="liquid-key wide">🖱️ L-CLICK: BREAK</div>
-        </div>
-        <div class="control-row">
-            <div class="liquid-key wide">🖱️ R-CLICK: PLACE</div>
-        </div>
-    </div>
 
     <div id="blocker">
         <div id="instructions">
@@ -496,17 +728,44 @@
             }
         } );
 
+        window.onSidebarToggle = function(isClosed) {
+            if (isClosed) {
+                if (!inRiddle) {
+                    controls.lock();
+                }
+            } else {
+                controls.unlock();
+            }
+        };
+
         controls.addEventListener( 'lock', function () {
             instructions.style.display = 'none';
             blocker.style.display = 'none';
             inMenu = false;
+            
+            // If pointer locks, collapse the sidebar automatically to clean up the screen
+            const wrapper = document.getElementById('sidebar-wrapper');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (wrapper && toggleBtn && !wrapper.classList.contains('collapsed')) {
+                wrapper.classList.add('collapsed');
+                toggleBtn.querySelector('span').textContent = '📖 Help (H)';
+            }
         } );
 
         controls.addEventListener( 'unlock', function () {
             if(!inRiddle) {
-                blocker.style.display = 'block';
-                instructions.style.display = 'flex';
-                inMenu = true;
+                const wrapper = document.getElementById('sidebar-wrapper');
+                const isSidebarOpen = wrapper && !wrapper.classList.contains('collapsed');
+                
+                if (isSidebarOpen) {
+                    blocker.style.display = 'none';
+                    instructions.style.display = 'none';
+                    inMenu = false;
+                } else {
+                    blocker.style.display = 'block';
+                    instructions.style.display = 'flex';
+                    inMenu = true;
+                }
             }
         } );
 
@@ -2611,7 +2870,33 @@
         const downRaycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ) );
 
         const onKeyDown = function ( event ) {
-            document.getElementById('key-'+event.code)?.classList.add('active');
+            // Highlight sidebar instruction key badge dynamically
+            if (event.code === 'ShiftRight') {
+                document.getElementById('sidebar-key-ShiftLeft')?.classList.add('active');
+            } else {
+                document.getElementById('sidebar-key-'+event.code)?.classList.add('active');
+            }
+
+            // Handle H key to toggle sidebar and mouse controls, even if inMenu is true!
+            if (event.code === 'KeyH') {
+                const wrapper = document.getElementById('sidebar-wrapper');
+                const toggleBtn = document.getElementById('sidebar-toggle-btn');
+                if (wrapper && toggleBtn) {
+                    wrapper.classList.toggle('collapsed');
+                    const isCollapsed = wrapper.classList.contains('collapsed');
+                    toggleBtn.querySelector('span').textContent = isCollapsed ? '📖 Help (H)' : '📕 Close (H)';
+                    
+                    if (!isCollapsed) {
+                        controls.unlock();
+                    } else {
+                        if (!inRiddle) {
+                            controls.lock();
+                        }
+                    }
+                }
+                return;
+            }
+
             if(inMenu || inRiddle) return;
             switch ( event.code ) {
                 case 'KeyC':
@@ -2694,7 +2979,13 @@
         };
 
         const onKeyUp = function ( event ) {
-            document.getElementById('key-'+event.code)?.classList.remove('active');
+            // Remove sidebar instruction key badge highlight
+            if (event.code === 'ShiftRight') {
+                document.getElementById('sidebar-key-ShiftLeft')?.classList.remove('active');
+            } else {
+                document.getElementById('sidebar-key-'+event.code)?.classList.remove('active');
+            }
+
             switch ( event.code ) {
                 case 'ArrowUp':
                 case 'KeyW':
