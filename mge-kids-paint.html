@@ -14,7 +14,7 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Kid friendly font */
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
             background-color: var(--secondary);
             margin: 0;
             padding: 20px;
@@ -30,37 +30,46 @@
             margin-bottom: 10px;
         }
 
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+        }
+
         .container {
             background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+            padding: 15px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 900px;
-            width: 100%;
         }
 
         .toolbar {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
             margin-bottom: 15px;
-            padding: 10px;
+            padding: 8px;
             background: #fff;
-            border-radius: 15px;
+            border-radius: 12px;
             border: 3px solid var(--accent);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .tool-group {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 5px 15px;
+            gap: 5px;
+            padding: 4px 10px;
             background: var(--light);
-            border-radius: 10px;
+            border-radius: 8px;
             border: 2px solid #ddd;
         }
 
@@ -77,9 +86,24 @@
             box-shadow: 0 4px 0 #d9534f;
         }
 
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            box-shadow: 0 3px 0 #d9534f;
+        }
+        
+        .btn-small.active-tool {
+            box-shadow: 0 3px 0 #1a252f;
+        }
+
         button:hover {
             transform: translateY(2px);
             box-shadow: 0 2px 0 #d9534f;
+        }
+
+        .btn-small:hover {
+            box-shadow: 0 1px 0 #d9534f;
         }
 
         button:active {
@@ -93,8 +117,8 @@
         }
 
         input[type="color"] {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             padding: 0;
             border: none;
             border-radius: 5px;
@@ -102,7 +126,15 @@
         }
 
         input[type="range"] {
-            width: 100px;
+            width: 80px;
+        }
+
+        .trace-control input[type="text"] {
+            padding: 6px;
+            border-radius: 6px;
+            border: 2px solid #ccc;
+            font-size: 13px;
+            width: 120px;
         }
 
         .canvas-container {
@@ -143,14 +175,15 @@
         .animation-timeline {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 10px;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             border: 3px solid var(--primary);
             width: 100%;
             overflow-x: auto;
             align-items: center;
+            box-sizing: border-box;
         }
 
         .frame {
@@ -170,21 +203,48 @@
             border-width: 4px;
         }
 
-        .trace-control {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            width: 100%;
-            justify-content: center;
-            margin-top: 10px;
+        /* Sidebar info */
+        .info-sidebar {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            width: 280px;
+            border: 4px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            font-size: 15px;
+            line-height: 1.5;
         }
 
-        input[type="text"] {
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #ccc;
-            font-size: 16px;
-            width: 300px;
+        .info-sidebar h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .info-sidebar h3 {
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .info-sidebar ol {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        .info-sidebar li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 1150px) {
+            .main-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            .info-sidebar {
+                width: 100%;
+                max-width: 800px;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
@@ -192,57 +252,74 @@
 
     <h1>🎨 Kids Paint & Animate Studio ✨</h1>
     
-    <div class="container">
-        
-        <!-- Tools -->
-        <div class="toolbar">
-            <div class="tool-group">
-                <input type="color" id="color-picker" value="#000000">
-                <label for="brush-size">Size:</label>
-                <input type="range" id="brush-size" min="1" max="50" value="10">
-            </div>
+    <div class="main-layout">
+        <div class="container">
             
-            <div class="tool-group">
-                <button id="btn-draw" class="active-tool">✏️ Draw</button>
-                <button id="btn-erase">🧽 Erase</button>
-                <button id="btn-clear">🗑️ Clear Canvas</button>
+            <!-- Compact Toolbar -->
+            <div class="toolbar">
+                <div class="tool-group">
+                    <input type="color" id="color-picker" value="#000000">
+                    <label for="brush-size" style="font-size:13px; font-weight:bold;">Size:</label>
+                    <input type="range" id="brush-size" min="1" max="50" value="10">
+                </div>
+                
+                <div class="tool-group">
+                    <button id="btn-draw" class="active-tool btn-small">✏️ Draw</button>
+                    <button id="btn-erase" class="btn-small">🧽 Erase</button>
+                    <button id="btn-clear" class="btn-small">🗑️ Clear</button>
+                </div>
+
+                <div class="trace-control tool-group">
+                    <strong style="font-size:13px;">Trace:</strong>
+                    <input type="text" id="trace-url" placeholder="URL...">
+                    <button id="btn-load-trace" class="btn-small">Load</button>
+                    <button id="btn-cycle-trace" class="btn-small">🔄 Cycle</button>
+                    <button id="btn-clear-trace" class="btn-small">Clear</button>
+                </div>
+
+                <div class="tool-group">
+                    <button id="btn-onion" class="btn-small">🧅 Onion: OFF</button>
+                    <button id="btn-save-img" class="btn-small">💾 Img</button>
+                    <button id="btn-save-sprite" class="btn-small">🎞️ Sprite</button>
+                </div>
             </div>
 
-            <div class="tool-group">
-                <button id="btn-onion">🧅 Onion Skin: OFF</button>
-                <button id="btn-save-img">💾 Save Picture</button>
-                <button id="btn-save-sprite">🎞️ Save Sprite Sheet</button>
+            <!-- Canvas Area -->
+            <div class="canvas-container">
+                <img id="trace-img" src="" alt="Trace Image">
+                <canvas id="onion-canvas" width="800" height="600"></canvas>
+                <canvas id="main-canvas" width="800" height="600"></canvas>
             </div>
-        </div>
 
-        <div class="trace-control tool-group">
-            <label><strong>Trace Mode:</strong></label>
-            <input type="text" id="trace-url" placeholder="Paste image URL here...">
-            <button id="btn-load-trace">Load Image</button>
-            <button id="btn-cycle-trace">🔄 Cycle Starters</button>
-            <button id="btn-clear-trace">Clear Trace</button>
-        </div>
-
-        <!-- Canvas Area -->
-        <div class="canvas-container">
-            <img id="trace-img" src="" alt="Trace Image">
-            <canvas id="onion-canvas" width="800" height="600"></canvas>
-            <canvas id="main-canvas" width="800" height="600"></canvas>
-        </div>
-
-        <!-- Animation Timeline -->
-        <div class="animation-timeline" id="timeline">
-            <button id="btn-play">▶️ Play</button>
-            <button id="btn-stop" style="display:none;">⏹️ Stop</button>
-            <button id="btn-add-frame">➕ Add Frame</button>
-            <button id="btn-dup-frame">📋 Duplicate</button>
-            <button id="btn-del-frame">❌ Delete</button>
-            <div style="width: 2px; height: 40px; background: #ccc; margin: 0 10px;"></div>
-            <div id="frames-container" style="display: flex; gap: 5px;">
-                <!-- Frames go here -->
+            <!-- Animation Timeline -->
+            <div class="animation-timeline" id="timeline">
+                <button id="btn-play" class="btn-small">▶️ Play</button>
+                <button id="btn-stop" class="btn-small" style="display:none;">⏹️ Stop</button>
+                <button id="btn-add-frame" class="btn-small">➕ Add Frame</button>
+                <button id="btn-dup-frame" class="btn-small">📋 Dup</button>
+                <button id="btn-del-frame" class="btn-small">❌ Del</button>
+                <div style="width: 2px; height: 30px; background: #ccc; margin: 0 10px;"></div>
+                <div id="frames-container" style="display: flex; gap: 5px;">
+                    <!-- Frames go here -->
+                </div>
             </div>
+
         </div>
 
+        <div class="info-sidebar">
+            <h2>🧅 What is Onion Skin?</h2>
+            <p><strong>Onion Skinning</strong> is a cool trick used by animators to create smooth movement!</p>
+            <p>When you turn it <strong>ON</strong>, you will see a faint, ghostly outline of your <em>previous drawing</em> underneath your current canvas.</p>
+            <h3>How to animate:</h3>
+            <ol>
+                <li>Draw your first frame (e.g., a person standing).</li>
+                <li>Click <strong>➕ Add Frame</strong> below the canvas.</li>
+                <li>Click <strong>🧅 Onion: OFF</strong> to turn it <strong>ON</strong>!</li>
+                <li>You'll see your last drawing faded out. Draw your next frame slightly moved forward.</li>
+                <li>Keep adding frames and moving your drawing slightly to create a walk cycle!</li>
+                <li>Press <strong>▶️ Play</strong> to see it move!</li>
+            </ol>
+        </div>
     </div>
 
     <script>
@@ -450,7 +527,7 @@
 
         document.getElementById('btn-onion').addEventListener('click', (e) => {
             onionSkinEnabled = !onionSkinEnabled;
-            e.target.textContent = onionSkinEnabled ? '🧅 Onion Skin: ON' : '🧅 Onion Skin: OFF';
+            e.target.textContent = onionSkinEnabled ? '🧅 Onion: ON' : '🧅 Onion: OFF';
             e.target.style.backgroundColor = onionSkinEnabled ? 'var(--dark)' : 'var(--primary)';
             drawOnionSkin();
         });
