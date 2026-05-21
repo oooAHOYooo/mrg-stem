@@ -199,10 +199,10 @@
         const traceImg = document.getElementById('trace-img');
         
         // Grid config
-        const cols = 50;
-        const rows = 35;
-        const pegRadius = 8;
-        const spacing = 20; // Distance between peg centers
+        const cols = 100;
+        const rows = 70;
+        const pegRadius = 4;
+        const spacing = 10; // Distance between peg centers
         
         canvas.width = cols * spacing;
         canvas.height = rows * spacing;
@@ -243,6 +243,22 @@
                 document.getElementById('btn-erase').style.borderColor = '#555';
             });
             paletteContainer.appendChild(btn);
+        });
+
+        // Add custom color wheel picker
+        const customPicker = document.createElement('input');
+        customPicker.type = 'color';
+        customPicker.value = '#ffffff';
+        customPicker.title = 'Pick Custom Color';
+        customPicker.style.cssText = 'width: 30px; height: 30px; padding: 0; border: none; border-radius: 5px; cursor: pointer; margin-left: 5px; background: transparent;';
+        paletteContainer.appendChild(customPicker);
+
+        customPicker.addEventListener('input', (e) => {
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            currentColor = e.target.value;
+            isErasing = false;
+            document.getElementById('btn-erase').style.backgroundColor = '#333';
+            document.getElementById('btn-erase').style.borderColor = '#555';
         });
 
         // Erase btn
