@@ -355,9 +355,15 @@
     
     <div class="main-layout">
         
-        <!-- Left Sidebar: Inspiration -->
+        <!-- Left Sidebar: Inspiration & Live Preview -->
         <div class="left-sidebar">
-            <h2>🐎 Animation Inspiration!</h2>
+            <h2 style="font-size:18px;">📖 Live Flipbook!</h2>
+            <canvas id="live-preview-canvas" width="800" height="600" style="width: 100%; border: 3px solid var(--primary); border-radius: 10px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></canvas>
+            <p style="font-size: 13px; margin-top: 5px; margin-bottom: 15px; font-weight: bold; color: var(--primary);">Your animation looping!</p>
+
+            <hr style="width: 100%; border: 1px dashed #ccc; margin-bottom: 15px;">
+
+            <h2>🐎 Inspiration!</h2>
             <img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Muybridge_race_horse_animated.gif" alt="Muybridge Horse Animation" class="inspiration-gif">
             <p><strong>Did you know?</strong> This running horse was one of the very first animations ever made! It was created by rapidly showing many pictures in a row.</p>
             
@@ -827,6 +833,40 @@
                 img.src = frameData;
             });
         });
+
+        // --- Live Flipbook Preview Logic ---
+        const livePreviewCanvas = document.getElementById('live-preview-canvas');
+        const lpCtx = livePreviewCanvas.getContext('2d');
+        let livePreviewIndex = 0;
+
+        setInterval(() => {
+            if (frames.length > 0) {
+                lpCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
+                
+                // Draw background white for flipbook
+                lpCtx.fillStyle = 'white';
+                lpCtx.fillRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
+
+                if (livePreviewIndex === currentFrameIndex) {
+                    lpCtx.drawImage(canvas, 0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
+                } else {
+                    const img = new Image();
+                    img.onload = () => {
+                        lpCtx.drawImage(img, 0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
+                    };
+                    img.src = frames[livePreviewIndex];
+                }
+                
+                if (frames.length > 1) {
+                    livePreviewIndex++;
+                    if (livePreviewIndex >= frames.length) {
+                        livePreviewIndex = 0;
+                    }
+                } else {
+                    livePreviewIndex = 0;
+                }
+            }
+        }, 200); // 5 FPS Loop
 
     </script>
 </body>
