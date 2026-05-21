@@ -219,6 +219,7 @@
             <label><strong>Trace Mode:</strong></label>
             <input type="text" id="trace-url" placeholder="Paste image URL here...">
             <button id="btn-load-trace">Load Image</button>
+            <button id="btn-cycle-trace">🔄 Cycle Starters</button>
             <button id="btn-clear-trace">Clear Trace</button>
         </div>
 
@@ -359,6 +360,20 @@
         });
 
         // --- Tracing Logic ---
+        const preloadedImages = [
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6YYXT485ieYyIJqENm6vMF9YyRGO4UOSOOA&s',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSp3vjFoSuZydzMLAQIsHVJpBctDccfswJ2ig&s',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlDyw2lU7zrJuyTkDWhnhVMqaIYrEM62063Q&s'
+        ];
+        let preloadedIndex = -1;
+
+        document.getElementById('btn-cycle-trace').addEventListener('click', () => {
+            preloadedIndex = (preloadedIndex + 1) % preloadedImages.length;
+            document.getElementById('trace-url').value = preloadedImages[preloadedIndex];
+            traceImg.src = preloadedImages[preloadedIndex];
+            traceImg.style.display = 'block';
+        });
+
         document.getElementById('btn-load-trace').addEventListener('click', () => {
             const url = document.getElementById('trace-url').value;
             if (url) {
@@ -371,6 +386,7 @@
             traceImg.src = '';
             traceImg.style.display = 'none';
             document.getElementById('trace-url').value = '';
+            preloadedIndex = -1;
         });
 
         // --- Animation Logic ---
