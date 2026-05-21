@@ -208,22 +208,38 @@
             background: white;
             padding: 25px;
             border-radius: 20px;
-            width: 280px;
+            width: 320px;
             border: 4px solid var(--primary);
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            font-size: 15px;
+            font-size: 14px;
             line-height: 1.5;
+            max-height: 700px;
+            overflow-y: auto;
+            box-sizing: border-box;
         }
 
         .info-sidebar h2 {
             margin-top: 0;
             color: var(--primary);
             font-size: 22px;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
-        .info-sidebar h3 {
+        .tip-section {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .tip-section h3 {
             color: var(--dark);
-            margin-bottom: 5px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
         }
 
         .info-sidebar ol {
@@ -235,6 +251,22 @@
             margin-bottom: 8px;
         }
 
+        /* Custom Scrollbar for sidebar */
+        .info-sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .info-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 10px;
+        }
+        .info-sidebar::-webkit-scrollbar-thumb {
+            background: var(--secondary); 
+            border-radius: 10px;
+        }
+        .info-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #3eb8b0; 
+        }
+
         @media (max-width: 1150px) {
             .main-layout {
                 flex-direction: column;
@@ -243,7 +275,6 @@
             .info-sidebar {
                 width: 100%;
                 max-width: 800px;
-                box-sizing: border-box;
             }
         }
     </style>
@@ -307,18 +338,34 @@
         </div>
 
         <div class="info-sidebar">
-            <h2>🧅 What is Onion Skin?</h2>
-            <p><strong>Onion Skinning</strong> is a cool trick used by animators to create smooth movement!</p>
-            <p>When you turn it <strong>ON</strong>, you will see a faint, ghostly outline of your <em>previous drawing</em> underneath your current canvas.</p>
-            <h3>How to animate:</h3>
-            <ol>
-                <li>Draw your first frame (e.g., a person standing).</li>
-                <li>Click <strong>➕ Add Frame</strong> below the canvas.</li>
-                <li>Click <strong>🧅 Onion: OFF</strong> to turn it <strong>ON</strong>!</li>
-                <li>You'll see your last drawing faded out. Draw your next frame slightly moved forward.</li>
-                <li>Keep adding frames and moving your drawing slightly to create a walk cycle!</li>
-                <li>Press <strong>▶️ Play</strong> to see it move!</li>
-            </ol>
+            <h2>✨ Pro Tips for Kids!</h2>
+
+            <div class="tip-section">
+                <h3>🖼️ Tracing Mode</h3>
+                <p>We've loaded a default picture for you! Press <strong>🔄 Cycle</strong> to see more starter images.</p>
+                <p><strong>Want to trace your own favorite picture?</strong></p>
+                <ol>
+                    <li>Find a picture you like on Google.</li>
+                    <li><strong>Right-click</strong> the picture and pick <strong>"Copy Image Address"</strong>.</li>
+                    <li><strong>Right-click</strong> inside the "URL..." box at the top and pick <strong>"Paste"</strong>.</li>
+                    <li>Click <strong>Load</strong>!</li>
+                </ol>
+            </div>
+
+            <div class="tip-section">
+                <h3>🧅 What is Onion Skin?</h3>
+                <p><strong>Onion Skinning</strong> is a cool trick used by animators to create smooth movement!</p>
+                <p>When you turn it <strong>ON</strong>, you will see a faint, ghostly outline of your <em>previous drawing</em> underneath your current canvas.</p>
+                <strong>How to animate:</strong>
+                <ol>
+                    <li>Draw your first frame (e.g., a person standing).</li>
+                    <li>Click <strong>➕ Add Frame</strong> below the canvas.</li>
+                    <li>Click <strong>🧅 Onion: OFF</strong> to turn it <strong>ON</strong>!</li>
+                    <li>You'll see your last drawing faded out. Draw your next frame slightly moved forward.</li>
+                    <li>Keep adding frames to create a walk cycle!</li>
+                    <li>Press <strong>▶️ Play</strong> to see it move!</li>
+                </ol>
+            </div>
         </div>
     </div>
 
@@ -336,6 +383,19 @@
         let isPlaying = false;
         let playInterval;
         let onionSkinEnabled = false;
+
+        // --- Tracing Default Setup ---
+        const preloadedImages = [
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6YYXT485ieYyIJqENm6vMF9YyRGO4UOSOOA&s',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSp3vjFoSuZydzMLAQIsHVJpBctDccfswJ2ig&s',
+            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlDyw2lU7zrJuyTkDWhnhVMqaIYrEM62063Q&s'
+        ];
+        let preloadedIndex = 0; // Load the first image by default
+
+        // Set initial state
+        document.getElementById('trace-url').value = preloadedImages[preloadedIndex];
+        traceImg.src = preloadedImages[preloadedIndex];
+        traceImg.style.display = 'block';
 
         // Initialize first frame
         saveCurrentFrameToData();
@@ -437,13 +497,6 @@
         });
 
         // --- Tracing Logic ---
-        const preloadedImages = [
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT6YYXT485ieYyIJqENm6vMF9YyRGO4UOSOOA&s',
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSp3vjFoSuZydzMLAQIsHVJpBctDccfswJ2ig&s',
-            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSlDyw2lU7zrJuyTkDWhnhVMqaIYrEM62063Q&s'
-        ];
-        let preloadedIndex = -1;
-
         document.getElementById('btn-cycle-trace').addEventListener('click', () => {
             preloadedIndex = (preloadedIndex + 1) % preloadedImages.length;
             document.getElementById('trace-url').value = preloadedImages[preloadedIndex];
