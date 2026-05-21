@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light Brite Studio</title>
+    <style>
+        :root {
+            --bg-color: #111;
+            --panel-bg: #222;
+            --text-color: #eee;
+            --accent: #ff007f;
+        }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: white;
+            text-shadow: 0 0 10px var(--accent);
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #333;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #444;
+            border-color: var(--accent);
+        }
+
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 0;
+        }
+
+        .color-btn.active {
+            border-color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .trace-control input[type="text"] {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: #111;
+            color: white;
+            width: 150px;
+        }
+
+        .canvas-container {
+            position: relative;
+            background-color: #050505;
+            border: 5px solid #222;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8) inset, 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #trace-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.3;
+            pointer-events: none;
+            display: none;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        .trace-thumbnail {
+            width: 35px;
+            height: 35px;
+            object-fit: cover;
+            border: 2px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .trace-thumbnail:hover {
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+        
+        .peg-info {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>✨ Light Brite Studio ✨</h1>
+    
+    <div class="main-layout">
+        <div class="toolbar">
+            <div class="tool-group" id="palette">
+                <!-- Colors injected via JS -->
+            </div>
+            
+            <div class="tool-group">
+                <button id="btn-erase">🧽 Erase Mode</button>
+                <button id="btn-clear">🗑️ Clear Board</button>
+            </div>
+
+            <div class="trace-control tool-group" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div style="display:flex; align-items: center; gap:10px;">
+                    <span style="font-size:13px; font-weight:bold;">Trace Image:</span>
+                    <div id="trace-thumbnails" style="display: flex; gap: 5px;"></div>
+                    <button id="btn-random-starters" style="padding:4px 8px; font-size:12px;">🔀</button>
+                </div>
+                <div style="display:flex; align-items: center; gap:5px;">
+                    <input type="text" id="trace-url" placeholder="Or Paste URL...">
+                    <button id="btn-load-trace">Load</button>
+                    <button id="btn-clear-trace">Clear Trace</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <button id="btn-save-img">💾 Save Art</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <img id="trace-img" src="" alt="Trace Image">
+            <canvas id="main-canvas"></canvas>
+        </div>
+        
+        <div class="peg-info">
+            Click and drag to place pegs. Use the Erase Mode or click on an existing peg with the active color to remove it.
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('main-canvas');
+        const ctx = canvas.getContext('2d');
+        const traceImg = document.getElementById('trace-img');
+        
+        // Grid config
+        const cols = 50;
+        const rows = 35;
+        const pegRadius = 8;
+        const spacing = 20; // Distance between peg centers
+        
+        canvas.width = cols * spacing;
+        canvas.height = rows * spacing;
+
+        const grid = Array(cols).fill().map(() => Array(rows).fill(null));
+
+        const colors = [
+            '#ff003c', // Neon Red
+            '#ff8a00', // Neon Orange
+            '#ffeb3b', // Neon Yellow
+            '#00e676', // Neon Green
+            '#00e5ff', // Neon Cyan
+            '#2979ff', // Neon Blue
+            '#d500f9', // Neon Purple
+            '#f50057', // Neon Pink
+            '#ffffff'  // White
+        ];
+
+        let currentColor = colors[0];
+        let isDrawing = false;
+        let isErasing = false;
+
+        // Init Palette
+        const paletteContainer = document.getElementById('palette');
+        colors.forEach((color, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'color-btn';
+            btn.style.backgroundColor = color;
+            btn.style.color = color; // for shadow matching
+            if (index === 0) btn.classList.add('active');
+            
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentColor = color;
+                isErasing = false;
+                document.getElementById('btn-erase').style.backgroundColor = '#333';
+                document.getElementById('btn-erase').style.borderColor = '#555';
+            });
+            paletteContainer.appendChild(btn);
+        });
+
+        // Erase btn
+        document.getElementById('btn-erase').addEventListener('click', (e) => {
+            isErasing = true;
+            e.target.style.backgroundColor = '#444';
+            e.target.style.borderColor = 'var(--accent)';
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        });
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            for(let c=0; c<cols; c++) {
+                for(let r=0; r<rows; r++) {
+                    grid[c][r] = null;
+                }
+            }
+            drawGrid();
+        });
+
+        // Trace Image Logic
+        const starterImagesPool = [
+            'https://i.pinimg.com/236x/88/b9/a2/88b9a2795ac32842cbd2fb9c04b6d797.jpg',
+            'https://i.ytimg.com/vi/Gjx5PYyh_Zs/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCR5BbYwk1QmHHwwK9p9Ie2HxLUog',
+            'https://i.pinimg.com/474x/49/67/10/4967102a284cdd65f1ba64beee955fe0.jpg',
+            'https://assets.dragoart.com/images/167579_502/how-to-draw-a-baby-dragon-step-7_5e4ccba5054be0.76947697_95846_5_3.png'
+        ];
+
+        function loadRandomThumbnails() {
+            let shuffled = [...starterImagesPool].sort(() => 0.5 - Math.random());
+            let selected = shuffled.slice(0, 3);
+            const container = document.getElementById('trace-thumbnails');
+            container.innerHTML = '';
+            
+            selected.forEach(src => {
+                let img = document.createElement('img');
+                img.src = src;
+                img.className = 'trace-thumbnail';
+                img.addEventListener('click', () => {
+                    document.getElementById('trace-url').value = src;
+                    traceImg.src = src;
+                    traceImg.style.display = 'block';
+                });
+                container.appendChild(img);
+            });
+        }
+        loadRandomThumbnails();
+        document.getElementById('btn-random-starters').addEventListener('click', loadRandomThumbnails);
+
+        document.getElementById('btn-load-trace').addEventListener('click', () => {
+            const url = document.getElementById('trace-url').value;
+            if (url) {
+                traceImg.src = url;
+                traceImg.style.display = 'block';
+            }
+        });
+
+        document.getElementById('btn-clear-trace').addEventListener('click', () => {
+            traceImg.src = '';
+            traceImg.style.display = 'none';
+            document.getElementById('trace-url').value = '';
+        });
+
+        // Save Image
+        document.getElementById('btn-save-img').addEventListener('click', () => {
+            // Fill background with black for saving
+            const saveCanvas = document.createElement('canvas');
+            saveCanvas.width = canvas.width;
+            saveCanvas.height = canvas.height;
+            const sCtx = saveCanvas.getContext('2d');
+            sCtx.fillStyle = '#050505';
+            sCtx.fillRect(0, 0, saveCanvas.width, saveCanvas.height);
+            sCtx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = 'light-brite-art.png';
+            link.href = saveCanvas.toDataURL();
+            link.click();
+        });
+
+        // Drawing Mechanics
+        function getGridPos(x, y) {
+            const c = Math.floor(x / spacing);
+            const r = Math.floor(y / spacing);
+            return { c, r };
+        }
+
+        function handleInput(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+            
+            const { c, r } = getGridPos(x, y);
+            
+            if (c >= 0 && c < cols && r >= 0 && r < rows) {
+                if (isErasing) {
+                    grid[c][r] = null;
+                } else {
+                    grid[c][r] = currentColor;
+                }
+                drawGrid();
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            handleInput(e);
+        });
+        canvas.addEventListener('mousemove', handleInput);
+        window.addEventListener('mouseup', () => { isDrawing = false; });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDrawing = true;
+            handleInput(e);
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleInput(e);
+        });
+        window.addEventListener('touchend', () => { isDrawing = false; });
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for(let c=0; c<cols; c++) {
+                for(let r=0; r<rows; r++) {
+                    const cx = c * spacing + spacing / 2;
+                    const cy = r * spacing + spacing / 2;
+                    const color = grid[c][r];
+                    
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, pegRadius, 0, Math.PI * 2);
+                    
+                    if (color) {
+                        ctx.fillStyle = color;
+                        ctx.shadowColor = color;
+                        ctx.shadowBlur = 15; // Glow effect
+                        ctx.fill();
+                        
+                        // Peg highlight
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                        ctx.beginPath();
+                        ctx.arc(cx - 2, cy - 2, pegRadius/3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Empty peg hole
+                        ctx.fillStyle = '#111';
+                        ctx.shadowBlur = 0;
+                        ctx.fill();
+                        ctx.strokeStyle = '#222';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Initial render
+        drawGrid();
+    </script>
+</body>
+</html>

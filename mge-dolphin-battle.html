@@ -1271,8 +1271,27 @@
         }
 
         function varColor(cssVarName) {
-            const val = getComputedStyle(document.documentElement).getPropertyValue(cssVarName).trim();
-            return parseInt(val.replace('#', '0x'), 16);
+            const defaultColors = {
+                '--neon-blue': 0x00f2fe,
+                '--neon-pink': 0xf472b6,
+                '--neon-yellow': 0xffe66d,
+                '--neon-purple': 0xa855f7
+            };
+            try {
+                const val = getComputedStyle(document.documentElement).getPropertyValue(cssVarName);
+                if (val) {
+                    const trimmed = val.trim();
+                    if (trimmed) {
+                        const parsed = parseInt(trimmed.replace('#', '0x'), 16);
+                        if (!isNaN(parsed)) {
+                            return parsed;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn(`Failed to parse CSS variable ${cssVarName}, using fallback.`, e);
+            }
+            return defaultColors[cssVarName] || 0xffffff;
         }
 
         // Procedural Reef columns
