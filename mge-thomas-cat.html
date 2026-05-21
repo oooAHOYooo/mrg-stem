@@ -81,6 +81,20 @@
             font-size: 1.5rem;
             margin-top: 10px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+
+        .controls-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            pointer-events: none;
+            z-index: 50;
         }
     </style>
 </head>
@@ -90,8 +104,12 @@
     <a href="mge.html" class="back-button">← Exit to Hub</a>
 
     <div id="instruction-overlay">
-        HOLD TO GO! 🚂
-        <div class="hint-text">(Click, Touch, or Spacebar)</div>
+        LET'S GO! 🚂
+    </div>
+    
+    <div class="controls-hint">
+        <div class="hint-text" style="color: white; font-weight: bold;">👈 Reverse (Left Side / A)</div>
+        <div class="hint-text" style="color: white; font-weight: bold;">Forward (Right Side / D) 👉</div>
     </div>
 
     <script>
@@ -325,14 +343,15 @@
 
         scene.add(trainGroup);
 
-        // --- Particles (Steam) ---
+        // --- Particles & Happy Things ---
         const particleGeo = new THREE.SphereGeometry(0.5, 8, 8);
         const particleMat = new THREE.MeshBasicMaterial({ color: 0xEEEEEE, transparent: true, opacity: 0.8 });
         const particles = [];
+        const happyThings = [];
+        const balloonGeo = new THREE.SphereGeometry(1, 16, 16);
 
         function spawnParticle() {
             const p = new THREE.Mesh(particleGeo, particleMat);
-            // World position of funnel
             const funnelPos = new THREE.Vector3(3, 7, 0);
             funnelPos.applyMatrix4(trainGroup.matrixWorld);
             p.position.copy(funnelPos);
@@ -348,6 +367,27 @@
             particles.push(p);
         }
 
+        function spawnHappyThing() {
+            const color = new THREE.Color().setHSL(Math.random(), 1.0, 0.5);
+            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.2 });
+            const b = new THREE.Mesh(balloonGeo, mat);
+            const pos = new THREE.Vector3(0, 5, 0);
+            pos.applyMatrix4(trainGroup.matrixWorld);
+            b.position.copy(pos);
+            b.position.y += 2 + Math.random() * 2;
+            b.position.x += (Math.random() - 0.5) * 8;
+            b.position.z += (Math.random() - 0.5) * 8;
+            
+            b.userData = {
+                velocity: new THREE.Vector3(0, 0.05 + Math.random() * 0.05, 0),
+                life: 1.0,
+                decay: 0.003 + Math.random() * 0.003
+            };
+            
+            scene.add(b);
+            happyThings.push(b);
+        }
+
         // --- Game Logic ---
         let trainAngle = 0;
         let speed = 0;
@@ -355,33 +395,43 @@
         const acceleration = 0.0005;
         const friction = 0.0002;
         
-        let isInputActive = false;
+        let inputDirection = 0; // 1 for forward, -1 for reverse, 0 for stop
         
         const overlay = document.getElementById('instruction-overlay');
 
-        function setInput(active) {
-            isInputActive = active;
-            if (active) {
+        function setInput(direction) {
+            inputDirection = direction;
+            if (direction !== 0) {
                 overlay.classList.add('hidden');
             } else {
                 overlay.classList.remove('hidden');
             }
         }
 
+        function handlePointerDown(x) {
+            if (x < window.innerWidth / 2) {
+                setInput(-1);
+            } else {
+                setInput(1);
+            }
+        }
+
         // Input Listeners
-        window.addEventListener('mousedown', () => setInput(true));
-        window.addEventListener('mouseup', () => setInput(false));
-        window.addEventListener('touchstart', (e) => { e.preventDefault(); setInput(true); }, {passive: false});
-        window.addEventListener('touchend', (e) => { e.preventDefault(); setInput(false); }, {passive: false});
+        window.addEventListener('mousedown', (e) => handlePointerDown(e.clientX));
+        window.addEventListener('mouseup', () => setInput(0));
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); handlePointerDown(e.touches[0].clientX); }, {passive: false});
+        window.addEventListener('touchend', (e) => { e.preventDefault(); setInput(0); }, {passive: false});
         
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.code === 'Enter') {
-                setInput(true);
+            if (e.code === 'ArrowRight' || e.code === 'KeyD' || e.code === 'Space') {
+                setInput(1);
+            } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+                setInput(-1);
             }
         });
         window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space' || e.code === 'Enter') {
-                setInput(false);
+            if (['ArrowRight', 'KeyD', 'Space', 'ArrowLeft', 'KeyA'].includes(e.code)) {
+                setInput(0);
             }
         });
 
@@ -400,11 +450,17 @@
             
             const delta = clock.getDelta();
 
-            // Handle speed
-            if (isInputActive) {
+            // Handle speed and direction
+            if (inputDirection === 1) {
                 speed = Math.min(speed + acceleration, maxSpeed);
+            } else if (inputDirection === -1) {
+                speed = Math.max(speed - acceleration, -maxSpeed);
             } else {
-                speed = Math.max(speed - friction, 0);
+                if (speed > 0) {
+                    speed = Math.max(speed - friction, 0);
+                } else if (speed < 0) {
+                    speed = Math.min(speed + friction, 0);
+                }
             }
 
             // Move train along track
@@ -414,7 +470,7 @@
             trainGroup.position.x = Math.cos(trainAngle) * radius;
             trainGroup.position.z = Math.sin(trainAngle) * radius;
             
-            // Orient train along the track
+            // Orient train along the track (always face forward, or switch? Let's just face forward along the curve, moving backward just reverses position)
             trainGroup.rotation.y = -trainAngle;
 
             // Spin wheels
@@ -423,13 +479,18 @@
             });
 
             // Bob Cat in the Hat up and down
-            if (speed > 0) {
+            if (Math.abs(speed) > 0) {
                 catGroup.position.y = 7 + Math.sin(trainAngle * 40) * 0.2;
             }
 
             // Particles
-            if (speed > 0.005 && Math.random() < 0.3) {
+            if (Math.abs(speed) > 0.005 && Math.random() < 0.3) {
                 spawnParticle();
+            }
+            
+            // Spawn happy things occasionally when moving
+            if (Math.abs(speed) > 0.005 && Math.random() < 0.05) {
+                spawnHappyThing();
             }
             
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -444,13 +505,26 @@
                     particles.splice(i, 1);
                 }
             }
+            
+            for (let i = happyThings.length - 1; i >= 0; i--) {
+                const b = happyThings[i];
+                b.position.add(b.userData.velocity);
+                b.userData.life -= b.userData.decay;
+                b.scale.setScalar(b.userData.life);
+                
+                if (b.userData.life <= 0) {
+                    scene.remove(b);
+                    happyThings.splice(i, 1);
+                }
+            }
 
             // Camera follow
             // Camera smoothly follows the train
+            const camOffset = speed >= 0 ? 0.5 : -0.5;
             const targetCamPos = new THREE.Vector3(
-                trainGroup.position.x + Math.cos(trainAngle + 0.5) * 20,
+                trainGroup.position.x + Math.cos(trainAngle + camOffset) * 20,
                 15,
-                trainGroup.position.z + Math.sin(trainAngle + 0.5) * 20
+                trainGroup.position.z + Math.sin(trainAngle + camOffset) * 20
             );
             camera.position.lerp(targetCamPos, 0.05);
             camera.lookAt(trainGroup.position);
