@@ -566,6 +566,32 @@
             box-shadow: 0 15px 50px rgba(244, 114, 182, 0.8) !important;
             background: linear-gradient(135deg, #f472b6, #a855f7) !important;
         }
+
+        /* Game Preview on Hover */
+        #game-preview-container {
+            position: fixed;
+            z-index: 9999;
+            width: 400px;
+            height: 250px;
+            background: #000;
+            border: 3px solid var(--mge-primary);
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            display: none;
+            pointer-events: none;
+            overflow: hidden;
+            transition: opacity 0.2s ease;
+            opacity: 0;
+        }
+        #game-preview-iframe {
+            border: none;
+            pointer-events: none;
+            /* scale it down slightly so they get a better view of the whole game */
+            transform: scale(0.8);
+            transform-origin: top left;
+            width: 125%;
+            height: 125%;
+        }
     </style>
 </head>
 
@@ -746,6 +772,16 @@
                     <h2 style="background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">🚀 NEW & FEATURED</h2>
                 </div>
                 <div class="experiments-grid" style="margin-top: 1rem;">
+                    <!-- FEATURED: Thomas & Cat in the Hat -->
+                    <div class="experiment-card featured-highlight" id="thomas-cat" style="border-color: #ff6b6b; background: linear-gradient(135deg, #1a2980, #26d0ce); color: #fff; box-shadow: 0 0 30px rgba(255, 107, 107, 0.35) !important; grid-column: span 2;">
+                        <span class="experiment-icon" style="font-size: 3.5rem; float: left; margin-right: 18px; text-shadow: 0 0 20px #ff6b6b;">🚂🎩</span>
+                        <div>
+                            <h2 style="background: linear-gradient(135deg, #ff6b6b, #ffe66d); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 2rem; font-family: 'Outfit', sans-serif; letter-spacing: 1px;">Thomas & Cat in the Hat (Accessible Mode)</h2>
+                            <p style="font-weight: 600; font-size: 1.2rem; color: #e2e8f0;">A soothing, accessible 3D adventure! Just hold any key, spacebar, or touch the screen to make Thomas drive around the track with the Cat in the Hat riding along. No timers, no stress, pure fun!</p>
+                            <a href="mge-thomas-cat.html" class="experiment-link" style="background: linear-gradient(135deg, #ff6b6b, #ffe66d); color: #1a2980; padding: 12px 30px; font-size: 1.2rem; border-radius: 30px; box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); font-weight: 900;">ALL ABOARD 🚂</a>
+                        </div>
+                    </div>
+
                     <!-- FEATURED: STEM Kart Racing -->
                     <div class="experiment-card featured-highlight" id="stem-kart" style="border-color: #00f2fe; background: linear-gradient(135deg, #040814, #080c1e); grid-column: span 2; box-shadow: 0 0 30px rgba(0, 242, 254, 0.3) !important;">
                         <span class="experiment-icon" style="font-size: 3.5rem; float: left; margin-right: 18px; text-shadow: 0 0 15px #00f2fe;">🏎️</span>
@@ -1281,6 +1317,65 @@
         document.addEventListener('DOMContentLoaded', () => {
             const savedView = localStorage.getItem('mgeView') || 'list';
             toggleView(savedView);
+
+            // --- Game Preview Logic ---
+            const previewContainer = document.createElement('div');
+            previewContainer.id = 'game-preview-container';
+            const previewIframe = document.createElement('iframe');
+            previewIframe.id = 'game-preview-iframe';
+            // Sandbox prevents the game from redirecting the top window
+            previewIframe.sandbox = 'allow-scripts allow-same-origin';
+            previewContainer.appendChild(previewIframe);
+            document.body.appendChild(previewContainer);
+            
+            let hoverTimer;
+            
+            document.querySelectorAll('.experiment-card').forEach(card => {
+                card.addEventListener('mouseenter', (e) => {
+                    const link = card.querySelector('.experiment-link');
+                    // Check if link exists and is local html file (not external link)
+                    if (link && link.href && link.href.includes('.html')) {
+                        hoverTimer = setTimeout(() => {
+                            previewIframe.src = link.href;
+                            previewContainer.style.display = 'block';
+                            // small delay for css transition
+                            setTimeout(() => {
+                                previewContainer.style.opacity = '1';
+                            }, 10);
+                        }, 600); // 600ms delay before preview to prevent accidental triggers
+                    }
+                });
+                
+                card.addEventListener('mousemove', (e) => {
+                    if (previewContainer.style.display === 'block') {
+                        // Position preview relative to mouse cursor
+                        let x = e.clientX + 20;
+                        let y = e.clientY + 20;
+                        
+                        // Check screen bounds
+                        if (x + 400 > window.innerWidth) {
+                            x = e.clientX - 420;
+                        }
+                        if (y + 250 > window.innerHeight) {
+                            y = e.clientY - 270;
+                        }
+                        
+                        previewContainer.style.left = x + 'px';
+                        previewContainer.style.top = y + 'px';
+                    }
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    clearTimeout(hoverTimer);
+                    previewContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        if (previewContainer.style.opacity === '0') {
+                            previewContainer.style.display = 'none';
+                            previewIframe.src = 'about:blank'; // unload to save resources
+                        }
+                    }, 200);
+                });
+            });
         });
     </script>
 </body>

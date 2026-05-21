@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thomas & Cat in the Hat - Accessible 3D Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --mge-primary: #ff6b6b;
+            --mge-secondary: #4ecdc4;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: #87CEEB; /* Sky blue */
+            touch-action: none; /* Prevent zooming/panning on touch */
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            cursor: pointer;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 100;
+            padding: 0.8rem 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            background: rgba(0, 0, 0, 0.6);
+            border-color: #fff;
+        }
+
+        #instruction-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            font-size: 4rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), 0 0 30px #ff6b6b;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        #instruction-overlay.hidden {
+            opacity: 0;
+        }
+        
+        .hint-text {
+            font-size: 1.5rem;
+            margin-top: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container"></div>
+    <a href="mge.html" class="back-button">← Exit to Hub</a>
+
+    <div id="instruction-overlay">
+        HOLD TO GO! 🚂
+        <div class="hint-text">(Click, Touch, or Spacebar)</div>
+    </div>
+
+    <script>
+        // Setup Three.js Scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Sky blue
+        scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 15, 30);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('game-container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(20, 40, 20);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.5;
+        dirLight.shadow.camera.far = 150;
+        dirLight.shadow.camera.left = -50;
+        dirLight.shadow.camera.right = 50;
+        dirLight.shadow.camera.top = 50;
+        dirLight.shadow.camera.bottom = -50;
+        scene.add(dirLight);
+
+        // Ground
+        const groundGeo = new THREE.PlaneGeometry(200, 200);
+        const groundMat = new THREE.MeshStandardMaterial({ 
+            color: 0x4CAF50, // Grass green
+            roughness: 0.8 
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Track
+        const trackRadius = 40;
+        const trackGeo = new THREE.TorusGeometry(trackRadius, 0.5, 8, 64);
+        const trackMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+        const track = new THREE.Mesh(trackGeo, trackMat);
+        track.rotation.x = Math.PI / 2;
+        track.position.y = 0.5;
+        track.receiveShadow = true;
+        track.castShadow = true;
+        scene.add(track);
+        
+        // Inner track
+        const trackGeoInner = new THREE.TorusGeometry(trackRadius - 3, 0.5, 8, 64);
+        const trackInner = new THREE.Mesh(trackGeoInner, trackMat);
+        trackInner.rotation.x = Math.PI / 2;
+        trackInner.position.y = 0.5;
+        trackInner.receiveShadow = true;
+        trackInner.castShadow = true;
+        scene.add(trackInner);
+
+        // Track ties (wooden planks)
+        const tiesGroup = new THREE.Group();
+        const tieGeo = new THREE.BoxGeometry(5, 0.4, 1);
+        const tieMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        for (let i = 0; i < 60; i++) {
+            const angle = (i / 60) * Math.PI * 2;
+            const tie = new THREE.Mesh(tieGeo, tieMat);
+            tie.position.set(Math.cos(angle) * (trackRadius - 1.5), 0.2, Math.sin(angle) * (trackRadius - 1.5));
+            tie.rotation.y = -angle;
+            tie.receiveShadow = true;
+            tie.castShadow = true;
+            tiesGroup.add(tie);
+        }
+        scene.add(tiesGroup);
+
+        // Scenery (Simple Trees)
+        const treeGeo = new THREE.ConeGeometry(3, 8, 8);
+        const treeMat = new THREE.MeshStandardMaterial({ color: 0x2E8B57 });
+        const trunkGeo = new THREE.CylinderGeometry(0.8, 0.8, 2);
+        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+        
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = trackRadius + 10 + Math.random() * 30;
+            
+            const tree = new THREE.Group();
+            
+            const leaves = new THREE.Mesh(treeGeo, treeMat);
+            leaves.position.y = 5;
+            leaves.castShadow = true;
+            
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 1;
+            trunk.castShadow = true;
+            
+            tree.add(leaves);
+            tree.add(trunk);
+            
+            tree.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+            scene.add(tree);
+        }
+
+        // --- Build Thomas ---
+        const trainGroup = new THREE.Group();
+        
+        // Boiler (Blue cylinder)
+        const boilerGeo = new THREE.CylinderGeometry(2, 2, 6, 16);
+        const blueMat = new THREE.MeshStandardMaterial({ color: 0x1E90FF, roughness: 0.4 });
+        const boiler = new THREE.Mesh(boilerGeo, blueMat);
+        boiler.rotation.z = Math.PI / 2;
+        boiler.position.set(1, 3.5, 0);
+        boiler.castShadow = true;
+        trainGroup.add(boiler);
+
+        // Cabin (Blue box)
+        const cabinGeo = new THREE.BoxGeometry(4, 5, 4.5);
+        const cabin = new THREE.Mesh(cabinGeo, blueMat);
+        cabin.position.set(-2.5, 4.5, 0);
+        cabin.castShadow = true;
+        trainGroup.add(cabin);
+
+        // Base (Red plate)
+        const baseGeo = new THREE.BoxGeometry(10, 1, 5);
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xFF0000 });
+        const base = new THREE.Mesh(baseGeo, redMat);
+        base.position.set(0, 2, 0);
+        base.castShadow = true;
+        trainGroup.add(base);
+
+        // Funnel (Black cylinder)
+        const funnelGeo = new THREE.CylinderGeometry(0.6, 0.4, 2);
+        const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const funnel = new THREE.Mesh(funnelGeo, blackMat);
+        funnel.position.set(3, 6, 0);
+        funnel.castShadow = true;
+        trainGroup.add(funnel);
+
+        // Face (Grey cylinder on front)
+        const faceGeo = new THREE.CylinderGeometry(1.8, 1.8, 0.5, 16);
+        const greyMat = new THREE.MeshStandardMaterial({ color: 0xDDDDDD });
+        const face = new THREE.Mesh(faceGeo, greyMat);
+        face.rotation.z = Math.PI / 2;
+        face.position.set(4.2, 3.5, 0);
+        trainGroup.add(face);
+        
+        // Eyes and mouth for face
+        const eyeGeo = new THREE.SphereGeometry(0.2);
+        const eye1 = new THREE.Mesh(eyeGeo, blackMat);
+        eye1.position.set(4.4, 3.8, 0.6);
+        trainGroup.add(eye1);
+        const eye2 = new THREE.Mesh(eyeGeo, blackMat);
+        eye2.position.set(4.4, 3.8, -0.6);
+        trainGroup.add(eye2);
+        
+        const mouthGeo = new THREE.BoxGeometry(0.1, 0.2, 1);
+        const mouth = new THREE.Mesh(mouthGeo, blackMat);
+        mouth.position.set(4.4, 2.8, 0);
+        trainGroup.add(mouth);
+
+        // Wheels
+        const wheelGeo = new THREE.CylinderGeometry(1, 1, 0.5, 16);
+        const wheelPositions = [
+            [-3, 1, 2.5], [0, 1, 2.5], [3, 1, 2.5],
+            [-3, 1, -2.5], [0, 1, -2.5], [3, 1, -2.5]
+        ];
+        
+        const wheels = [];
+        wheelPositions.forEach(pos => {
+            const w = new THREE.Mesh(wheelGeo, blackMat);
+            w.rotation.x = Math.PI / 2;
+            w.position.set(...pos);
+            w.castShadow = true;
+            trainGroup.add(w);
+            wheels.push(w);
+        });
+
+        // --- Build Cat in the Hat ---
+        const catGroup = new THREE.Group();
+        
+        // Body (White box)
+        const catBodyGeo = new THREE.BoxGeometry(1.5, 2.5, 1.5);
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
+        const catBody = new THREE.Mesh(catBodyGeo, whiteMat);
+        catBody.position.y = 1.25;
+        catBody.castShadow = true;
+        catGroup.add(catBody);
+
+        // Head (White sphere)
+        const catHeadGeo = new THREE.SphereGeometry(1);
+        const catHead = new THREE.Mesh(catHeadGeo, whiteMat);
+        catHead.position.y = 3.5;
+        catHead.castShadow = true;
+        catGroup.add(catHead);
+        
+        // Cat Eyes
+        const catEye1 = new THREE.Mesh(eyeGeo, blackMat);
+        catEye1.position.set(0.9, 3.6, 0.4);
+        catGroup.add(catEye1);
+        const catEye2 = new THREE.Mesh(eyeGeo, blackMat);
+        catEye2.position.set(0.9, 3.6, -0.4);
+        catGroup.add(catEye2);
+
+        // Hat (Striped cylinder)
+        const hatGroup = new THREE.Group();
+        const hatBrimGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.2, 16);
+        const hatBrim = new THREE.Mesh(hatBrimGeo, redMat);
+        hatGroup.add(hatBrim);
+
+        for (let i = 0; i < 4; i++) {
+            const stripeGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.5, 16);
+            const stripeMat = (i % 2 === 0) ? whiteMat : redMat;
+            const stripe = new THREE.Mesh(stripeGeo, stripeMat);
+            stripe.position.y = 0.25 + i * 0.5;
+            stripe.castShadow = true;
+            hatGroup.add(stripe);
+        }
+        hatGroup.position.set(0, 4.5, 0);
+        // Tilt the hat slightly for character
+        hatGroup.rotation.z = -0.2;
+        catGroup.add(hatGroup);
+
+        // Place cat on top of the cabin
+        catGroup.position.set(-2.5, 7, 0);
+        trainGroup.add(catGroup);
+
+        scene.add(trainGroup);
+
+        // --- Particles (Steam) ---
+        const particleGeo = new THREE.SphereGeometry(0.5, 8, 8);
+        const particleMat = new THREE.MeshBasicMaterial({ color: 0xEEEEEE, transparent: true, opacity: 0.8 });
+        const particles = [];
+
+        function spawnParticle() {
+            const p = new THREE.Mesh(particleGeo, particleMat);
+            // World position of funnel
+            const funnelPos = new THREE.Vector3(3, 7, 0);
+            funnelPos.applyMatrix4(trainGroup.matrixWorld);
+            p.position.copy(funnelPos);
+            p.scale.set(0.5, 0.5, 0.5);
+            
+            p.userData = {
+                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.1, 0.2 + Math.random() * 0.1, (Math.random() - 0.5) * 0.1),
+                life: 1.0,
+                decay: 0.01 + Math.random() * 0.02
+            };
+            
+            scene.add(p);
+            particles.push(p);
+        }
+
+        // --- Game Logic ---
+        let trainAngle = 0;
+        let speed = 0;
+        const maxSpeed = 0.015;
+        const acceleration = 0.0005;
+        const friction = 0.0002;
+        
+        let isInputActive = false;
+        
+        const overlay = document.getElementById('instruction-overlay');
+
+        function setInput(active) {
+            isInputActive = active;
+            if (active) {
+                overlay.classList.add('hidden');
+            } else {
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Input Listeners
+        window.addEventListener('mousedown', () => setInput(true));
+        window.addEventListener('mouseup', () => setInput(false));
+        window.addEventListener('touchstart', (e) => { e.preventDefault(); setInput(true); }, {passive: false});
+        window.addEventListener('touchend', (e) => { e.preventDefault(); setInput(false); }, {passive: false});
+        
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                setInput(true);
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                setInput(false);
+            }
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+
+            // Handle speed
+            if (isInputActive) {
+                speed = Math.min(speed + acceleration, maxSpeed);
+            } else {
+                speed = Math.max(speed - friction, 0);
+            }
+
+            // Move train along track
+            trainAngle += speed;
+            
+            const radius = trackRadius - 1.5;
+            trainGroup.position.x = Math.cos(trainAngle) * radius;
+            trainGroup.position.z = Math.sin(trainAngle) * radius;
+            
+            // Orient train along the track
+            trainGroup.rotation.y = -trainAngle;
+
+            // Spin wheels
+            wheels.forEach(w => {
+                w.rotation.z -= speed * 20;
+            });
+
+            // Bob Cat in the Hat up and down
+            if (speed > 0) {
+                catGroup.position.y = 7 + Math.sin(trainAngle * 40) * 0.2;
+            }
+
+            // Particles
+            if (speed > 0.005 && Math.random() < 0.3) {
+                spawnParticle();
+            }
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.position.add(p.userData.velocity);
+                p.scale.multiplyScalar(1.02);
+                p.userData.life -= p.userData.decay;
+                p.material.opacity = p.userData.life * 0.8;
+                
+                if (p.userData.life <= 0) {
+                    scene.remove(p);
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Camera follow
+            // Camera smoothly follows the train
+            const targetCamPos = new THREE.Vector3(
+                trainGroup.position.x + Math.cos(trainAngle + 0.5) * 20,
+                15,
+                trainGroup.position.z + Math.sin(trainAngle + 0.5) * 20
+            );
+            camera.position.lerp(targetCamPos, 0.05);
+            camera.lookAt(trainGroup.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
