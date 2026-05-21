@@ -346,6 +346,28 @@
                 width: 100%;
                 max-width: 800px;
             }
+            .container {
+                order: -1; /* Keep the drawing canvas on top when wrapped */
+            }
+        }
+
+        /* Hover Preview Mode (when loaded in iframe on mge.html) */
+        body.preview-mode .left-sidebar, 
+        body.preview-mode .info-sidebar,
+        body.preview-mode h1 {
+            display: none !important;
+        }
+        body.preview-mode {
+            padding: 10px;
+            background: var(--secondary);
+            overflow: hidden;
+        }
+        body.preview-mode .container {
+            transform: scale(0.55);
+            transform-origin: top left;
+            margin: 0;
+            box-shadow: none;
+            background: transparent;
         }
     </style>
 </head>
@@ -480,6 +502,11 @@
     </div>
 
     <script>
+        // Check if we are inside the hover preview iframe on the hub
+        if (window !== window.top) {
+            document.body.classList.add('preview-mode');
+        }
+
         const canvas = document.getElementById('main-canvas');
         const ctx = canvas.getContext('2d');
         const onionCanvas = document.getElementById('onion-canvas');
