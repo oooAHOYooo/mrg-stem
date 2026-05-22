@@ -115,6 +115,43 @@
     </div>
     
     <script>
+        // --- AUDIO (8-BIT SYNTH) ---
+        let audioCtx = null;
+        function initAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playSound(type) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if(type === 'shoot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if(type === 'explosion') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            } else if(type === 'jump') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(300, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            }
+        }
+
         // --- GLOBALS & STATE ---
         const GRAVITY = -30;
         const TERRAIN_W = 2000;
@@ -132,13 +169,16 @@
             wind: (Math.random() - 0.5) * 20,
             power: 0,
             maxPower: 50,
-            activeProjectile: null
+            activeProjectiles: [],
+            shakeAmount: 0,
+            mouseWorldPos: new THREE.Vector3()
         };
 
         const weapons = [
             { id: 'bazooka', name: '💣 Bazooka', radius: 10, damage: 30, color: 0x555555, bounce: 0, delay: 0 },
             { id: 'grenade', name: '👑 Holy Hand Grenade', radius: 18, damage: 50, color: 0xffd700, bounce: 0.6, delay: 3 },
-            { id: 'chicken', name: '🐔 Rubber Chicken', radius: 12, damage: 25, color: 0xffff00, bounce: 0.8, delay: 0 } 
+            { id: 'chicken', name: '🐔 Rubber Chicken', radius: 12, damage: 25, color: 0xffff00, bounce: 0.8, delay: 0 },
+            { id: 'airstrike', name: '🛩️ Airstrike', radius: 15, damage: 35, color: 0xcc0000, bounce: 0, delay: 0 } 
         ];
 
         let teams = [
@@ -147,7 +187,6 @@
         ];
 
         let allWorms = [];
-        
         let weaponTimer = null;
 
         // --- LOBBY LOGIC ---
@@ -160,31 +199,23 @@
         }
 
         function startGame() {
+            initAudio();
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-ui').style.display = 'block';
             
-            // Spawn worms
             teams.forEach((t, tIdx) => {
                 for(let i=0; i<t.requestedCount; i++) {
                     const worm = {
-                        team: t,
-                        name: `${t.name.split(' ')[1]} ${i+1}`,
-                        health: 100,
+                        team: t, name: `${t.name.split(' ')[1]} ${i+1}`, health: 100,
                         pos: new THREE.Vector3((Math.random()-0.5)*SCENE_W*0.8, 40, 0),
-                        vel: new THREE.Vector3(),
-                        aimAngle: tIdx === 0 ? Math.PI/4 : Math.PI*3/4,
-                        weaponIdx: 0,
-                        mesh: createWormSprite(t.colorHex, t.colorStr)
+                        vel: new THREE.Vector3(), aimAngle: tIdx === 0 ? Math.PI/4 : Math.PI*3/4,
+                        weaponIdx: 0, mesh: createWormSprite(t.colorHex, t.colorStr)
                     };
-                    t.worms.push(worm);
-                    allWorms.push(worm);
-                    scene.add(worm.mesh);
+                    t.worms.push(worm); allWorms.push(worm); scene.add(worm.mesh);
                 }
                 t.totalHealth = t.worms.length * 100;
             });
-            
-            state.gameStarted = true;
-            announceTurn();
+            state.gameStarted = true; announceTurn();
         }
 
         // --- THREE.JS SETUP ---
@@ -195,11 +226,10 @@
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1a1a3a);
-        
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 120);
 
-        // --- TERRAIN GENERATION ---
+        // --- TERRAIN ---
         const tCanvas = document.createElement('canvas');
         tCanvas.width = TERRAIN_W; tCanvas.height = TERRAIN_H;
         const tCtx = tCanvas.getContext('2d');
@@ -245,9 +275,7 @@
         const starGeo = new THREE.BufferGeometry();
         const starPos = new Float32Array(300 * 3);
         for(let i=0; i<300; i++) {
-            starPos[i*3] = (Math.random() - 0.5) * SCENE_W * 1.5;
-            starPos[i*3+1] = (Math.random() - 0.5) * SCENE_H * 1.5 + 20;
-            starPos[i*3+2] = -50;
+            starPos[i*3] = (Math.random() - 0.5) * SCENE_W * 1.5; starPos[i*3+1] = (Math.random() - 0.5) * SCENE_H * 1.5 + 20; starPos[i*3+2] = -50;
         }
         starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
         scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 })));
@@ -274,31 +302,25 @@
             ctx.strokeStyle = 'black'; ctx.lineWidth = 3;
             ctx.beginPath(); ctx.arc(64, 48, 6, 0, Math.PI, false); ctx.stroke();
             
-            ctx.fillStyle = '#4a5d23';
-            ctx.beginPath(); ctx.arc(64, 32, 22, Math.PI, 0, false); ctx.fill();
-            ctx.fillStyle = '#3a4d13';
-            ctx.fillRect(42, 30, 44, 4);
+            ctx.fillStyle = '#4a5d23'; ctx.beginPath(); ctx.arc(64, 32, 22, Math.PI, 0, false); ctx.fill();
+            ctx.fillStyle = '#3a4d13'; ctx.fillRect(42, 30, 44, 4);
 
             const tex = new THREE.CanvasTexture(canvas);
             const mat = new THREE.SpriteMaterial({ map: tex });
             const sprite = new THREE.Sprite(mat);
-            sprite.scale.set(4, 4, 1);
-            sprite.position.y = 1.5;
-            group.add(sprite);
-            group.sprite = sprite;
+            sprite.scale.set(4, 4, 1); sprite.position.y = 1.5;
+            group.add(sprite); group.sprite = sprite;
             
             const crosshair = new THREE.Group();
             const chMat = new THREE.MeshBasicMaterial({ color: colorHex });
             const p1 = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.2), chMat); p1.position.x = 2; crosshair.add(p1);
             const p2 = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.8), chMat); p2.position.x = 2; crosshair.add(p2);
             crosshair.position.y = 1.5; crosshair.position.z = 0.1;
-            group.add(crosshair);
-            group.crosshair = crosshair;
+            group.add(crosshair); group.crosshair = crosshair;
 
             return group;
         }
 
-        // Trajectory preview
         const trajGeo = new THREE.BufferGeometry();
         const trajPos = new Float32Array(50 * 3);
         trajGeo.setAttribute('position', new THREE.BufferAttribute(trajPos, 3));
@@ -307,30 +329,22 @@
 
         // --- PHYSICS & COLLISION ---
         function isSolid(wx, wy) {
-            const cx = Math.floor((wx + SCENE_W/2) * SCALE);
-            const cy = Math.floor((wy + SCENE_H/2) * SCALE);
+            const cx = Math.floor((wx + SCENE_W/2) * SCALE); const cy = Math.floor((wy + SCENE_H/2) * SCALE);
             if(cx < 0 || cx >= TERRAIN_W || cy < 0 || cy >= TERRAIN_H) return false;
             return collisionMap[cy * TERRAIN_W + cx] === 1;
         }
 
         function destroyTerrain(wx, wy, radiusUnits) {
             const pr = radiusUnits * SCALE;
-            const cx = Math.floor((wx + SCENE_W/2) * SCALE);
-            const cy = Math.floor((wy + SCENE_H/2) * SCALE);
-            
+            const cx = Math.floor((wx + SCENE_W/2) * SCALE); const cy = Math.floor((wy + SCENE_H/2) * SCALE);
             tCtx.globalCompositeOperation = 'destination-out';
-            tCtx.beginPath();
-            tCtx.arc(cx, TERRAIN_H - cy, pr, 0, Math.PI*2);
-            tCtx.fill();
+            tCtx.beginPath(); tCtx.arc(cx, TERRAIN_H - cy, pr, 0, Math.PI*2); tCtx.fill();
             tCtx.globalCompositeOperation = 'source-over';
             terrainTex.needsUpdate = true;
-            
             for(let y = cy - pr; y <= cy + pr; y++) {
                 for(let x = cx - pr; x <= cx + pr; x++) {
                     if(x>=0 && x<TERRAIN_W && y>=0 && y<TERRAIN_H) {
-                        if((x-cx)*(x-cx) + (y-cy)*(y-cy) <= pr*pr) {
-                            collisionMap[y * TERRAIN_W + x] = 0;
-                        }
+                        if((x-cx)*(x-cx) + (y-cy)*(y-cy) <= pr*pr) collisionMap[y * TERRAIN_W + x] = 0;
                     }
                 }
             }
@@ -349,28 +363,25 @@
         
         window.addEventListener('mousemove', e => {
             if(!state.gameStarted) return;
+            const vec = new THREE.Vector3((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1, 0.5);
+            vec.unproject(camera); vec.sub(camera.position).normalize();
+            const distance = -camera.position.z / vec.z;
+            state.mouseWorldPos.copy(camera.position).add(vec.multiplyScalar(distance));
+            
             if(state.phase === 'aiming' || state.phase === 'powering') {
-                const vec = new THREE.Vector3((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1, 0.5);
-                vec.unproject(camera);
-                vec.sub(camera.position).normalize();
-                const distance = -camera.position.z / vec.z;
-                const mouseWorld = new THREE.Vector3().copy(camera.position).add(vec.multiplyScalar(distance));
                 const p = getActiveWorm();
-                if(p) p.aimAngle = Math.atan2(mouseWorld.y - (p.pos.y + 1.5), mouseWorld.x - p.pos.x);
+                if(p) p.aimAngle = Math.atan2(state.mouseWorldPos.y - (p.pos.y + 1.5), state.mouseWorldPos.x - p.pos.x);
             }
         });
 
         window.addEventListener('wheel', e => {
             if(state.phase === 'aiming' && state.gameStarted) {
-                const p = getActiveWorm();
-                if(!p) return;
-                
+                const p = getActiveWorm(); if(!p) return;
                 if(e.deltaY > 0) p.weaponIdx = (p.weaponIdx + 1) % weapons.length;
                 else p.weaponIdx = (p.weaponIdx - 1 + weapons.length) % weapons.length;
                 
                 const wDisp = document.getElementById('weapon-display');
-                wDisp.innerText = weapons[p.weaponIdx].name;
-                wDisp.style.display = 'block';
+                wDisp.innerText = weapons[p.weaponIdx].name; wDisp.style.display = 'block';
                 if(weaponTimer) clearTimeout(weaponTimer);
                 weaponTimer = setTimeout(() => wDisp.style.display = 'none', 1000);
             }
@@ -380,24 +391,34 @@
         window.addEventListener('mousedown', e => {
             if(e.target.tagName === 'BUTTON') return;
             if(state.phase === 'aiming' && state.gameStarted) {
+                initAudio();
                 mouseDown = true;
-                state.phase = 'powering';
-                state.power = 0;
-                document.getElementById('power-container').style.display = 'block';
+                const p = getActiveWorm();
+                if(weapons[p.weaponIdx].id === 'airstrike') {
+                    // Instant fire for airstrike
+                    fireProjectile();
+                } else {
+                    state.phase = 'powering';
+                    state.power = 0;
+                    document.getElementById('power-container').style.display = 'block';
+                }
             }
         });
         window.addEventListener('mouseup', e => {
             if(state.phase === 'powering') {
-                mouseDown = false;
-                fireProjectile();
+                mouseDown = false; fireProjectile();
             }
         });
         window.addEventListener('keydown', e => {
             if(e.code === 'Space' && state.phase === 'aiming' && state.gameStarted) {
                 keys['Space'] = true;
-                state.phase = 'powering';
-                state.power = 0;
-                document.getElementById('power-container').style.display = 'block';
+                const p = getActiveWorm();
+                if(weapons[p.weaponIdx].id === 'airstrike') {
+                    fireProjectile();
+                } else {
+                    state.phase = 'powering'; state.power = 0;
+                    document.getElementById('power-container').style.display = 'block';
+                }
             }
         });
         window.addEventListener('keyup', e => {
@@ -407,10 +428,8 @@
         // --- GAME LOGIC ---
         function updateUI() {
             if(!state.gameStarted) return;
-            
             let h0 = teams[0].worms.reduce((sum, w) => sum + Math.max(0, w.health), 0);
             let h1 = teams[1].worms.reduce((sum, w) => sum + Math.max(0, w.health), 0);
-            
             document.getElementById('t0-health').style.width = (h0 / (teams[0].requestedCount * 100) * 100) + '%';
             document.getElementById('t1-health').style.width = (h1 / (teams[1].requestedCount * 100) * 100) + '%';
             
@@ -422,28 +441,25 @@
             document.getElementById('wind-text').innerText = Math.abs(state.wind).toFixed(1);
             
             const activeWorm = getActiveWorm();
-            
             allWorms.forEach(p => {
                 const isActive = (p === activeWorm && state.phase === 'aiming');
-                p.mesh.crosshair.visible = isActive;
+                p.mesh.crosshair.visible = isActive && weapons[p.weaponIdx].id !== 'airstrike';
                 p.mesh.crosshair.rotation.z = p.aimAngle;
                 p.mesh.sprite.scale.x = Math.cos(p.aimAngle) < 0 ? -4 : 4;
                 
                 if(!p.label) {
-                    p.label = document.createElement('div');
-                    p.label.className = 'worm-label';
+                    p.label = document.createElement('div'); p.label.className = 'worm-label';
                     document.getElementById('labels-container').appendChild(p.label);
                 }
                 p.label.innerHTML = `${p.name} <br> <span style="color: ${p.team.colorStr};">[${Math.max(0, p.health)}]</span>`;
                 
                 const pos = p.pos.clone().add(new THREE.Vector3(0, 4, 0)).project(camera);
-                const x = (pos.x * .5 + .5) * window.innerWidth;
-                const y = (pos.y * -.5 + .5) * window.innerHeight;
+                const x = (pos.x * .5 + .5) * window.innerWidth; const y = (pos.y * -.5 + .5) * window.innerHeight;
                 p.label.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
                 p.label.style.display = p.health > 0 ? 'block' : 'none';
             });
             
-            if((state.phase === 'aiming' || state.phase === 'powering') && activeWorm) {
+            if((state.phase === 'aiming' || state.phase === 'powering') && activeWorm && weapons[activeWorm.weaponIdx].id !== 'airstrike') {
                 trajPoints.visible = true;
                 const simPower = state.phase === 'powering' ? state.power : state.maxPower * 0.4;
                 const dir = new THREE.Vector3(Math.cos(activeWorm.aimAngle), Math.sin(activeWorm.aimAngle), 0);
@@ -464,77 +480,70 @@
         }
 
         function createPopup(text, pos3d, color='#ffeb3b') {
-            const div = document.createElement('div');
-            div.className = 'popup-text'; div.innerText = text; div.style.color = color;
+            const div = document.createElement('div'); div.className = 'popup-text'; div.innerText = text; div.style.color = color;
             const pos = pos3d.clone().project(camera);
-            div.style.left = ((pos.x * .5 + .5) * window.innerWidth) + 'px';
-            div.style.top = ((pos.y * -.5 + .5) * window.innerHeight) + 'px';
-            document.querySelector('.ui-layer').appendChild(div);
-            setTimeout(() => div.remove(), 2000);
+            div.style.left = ((pos.x * .5 + .5) * window.innerWidth) + 'px'; div.style.top = ((pos.y * -.5 + .5) * window.innerHeight) + 'px';
+            document.querySelector('.ui-layer').appendChild(div); setTimeout(() => div.remove(), 2000);
         }
 
         let particles = [];
         function createExplosion(pos, radius, color) {
-            const pCount = 30;
-            const geo = new THREE.BufferGeometry();
-            const positions = new Float32Array(pCount * 3);
-            const velocities = [];
+            const pCount = 30; const geo = new THREE.BufferGeometry(); const positions = new Float32Array(pCount * 3); const velocities = [];
             for(let i=0; i<pCount; i++) {
                 positions[i*3] = pos.x; positions[i*3+1] = pos.y; positions[i*3+2] = 0.5;
                 velocities.push(new THREE.Vector3((Math.random()-0.5)*radius, Math.random()*radius, 0));
             }
             geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             const points = new THREE.Points(geo, new THREE.PointsMaterial({ color: color, size: 0.8 }));
-            scene.add(points);
-            particles.push({ mesh: points, vels: velocities, age: 0, max: 1.0 });
+            scene.add(points); particles.push({ mesh: points, vels: velocities, age: 0, max: 1.0 });
         }
         
         function announceTurn() {
-            const t = teams[state.activeTeamIdx];
-            const ann = document.getElementById('turnAnnouncer');
-            ann.innerText = t.name + "'S TURN!";
-            ann.style.color = t.colorStr;
-            ann.style.display = 'block';
+            const t = teams[state.activeTeamIdx]; const ann = document.getElementById('turnAnnouncer');
+            ann.innerText = t.name + "'S TURN!"; ann.style.color = t.colorStr; ann.style.display = 'block';
             setTimeout(() => ann.style.display = 'none', 2000);
-            
             const wDisp = document.getElementById('weapon-display');
-            wDisp.innerText = weapons[getActiveWorm().weaponIdx].name;
-            wDisp.style.display = 'block';
+            wDisp.innerText = weapons[getActiveWorm().weaponIdx].name; wDisp.style.display = 'block';
             if(weaponTimer) clearTimeout(weaponTimer);
             weaponTimer = setTimeout(() => wDisp.style.display = 'none', 1500);
         }
 
         function switchTurn() {
-            // Clean up dead worms
-            teams.forEach(t => {
-                t.worms = t.worms.filter(w => w.health > 0);
-            });
-            
+            teams.forEach(t => t.worms = t.worms.filter(w => w.health > 0));
             if(teams[0].worms.length === 0 || teams[1].worms.length === 0) {
                 state.phase = 'gameover';
                 const winner = teams[0].worms.length > 0 ? teams[0].name : (teams[1].worms.length > 0 ? teams[1].name : "DRAW");
                 const ann = document.getElementById('turnAnnouncer');
-                ann.innerText = winner + " WINS!";
-                ann.style.color = '#ffeb3b';
-                ann.style.display = 'block';
+                ann.innerText = winner + " WINS!"; ann.style.color = '#ffeb3b'; ann.style.display = 'block';
                 return;
             }
-            
-            // Advance turn
             state.activeTeamIdx = state.activeTeamIdx === 0 ? 1 : 0;
             const t = teams[state.activeTeamIdx];
             t.activeWormIdx = (t.activeWormIdx + 1) % t.worms.length;
-            
-            state.phase = 'aiming';
-            state.wind = (Math.random() - 0.5) * 20;
-            
+            state.phase = 'aiming'; state.wind = (Math.random() - 0.5) * 20;
             announceTurn();
         }
 
         function fireProjectile() {
             state.phase = 'firing';
+            playSound('shoot');
             const p = getActiveWorm();
             const wData = weapons[p.weaponIdx];
+            
+            if(wData.id === 'airstrike') {
+                createPopup("INCOMING!", state.mouseWorldPos.clone().add(new THREE.Vector3(0,10,0)), '#ff0000');
+                const targetX = state.mouseWorldPos.x;
+                for(let i=0; i<5; i++) {
+                    setTimeout(() => {
+                        const projGeo = new THREE.CircleGeometry(0.8, 16);
+                        const mesh = new THREE.Mesh(projGeo, new THREE.MeshBasicMaterial({ color: wData.color }));
+                        mesh.position.set(targetX - 30 + i*15, SCENE_H/2 + 10, 0.5);
+                        scene.add(mesh);
+                        state.activeProjectiles.push({ mesh: mesh, vel: new THREE.Vector3(state.wind * 0.5, -50, 0), data: wData, timer: 0 });
+                    }, i * 300);
+                }
+                return;
+            }
             
             const projGeo = wData.id === 'chicken' ? new THREE.PlaneGeometry(1.5, 1.5) : new THREE.CircleGeometry(0.5, 16);
             const mesh = new THREE.Mesh(projGeo, new THREE.MeshBasicMaterial({ color: wData.color }));
@@ -544,15 +553,20 @@
             mesh.position.z = 0.5;
             scene.add(mesh);
             
-            state.activeProjectile = { mesh: mesh, vel: dir.multiplyScalar(state.power), data: wData, timer: wData.delay };
+            state.activeProjectiles.push({ mesh: mesh, vel: dir.multiplyScalar(state.power), data: wData, timer: wData.delay });
             createPopup("YEET!", mesh.position, '#fff');
         }
 
-        function handleExplosion(pos, wData) {
+        function handleExplosion(proj) {
+            const pos = proj.mesh.position; const wData = proj.data;
+            playSound('explosion');
+            state.shakeAmount += wData.radius * 0.6; // Add to shake
+            
             createExplosion(pos, wData.radius, wData.color);
             destroyTerrain(pos.x, pos.y, wData.radius);
-            if(state.activeProjectile) scene.remove(state.activeProjectile.mesh);
-            state.activeProjectile = null;
+            
+            scene.remove(proj.mesh);
+            state.activeProjectiles = state.activeProjectiles.filter(p => p !== proj);
             
             let texts = ["BOOM!", "KABLAM!"];
             if(wData.id === 'chicken') texts = ["BOK BOK!", "FEATHERS!"];
@@ -571,8 +585,10 @@
                 }
             });
             
-            state.phase = 'resolving';
-            setTimeout(switchTurn, 2500);
+            if(state.activeProjectiles.length === 0) {
+                state.phase = 'resolving';
+                setTimeout(() => { if(state.activeProjectiles.length === 0) switchTurn(); }, 2500);
+            }
         }
 
         // --- MAIN LOOP ---
@@ -583,23 +599,30 @@
             if(!state.gameStarted) return;
             
             if(state.phase === 'powering') {
-                state.power += dt * 40;
-                if(state.power > state.maxPower) state.power = state.maxPower;
+                state.power += dt * 40; if(state.power > state.maxPower) state.power = state.maxPower;
             }
             
             let camTarget = new THREE.Vector3(0, 0, 120);
-            if(state.activeProjectile) {
-                camTarget.x = state.activeProjectile.mesh.position.x;
-                camTarget.y = state.activeProjectile.mesh.position.y;
+            if(state.activeProjectiles.length > 0) {
+                // Follow the first active projectile
+                camTarget.x = state.activeProjectiles[0].mesh.position.x;
+                camTarget.y = state.activeProjectiles[0].mesh.position.y;
             } else {
                 const w = getActiveWorm();
                 if(w) { camTarget.x = w.pos.x; camTarget.y = w.pos.y; }
             }
             camera.position.lerp(camTarget, 0.1);
             
+            // Screen Shake
+            if(state.shakeAmount > 0) {
+                camera.position.x += (Math.random() - 0.5) * state.shakeAmount;
+                camera.position.y += (Math.random() - 0.5) * state.shakeAmount;
+                state.shakeAmount *= 0.9;
+                if(state.shakeAmount < 0.1) state.shakeAmount = 0;
+            }
+            
             allWorms.forEach(p => {
                 if(p.health <= 0) return;
-                
                 const isCurrent = (p === getActiveWorm() && state.phase === 'aiming');
                 
                 if(isCurrent) {
@@ -616,13 +639,14 @@
                         }
                     }
                     
-                    if((keys['ShiftRight'] || keys['KeyE']) && Math.abs(p.vel.y) < 0.1 && isSolid(p.pos.x, p.pos.y - 0.5)) p.vel.y = 15;
+                    if((keys['ShiftRight'] || keys['KeyE']) && Math.abs(p.vel.y) < 0.1 && isSolid(p.pos.x, p.pos.y - 0.5)) {
+                        p.vel.y = 15; playSound('jump');
+                    }
                 }
                 
                 p.vel.y += GRAVITY * dt;
                 let nextY = p.pos.y + p.vel.y * dt;
                 
-                // Keep inside level bounds
                 if(p.pos.x < -SCENE_W/2) p.pos.x = -SCENE_W/2;
                 if(p.pos.x > SCENE_W/2) p.pos.x = SCENE_W/2;
                 
@@ -635,34 +659,30 @@
                 p.pos.x += p.vel.x * dt;
                 
                 if(p.pos.y < -SCENE_H/2 + 5) {
-                    p.health = 0;
-                    createPopup("GLUG GLUG!", p.pos);
-                    p.mesh.rotation.z = Math.PI/2;
-                    p.label.style.display = 'none';
+                    p.health = 0; createPopup("GLUG GLUG!", p.pos); p.mesh.rotation.z = Math.PI/2; p.label.style.display = 'none';
                 }
                 p.mesh.position.copy(p.pos);
             });
             
-            if(state.activeProjectile) {
-                const proj = state.activeProjectile;
+            // Loop backwards because we might remove projectiles during iteration
+            for(let i=state.activeProjectiles.length-1; i>=0; i--) {
+                const proj = state.activeProjectiles[i];
                 proj.vel.x += state.wind * dt; proj.vel.y += GRAVITY * dt;
                 proj.mesh.position.add(proj.vel.clone().multiplyScalar(dt));
                 proj.mesh.rotation.z += dt * 5;
                 
                 if(proj.mesh.position.y < -SCENE_H/2 + 5 || Math.abs(proj.mesh.position.x) > SCENE_W/2) {
-                    handleExplosion(proj.mesh.position, proj.data);
+                    handleExplosion(proj);
                 } else if(isSolid(proj.mesh.position.x, proj.mesh.position.y)) {
                     if(proj.data.bounce > 0) {
                         proj.vel.y *= -proj.data.bounce; proj.vel.x *= 0.8; proj.mesh.position.y += 0.5;
-                        if(Math.abs(proj.vel.y) < 2 && proj.data.id === 'chicken') handleExplosion(proj.mesh.position, proj.data);
+                        if(Math.abs(proj.vel.y) < 2 && proj.data.id === 'chicken') handleExplosion(proj);
                     } else {
-                        handleExplosion(proj.mesh.position, proj.data);
+                        handleExplosion(proj);
                     }
-                }
-                
-                if(proj && proj.data.delay > 0) {
+                } else if (proj.data.delay > 0) {
                     proj.timer -= dt;
-                    if(proj.timer <= 0) handleExplosion(proj.mesh.position, proj.data);
+                    if(proj.timer <= 0) handleExplosion(proj);
                 }
             }
             
@@ -680,14 +700,12 @@
                 }
                 p.mesh.geometry.attributes.position.needsUpdate = true;
             }
-            
             updateUI();
         }
 
         function render() {
             requestAnimationFrame(render);
-            update();
-            renderer.render(scene, camera);
+            update(); renderer.render(scene, camera);
         }
 
         window.addEventListener('resize', () => {
