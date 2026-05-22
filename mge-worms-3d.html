@@ -70,7 +70,7 @@
         
         <div class="controls-panel">
             <div class="controls-text">
-                [LEFT/RIGHT] Crawl &nbsp;|&nbsp; [UP/DOWN] Aim Weapon &nbsp;|&nbsp; [SPACE/CLICK] Hold to Fire &nbsp;|&nbsp; [SHIFT] Jump
+                [LEFT/RIGHT] Crawl &nbsp;|&nbsp; [MOUSE or UP/DOWN] Aim &nbsp;|&nbsp; [SPACE/CLICK] Hold to Fire &nbsp;|&nbsp; [SHIFT] Jump
             </div>
             <select class="weapon-select" id="weapon-select">
                 <option value="bazooka">💣 Basic Bazooka</option>
@@ -316,10 +316,30 @@
                 fireProjectile();
             }
         });
+        
+        window.addEventListener('mousemove', e => {
+            if(state.phase === 'aiming' || state.phase === 'powering') {
+                const vec = new THREE.Vector3((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1, 0.5);
+                vec.unproject(camera);
+                vec.sub(camera.position).normalize();
+                const distance = -camera.position.z / vec.z;
+                const mouseWorld = new THREE.Vector3().copy(camera.position).add(vec.multiplyScalar(distance));
+                const p = players[state.turn - 1];
+                p.aimAngle = Math.atan2(mouseWorld.y - (p.pos.y + 1.5), mouseWorld.x - p.pos.x);
+            }
+        });
 
         document.getElementById('weapon-select').addEventListener('change', e => {
             players[state.turn-1].weapon = e.target.value;
         });
+
+        // Trajectory preview
+        const trajGeo = new THREE.BufferGeometry();
+        const trajPos = new Float32Array(50 * 3);
+        trajGeo.setAttribute('position', new THREE.BufferAttribute(trajPos, 3));
+        const trajMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8 });
+        const trajPoints = new THREE.Points(trajGeo, trajMat);
+        scene.add(trajPoints);
 
         // --- GAME LOGIC ---
         function updateUI() {
@@ -361,6 +381,29 @@
                 p.label.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`;
                 p.label.style.display = p.health > 0 ? 'block' : 'none';
             });
+            
+            if(state.phase === 'aiming' || state.phase === 'powering') {
+                trajPoints.visible = true;
+                const p = players[state.turn - 1];
+                const simPower = state.phase === 'powering' ? state.power : state.maxPower * 0.4;
+                const dir = new THREE.Vector3(Math.cos(p.aimAngle), Math.sin(p.aimAngle), 0);
+                let simPos = p.pos.clone().add(new THREE.Vector3(0, 1.5, 0)).add(dir.clone().multiplyScalar(2));
+                let simVel = dir.multiplyScalar(simPower);
+                
+                const positions = trajGeo.attributes.position.array;
+                const simDt = 0.1;
+                for(let i=0; i<50; i++) {
+                    positions[i*3] = simPos.x;
+                    positions[i*3+1] = simPos.y;
+                    positions[i*3+2] = 0.5;
+                    simVel.x += state.wind * simDt;
+                    simVel.y += GRAVITY * simDt;
+                    simPos.add(simVel.clone().multiplyScalar(simDt));
+                }
+                trajGeo.attributes.position.needsUpdate = true;
+            } else {
+                trajPoints.visible = false;
+            }
         }
 
         function createPopup(text, pos3d, color='#ffeb3b') {
