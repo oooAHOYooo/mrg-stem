@@ -18,7 +18,7 @@
         .health-bar-container { width: 300px; height: 25px; background: rgba(0,0,0,0.7); border: 3px solid white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .health-bar { height: 100%; background: #00ff00; width: 100%; transition: width 0.3s; box-shadow: inset 0 2px 5px rgba(255,255,255,0.5); }
         
-        .controls-info { background: rgba(0,0,0,0.8); color: white; padding: 10px 15px; border-radius: 8px; pointer-events: auto; display: inline-block; align-self: flex-start; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); transition: opacity 0.3s; }
+        .controls-info { background: rgba(0,0,0,0.9); color: #fff; padding: 15px 25px; border-radius: 12px; pointer-events: auto; display: inline-block; align-self: flex-start; font-weight: 900; font-size: 1.1rem; border: 2px solid #ffeb3b; transition: opacity 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 1px; }
         
         .turn-announcer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5rem; color: #ffeb3b; text-shadow: 4px 4px 0 #d32f2f, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; font-weight: 900; text-align: center; display: none; z-index: 10; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; white-space: nowrap; }
         
@@ -212,48 +212,67 @@
         water.position.y = -2;
         scene.add(water);
 
-        // Player Meshes
-        function createWorm(color) {
+        // Player Meshes (2D Sprites in a 3D world)
+        function createWormSprite(colorHex, colorStr) {
             const group = new THREE.Group();
             
-            const mat = new THREE.MeshToonMaterial({ color: color });
+            // Create a 2D canvas texture for the sprite
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
             
-            // Segmented worm body
-            const segGeo = new THREE.SphereGeometry(0.6, 16, 16);
-            for(let i=0; i<3; i++) {
-                const mesh = new THREE.Mesh(segGeo, mat);
-                mesh.position.y = 0.6 + i * 0.45;
-                mesh.castShadow = true;
-                group.add(mesh);
-            }
+            // Draw a cute worm sprite
+            ctx.fillStyle = colorStr;
+            // Body segments
+            ctx.beginPath(); ctx.arc(64, 100, 25, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(64, 70, 22, 0, Math.PI * 2); ctx.fill();
+            // Head
+            ctx.beginPath(); ctx.arc(64, 40, 20, 0, Math.PI * 2); ctx.fill();
             
             // Eyes
-            const eyeGeo = new THREE.SphereGeometry(0.2, 8, 8);
-            const eyeMat = new THREE.MeshToonMaterial({ color: 0xffffff });
-            const pupilMat = new THREE.MeshToonMaterial({ color: 0x000000 });
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(56, 35, 6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(72, 35, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'black';
+            ctx.beginPath(); ctx.arc(56, 35, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(72, 35, 2.5, 0, Math.PI*2); ctx.fill();
             
-            const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.3, 1.6, 0.4);
-            const p1 = new THREE.Mesh(new THREE.SphereGeometry(0.08), pupilMat); p1.position.set(0,0,0.15);
-            e1.add(p1); group.add(e1);
+            // Mouth
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(64, 48, 6, 0, Math.PI, false); ctx.stroke();
             
-            const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.3, 1.6, 0.4);
-            const p2 = new THREE.Mesh(new THREE.SphereGeometry(0.08), pupilMat); p2.position.set(0,0,0.15);
-            e2.add(p2); group.add(e2);
+            // Helmet/Hat
+            ctx.fillStyle = '#444';
+            ctx.beginPath(); ctx.arc(64, 30, 22, Math.PI, 0, false); ctx.fill();
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.SpriteMaterial({ map: tex });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(3, 3, 1);
+            sprite.position.y = 1.5;
+            group.add(sprite);
             
-            // Marker arrow
-            const arrowGeo = new THREE.ConeGeometry(0.3, 1, 8);
-            arrowGeo.rotateX(Math.PI);
-            const arrowMat = new THREE.MeshBasicMaterial({ color: color });
+            // 3D Marker arrow to show aim direction clearly
+            const arrowGeo = new THREE.ConeGeometry(0.3, 1.5, 8);
+            arrowGeo.rotateX(Math.PI / 2); // Point forward
+            const arrowMat = new THREE.MeshBasicMaterial({ color: colorHex });
             const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-            arrow.position.y = 3.5;
+            arrow.position.set(0, 0, 2); 
             arrow.name = "marker";
-            group.add(arrow);
+            
+            const aimPivot = new THREE.Group();
+            aimPivot.position.y = 1.5;
+            aimPivot.name = "aimPivot";
+            aimPivot.add(arrow);
+            group.add(aimPivot);
 
             return group;
         }
 
-        players[0].mesh = createWorm(players[0].color); scene.add(players[0].mesh);
-        players[1].mesh = createWorm(players[1].color); scene.add(players[1].mesh);
+        players[0].mesh = createWormSprite(players[0].color, '#ff00aa'); scene.add(players[0].mesh);
+        players[1].mesh = createWormSprite(players[1].color, '#00ff00'); scene.add(players[1].mesh);
 
         // Helper func to get height at x,z
         function getTerrainHeight(x, z) {
