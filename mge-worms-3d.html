@@ -8,12 +8,12 @@
         body { margin: 0; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
         #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
         canvas { display: block; }
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; display: flex; flex-direction: column; }
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; display: flex; flex-direction: row; }
         
         /* Split screen divider */
-        .divider { width: 100%; height: 4px; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 3; }
+        .divider { width: 4px; height: 100%; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 3; }
         
-        .player-ui { width: 100%; height: 50%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; position: relative; overflow: hidden; }
+        .player-ui { width: 50%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; position: relative; overflow: hidden; }
         
         .health-bar-container { width: 300px; height: 25px; background: rgba(0,0,0,0.7); border: 3px solid white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .health-bar { height: 100%; background: #00ff00; width: 100%; transition: width 0.3s; box-shadow: inset 0 2px 5px rgba(255,255,255,0.5); }
@@ -125,8 +125,8 @@
         };
 
         const players = [
-            { id: 1, color: 0xff0000, health: 100, pos: new THREE.Vector3(-30, 20, 0), vel: new THREE.Vector3(), mesh: null, controls: { forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', jump: 'KeyE' }, dead: false, yaw: 0, pitch: 0, weapon: 'bazooka' },
-            { id: 2, color: 0x0000ff, health: 100, pos: new THREE.Vector3(30, 20, 0), vel: new THREE.Vector3(), mesh: null, controls: { forward: 'ArrowUp', back: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', jump: 'ShiftRight' }, dead: false, yaw: Math.PI, pitch: 0, weapon: 'bazooka' }
+            { id: 1, color: 0xff00aa, health: 100, pos: new THREE.Vector3(-30, 20, 0), vel: new THREE.Vector3(), mesh: null, controls: { forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', jump: 'KeyE' }, dead: false, yaw: 0, pitch: 0, weapon: 'bazooka' },
+            { id: 2, color: 0x00ff00, health: 100, pos: new THREE.Vector3(30, 20, 0), vel: new THREE.Vector3(), mesh: null, controls: { forward: 'ArrowUp', back: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', jump: 'ShiftRight' }, dead: false, yaw: Math.PI, pitch: 0, weapon: 'bazooka' }
         ];
 
         // Three.js Setup
@@ -142,7 +142,7 @@
         scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
 
         // Cameras for split screen
-        const aspect = window.innerWidth / (window.innerHeight / 2);
+        const aspect = (window.innerWidth / 2) / window.innerHeight;
         const camera1 = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
         const camera2 = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 
@@ -213,25 +213,30 @@
         scene.add(water);
 
         // Player Meshes
-        const wormGeo = new THREE.CapsuleGeometry(0.6, 1.2, 4, 16);
         function createWorm(color) {
             const group = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.5 });
-            const mesh = new THREE.Mesh(wormGeo, mat);
-            mesh.position.y = 1.2;
-            mesh.castShadow = true;
-            group.add(mesh);
+            
+            const mat = new THREE.MeshToonMaterial({ color: color });
+            
+            // Segmented worm body
+            const segGeo = new THREE.SphereGeometry(0.6, 16, 16);
+            for(let i=0; i<3; i++) {
+                const mesh = new THREE.Mesh(segGeo, mat);
+                mesh.position.y = 0.6 + i * 0.45;
+                mesh.castShadow = true;
+                group.add(mesh);
+            }
             
             // Eyes
             const eyeGeo = new THREE.SphereGeometry(0.2, 8, 8);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eyeMat = new THREE.MeshToonMaterial({ color: 0xffffff });
+            const pupilMat = new THREE.MeshToonMaterial({ color: 0x000000 });
             
-            const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.3, 1.8, 0.4);
+            const e1 = new THREE.Mesh(eyeGeo, eyeMat); e1.position.set(0.3, 1.6, 0.4);
             const p1 = new THREE.Mesh(new THREE.SphereGeometry(0.08), pupilMat); p1.position.set(0,0,0.15);
             e1.add(p1); group.add(e1);
             
-            const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.3, 1.8, 0.4);
+            const e2 = new THREE.Mesh(eyeGeo, eyeMat); e2.position.set(-0.3, 1.6, 0.4);
             const p2 = new THREE.Mesh(new THREE.SphereGeometry(0.08), pupilMat); p2.position.set(0,0,0.15);
             e2.add(p2); group.add(e2);
             
@@ -240,7 +245,7 @@
             arrowGeo.rotateX(Math.PI);
             const arrowMat = new THREE.MeshBasicMaterial({ color: color });
             const arrow = new THREE.Mesh(arrowGeo, arrowMat);
-            arrow.position.y = 4;
+            arrow.position.y = 3.5;
             arrow.name = "marker";
             group.add(arrow);
 
@@ -639,19 +644,19 @@
 
             renderer.setScissorTest(true);
 
-            renderer.setViewport(0, height / 2, width, height / 2);
-            renderer.setScissor(0, height / 2, width, height / 2);
+            renderer.setViewport(0, 0, width / 2, height);
+            renderer.setScissor(0, 0, width / 2, height);
             renderer.render(scene, camera1);
 
-            renderer.setViewport(0, 0, width, height / 2);
-            renderer.setScissor(0, 0, width, height / 2);
+            renderer.setViewport(width / 2, 0, width / 2, height);
+            renderer.setScissor(width / 2, 0, width / 2, height);
             renderer.render(scene, camera2);
             
             renderer.setScissorTest(false);
         }
 
         window.addEventListener('resize', () => {
-            const aspect = window.innerWidth / (window.innerHeight / 2);
+            const aspect = (window.innerWidth / 2) / window.innerHeight;
             camera1.aspect = aspect;
             camera1.updateProjectionMatrix();
             camera2.aspect = aspect;
