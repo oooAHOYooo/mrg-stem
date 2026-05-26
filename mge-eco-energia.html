@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Eco-Energía! Enciende la Ciudad ☀️🔋💡 | MGE STEM</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050a12;
+            --panel: rgba(13, 27, 42, 0.85);
+            --border: #1b355a;
+            --yellow: #ffd600;
+            --yellow-glow: rgba(255, 214, 0, 0.4);
+            --cyan: #00e5ff;
+            --cyan-glow: rgba(0, 229, 255, 0.4);
+            --green: #00e676;
+            --green-glow: rgba(0, 230, 118, 0.4);
+            --pink: #ff4081;
+            --text: #e0f2fe;
+            --dim: #708fa6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(circle at 50% 30%, #0d213f 0%, #050a12 70%);
+            color: var(--text);
+            font-family: 'Outfit', 'Comic Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .top-nav {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 60px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .nav-brand {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 10px var(--cyan-glow);
+        }
+
+        .nav-score {
+            color: var(--yellow);
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--yellow-glow);
+        }
+
+        .nav-btn {
+            background: rgba(27, 53, 90, 0.6);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+        }
+
+        /* MAIN CONTAINER */
+        .game-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            gap: 1.2rem;
+        }
+
+        /* HERO CARD */
+        .hero {
+            background: linear-gradient(135deg, rgba(13, 27, 42, 0.6), rgba(27, 53, 90, 0.4));
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--yellow), var(--cyan), var(--green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-sub {
+            color: var(--dim);
+            font-size: clamp(0.95rem, 2vw, 1.2rem);
+            font-weight: 600;
+        }
+
+        /* COMPANION SPARK */
+        .companion-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            margin-bottom: 0.5rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .companion-avatar {
+            font-size: 2.8rem;
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .companion-speech {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #b9e0ff;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        /* INTERACTIVE BOARD */
+        .board-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 3px solid var(--border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.8rem;
+        }
+
+        .level-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--cyan);
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, var(--green), #00b0ff);
+            color: #000;
+            font-weight: 900;
+            padding: 4px 14px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* LEVEL INSTRUCTION */
+        .instruction-box {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(0, 229, 255, 0.08);
+            border-left: 5px solid var(--cyan);
+            padding: 0.8rem 1.2rem;
+            border-radius: 0 12px 12px 0;
+            line-height: 1.4;
+        }
+
+        /* SLOTS (THE CIRCUIT BUILDER ZONE) */
+        .circuit-builder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 2px dashed rgba(27, 53, 90, 0.8);
+            min-height: 160px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .slot {
+            width: 100px;
+            height: 100px;
+            border: 3px dashed var(--border);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            color: rgba(255, 255, 255, 0.2);
+            transition: all 0.25s;
+            position: relative;
+            background: rgba(13, 27, 42, 0.4);
+            cursor: pointer;
+        }
+
+        .slot.filled {
+            border: 3px solid var(--cyan);
+            background: linear-gradient(135deg, rgba(27, 53, 90, 0.8), rgba(13, 27, 42, 0.9));
+            color: var(--text);
+            box-shadow: 0 0 15px var(--cyan-glow);
+            transform: scale(1.05);
+        }
+
+        .slot-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--dim);
+            margin-top: 4px;
+            pointer-events: none;
+        }
+
+        .slot.filled .slot-label {
+            color: var(--cyan);
+        }
+
+        /* Wire connector between slots */
+        .wire {
+            width: 30px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            transition: all 0.5s;
+        }
+
+        .circuit-builder.active-wires .wire {
+            background: var(--green);
+            box-shadow: 0 0 12px var(--green-glow);
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* PALETTE (SELECTION CARDS) */
+        .palette {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 0.5rem 0;
+        }
+
+        .card {
+            background: #0d1b2a;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            width: 100px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--yellow);
+            box-shadow: 0 8px 20px var(--yellow-glow);
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .card-type {
+            font-size: 0.65rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        /* BUTTONS */
+        .actions {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 1rem;
+            border-radius: 16px;
+            font-family: inherit;
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-test {
+            background: linear-gradient(135deg, var(--green), #00b0ff);
+            color: #000;
+            box-shadow: 0 6px 20px rgba(0, 230, 118, 0.3);
+        }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.5);
+        }
+
+        .btn-test:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-clear {
+            background: rgba(255, 64, 129, 0.1);
+            color: var(--pink);
+            border: 2px solid rgba(255, 64, 129, 0.4);
+            max-width: 160px;
+        }
+
+        .btn-clear:hover {
+            background: rgba(255, 64, 129, 0.2);
+            border-color: var(--pink);
+        }
+
+        /* EXPLANATION PANEL */
+        .explanation-panel {
+            background: linear-gradient(135deg, #07172b, #0c2b4c);
+            border: 2px solid rgba(0, 229, 255, 0.25);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .explanation-panel.show {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .explanation-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--yellow);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explanation-text {
+            font-size: 1.05rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        /* VICTORY OVERLAY */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 7, 14, 0.95);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        .victory-card {
+            background: linear-gradient(135deg, #0b1c33, #061021);
+            border: 4px solid var(--green);
+            border-radius: 32px;
+            padding: 3rem 2rem;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(0, 230, 118, 0.4);
+            position: relative;
+        }
+
+        .victory-title {
+            font-size: 2.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--yellow), var(--green), var(--cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .victory-desc {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #cce7ff;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+        }
+
+        .confetti-celebration {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .victory-btn {
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            color: #000;
+            font-size: 1.2rem;
+            font-weight: 900;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 6px 20px rgba(0, 230, 118, 0.4);
+        }
+
+        .victory-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(0, 230, 118, 0.6);
+        }
+
+        /* PROGRESS TRACKER */
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: var(--cyan);
+            box-shadow: 0 0 8px var(--cyan-glow);
+        }
+
+        .dot.completed {
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green-glow);
+        }
+
+        /* SHAKE ANIMATION ON ERROR */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .shake-err {
+            animation: shake 0.4s ease;
+        }
+
+        /* SUCCESS FLASH */
+        @keyframes successFlash {
+            0% { border-color: var(--border); }
+            50% { border-color: var(--green); box-shadow: 0 0 30px var(--green-glow); }
+            100% { border-color: var(--border); }
+        }
+
+        .success-flash {
+            animation: successFlash 1s ease;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 600px) {
+            .card {
+                width: 80px;
+                padding: 6px;
+            }
+            .card-icon {
+                font-size: 1.8rem;
+            }
+            .slot {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5rem;
+            }
+            .btn {
+                font-size: 1rem;
+            }
+            .btn-clear {
+                max-width: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <nav class="top-nav">
+        <div class="nav-brand">⚡ ¡Eco-Energía!</div>
+        <div style="display:flex; align-items:center; gap:1.2rem;">
+            <span class="nav-score" id="nav-score">⭐ 0 pts</span>
+            <a href="mge.html" class="nav-btn">🏠 Hub</a>
+        </div>
+    </nav>
+
+    <!-- CONTENT WRAP -->
+    <div class="game-wrap">
+
+        <!-- TITLE HERO -->
+        <div class="hero">
+            <h1 class="hero-title">¡Eco-Energía! ☀️</h1>
+            <p class="hero-sub">Enciende la Ciudad con Energía Limpia &nbsp;·&nbsp; Grados 1–3</p>
+        </div>
+
+        <!-- COMPANION ROBOT -->
+        <div class="companion-box">
+            <div class="companion-avatar">🤖</div>
+            <div class="companion-speech" id="bubble">
+                ¡Hola! Soy Sparky, tu robot ayudante. ¡Villa Verde está sin luz! 🌃 Conecta el sol, el viento y el agua para encenderla de nuevo.
+            </div>
+        </div>
+
+        <!-- MAIN GAME BOARD -->
+        <div class="board-container">
+            <div class="panel" id="board">
+
+                <!-- LEVEL INFO -->
+                <div class="level-header">
+                    <span class="level-title" id="level-num">Nivel 1 de 5</span>
+                    <span class="level-badge" id="level-tag">Solar ☀️</span>
+                </div>
+
+                <!-- MISSION TEXT -->
+                <div class="instruction-box" id="instruction">
+                    ¡Conecta el Sol ☀️ al Foco de la Escuela 🏫 usando un Cable!
+                </div>
+
+                <!-- THE CIRCUIT SLOTS -->
+                <div class="circuit-builder" id="circuit-zone">
+                    <!-- Dynamic slots injected here -->
+                </div>
+
+                <!-- ITEM OPTIONS SELECTION -->
+                <div style="text-align: center; font-weight: 800; font-size: 0.9rem; color: var(--dim); letter-spacing: 0.5px; text-transform: uppercase;">
+                    👇 Haz clic en un elemento para colocarlo en tu circuito
+                </div>
+                <div class="palette" id="palette-zone">
+                    <!-- Dynamic cards injected here -->
+                </div>
+
+                <!-- SUBMIT ACTIONS -->
+                <div class="actions">
+                    <button class="btn btn-clear" onclick="clearCircuit()">🔄 Vaciar</button>
+                    <button class="btn btn-test" id="btn-submit" onclick="testCircuit()" disabled>🔌 ¡Probar Circuito! ⚡</button>
+                </div>
+
+                <!-- PROGRESS DOTS -->
+                <div class="progress-dots" id="dots-zone">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+
+            </div>
+
+            <!-- EXPLANATION SCIENCE DETAILS -->
+            <div class="explanation-panel" id="explanation-box">
+                <div class="explanation-title">🔬 ¿Cómo funciona?</div>
+                <div class="explanation-text" id="explanation-desc">
+                    ¡Excelente trabajo! Conectaste el circuito de energía solar.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- VICTORY FINAL MODAL -->
+    <div class="overlay" id="victory-modal">
+        <div class="victory-card">
+            <div class="confetti-celebration">🌍 🔋 💡 🌳 ✨</div>
+            <h2 class="victory-title">¡HÉROE DE LA ENERGÍA!</h2>
+            <p class="victory-desc" id="victory-desc">
+                ¡Has completado los 5 niveles! Toda Villa Verde brilla ahora de forma limpia y hermosa. ¡Eres un genio de la ingeniería ecológica! 🏆
+            </p>
+            <button class="victory-btn" onclick="restartGame()">🔄 ¡Jugar de Nuevo!</button>
+            <br>
+            <a href="mge.html" style="display:inline-block; margin-top:1.5rem; color:var(--cyan); font-weight:900; text-decoration:none;">← Regresar al Hub de Experimentos</a>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ─── AUDIO SYSTEM ──────────────────────────────────────────
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq, type, duration, vol = 0.1) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = type;
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function playSuccessSound() {
+            playTone(523.25, 'triangle', 0.15, 0.15); // C5
+            setTimeout(() => playTone(659.25, 'triangle', 0.15, 0.15), 100); // E5
+            setTimeout(() => playTone(783.99, 'triangle', 0.15, 0.15), 200); // G5
+            setTimeout(() => playTone(1046.50, 'triangle', 0.3, 0.2), 300); // C6
+        }
+
+        function playErrorSound() {
+            playTone(220, 'sawtooth', 0.2, 0.15); // A3
+            setTimeout(() => playTone(147, 'sawtooth', 0.35, 0.15), 150); // D3
+        }
+
+        function playClickSound() {
+            playTone(600, 'sine', 0.08, 0.1);
+        }
+
+        function playResetSound() {
+            playTone(350, 'sine', 0.12, 0.08);
+            setTimeout(() => playTone(280, 'sine', 0.12, 0.08), 80);
+        }
+
+        // ─── ITEMS DEFINITION ───────────────────────────────────────
+        const ITEMS = {
+            sol: { name: 'Sol ☀️', icon: '☀️', type: 'Energía' },
+            viento: { name: 'Viento 💨', icon: '💨', type: 'Energía' },
+            agua: { name: 'Agua 💧', icon: '💧', type: 'Energía' },
+            cable: { name: 'Cable 🔌', icon: '🔌', type: 'Conexión' },
+            bateria: { name: 'Batería 🔋', icon: '🔋', type: 'Guarda' },
+            boton: { name: 'Interruptor 🎛️', icon: '🎛️', type: 'Acción' },
+            foco: { name: 'Foco 💡', icon: '💡', type: 'Luz' },
+            escuela: { name: 'Escuela 🏫', icon: '🏫', type: 'Lugar' },
+            hospital: { name: 'Hospital 🏥', icon: '🏥', type: 'Lugar' },
+            parque: { name: 'Parque 🌳', icon: '🌳', type: 'Lugar' },
+            ciudad: { name: 'Ciudad 🌆', icon: '🌆', type: 'Lugar' },
+        };
+
+        // ─── LEVELS DEFINITION ──────────────────────────────────────
+        const LEVELS = [
+            {
+                num: 1,
+                tag: 'Solar ☀️',
+                instruction: '¡Conecta el Sol ☀️ al Foco de la Escuela 🏫 usando un Cable 🔌!',
+                slots: ['Fuentes', 'Cables', 'Focos'],
+                palette: ['sol', 'cable', 'foco', 'escuela', 'bateria'],
+                validate: (arr) => arr[0] === 'sol' && arr[1] === 'cable' && arr[2] === 'foco',
+                science: '¡Súper! El Sol brilla con luz fuerte. Sus rayos chocan con el panel solar, viajan por el cable y encienden las luces de la escuela.',
+                sparky: '¡Increíble! Villa Verde ya tiene escuela iluminada con energía solar limpia.'
+            },
+            {
+                num: 2,
+                tag: 'Eólica 💨',
+                instruction: '¡Conecta el Viento 💨 a la Turbina con un Cable 🔌 y guárdalo en la Batería 🔋!',
+                slots: ['Fuentes', 'Cables', 'Baterías'],
+                palette: ['viento', 'cable', 'bateria', 'foco', 'agua'],
+                validate: (arr) => arr[0] === 'viento' && arr[1] === 'cable' && arr[2] === 'bateria',
+                science: '¡Excelente! El viento sopla y hace girar la turbina gigante. Esa energía mecánica viaja por el cable y se guarda de forma segura en la batería.',
+                sparky: '¡Bien hecho! Ahora tenemos una batería cargada con energía del viento.'
+            },
+            {
+                num: 3,
+                tag: 'Hidráulica 💧',
+                instruction: '¡Conecta el Agua 💧, pon un Interruptor 🎛️ para controlar la luz y enciende el Hospital 🏥!',
+                slots: ['Fuentes', 'Cables', 'Interruptores', 'Lugar'],
+                palette: ['agua', 'cable', 'boton', 'hospital', 'foco', 'sol'],
+                validate: (arr) => arr[0] === 'agua' && arr[1] === 'cable' && arr[2] === 'boton' && arr[3] === 'hospital',
+                science: '¡Brillante! El agua del río corre con gran fuerza. Pasa por el generador, cruza el interruptor (botón) que nos permite encender y apagar la luz, y alimenta el hospital.',
+                sparky: '¡Fantástico! Los médicos de Villa Verde ahora tienen luces limpias gracias al río.'
+            },
+            {
+                num: 4,
+                tag: 'Circuitos ⚡',
+                instruction: '¡Usa la Batería 🔋 cargada, conecta el Interruptor 🎛️ y enciende el Foco 💡 del Parque 🌳!',
+                slots: ['Baterías', 'Interruptores', 'Focos', 'Lugar'],
+                palette: ['bateria', 'boton', 'foco', 'parque', 'cable', 'viento'],
+                validate: (arr) => arr[0] === 'bateria' && arr[1] === 'boton' && arr[2] === 'foco' && arr[3] === 'parque',
+                science: '¡Wow! La batería libera la energía guardada. Al presionar el interruptor, la corriente pasa por el foco para iluminar todo el hermoso parque.',
+                sparky: '¡Qué lindo parque! Ahora los niños pueden jugar de noche bajo energía eólica limpia.'
+            },
+            {
+                num: 5,
+                tag: 'Eco-Héroe 🌍',
+                instruction: '¡Conecta el Sol ☀️, el Viento 💨 y el Agua 💧 usando Cables 🔌 para encender toda la Ciudad 🌆!',
+                slots: ['Fuentes', 'Fuentes', 'Fuentes', 'Cables', 'Lugar'],
+                palette: ['sol', 'viento', 'agua', 'cable', 'ciudad', 'bateria', 'boton'],
+                validate: (arr) => {
+                    const sources = [arr[0], arr[1], arr[2]];
+                    return sources.includes('sol') && sources.includes('viento') && sources.includes('agua') && arr[3] === 'cable' && arr[4] === 'ciudad';
+                },
+                science: '¡LO LOGRASTE! Uniste el sol, el viento y el agua. Las tres grandes energías limpias alimentan Villa Verde por completo a través de los cables principales.',
+                sparky: '¡Villa Verde es la ciudad más limpia del planeta! Eres una estrella de la ciencia y la ecología.'
+            }
+        ];
+
+        // ─── GAME STATE ─────────────────────────────────────────────
+        let currentLevelIndex = 0;
+        let score = 0;
+        let selectedItems = [];
+
+        // ─── INITIALIZATION ─────────────────────────────────────────
+        function initLevel() {
+            selectedItems = [];
+            const lvl = LEVELS[currentLevelIndex];
+
+            // Render details
+            document.getElementById('level-num').innerText = `Nivel ${lvl.num} de 5`;
+            document.getElementById('level-tag').innerText = lvl.tag;
+            document.getElementById('instruction').innerText = lvl.instruction;
+
+            // Render slots
+            const circuitZone = document.getElementById('circuit-zone');
+            circuitZone.classList.remove('active-wires');
+            let slotsHTML = '';
+            for (let i = 0; i < lvl.slots.length; i++) {
+                if (i > 0) {
+                    slotsHTML += `<div class="wire" id="wire-${i}"></div>`;
+                }
+                slotsHTML += `
+                    <div class="slot" id="slot-${i}" onclick="removeSlot(${i})">
+                        ❓
+                        <span class="slot-label">${lvl.slots[i]}</span>
+                    </div>
+                `;
+            }
+            circuitZone.innerHTML = slotsHTML;
+
+            // Render palette selection cards
+            const paletteZone = document.getElementById('palette-zone');
+            let paletteHTML = '';
+            lvl.palette.forEach(itemId => {
+                const item = ITEMS[itemId];
+                paletteHTML += `
+                    <div class="card" onclick="selectItem('${itemId}')">
+                        <span class="card-icon">${item.icon}</span>
+                        <span class="card-title">${item.name}</span>
+                        <span class="card-type">${item.type}</span>
+                    </div>
+                `;
+            });
+            paletteZone.innerHTML = paletteHTML;
+
+            // Hide explanation
+            document.getElementById('explanation-box').classList.remove('show');
+
+            // Set button state
+            updateSubmitButton();
+
+            // Set dots
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.className = 'dot';
+                if (index === currentLevelIndex) {
+                    dot.classList.add('active');
+                } else if (index < currentLevelIndex) {
+                    dot.classList.add('completed');
+                }
+            });
+        }
+
+        // ─── SELECTION LOGIC ────────────────────────────────────────
+        function selectItem(itemId) {
+            const lvl = LEVELS[currentLevelIndex];
+            if (selectedItems.length >= lvl.slots.length) return; // Full
+
+            playClickSound();
+            selectedItems.push(itemId);
+            renderFilledSlots();
+            updateSubmitButton();
+        }
+
+        function removeSlot(index) {
+            if (index < selectedItems.length) {
+                playResetSound();
+                selectedItems.splice(index, 1);
+                renderFilledSlots();
+                updateSubmitButton();
+            }
+        }
+
+        function renderFilledSlots() {
+            const lvl = LEVELS[currentLevelIndex];
+            for (let i = 0; i < lvl.slots.length; i++) {
+                const slotEl = document.getElementById(`slot-${i}`);
+                if (i < selectedItems.length) {
+                    const item = ITEMS[selectedItems[i]];
+                    slotEl.innerHTML = `
+                        ${item.icon}
+                        <span class="slot-label">${item.name}</span>
+                    `;
+                    slotEl.classList.add('filled');
+                } else {
+                    slotEl.innerHTML = `
+                        ❓
+                        <span class="slot-label">${lvl.slots[i]}</span>
+                    `;
+                    slotEl.classList.remove('filled');
+                }
+            }
+        }
+
+        function clearCircuit() {
+            playResetSound();
+            selectedItems = [];
+            renderFilledSlots();
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const lvl = LEVELS[currentLevelIndex];
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = selectedItems.length < lvl.slots.length;
+        }
+
+        // ─── VALIDATION ─────────────────────────────────────────────
+        function testCircuit() {
+            const lvl = LEVELS[currentLevelIndex];
+            const board = document.getElementById('board');
+
+            if (lvl.validate(selectedItems)) {
+                // Success
+                playSuccessSound();
+                score += 100;
+                document.getElementById('nav-score').innerText = `⭐ ${score} pts`;
+
+                // Add success visual effects
+                board.classList.add('success-flash');
+                document.getElementById('circuit-zone').classList.add('active-wires');
+
+                // Set companion speech and science explanation
+                document.getElementById('bubble').innerHTML = `<strong>🤖 Sparky:</strong> "${lvl.sparky}"`;
+                document.getElementById('explanation-desc').innerText = lvl.science;
+                document.getElementById('explanation-box').classList.add('show');
+
+                setTimeout(() => {
+                    board.classList.remove('success-flash');
+                }, 1000);
+
+                // Show next button inside actions
+                document.getElementById('btn-submit').outerHTML = `
+                    <button class="btn btn-test" id="btn-submit" onclick="nextLevel()">👉 ¡Siguiente Nivel! ⚡</button>
+                `;
+            } else {
+                // Error
+                playErrorSound();
+                board.classList.add('shake-err');
+                document.getElementById('bubble').innerHTML = `<strong>🤖 Sparky:</strong> "¡Oh no! El circuito no enciende. Intenta reordenar los elementos en el orden correcto."`;
+
+                setTimeout(() => {
+                    board.classList.remove('shake-err');
+                }, 500);
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIndex++;
+            
+            // Restore button HTML template
+            const container = document.querySelector('.actions');
+            container.innerHTML = `
+                <button class="btn btn-clear" onclick="clearCircuit()">🔄 Vaciar</button>
+                <button class="btn btn-test" id="btn-submit" onclick="testCircuit()" disabled>🔌 ¡Probar Circuito! ⚡</button>
+            `;
+
+            if (currentLevelIndex < LEVELS.length) {
+                initLevel();
+                document.getElementById('bubble').innerText = `🤖 ¡Bienvenido al Nivel ${currentLevelIndex + 1}! Vamos a seguir iluminando la ciudad.`;
+            } else {
+                showVictory();
+            }
+        }
+
+        function showVictory() {
+            document.getElementById('victory-modal').classList.add('show');
+        }
+
+        function restartGame() {
+            currentLevelIndex = 0;
+            score = 0;
+            document.getElementById('nav-score').innerText = `⭐ 0 pts`;
+            document.getElementById('victory-modal').classList.remove('show');
+            initLevel();
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initLevel();
+        });
+    </script>
+</body>
+</html>
