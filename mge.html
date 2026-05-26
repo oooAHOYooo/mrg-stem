@@ -657,6 +657,73 @@
                     creative coding projects, and mind-bending experiments. Dive in and explore!
                 </p>
 
+                <!-- SEARCH & FILTER BAR -->
+                <div class="search-filter-container" style="background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 2rem; margin-bottom: 3rem; backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+                        <span style="font-size: 1.8rem;">🔍</span>
+                        <input type="text" id="game-search" placeholder="Search experiments (e.g. Spanish, 3D, Paint, Robot)..." 
+                            style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.15); border-radius: 50px; padding: 14px 24px; font-size: 1.1rem; color: #fff; font-family: inherit; font-weight: 600; outline: none; transition: all 0.3s;"
+                            onfocus="this.style.borderColor='var(--mge-primary)'; this.style.boxShadow='0 0 15px rgba(255,107,107,0.3)';"
+                            onblur="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.boxShadow='none';"
+                            oninput="filterGames()">
+                    </div>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <span style="font-weight: 800; font-size: 0.95rem; color: #94a3b8; text-transform: uppercase; margin-right: 8px; letter-spacing: 0.5px;">Quick Filters:</span>
+                        <button class="filter-pill active" onclick="setFilter('all')" data-filter="all">All Games 🎮</button>
+                        <button class="filter-pill" onclick="setFilter('spanish')" data-filter="spanish" style="border-color: #ff4757; color: #ff4757;">🇪🇸 In Spanish</button>
+                        <button class="filter-pill" onclick="setFilter('k2')" data-filter="k2" style="border-color: #10b981; color: #10b981;">👦 Discovery (K-2)</button>
+                        <button class="filter-pill" onclick="setFilter('35')" data-filter="35" style="border-color: #3b82f6; color: #3b82f6;">💡 Innovation (3-5)</button>
+                        <button class="filter-pill" onclick="setFilter('creative')" data-filter="creative" style="border-color: #f472b6; color: #f472b6;">🎨 Creative Studio</button>
+                    </div>
+                </div>
+
+                <style>
+                    .filter-pill {
+                        background: rgba(255,255,255,0.04);
+                        border: 2px solid rgba(255,255,255,0.15);
+                        color: #94a3b8;
+                        padding: 8px 18px;
+                        border-radius: 50px;
+                        font-family: inherit;
+                        font-weight: 700;
+                        font-size: 0.95rem;
+                        cursor: pointer;
+                        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    }
+                    .filter-pill:hover {
+                        transform: translateY(-2px);
+                        background: rgba(255,255,255,0.1);
+                        color: #fff;
+                    }
+                    .filter-pill.active {
+                        background: var(--mge-primary) !important;
+                        color: white !important;
+                        border-color: var(--mge-primary) !important;
+                        box-shadow: 0 0 15px rgba(255,107,107,0.4) !important;
+                    }
+                    .filter-pill[data-filter="spanish"].active {
+                        background: #ff4757 !important;
+                        border-color: #ff4757 !important;
+                        box-shadow: 0 0 15px rgba(255,71,87,0.4) !important;
+                    }
+                    .filter-pill[data-filter="k2"].active {
+                        background: #10b981 !important;
+                        border-color: #10b981 !important;
+                        box-shadow: 0 0 15px rgba(16,185,129,0.4) !important;
+                    }
+                    .filter-pill[data-filter="35"].active {
+                        background: #3b82f6 !important;
+                        border-color: #3b82f6 !important;
+                        box-shadow: 0 0 15px rgba(59,130,246,0.4) !important;
+                    }
+                    .filter-pill[data-filter="creative"].active {
+                        background: #f472b6 !important;
+                        border-color: #f472b6 !important;
+                        box-shadow: 0 0 15px rgba(244,114,182,0.4) !important;
+                    }
+                </style>
+
                 <!-- FEATURED GAME OF THE WEEK -->
                 <section class="featured-week-section" id="featured-game-of-the-week"
                     style="background: linear-gradient(135deg, #030e10 0%, #061a18 50%, #041210 100%); border: 5px solid #00e676; padding: 3rem; position: relative; overflow: hidden; margin-bottom: 3rem; border-radius: 40px; box-shadow: 0 20px 80px rgba(0, 230, 118, 0.45); color: white; transition: all 0.3s ease;">
@@ -1362,6 +1429,73 @@
             iframe.src = 'about:blank';
             document.body.style.overflow = '';
         });
+
+        // --- Real-time Search & Filtering ---
+        let activeFilter = 'all';
+
+        function setFilter(filterType) {
+            activeFilter = filterType;
+            
+            // Update active pill styling
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.classList.remove('active');
+                if (pill.getAttribute('data-filter') === filterType) {
+                    pill.classList.add('active');
+                }
+            });
+            
+            filterGames();
+        }
+
+        function filterGames() {
+            const query = document.getElementById('game-search').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.experiment-card');
+            
+            cards.forEach(card => {
+                const title = (card.querySelector('h2') ? card.querySelector('h2').textContent : '').toLowerCase();
+                const desc = (card.querySelector('p') ? card.querySelector('p').textContent : '').toLowerCase();
+                const tags = card.textContent.toLowerCase();
+                
+                const matchesSearch = title.includes(query) || desc.includes(query) || tags.includes(query);
+                
+                let matchesFilter = false;
+                if (activeFilter === 'all') {
+                    matchesFilter = true;
+                } else if (activeFilter === 'spanish') {
+                    matchesFilter = card.textContent.toLowerCase().includes('in spanish') || card.textContent.toLowerCase().includes('en español');
+                } else if (activeFilter === 'k2') {
+                    matchesFilter = card.closest('#level-k2') || card.closest('.experiments-grid').previousElementSibling.id === 'level-k2' || card.id.endsWith('-k2') || card.id.endsWith('loco') || card.id.includes('aqua') || card.id.includes('day-night') || card.id.includes('easter') || card.id.includes('typing') || card.id.includes('energia') || card.id.includes('clasifica') || card.id.includes('thomas') || card.id.includes('aldo') || card.id.includes('skat');
+                } else if (activeFilter === '35') {
+                    matchesFilter = card.closest('#level-35') || card.closest('.experiments-grid').previousElementSibling.id === 'level-35' || card.closest('#popular-games') || card.closest('.experiments-grid').previousElementSibling.id === 'popular-games' || card.closest('#creative-studio') || card.closest('.experiments-grid').previousElementSibling.id === 'creative-studio';
+                } else if (activeFilter === 'creative') {
+                    matchesFilter = card.closest('#creative-studio') || card.closest('.experiments-grid').previousElementSibling.id === 'creative-studio';
+                }
+                
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Hide empty grids and their headers
+            document.querySelectorAll('.experiments-grid').forEach(grid => {
+                const visibleCards = Array.from(grid.querySelectorAll('.experiment-card')).filter(c => c.style.display !== 'none');
+                const header = grid.previousElementSibling;
+                
+                if (visibleCards.length === 0) {
+                    grid.style.display = 'none';
+                    if (header && header.classList.contains('grid-section-header')) {
+                        header.style.display = 'none';
+                    }
+                } else {
+                    grid.style.display = '';
+                    if (header && header.classList.contains('grid-section-header')) {
+                        header.style.display = '';
+                    }
+                }
+            });
+        }
 
         function toggleView(view) {
             const grids = document.querySelectorAll('.experiments-grid');
