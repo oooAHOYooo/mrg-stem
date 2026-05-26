@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Laboratorio Loco 🧪 | MGE STEM</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060c14;
+            --panel: #0c1520;
+            --border: #1e3850;
+            --green: #00e676;
+            --teal: #00bcd4;
+            --purple: #ab47bc;
+            --pink: #f06292;
+            --yellow: #ffd740;
+            --orange: #ff9100;
+            --text: #e0f0ff;
+            --dim: #5a7a9a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', 'Comic Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAV */
+        .top-nav {
+            background: #000;
+            border-bottom: 3px solid var(--green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 58px;
+            flex-shrink: 0;
+            gap: 1rem;
+        }
+        .nav-brand {
+            font-size: 1.35rem;
+            font-weight: 900;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .nav-score {
+            color: var(--yellow);
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+        .nav-btn {
+            background: #1a2a3a;
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { border-color: var(--green); color: var(--green); }
+
+        /* MAIN WRAPPER */
+        .game-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+            gap: 0.9rem;
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #060c14, #0d1e30, #08131e);
+            border: 2px solid rgba(0, 230, 118, 0.3);
+            border-radius: 20px;
+            padding: 1.25rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0,230,118,0.06) 0%, transparent 70%);
+        }
+        .hero-title {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #00e676, #00bcd4, #ab47bc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+            line-height: 1.1;
+        }
+        .hero-sub {
+            color: var(--dim);
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            margin-top: 0.4rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+        }
+
+        /* MISSION BAR */
+        .mission-bar {
+            background: var(--panel);
+            border: 2px solid rgba(255, 215, 64, 0.4);
+            border-radius: 14px;
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .mission-badge {
+            background: linear-gradient(135deg, #ffd740, #ff9100);
+            color: #000;
+            font-weight: 900;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        .mission-text {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--yellow);
+            flex: 1;
+        }
+        .mission-prog {
+            color: var(--dim);
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        /* GAME AREA */
+        .game-area {
+            display: grid;
+            grid-template-columns: 260px 1fr 300px;
+            gap: 0.9rem;
+            flex: 1;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 1.1rem;
+        }
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--green);
+            margin-bottom: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.65rem;
+        }
+
+        /* INGREDIENTS */
+        .ing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+        .ing-btn {
+            background: #0a1825;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 0.65rem 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-family: inherit;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .ing-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--teal);
+            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.2);
+        }
+        .ing-btn.selected {
+            border-color: var(--green) !important;
+            background: rgba(0, 230, 118, 0.1) !important;
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.3) !important;
+        }
+        .ing-icon { font-size: 2rem; line-height: 1; }
+        .ing-name { font-weight: 700; font-size: 0.78rem; line-height: 1.2; }
+        .ing-type { font-size: 0.65rem; color: var(--dim); }
+
+        /* CENTER / BEAKER PANEL */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        /* Selected chips */
+        .selected-bar {
+            background: #080f1c;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 0.65rem 1rem;
+            min-height: 48px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 7px;
+            font-size: 0.95rem;
+        }
+        .mix-chip {
+            background: rgba(0,230,118,0.12);
+            border: 1px solid rgba(0,230,118,0.35);
+            border-radius: 8px;
+            padding: 3px 10px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--green);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mix-hint { color: var(--dim); font-size: 0.9rem; }
+
+        /* BEAKER */
+        .beaker-wrap {
+            position: relative;
+            width: 180px;
+            height: 240px;
+            flex-shrink: 0;
+        }
+        .beaker-glass {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 210px;
+            border: 4px solid #4a8ab8;
+            border-top: none;
+            border-radius: 0 0 40px 40px;
+            overflow: hidden;
+            background: rgba(10, 20, 40, 0.6);
+        }
+        .beaker-liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 45%;
+            background: #1a4060;
+            transition: background 0.9s ease, height 0.6s ease;
+        }
+        .beaker-liquid.separated {
+            background: linear-gradient(to top, #c5a800 50%, rgba(200,180,0,0.4) 50%);
+        }
+        .beaker-liquid.separated-honey {
+            background: linear-gradient(to top, #cc7700 55%, #d4a800 55%);
+        }
+        /* Measurement marks inside the glass */
+        .beaker-glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 48px,
+                rgba(100,160,220,0.15) 48px,
+                rgba(100,160,220,0.15) 50px
+            );
+            pointer-events: none;
+        }
+        .beaker-rim {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 14px;
+            background: #2e5a8a;
+            border-radius: 6px;
+        }
+        /* Tick marks on the side */
+        .beaker-ticks {
+            position: absolute;
+            left: calc(50% - 86px);
+            bottom: 30px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 47px;
+        }
+        .tick {
+            width: 12px;
+            height: 2px;
+            background: rgba(100,160,220,0.4);
+        }
+
+        /* Bubbles */
+        .bubble-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 0 0 38px 38px;
+        }
+        @keyframes rise {
+            0%   { transform: translateY(0) scale(1); opacity: 0.9; }
+            100% { transform: translateY(-120px) scale(0.2); opacity: 0; }
+        }
+        .bub {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(178,255,120,0.7);
+            animation: rise 1s ease-out forwards;
+        }
+
+        /* Reaction card */
+        .reaction-card {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            text-align: center;
+            width: 100%;
+            min-height: 74px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: border-color 0.4s;
+        }
+        .reaction-title { font-size: 1.35rem; font-weight: 900; }
+        .reaction-desc { font-size: 0.88rem; color: var(--dim); line-height: 1.45; }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            width: 100%;
+        }
+        .btn-mezclar {
+            flex: 1;
+            background: linear-gradient(135deg, #00e676, #00bcd4);
+            color: #000;
+            border: none;
+            font-size: 1.15rem;
+            font-weight: 900;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-mezclar:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,230,118,0.4); }
+        .btn-mezclar:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-reset {
+            background: #0a1825;
+            color: var(--dim);
+            border: 2px solid var(--border);
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-reset:hover { border-color: var(--pink); color: var(--pink); }
+
+        /* SCIENCE PANEL */
+        .sci-panel { display: flex; flex-direction: column; gap: 0.8rem; }
+
+        .score-card {
+            background: linear-gradient(135deg, #0d1e30, #0f2540);
+            border: 2px solid rgba(0,230,118,0.25);
+            border-radius: 14px;
+            padding: 0.9rem;
+            text-align: center;
+        }
+        .score-lbl { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .score-num { font-size: 2.2rem; font-weight: 900; color: var(--green); line-height: 1; }
+
+        .missions-box { flex: 1; overflow-y: auto; max-height: 260px; }
+        .missions-hdr { font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--yellow); margin-bottom: 0.6rem; }
+        .m-item {
+            background: #08121e;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            transition: all 0.3s;
+        }
+        .m-item.current { border-color: var(--yellow); background: rgba(255,215,64,0.06); }
+        .m-item.done { border-color: var(--green); background: rgba(0,230,118,0.04); opacity: 0.65; }
+        .m-hint { color: var(--dim); font-size: 0.73rem; margin-top: 3px; }
+
+        .fact-card {
+            background: linear-gradient(135deg, #0d1e30, #141830);
+            border: 2px solid rgba(171,71,188,0.3);
+            border-radius: 14px;
+            padding: 0.9rem;
+        }
+        .fact-hdr { font-size: 0.75rem; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; font-weight: 900; margin-bottom: 0.5rem; }
+        .fact-body { font-size: 0.85rem; color: var(--dim); line-height: 1.5; }
+
+        /* Shake animation for beaker fizz */
+        @keyframes shake {
+            0%,100% { transform: translateX(-50%) rotate(0deg); }
+            20% { transform: translateX(calc(-50% - 6px)) rotate(-2deg); }
+            40% { transform: translateX(calc(-50% + 6px)) rotate(2deg); }
+            60% { transform: translateX(calc(-50% - 4px)) rotate(-1deg); }
+            80% { transform: translateX(calc(-50% + 4px)) rotate(1deg); }
+        }
+        .fizzing .beaker-glass { animation: shake 0.12s ease infinite; }
+
+        /* Flash success */
+        @keyframes greenflash {
+            0%   { box-shadow: 0 0 0 rgba(0,230,118,0); }
+            50%  { box-shadow: 0 0 60px rgba(0,230,118,0.4); }
+            100% { box-shadow: 0 0 0 rgba(0,230,118,0); }
+        }
+        .flash-win { animation: greenflash 0.7s ease; }
+
+        /* VICTORY */
+        .overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .win-card {
+            background: linear-gradient(135deg, #060c14, #0d1a2e);
+            border: 4px solid var(--green);
+            border-radius: 28px;
+            padding: 2.5rem;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(0,230,118,0.4);
+        }
+        .win-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00e676, #00bcd4, #ab47bc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+        .win-score { color: var(--green); font-size: 1.6rem; font-weight: 900; margin: 0.75rem 0; }
+        .win-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #00e676, #00bcd4);
+            color: #000;
+            border: none;
+            font-size: 1.05rem;
+            font-weight: 900;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 1rem;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .win-btn:hover { transform: translateY(-2px); }
+
+        /* Responsive */
+        @media (max-width: 950px) {
+            .game-area { grid-template-columns: 1fr; }
+            .missions-box { max-height: 200px; }
+        }
+        @media (max-width: 600px) {
+            .ing-grid { grid-template-columns: repeat(4, 1fr); }
+            .game-wrap { padding: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="top-nav">
+    <div class="nav-brand">🧪 El Laboratorio Loco</div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+        <span class="nav-score" id="nav-score">⭐ 0 pts</span>
+        <a href="mge.html" class="nav-btn">🏠 Hub</a>
+    </div>
+</nav>
+
+<div class="game-wrap">
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-title">🧪 El Laboratorio Loco</div>
+        <div class="hero-sub">¡Mezcla, Reacciona y Descubre la Ciencia! &nbsp;·&nbsp; Grados 2–5 &nbsp;·&nbsp; ¡Todo en Español!</div>
+    </div>
+
+    <!-- MISSION BAR -->
+    <div class="mission-bar">
+        <span class="mission-badge">🎯 Misión</span>
+        <span class="mission-text" id="m-text">¡Crea el color NARANJA mezclando colores primarios!</span>
+        <span class="mission-prog" id="m-prog">1 de 7</span>
+    </div>
+
+    <!-- GAME AREA -->
+    <div class="game-area">
+
+        <!-- LEFT: INGREDIENTS -->
+        <div class="panel">
+            <div class="panel-title">🫙 Ingredientes</div>
+            <div class="ing-grid" id="ing-grid"></div>
+        </div>
+
+        <!-- CENTER: BEAKER -->
+        <div class="panel center-panel">
+
+            <div class="selected-bar" id="selected-bar">
+                <span class="mix-hint">Selecciona 2–4 ingredientes...</span>
+            </div>
+
+            <div class="beaker-wrap" id="beaker-wrap">
+                <div class="beaker-rim"></div>
+                <div class="beaker-glass" id="beaker-glass">
+                    <div class="beaker-liquid" id="liquid"></div>
+                    <div class="bubble-layer" id="bubble-layer"></div>
+                </div>
+                <div class="beaker-ticks">
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                    <div class="tick"></div>
+                </div>
+            </div>
+
+            <div class="reaction-card" id="reaction-card">
+                <span class="reaction-desc">Selecciona ingredientes y presiona ¡MEZCLAR!</span>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-mezclar" id="btn-mix" onclick="mezclar()" disabled>⚗️ ¡MEZCLAR!</button>
+                <button class="btn-reset" onclick="resetMezcla()">🔄 Limpiar</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: SCIENCE -->
+        <div class="panel sci-panel">
+
+            <div class="score-card">
+                <div class="score-lbl">Puntos de Ciencia</div>
+                <div class="score-num" id="score-num">0</div>
+            </div>
+
+            <div class="missions-box">
+                <div class="missions-hdr">📋 Misiones</div>
+                <div id="m-list"></div>
+            </div>
+
+            <div class="fact-card">
+                <div class="fact-hdr">🔬 Dato Científico</div>
+                <div class="fact-body" id="fact-body">¡Mezcla ingredientes para descubrir datos de ciencia increíbles!</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- VICTORY -->
+<div class="overlay" id="overlay">
+    <div class="win-card">
+        <div class="win-title">🏆 ¡Científico Increíble!</div>
+        <p style="color:#5a7a9a; font-size:1.05rem; line-height:1.5;">¡Completaste todas las misiones del laboratorio! Eres un verdadero científico.</p>
+        <div style="font-size:2.5rem; margin:0.75rem 0;">🧬 🔭 🔬 ⚗️ 🧪</div>
+        <div class="win-score">Puntos: <span id="final-pts">0</span></div>
+        <button class="win-btn" onclick="reiniciar()">🔄 Jugar de Nuevo</button>
+        <br>
+        <a href="mge.html" style="display:inline-block; margin-top:0.85rem; color:#5a7a9a; font-weight:700; text-decoration:none; font-size:0.9rem;">← Regresar al Hub</a>
+    </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────
+const INGS = [
+    { id:'agua',        name:'Agua',             icon:'💧', type:'Líquido Polar' },
+    { id:'vinagre',     name:'Vinagre',           icon:'🫙', type:'Ácido' },
+    { id:'bicarbonato', name:'Bicarbonato',       icon:'🥄', type:'Base (polvo)' },
+    { id:'rojo',        name:'Color Rojo',        icon:'🔴', type:'Color Primario' },
+    { id:'azul',        name:'Color Azul',        icon:'🔵', type:'Color Primario' },
+    { id:'amarillo',    name:'Color Amarillo',    icon:'🟡', type:'Color Primario' },
+    { id:'miel',        name:'Miel',              icon:'🍯', type:'Muy Densa' },
+    { id:'aceite',      name:'Aceite',            icon:'🫗', type:'Poco Densa' },
+];
+
+// Key = sorted IDs joined with +
+const RXNS = {
+    'amarillo+rojo': {
+        title:'¡Naranja! 🟠', liqColor:'#e65100', glow:'rgba(230,81,0,.7)',
+        fact:'El rojo y el amarillo son COLORES PRIMARIOS. Juntos crean el naranja, un COLOR SECUNDARIO. ¡Los artistas y los impresores usan esta mezcla todos los días!',
+        fizz:false, split:false, pts:100
+    },
+    'amarillo+azul': {
+        title:'¡Verde! 🟢', liqColor:'#00c853', glow:'rgba(0,200,83,.7)',
+        fact:'Azul + Amarillo = Verde. ¡Los tres colores primarios (rojo, azul, amarillo) pueden crear casi todos los colores! Los pintores mezclan estos colores para hacer sus obras.',
+        fizz:false, split:false, pts:100
+    },
+    'azul+rojo': {
+        title:'¡Morado! 🟣', liqColor:'#7b1fa2', glow:'rgba(123,31,162,.7)',
+        fact:'El rojo y el azul forman el morado (violeta). El violeta es el último color del arcoíris. ¡La luz se separa en 7 colores cuando pasa por un prisma de cristal!',
+        fizz:false, split:false, pts:100
+    },
+    'amarillo+azul+rojo': {
+        title:'¡Café Oscuro! 🤎', liqColor:'#4e342e', glow:'rgba(78,52,46,.6)',
+        fact:'Mezclar los TRES COLORES PRIMARIOS hace café oscuro. Cada color "absorbe" a los otros. ¡La mezcla de todos los pigmentos da negro, pero con pintura de colores da café!',
+        fizz:false, split:false, pts:150
+    },
+    'bicarbonato+vinagre': {
+        title:'¡REACCIÓN ÁCIDO-BASE! 💥', liqColor:'#76ff03', glow:'rgba(118,255,3,.8)',
+        fact:'El vinagre es un ÁCIDO y el bicarbonato es una BASE. Cuando se unen, crean una reacción química que libera CO₂ (dióxido de carbono). ¡Ese gas es el mismo que sale de las gaseosas!',
+        fizz:true, split:false, pts:200
+    },
+    'aceite+agua': {
+        title:'¡No Se Mezclan! 🫧', liqColor:null, glow:'rgba(200,180,0,.5)',
+        split:'water', pts:150,
+        fact:'El agua y el aceite NO se mezclan. El agua tiene MOLÉCULAS POLARES (con carga) y el aceite tiene moléculas no polares. ¡Los iguales se atraen! El aceite flota porque su DENSIDAD es menor.',
+        fizz:false
+    },
+    'aceite+miel': {
+        title:'¡Capas de Densidad! 📊', liqColor:null, glow:'rgba(204,119,0,.6)',
+        split:'honey', pts:150,
+        fact:'La miel es MUCHO MÁS DENSA que el aceite. La DENSIDAD es cuánto pesa un líquido por su tamaño. Los líquidos más densos se hunden y los menos densos flotan. ¡Por eso la miel va abajo!',
+        fizz:false
+    },
+    'agua+miel': {
+        title:'¡Se Disuelve! 🍬', liqColor:'#ffca28', glow:'rgba(255,202,40,.6)',
+        fact:'La miel sí se disuelve en agua porque ambas tienen moléculas POLARES. El azúcar y la glucosa en la miel son atraídas por las moléculas de agua. ¡Eso es la SOLUBILIDAD!',
+        fizz:false, split:false, pts:100
+    },
+    'agua+bicarbonato': {
+        title:'¡Solución Básica! 🧼', liqColor:'#80cbc4', glow:'rgba(128,203,196,.6)',
+        fact:'El bicarbonato en agua crea una SOLUCIÓN BÁSICA (o alcalina). El pH del agua pura es 7 (neutro). El bicarbonato sube el pH por encima de 7. ¡El jabón también es básico!',
+        fizz:false, split:false, pts:80
+    },
+    'agua+vinagre': {
+        title:'¡Solución Ácida! 🍋', liqColor:'#f9a825', glow:'rgba(249,168,37,.6)',
+        fact:'El vinagre mezclado con agua forma una SOLUCIÓN ÁCIDA. El pH baja por debajo de 7. Los ácidos tienen un sabor ácido (agrio). ¡El jugo de limón y los tomates también son ácidos!',
+        fizz:false, split:false, pts:80
+    },
+};
+
+const DEFAULT_RXN = {
+    title:'¡Mezcla Misteriosa! 🔮', liqColor:'#6a1b9a', glow:'rgba(106,27,154,.6)',
+    fact:'¡Combinación interesante! Los científicos hacen experimentos mezclando sustancias para descubrir cosas nuevas. ¡Muchos descubrimientos famosos fueron accidentes en el laboratorio!',
+    fizz:false, split:false, pts:40
+};
+
+const MISSIONS = [
+    {
+        text:'🟠 Crea el color NARANJA mezclando colores primarios',
+        hint:'Pista: Rojo + Amarillo',
+        ok: m => has2(m,'rojo','amarillo') && m.length===2
+    },
+    {
+        text:'💥 Haz una REACCIÓN DE BURBUJAS con ácido y base',
+        hint:'Pista: Vinagre + Bicarbonato',
+        ok: m => has2(m,'vinagre','bicarbonato') && m.length===2
+    },
+    {
+        text:'🟢 ¡Crea el color VERDE mezclando primarios!',
+        hint:'Pista: Azul + Amarillo',
+        ok: m => has2(m,'azul','amarillo') && m.length===2
+    },
+    {
+        text:'🫧 Demuestra que ACEITE y AGUA no se mezclan',
+        hint:'Pista: Aceite + Agua',
+        ok: m => has2(m,'aceite','agua') && m.length===2
+    },
+    {
+        text:'🟣 Crea el color MORADO',
+        hint:'Pista: Rojo + Azul',
+        ok: m => has2(m,'azul','rojo') && m.length===2
+    },
+    {
+        text:'📊 Muestra que la MIEL es más densa que el ACEITE',
+        hint:'Pista: Aceite + Miel',
+        ok: m => has2(m,'aceite','miel') && m.length===2
+    },
+    {
+        text:'🤎 ¡Mezcla los 3 COLORES PRIMARIOS juntos!',
+        hint:'Pista: Rojo + Azul + Amarillo',
+        ok: m => has2(m,'rojo','azul') && m.includes('amarillo')
+    },
+];
+
+// ─── STATE ───────────────────────────────────────────────────
+let mix = [], mIdx = 0, done = new Set(), pts = 0, busy = false;
+
+// ─── HELPERS ─────────────────────────────────────────────────
+function has2(arr, a, b) { return arr.includes(a) && arr.includes(b); }
+function rxnKey(arr) { return [...arr].sort().join('+'); }
+
+// ─── INIT ─────────────────────────────────────────────────────
+function init() {
+    const grid = document.getElementById('ing-grid');
+    grid.innerHTML = INGS.map(i =>
+        `<button class="ing-btn" id="i-${i.id}" onclick="toggle('${i.id}')">
+            <span class="ing-icon">${i.icon}</span>
+            <span class="ing-name">${i.name}</span>
+            <span class="ing-type">${i.type}</span>
+        </button>`
+    ).join('');
+    renderMissions();
+    updateMBar();
+}
+
+// ─── TOGGLE INGREDIENT ────────────────────────────────────────
+function toggle(id) {
+    if (busy) return;
+    const idx = mix.indexOf(id);
+    if (idx >= 0) {
+        mix.splice(idx, 1);
+        document.getElementById('i-'+id).classList.remove('selected');
+    } else {
+        if (mix.length >= 4) return;
+        mix.push(id);
+        document.getElementById('i-'+id).classList.add('selected');
+    }
+    updateChips();
+    document.getElementById('btn-mix').disabled = mix.length < 2;
+}
+
+function updateChips() {
+    const bar = document.getElementById('selected-bar');
+    if (!mix.length) {
+        bar.innerHTML = '<span class="mix-hint">Selecciona 2–4 ingredientes...</span>';
+        return;
+    }
+    bar.innerHTML = mix.map(id => {
+        const i = INGS.find(x=>x.id===id);
+        return `<span class="mix-chip">${i.icon} ${i.name}</span>`;
+    }).join('<span style="color:var(--dim)">+</span>');
+}
+
+// ─── MEZCLAR ──────────────────────────────────────────────────
+function mezclar() {
+    if (mix.length < 2 || busy) return;
+    busy = true;
+
+    const rxn = RXNS[rxnKey(mix)] || DEFAULT_RXN;
+    const liq = document.getElementById('liquid');
+    const glass = document.getElementById('beaker-glass');
+    const card = document.getElementById('reaction-card');
+    const wrap = document.getElementById('beaker-wrap');
+
+    // Raise liquid
+    liq.style.height = '65%';
+
+    // Set liquid appearance
+    liq.classList.remove('separated','separated-honey');
+    if (rxn.split === 'water') {
+        liq.classList.add('separated');
+        liq.style.background = '';
+    } else if (rxn.split === 'honey') {
+        liq.classList.add('separated-honey');
+        liq.style.background = '';
+    } else {
+        liq.style.background = rxn.liqColor || '#1a4060';
+    }
+
+    // Glow
+    glass.style.boxShadow = `0 0 30px ${rxn.glow}, inset 0 0 20px ${rxn.glow}`;
+    setTimeout(() => { glass.style.boxShadow = ''; }, 2500);
+
+    // Fizz
+    if (rxn.fizz) {
+        wrap.classList.add('fizzing');
+        spawnBubbles();
+        setTimeout(() => wrap.classList.remove('fizzing'), 2000);
+    }
+
+    // Reaction card
+    const titleColor = rxn.liqColor || '#ffd740';
+    card.style.borderColor = rxn.glow.replace(/rgba?\([^)]+\)/,s=>s);
+    card.innerHTML = `
+        <span class="reaction-title" style="color:${titleColor}">${rxn.title}</span>
+        <span class="reaction-desc">${rxn.fact.substring(0,80)}...</span>
+    `;
+
+    // Fact
+    document.getElementById('fact-body').textContent = rxn.fact;
+
+    // Score
+    addPts(rxn.pts);
+
+    // Mission check
+    if (mIdx < MISSIONS.length && MISSIONS[mIdx].ok([...mix])) {
+        completeMission();
+    }
+
+    setTimeout(() => { busy = false; }, 1200);
+}
+
+// ─── BUBBLES ──────────────────────────────────────────────────
+function spawnBubbles() {
+    const layer = document.getElementById('bubble-layer');
+    for (let i = 0; i < 14; i++) {
+        setTimeout(() => {
+            const b = document.createElement('div');
+            b.className = 'bub';
+            const s = 5 + Math.random()*10;
+            b.style.cssText = `width:${s}px;height:${s}px;left:${10+Math.random()*80}%;bottom:${5+Math.random()*30}%;animation-duration:${0.7+Math.random()*0.8}s;animation-delay:${Math.random()*0.4}s`;
+            layer.appendChild(b);
+            setTimeout(()=>b.remove(), 1500);
+        }, i*80);
+    }
+}
+
+// ─── RESET ────────────────────────────────────────────────────
+function resetMezcla() {
+    mix = [];
+    INGS.forEach(i => document.getElementById('i-'+i.id)?.classList.remove('selected'));
+    updateChips();
+    document.getElementById('btn-mix').disabled = true;
+
+    const liq = document.getElementById('liquid');
+    liq.style.height = '45%';
+    liq.style.background = '#1a4060';
+    liq.classList.remove('separated','separated-honey');
+    document.getElementById('beaker-glass').style.boxShadow = '';
+    document.getElementById('beaker-wrap').classList.remove('fizzing');
+
+    document.getElementById('reaction-card').innerHTML =
+        '<span class="reaction-desc">Selecciona ingredientes y presiona ¡MEZCLAR!</span>';
+    document.getElementById('reaction-card').style.borderColor = 'var(--border)';
+}
+
+// ─── SCORE ────────────────────────────────────────────────────
+function addPts(n) {
+    pts += n;
+    document.getElementById('score-num').textContent = pts;
+    document.getElementById('nav-score').textContent = `⭐ ${pts} pts`;
+}
+
+// ─── MISSION ──────────────────────────────────────────────────
+function completeMission() {
+    done.add(mIdx);
+    renderMissions();
+    document.querySelector('.game-wrap').classList.add('flash-win');
+    setTimeout(()=>document.querySelector('.game-wrap').classList.remove('flash-win'), 700);
+    mIdx++;
+    if (mIdx >= MISSIONS.length) {
+        setTimeout(victory, 1200);
+    } else {
+        updateMBar();
+        renderMissions();
+    }
+}
+
+function updateMBar() {
+    if (mIdx < MISSIONS.length) {
+        document.getElementById('m-text').textContent = MISSIONS[mIdx].text;
+        document.getElementById('m-prog').textContent = `${mIdx+1} de ${MISSIONS.length}`;
+    } else {
+        document.getElementById('m-text').textContent = '¡Todas las misiones completadas! 🎉';
+        document.getElementById('m-prog').textContent = '¡Completo!';
+    }
+}
+
+function renderMissions() {
+    document.getElementById('m-list').innerHTML = MISSIONS.map((m,i)=>{
+        const isDone = done.has(i);
+        const isCur = i === mIdx;
+        const cls = isDone ? 'done' : isCur ? 'current' : '';
+        const icon = isDone ? '✅' : isCur ? '🎯' : '⬜';
+        return `<div class="m-item ${cls}">
+            ${icon} <span style="${isDone?'text-decoration:line-through':''}">${m.text}</span>
+            ${isCur ? `<div class="m-hint">${m.hint}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// ─── VICTORY ─────────────────────────────────────────────────
+function victory() {
+    document.getElementById('final-pts').textContent = pts;
+    document.getElementById('overlay').classList.add('show');
+}
+
+function reiniciar() {
+    mix=[]; mIdx=0; done=new Set(); pts=0; busy=false;
+    document.getElementById('score-num').textContent='0';
+    document.getElementById('nav-score').textContent='⭐ 0 pts';
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('fact-body').textContent='¡Mezcla ingredientes para descubrir datos de ciencia increíbles!';
+    resetMezcla();
+    updateMBar();
+    renderMissions();
+}
+
+// ─── START ────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
