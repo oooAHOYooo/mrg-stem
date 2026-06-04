@@ -31,8 +31,8 @@
         .team-health-bg { width: 300px; height: 25px; background: rgba(0,0,0,0.8); border: 3px solid #fff; border-radius: 12px; overflow: hidden; margin-top: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .team-health-bar { height: 100%; transition: width 0.3s; box-shadow: inset 0 2px 5px rgba(255,255,255,0.5); }
         
-        .controls-panel { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 3px solid #ffeb3b; padding: 15px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .controls-text { color: white; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; text-align: center; }
+        .controls-panel { position: absolute; bottom: 30px; left: 30px; background: rgba(0,0,0,0.9); border: 3px solid #ffeb3b; padding: 15px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; z-index: 100; }
+        .controls-text { color: white; font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; text-align: left; line-height: 1.5; }
         
         .weapon-icon-display { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); border: 4px solid #ffeb3b; color: white; font-size: 3rem; font-weight: 900; padding: 20px 40px; border-radius: 20px; display: none; z-index: 50; text-shadow: 3px 3px 0 #000; text-transform: uppercase; }
         
@@ -63,21 +63,27 @@
     <div id="lobby">
         <h1>MGE WORMS</h1>
         <h3>Ultimate Artillery Edition</h3>
-        <div class="lobby-panel">
-            <div class="team-setup">
-                <h2 style="color: #ff3366;">TEAM PINK</h2>
-                <div>
-                    <button class="lobby-btn" onclick="adjWorms(0, -1)">-</button>
-                    <span class="worm-count" id="count-0">3</span>
-                    <button class="lobby-btn" onclick="adjWorms(0, 1)">+</button>
-                </div>
+        <div class="lobby-panel" style="flex-direction: column; align-items: center; gap: 20px;">
+            <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+                <button class="lobby-btn" id="mode-2p" style="width: auto; background: #4CAF50; border-color: #ffeb3b;" onclick="setGameMode('2p')">2 Player Local</button>
+                <button class="lobby-btn" id="mode-1p" style="width: auto; background: #777;" onclick="setGameMode('1p')">1 Player vs AI</button>
             </div>
-            <div class="team-setup">
-                <h2 style="color: #33ff33;">TEAM LIME</h2>
-                <div>
-                    <button class="lobby-btn" onclick="adjWorms(1, -1)">-</button>
-                    <span class="worm-count" id="count-1">3</span>
-                    <button class="lobby-btn" onclick="adjWorms(1, 1)">+</button>
+            <div style="display: flex; gap: 60px;">
+                <div class="team-setup">
+                    <h2 style="color: #ff3366;">TEAM PINK</h2>
+                    <div>
+                        <button class="lobby-btn" onclick="adjWorms(0, -1)">-</button>
+                        <span class="worm-count" id="count-0">3</span>
+                        <button class="lobby-btn" onclick="adjWorms(0, 1)">+</button>
+                    </div>
+                </div>
+                <div class="team-setup">
+                    <h2 style="color: #33ff33;">TEAM LIME</h2>
+                    <div>
+                        <button class="lobby-btn" onclick="adjWorms(1, -1)">-</button>
+                        <span class="worm-count" id="count-1">3</span>
+                        <button class="lobby-btn" onclick="adjWorms(1, 1)">+</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,7 +115,8 @@
         
         <div class="controls-panel">
             <div class="controls-text">
-                [LEFT/RIGHT] Crawl &nbsp;|&nbsp; [MOUSE] Aim &nbsp;|&nbsp; [SCROLL] Switch Weapon &nbsp;|&nbsp; [SPACE/CLICK] Hold to Fire &nbsp;|&nbsp; [SHIFT] Jump
+                [LEFT/RIGHT] Crawl &nbsp;|&nbsp; [MOUSE] Aim &nbsp;|&nbsp; [SPACE/CLICK] Hold to Fire &nbsp;|&nbsp; [SHIFT] Jump<br>
+                <span style="color: #ffeb3b; font-size: 1.4rem;">Remember: Weapon Selection is with the MOUSE WHEEL [SCROLL]</span>
             </div>
         </div>
     </div>
@@ -164,6 +171,8 @@
         
         const state = {
             gameStarted: false,
+            gameMode: '2p',
+            levelType: 0,
             activeTeamIdx: 0,
             phase: 'aiming', // aiming, powering, firing, resolving, gameover
             wind: (Math.random() - 0.5) * 20,
@@ -171,7 +180,8 @@
             maxPower: 50,
             activeProjectiles: [],
             shakeAmount: 0,
-            mouseWorldPos: new THREE.Vector3()
+            mouseWorldPos: new THREE.Vector3(),
+            aiState: { timer: 0, target: null, targetAngle: 0, targetPower: 0 }
         };
 
         const weapons = [
@@ -182,14 +192,33 @@
         ];
 
         let teams = [
-            { name: 'TEAM PINK', colorHex: 0xff3366, colorStr: '#ff3366', requestedCount: 3, totalHealth: 0, activeWormIdx: 0, worms: [] },
-            { name: 'TEAM LIME', colorHex: 0x33ff33, colorStr: '#33ff33', requestedCount: 3, totalHealth: 0, activeWormIdx: 0, worms: [] }
+            { name: 'TEAM PINK', colorHex: 0xff3366, colorStr: '#ff3366', requestedCount: 3, totalHealth: 0, activeWormIdx: 0, worms: [], isAI: false },
+            { name: 'TEAM LIME', colorHex: 0x33ff33, colorStr: '#33ff33', requestedCount: 3, totalHealth: 0, activeWormIdx: 0, worms: [], isAI: false }
         ];
 
         let allWorms = [];
         let weaponTimer = null;
 
         // --- LOBBY LOGIC ---
+        function setGameMode(mode) {
+            state.gameMode = mode;
+            if(mode === '1p') {
+                document.getElementById('mode-1p').style.background = '#4CAF50';
+                document.getElementById('mode-1p').style.borderColor = '#ffeb3b';
+                document.getElementById('mode-2p').style.background = '#777';
+                document.getElementById('mode-2p').style.borderColor = 'transparent';
+                teams[1].isAI = true;
+                teams[1].name = 'TEAM LIME (AI)';
+            } else {
+                document.getElementById('mode-2p').style.background = '#4CAF50';
+                document.getElementById('mode-2p').style.borderColor = '#ffeb3b';
+                document.getElementById('mode-1p').style.background = '#777';
+                document.getElementById('mode-1p').style.borderColor = 'transparent';
+                teams[1].isAI = false;
+                teams[1].name = 'TEAM LIME';
+            }
+        }
+
         function adjWorms(teamIdx, amount) {
             let val = teams[teamIdx].requestedCount + amount;
             if(val < 1) val = 1;
@@ -203,6 +232,9 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('game-ui').style.display = 'block';
             
+            const levelNames = ["Classic Hills", "Twin Peaks", "Floating Islands", "Cavern Roof"];
+            createPopup(levelNames[state.levelType] + "!", new THREE.Vector3(0, 20, 0), '#4CAF50');
+            
             teams.forEach((t, tIdx) => {
                 for(let i=0; i<t.requestedCount; i++) {
                     const worm = {
@@ -211,6 +243,11 @@
                         vel: new THREE.Vector3(), aimAngle: tIdx === 0 ? Math.PI/4 : Math.PI*3/4,
                         weaponIdx: 0, mesh: createWormSprite(t.colorHex, t.colorStr)
                     };
+                    for(let sy = 40; sy > -40; sy-=0.5) {
+                        if(!isSolid(worm.pos.x, sy) && isSolid(worm.pos.x, sy - 1)) {
+                            worm.pos.y = sy; break;
+                        }
+                    }
                     t.worms.push(worm); allWorms.push(worm); scene.add(worm.mesh);
                 }
                 t.totalHealth = t.worms.length * 100;
@@ -236,17 +273,37 @@
         const imgData = tCtx.createImageData(TERRAIN_W, TERRAIN_H);
         const data = imgData.data;
 
+        state.levelType = Math.floor(Math.random() * 4); // 0: Classic, 1: Twin Peaks, 2: Islands, 3: Cavern
+
         const perlin = new THREE.ImprovedNoise();
         for(let y=0; y<TERRAIN_H; y++) {
             for(let x=0; x<TERRAIN_W; x++) {
                 const invY = TERRAIN_H - 1 - y;
                 let val = perlin.noise(x/250, invY/250, 0) + 0.5;
                 let threshold = 0.45;
-                if(invY < 200) threshold -= (200 - invY)*0.005;
-                if(invY > 600) threshold += (invY - 600)*0.002;
+                
+                if (state.levelType === 0) {
+                    if(invY < 200) threshold -= (200 - invY)*0.005;
+                    if(invY > 600) threshold += (invY - 600)*0.002;
+                } else if (state.levelType === 1) {
+                    const distFromCenter = Math.abs(x - TERRAIN_W/2);
+                    if(invY < 200) threshold -= (200 - invY)*0.005;
+                    threshold += (TERRAIN_W/2 - distFromCenter)*0.0005;
+                } else if (state.levelType === 2) {
+                    threshold = 0.55;
+                } else if (state.levelType === 3) {
+                    if(invY > TERRAIN_H - 200) threshold -= (invY - (TERRAIN_H - 200))*0.005;
+                    if(invY < 300) threshold += (300 - invY)*0.002;
+                }
                 
                 let hole = perlin.noise(x/50, invY/50, 100) > 0.35;
-                if(val > threshold && !hole && invY > 80) {
+                if (state.levelType === 2) hole = perlin.noise(x/40, invY/40, 100) > 0.25;
+                if (state.levelType === 3) hole = perlin.noise(x/60, invY/60, 100) > 0.4;
+                
+                let isSolid = val > threshold && !hole;
+                if (state.levelType !== 3 && invY <= 80) isSolid = false; 
+
+                if(isSolid) {
                     const idx = (y * TERRAIN_W + x) * 4;
                     const depth = perlin.noise(x/15, invY/15, 50);
                     const colorBase = 220 + depth * 35;
@@ -376,6 +433,7 @@
 
         window.addEventListener('wheel', e => {
             if(state.phase === 'aiming' && state.gameStarted) {
+                if(teams[state.activeTeamIdx].isAI) return;
                 const p = getActiveWorm(); if(!p) return;
                 if(e.deltaY > 0) p.weaponIdx = (p.weaponIdx + 1) % weapons.length;
                 else p.weaponIdx = (p.weaponIdx - 1 + weapons.length) % weapons.length;
@@ -390,6 +448,7 @@
         let mouseDown = false;
         window.addEventListener('mousedown', e => {
             if(e.target.tagName === 'BUTTON') return;
+            if(state.gameStarted && teams[state.activeTeamIdx].isAI) return;
             if(state.phase === 'aiming' && state.gameStarted) {
                 initAudio();
                 mouseDown = true;
@@ -411,6 +470,7 @@
         });
         window.addEventListener('keydown', e => {
             if(e.code === 'Space' && state.phase === 'aiming' && state.gameStarted) {
+                if(teams[state.activeTeamIdx].isAI) return;
                 keys['Space'] = true;
                 const p = getActiveWorm();
                 if(weapons[p.weaponIdx].id === 'airstrike') {
@@ -591,6 +651,59 @@
             }
         }
 
+        function handleAI(dt) {
+            if(state.phase === 'gameover' || state.phase === 'resolving' || state.phase === 'firing') return;
+            
+            const p = getActiveWorm();
+            if(!p) return;
+            
+            if(state.phase === 'aiming') {
+                if(state.aiState.timer === 0) {
+                    const enemies = teams[state.activeTeamIdx === 0 ? 1 : 0].worms.filter(w => w.health > 0);
+                    if(enemies.length > 0) {
+                        state.aiState.target = enemies[Math.floor(Math.random() * enemies.length)];
+                        
+                        const dx = state.aiState.target.pos.x - p.pos.x;
+                        const dy = state.aiState.target.pos.y - p.pos.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        
+                        p.weaponIdx = Math.floor(Math.random() * weapons.length);
+                        const wDisp = document.getElementById('weapon-display');
+                        wDisp.innerText = weapons[p.weaponIdx].name; wDisp.style.display = 'block';
+                        if(weaponTimer) clearTimeout(weaponTimer);
+                        weaponTimer = setTimeout(() => wDisp.style.display = 'none', 1000);
+                        
+                        const error = (Math.random() - 0.5) * 0.2;
+                        state.aiState.targetAngle = Math.atan2(dy + dist * 0.5, dx) + error;
+                        state.aiState.targetAngle -= (state.wind * 0.01) * Math.sign(dx);
+                        state.aiState.targetPower = Math.min(state.maxPower, dist * 0.8 + Math.abs(dy) * 0.5 + Math.random() * 5);
+                        
+                        if(weapons[p.weaponIdx].id === 'airstrike') {
+                            state.mouseWorldPos.x = state.aiState.target.pos.x + (Math.random()-0.5)*10;
+                            state.mouseWorldPos.y = SCENE_H/2;
+                        }
+                    }
+                    state.aiState.timer += dt;
+                } else if(state.aiState.timer < 2.0) {
+                    state.aiState.timer += dt;
+                    p.aimAngle += (state.aiState.targetAngle - p.aimAngle) * dt * 5;
+                } else {
+                    if(weapons[p.weaponIdx].id === 'airstrike') {
+                        fireProjectile();
+                    } else {
+                        state.phase = 'powering';
+                        state.power = 0;
+                        document.getElementById('power-container').style.display = 'block';
+                    }
+                    state.aiState.timer = 0;
+                }
+            } else if(state.phase === 'powering') {
+                if(state.power >= state.aiState.targetPower || state.power >= state.maxPower) {
+                    fireProjectile();
+                }
+            }
+        }
+
         // --- MAIN LOOP ---
         const clock = new THREE.Clock();
         
@@ -598,8 +711,15 @@
             const dt = Math.min(clock.getDelta(), 0.1);
             if(!state.gameStarted) return;
             
-            if(state.phase === 'powering') {
+            const t = teams[state.activeTeamIdx];
+            if(state.gameStarted && t.isAI) {
+                handleAI(dt);
+            }
+            
+            if(state.phase === 'powering' && !t.isAI) {
                 state.power += dt * 40; if(state.power > state.maxPower) state.power = state.maxPower;
+            } else if (state.phase === 'powering' && t.isAI) {
+                state.power += dt * 40;
             }
             
             let camTarget = new THREE.Vector3(0, 0, 120);
@@ -625,7 +745,7 @@
                 if(p.health <= 0) return;
                 const isCurrent = (p === getActiveWorm() && state.phase === 'aiming');
                 
-                if(isCurrent) {
+                if(isCurrent && !teams[state.activeTeamIdx].isAI) {
                     let dx = 0;
                     if(keys['ArrowRight'] || keys['KeyD']) dx = 10 * dt;
                     if(keys['ArrowLeft'] || keys['KeyA']) dx = -10 * dt;
